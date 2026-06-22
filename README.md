@@ -14,6 +14,8 @@ manyfast-local/
 └─ openspec/ 도그푸딩 — 이 프로젝트 자체를 openspec change로 관리
 ```
 
+> **openspec 워크플로우**: 표준 `openspec` CLI 스킬이 아니라 **agentic-harness 플러그인의 커스텀 스킬**(`agentic-harness:openspec-propose`/`-apply`/`-verify`/`-review`/`-goal`/`-archive`)을 쓴다. verify·게이트가 포함된 우리 워크플로우 기준. `openspec init`이 생성하는 표준 `.claude/skills`·`opsx` 커맨드는 제거함(중복·충돌).
+
 데이터는 **파일 기반**: `spec.md`(SSOT, 읽기) + `<change>/viz/graph-overlay.json`(레이아웃 오버레이, 쓰기). Postgres 안 씀.
 
 ## 설계 결정
