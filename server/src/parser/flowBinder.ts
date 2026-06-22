@@ -42,22 +42,30 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Python _token_pattern: ASCII 토큰은 \b 단어경계, 한글 포함은 부분매칭(폴백) */
+/**
+ * Python _count 1:1 포팅:
+ *  - _token_pattern(tok): low=tok.lower().strip(); ASCII면 \b 패턴, 아니면 None
+ *  - ASCII 토큰 → \b 단어경계 매칭(strip된 값)
+ *  - 비ASCII(한글) 토큰 → None 폴백 → _count else 분기 t.count(tok.lower())
+ *    ⚠️ 원본 else는 strip 안 한 tok.lower()로 부분매칭 (ASCII 분기와 비대칭).
+ *    현 토큰 사전엔 공백 있는 한글 토큰이 없어 영향 없으나 원본 충실하게 맞춤.
+ */
 function countToken(textLow: string, tok: string): number {
-  const low = tok.toLowerCase().trim();
-  // isascii() 동치: 모든 코드포인트 < 128
-  const isAscii = /^[\x00-\x7f]*$/.test(low);
+  const stripped = tok.toLowerCase().trim();
+  // isascii() 동치: 모든 코드포인트 < 128 (strip된 값으로 판정 = _token_pattern)
+  const isAscii = /^[\x00-\x7f]*$/.test(stripped);
   if (isAscii) {
-    const re = new RegExp("\\b" + escapeRegExp(low) + "\\b", "g");
+    const re = new RegExp("\\b" + escapeRegExp(stripped) + "\\b", "g");
     return (textLow.match(re) ?? []).length;
   }
-  // 한글 등: 부분매칭 (textLow.count(tok))
-  if (low.length === 0) return 0;
+  // 한글 등: 원본 _count else = t.count(tok.lower()) — strip 안 한 값으로 부분매칭
+  const needle = tok.toLowerCase();
+  if (needle.length === 0) return 0;
   let count = 0;
-  let idx = textLow.indexOf(low);
+  let idx = textLow.indexOf(needle);
   while (idx !== -1) {
     count++;
-    idx = textLow.indexOf(low, idx + low.length);
+    idx = textLow.indexOf(needle, idx + needle.length);
   }
   return count;
 }
