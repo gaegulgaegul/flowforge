@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import { graphRouter } from "./routes/graph.js";
 
 const app = express();
 app.use(cors());
@@ -9,6 +10,8 @@ app.use(express.json());
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", service: "manyfast-local", ts: new Date().toISOString() });
 });
+
+app.use(graphRouter);
 
 const PORT = Number(process.env.PORT ?? 8811);
 
