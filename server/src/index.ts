@@ -1,4 +1,7 @@
 import "dotenv/config";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import express from "express";
 import cors from "cors";
 import { graphRouter } from "./routes/graph.js";
@@ -12,6 +15,16 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use(graphRouter);
+
+// web 빌드 산출물 정적 서빙(배포 단일 컨테이너 패턴). dist 없으면 스킵.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const webDist = join(__dirname, "..", "..", "web", "dist");
+if (existsSync(webDist)) {
+  app.use(express.static(webDist));
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(join(webDist, "index.html"));
+  });
+}
 
 const PORT = Number(process.env.PORT ?? 8811);
 

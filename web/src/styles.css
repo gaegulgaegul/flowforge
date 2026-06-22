@@ -1,0 +1,21 @@
+:root {
+  --bg: #16181d;
+  --text: #e6e8ec;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Noto Sans KR", sans-serif;
+}
+select, button {
+  background: #22262e;
+  color: var(--text);
+  border: 1px solid #2a2e38;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+button:hover { border-color: #b6e65a; }

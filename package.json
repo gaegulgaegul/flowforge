@@ -5,14 +5,16 @@
   "description": "openspec spec을 유저플로우 그래프·IA 트리·와이어프레임으로 시각화하고 웹에서 편집하는 개인용 도구",
   "workspaces": [
     "shared",
-    "server"
+    "server",
+    "web"
   ],
   "scripts": {
-    "build": "npm run build --workspace shared && npm run build --workspace server",
+    "build": "npm run build --workspace shared && npm run build --workspace server && npm run build --workspace web",
     "test": "npm run test --workspace server",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "dev:server": "npm run dev --workspace server"
+    "dev:server": "npm run dev --workspace server",
+    "dev:web": "npm run dev --workspace web"
   },
   "engines": {
     "node": ">=22"
