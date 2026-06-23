@@ -8,7 +8,7 @@ export function safe(handler: AsyncHandler) {
   return (req: Request, res: Response, _next: NextFunction): void => {
     handler(req, res).catch((err: unknown) => {
       const detail = err instanceof Error ? err.message : String(err);
-      process.stderr.write(`[manyfast-local] ${req.method} ${req.path} 실패: ${detail}\n`);
+      process.stderr.write(`[flowforge] ${req.method} ${req.path} 실패: ${detail}\n`);
       if (!res.headersSent) {
         res.status(500).json({ error: "internal_error" });
       }

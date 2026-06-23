@@ -1,5 +1,5 @@
-/** manyfast-local API 클라이언트 (dev: vite 프록시 /api → :8811) */
-import type { SpecGraph, LayoutOverlay } from "@manyfast/shared";
+/** flowforge API 클라이언트 (dev: vite 프록시 /api → :8811) */
+import type { SpecGraph, LayoutOverlay } from "@flowforge/shared";
 
 export interface GraphResponse {
   id: string;

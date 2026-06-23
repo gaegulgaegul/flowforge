@@ -1,9 +1,9 @@
 {
-  "name": "@manyfast/server",
+  "name": "@flowforge/server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "manyfast-local API — openspec spec.md를 유저플로우 그래프로 파싱·서빙 (개인용)",
+  "description": "flowforge API — openspec spec.md를 유저플로우 그래프로 파싱·서빙 (개인용)",
   "main": "./dist/index.js",
   "scripts": {
     "dev": "node --watch --loader ts-node/esm src/index.ts",
@@ -13,7 +13,7 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
-    "@manyfast/shared": "*",
+    "@flowforge/shared": "*",
     "cors": "^2.8.5",
     "dotenv": "^16.4.0",
     "express": "^4.19.0"

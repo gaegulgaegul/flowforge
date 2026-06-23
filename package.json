@@ -1,5 +1,5 @@
 {
-  "name": "manyfast-local",
+  "name": "flowforge",
   "version": "0.1.0",
   "private": true,
   "description": "openspec spec을 유저플로우 그래프·IA 트리·와이어프레임으로 시각화하고 웹에서 편집하는 개인용 도구",

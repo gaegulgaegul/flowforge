@@ -8,7 +8,7 @@
  * :id는 'archive/<name>' 형태도 허용하므로 와일드카드(*)로 받는다.
  */
 import { Router } from "express";
-import type { GraphNode, GraphEdge, SpecGraph, LayoutOverlay } from "@manyfast/shared";
+import type { GraphNode, GraphEdge, SpecGraph, LayoutOverlay } from "@flowforge/shared";
 import { buildGraph } from "../parser/graphBuilder.js";
 import { listChanges, resolveChangeDir, readOverlay, writeOverlay } from "../lib/changes.js";
 import { safe } from "../lib/safe-error.js";

@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", service: "manyfast-local", ts: new Date().toISOString() });
+  res.json({ status: "ok", service: "flowforge", ts: new Date().toISOString() });
 });
 
 app.use(graphRouter);

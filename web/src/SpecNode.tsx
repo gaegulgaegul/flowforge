@@ -1,6 +1,6 @@
 /** 유저플로우 커스텀 노드 — 4타입(start/section/screen/action) 다크테마 디자인. */
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import type { NodeKind } from "@manyfast/shared";
+import type { NodeKind } from "@flowforge/shared";
 import type { SpecNodeData } from "./graphAdapter.js";
 
 /** 타입별 시각 토큰. 색상은 styles.css 다크 팔레트 + 라임 액센트 계열. */

@@ -1,7 +1,7 @@
 /** SpecGraph(shared) → ReactFlow nodes/edges. 레이아웃 오버레이 머지 + dagre 자동정렬. */
 import dagre from "@dagrejs/dagre";
 import type { Node, Edge } from "@xyflow/react";
-import type { SpecGraph, LayoutOverlay, NodeKind } from "@manyfast/shared";
+import type { SpecGraph, LayoutOverlay, NodeKind } from "@flowforge/shared";
 
 /** 커스텀 노드가 받는 데이터. App에서 nodeTypes로 SpecNode에 매핑. */
 export interface SpecNodeData extends Record<string, unknown> {

@@ -1,16 +1,18 @@
-# manyfast-local
+# Flowforge
 
 openspec의 `spec.md`(WHEN/THEN 시나리오)를 **유저플로우 그래프**로 시각화하고 웹에서 직접 드래그·편집하는 개인용 도구.
+
+> 이름: flow(유저플로우) + forge(spec에서 벼려낸다). 편집과 생성을 함께 담음. (이전 가칭: manyfast-local)
 
 manyfast.io(AI 기획 SaaS)의 핵심 가치인 "기획을 시각화 산출물로 만들고 웹에서 편집"을 openspec 위에 자체 구축한다. 인증·결제·멀티테넌시·크레딧·챗 UI는 제외(개인 단일 사용자용).
 
 ## 구조 (npm workspaces 모노레포)
 
 ```
-manyfast-local/
-├─ shared/   공용 타입 (@manyfast/shared) — GraphNode/GraphEdge/SpecGraph 등
+flowforge/
+├─ shared/   공용 타입 (@flowforge/shared) — GraphNode/GraphEdge/SpecGraph 등
 ├─ server/   Node + Express (TS strict, ESM) — spec.md 파싱 → 그래프 JSON 서빙
-├─ web/      Vite + React + ReactFlow (예정) — 그래프 캔버스 드래그·편집
+├─ web/      Vite + React + ReactFlow — 그래프 캔버스 드래그·편집 (dagre 자동정렬 + 4타입 커스텀 노드)
 └─ openspec/ 도그푸딩 — 이 프로젝트 자체를 openspec change로 관리
 ```
 
@@ -41,9 +43,9 @@ npm run dev:server       # server 개발 모드
 ## 로드맵
 
 - **Phase 0** — 스캐폴딩 + openspec init ✅
-- **Phase 1** — 파싱 포팅(`specParser.ts`/`flowBinder.ts`) + 골든 테스트
-- **Phase 2** — Express API + ReactFlow 캔버스
-- **Phase 3** — 배포 + 도메인 (비가역, 확인 게이트)
-- **Phase 4** — IA 트리 / 와이어프레임 / PRD (후속 change)
+- **Phase 1** — 파싱 포팅(`specParser.ts`/`flowBinder.ts`) + 골든 테스트 ✅
+- **Phase 2** — Express API + ReactFlow 캔버스 ✅ (+ dagre 자동정렬·4타입 노드 디자인)
+- **Phase 3** — 배포 + 도메인 (비가역, 확인 게이트) ⬜ 진행 예정
+- **Phase 4** — IA 트리 / 와이어프레임 / PRD (후속 change) ⬜
 
 상세 계획: `~/.claude/plans/temporal-swimming-dahl.md`

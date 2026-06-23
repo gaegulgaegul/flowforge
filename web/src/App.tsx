@@ -9,7 +9,7 @@ import {
   type NodeChange,
   type NodeTypes,
 } from "@xyflow/react";
-import type { LayoutOverlay, SpecGraph } from "@manyfast/shared";
+import type { LayoutOverlay, SpecGraph } from "@flowforge/shared";
 import { fetchChanges, fetchGraph, saveLayout } from "./api.js";
 import { toFlowNodes, toFlowEdges, danglingCount, autoLayout } from "./graphAdapter.js";
 import { SpecNode } from "./SpecNode.js";
@@ -72,7 +72,7 @@ export function App(): JSX.Element {
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <header style={{ padding: "10px 16px", borderBottom: "1px solid #2a2e38", display: "flex", gap: 12, alignItems: "center" }}>
-        <strong>manyfast-local · 유저플로우</strong>
+        <strong>flowforge · 유저플로우</strong>
         <select value={selected} onChange={(e) => setSelected(e.target.value)} data-testid="change-select">
           {changes.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>

@@ -7,7 +7,7 @@
  */
 import { readdirSync, statSync, existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import type { LayoutOverlay } from "@manyfast/shared";
+import type { LayoutOverlay } from "@flowforge/shared";
 
 /** changes 스캔 루트. 기본: <cwd>/openspec/changes */
 export function changesRoot(): string {
