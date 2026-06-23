@@ -19,3 +19,15 @@ export type {
   WireScreen,
   Wireframe,
 } from './wireframe-types.js';
+
+export type {
+  PrdSectionKey,
+  PrdSection,
+  Prd,
+} from './prd-types.js';
+
+export type {
+  SpecTreeNodeKind,
+  SpecTreeNode,
+  SpecTree,
+} from './spec-tree-types.js';
