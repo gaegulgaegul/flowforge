@@ -7,14 +7,20 @@ import {
   type Node,
   type Edge,
   type NodeChange,
+  type NodeTypes,
 } from "@xyflow/react";
-import type { LayoutOverlay } from "@manyfast/shared";
+import type { LayoutOverlay, SpecGraph } from "@manyfast/shared";
 import { fetchChanges, fetchGraph, saveLayout } from "./api.js";
-import { toFlowNodes, toFlowEdges, danglingCount } from "./graphAdapter.js";
+import { toFlowNodes, toFlowEdges, danglingCount, autoLayout } from "./graphAdapter.js";
+import { SpecNode } from "./SpecNode.js";
+
+// 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지
+const nodeTypes: NodeTypes = { spec: SpecNode };
 
 export function App(): JSX.Element {
   const [changes, setChanges] = useState<string[]>([]);
   const [selected, setSelected] = useState<string>("");
+  const [graph, setGraph] = useState<SpecGraph | null>(null);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [dangling, setDangling] = useState(0);
@@ -33,6 +39,7 @@ export function App(): JSX.Element {
     if (!selected) return;
     fetchGraph(selected)
       .then((r) => {
+        setGraph(r.graph);
         setNodes(toFlowNodes(r.graph, r.layout));
         setEdges(toFlowEdges(r.graph));
         setDangling(danglingCount(r.graph));
@@ -44,6 +51,14 @@ export function App(): JSX.Element {
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
   }, []);
+
+  // dagre 자동정렬 다시 적용 — 저장된 오버레이 무시하고 위계 배치로 리셋
+  const relayout = useCallback(() => {
+    if (!graph) return;
+    const fresh = autoLayout(graph);
+    setNodes((nds) => nds.map((n) => ({ ...n, position: fresh[n.id] ?? n.position })));
+    setStatus("자동정렬 적용됨 — '위치 저장'으로 영속화하세요");
+  }, [graph]);
 
   const persist = useCallback(() => {
     if (!selected) return;
@@ -61,12 +76,13 @@ export function App(): JSX.Element {
         <select value={selected} onChange={(e) => setSelected(e.target.value)} data-testid="change-select">
           {changes.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+        <button onClick={relayout} data-testid="relayout-btn">자동정렬</button>
         <button onClick={persist} data-testid="save-btn">위치 저장</button>
         {dangling > 0 && <span style={{ color: "#f0a05a" }}>⚠ dangling {dangling}</span>}
         <span style={{ color: "#9aa0ad", fontSize: 13 }}>{status}</span>
       </header>
       <div style={{ flex: 1 }}>
-        <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} fitView>
+        <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange} fitView>
           <Background />
           <Controls />
         </ReactFlow>

@@ -1,6 +1,8 @@
 :root {
   --bg: #16181d;
   --text: #e6e8ec;
+  --lime: #b6e65a;
+  --border: #2a2e38;
 }
 * { box-sizing: border-box; }
 body {
@@ -12,10 +14,63 @@ body {
 select, button {
   background: #22262e;
   color: var(--text);
-  border: 1px solid #2a2e38;
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 13px;
   cursor: pointer;
 }
-button:hover { border-color: #b6e65a; }
+button:hover { border-color: var(--lime); }
+
+/* === 커스텀 유저플로우 노드 === */
+.spec-node {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 160px;
+  max-width: 220px;
+  padding: 9px 12px;
+  border: 1.5px solid;
+  border-radius: 9px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.3;
+}
+.spec-node-icon {
+  font-size: 15px;
+  flex: 0 0 auto;
+}
+.spec-node-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.spec-node-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.spec-node-label {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spec-handle {
+  width: 7px;
+  height: 7px;
+  background: #6b7280;
+  border: 1px solid var(--bg);
+}
+
+/* ReactFlow 다크 테마 보정 */
+.react-flow__edge-text { fill: #9aa0ad; font-size: 11px; }
+.react-flow__edge-textbg { fill: var(--bg); }
+.react-flow__controls button {
+  background: #22262e;
+  border-bottom: 1px solid var(--border);
+  fill: var(--text);
+}
+.react-flow__controls button:hover { background: #2a2e38; }

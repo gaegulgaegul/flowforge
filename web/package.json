@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@manyfast/shared": "*",
     "@xyflow/react": "^12.3.0",
     "react": "^18.3.0",

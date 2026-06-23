@@ -30,3 +30,4 @@ coverage/
 # runtime data (그래프 오버레이는 spec 디렉토리에 저장, 여긴 임시만)
 tmp/
 *.tmp
+.gstack/
