@@ -99,4 +99,44 @@ describe("graph API", () => {
     rmSync(tmp, { recursive: true, force: true });
     process.env.OPENSPEC_ROOT = WOWA_OPENSPEC;
   });
+
+  it("GET /api/changes/:id/prd — proposal+design 있는 change는 5섹션 채움", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/changes/implement-ios-app/prd");
+    expect(res.status).toBe(200);
+    expect(res.body.prd.sections).toHaveLength(5);
+    const keys = res.body.prd.sections.map((s: { key: string }) => s.key);
+    expect(keys).toEqual(["overview", "value", "target", "metrics", "attributes"]);
+    // implement-ios-app엔 proposal(Why/What Changes/Impact)+design 모두 있어 핵심 섹션이 채워짐
+    const overview = res.body.prd.sections.find((s: { key: string }) => s.key === "overview");
+    expect(overview.empty).toBe(false);
+    expect(typeof overview.body).toBe("string");
+    expect(overview.body.length).toBeGreaterThan(0);
+  });
+
+  it("GET /api/changes/:id/spec-tree — capability→feature→detail 3단, Scenario를 노드로 펼침", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/changes/implement-ios-app/spec-tree");
+    expect(res.status).toBe(200);
+    const root = res.body.tree;
+    expect(root.kind).toBe("change");
+    expect(root.children.length).toBeGreaterThanOrEqual(1);
+    const cap = root.children[0];
+    expect(cap.kind).toBe("requirement");
+    const feature = cap.children.find((f: { children: unknown[] }) => f.children.length > 0);
+    expect(feature.kind).toBe("feature");
+    // 상세기능(Scenario) 노드는 detail이고 when/then을 가진다(count가 아니라 펼쳐진 노드)
+    const detail = feature.children[0];
+    expect(detail.kind).toBe("detail");
+    expect(typeof detail.when).toBe("string");
+    expect(typeof detail.then).toBe("string");
+  });
+
+  it("GET 존재하지 않는 change → prd/spec-tree 404", async () => {
+    const app = await loadApp();
+    const prd = await request(app).get("/api/changes/nope-not-real/prd");
+    const tree = await request(app).get("/api/changes/nope-not-real/spec-tree");
+    expect(prd.status).toBe(404);
+    expect(tree.status).toBe(404);
+  });
 });
