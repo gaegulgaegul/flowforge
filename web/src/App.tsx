@@ -74,6 +74,11 @@ export function App(): JSX.Element {
   // change 선택 시 다섯 산출물 모두 로드
   useEffect(() => {
     if (!selected) return;
+    // 이전 change 데이터를 먼저 비워 새 데이터 도착 전 stale 잔류(플래시)를 막는다
+    setPrd(null);
+    setSpecRoot(null);
+    setSpecNodes([]);
+    setSpecEdges([]);
     fetchGraph(selected)
       .then((r) => {
         setGraph(r.graph);
@@ -167,7 +172,8 @@ export function App(): JSX.Element {
         <span style={{ color: "#9aa0ad", fontSize: 13 }}>{status}</span>
       </header>
       <div style={{ flex: 1, minHeight: 0 }}>
-        {tab === "prd" && prd && <PrdPanel prd={prd} />}
+        {tab === "prd" &&
+          (prd ? <PrdPanel prd={prd} /> : <div className="prd-loading">PRD 불러오는 중…</div>)}
         {tab === "spec" && (
           <ReactFlow key="spec" nodes={specNodes} edges={specEdges} nodeTypes={nodeTypes} nodesDraggable={false} fitView>
             <Background />

@@ -194,6 +194,11 @@ button:hover { border-color: var(--lime); }
   max-width: 860px;
   margin: 0 auto;
 }
+.prd-loading {
+  padding: 40px;
+  color: #9aa0ad;
+  font-size: 14px;
+}
 .prd-section {
   margin-bottom: 28px;
   padding-bottom: 20px;
