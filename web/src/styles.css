@@ -185,3 +185,82 @@ button:hover { border-color: var(--lime); }
   fill: var(--text);
 }
 .react-flow__controls button:hover { background: #2a2e38; }
+
+/* === PRD 문서 패널 (읽기전용 5섹션) === */
+.prd-doc {
+  height: 100%;
+  overflow: auto;
+  padding: 24px 28px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.prd-section {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.prd-section:last-child { border-bottom: none; }
+.prd-section--empty { opacity: 0.55; }
+.prd-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: var(--lime);
+}
+.prd-section-body { font-size: 13.5px; line-height: 1.6; color: var(--text); }
+.prd-empty-note {
+  font-style: italic;
+  color: #8b91a0;
+  padding: 6px 10px;
+  border: 1px dashed #3a3f4a;
+  border-radius: 6px;
+  display: inline-block;
+  margin: 0;
+}
+.prd-subheading { font-size: 13.5px; font-weight: 600; margin: 14px 0 6px; color: #c7cbd2; }
+.prd-list { margin: 6px 0; padding-left: 20px; }
+.prd-list-item { margin: 3px 0; }
+.prd-paragraph { margin: 8px 0; }
+.prd-table-raw {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: #9aa0ad;
+  background: #1b1e24;
+  padding: 2px 8px;
+  margin: 1px 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* === 기능명세서 3단 트리 노드 (읽기전용, detail만 WHEN/THEN) === */
+.spec-tree-node {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 240px;
+  padding: 7px 11px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+}
+.spec-tree-node--detail { gap: 4px; }
+.spec-tree-node-head { display: flex; align-items: center; gap: 6px; }
+.spec-tree-node-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.spec-tree-node-label { font-weight: 500; white-space: normal; }
+.spec-tree-node-when,
+.spec-tree-node-then {
+  font-size: 11px;
+  color: #9aa0ad;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.spec-tree-node-then { color: #b3b8c0; }
