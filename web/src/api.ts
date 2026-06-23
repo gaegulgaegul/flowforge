@@ -1,10 +1,15 @@
 /** flowforge API 클라이언트 (dev: vite 프록시 /api → :8811) */
-import type { SpecGraph, LayoutOverlay } from "@flowforge/shared";
+import type { SpecGraph, LayoutOverlay, IANode } from "@flowforge/shared";
 
 export interface GraphResponse {
   id: string;
   graph: SpecGraph;
   layout: LayoutOverlay;
+}
+
+export interface IAResponse {
+  id: string;
+  tree: IANode;
 }
 
 export async function fetchChanges(): Promise<string[]> {
@@ -18,6 +23,12 @@ export async function fetchGraph(id: string): Promise<GraphResponse> {
   const res = await fetch(`/api/changes/${id}/graph`);
   if (!res.ok) throw new Error(`graph ${res.status}`);
   return (await res.json()) as GraphResponse;
+}
+
+export async function fetchIA(id: string): Promise<IAResponse> {
+  const res = await fetch(`/api/changes/${id}/ia`);
+  if (!res.ok) throw new Error(`ia ${res.status}`);
+  return (await res.json()) as IAResponse;
 }
 
 export async function saveLayout(id: string, layout: LayoutOverlay): Promise<void> {

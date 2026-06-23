@@ -1,0 +1,28 @@
+services:
+  flowforge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flowforge
+    restart: unless-stopped
+    ports:
+      - "8812:8812"
+    environment:
+      PORT: "8812"
+      NODE_ENV: production
+      # 시각화 대상 openspec 루트(컨테이너 내부 경로). 아래 볼륨으로 호스트 openspec/ 마운트.
+      OPENSPEC_ROOT: /data/openspec
+    volumes:
+      # 시각화 대상 = wowa-app openspec(change 6개, 데모 풍부). spec.md=읽기, viz/graph-overlay.json=쓰기라 RW.
+      # wowa .gitignore에 openspec/**/viz/ 추가해 시각화 산출물 git 오염 차단함.
+      # 도그푸딩(자체 openspec)으로 되돌리려면 ./openspec:/data/openspec 으로 교체.
+      - /home/gaegul/wowa-app/openspec:/data/openspec
+    # immich 가 RAM 빠듯한 서버 → 메모리 상한으로 영향 차단(메모리 교훈: RAM 압박)
+    mem_limit: 256m
+    networks:
+      - gaegul-infra
+
+networks:
+  gaegul-infra:
+    external: true
+    name: gaegul-infra_default

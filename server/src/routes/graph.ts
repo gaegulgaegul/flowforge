@@ -10,6 +10,7 @@
 import { Router } from "express";
 import type { GraphNode, GraphEdge, SpecGraph, LayoutOverlay } from "@flowforge/shared";
 import { buildGraph } from "../parser/graphBuilder.js";
+import { buildIATree } from "../parser/iaBuilder.js";
 import { listChanges, resolveChangeDir, readOverlay, writeOverlay } from "../lib/changes.js";
 import { safe } from "../lib/safe-error.js";
 
@@ -54,6 +55,19 @@ graphRouter.get(
     const graph = toSpecGraph(dir);
     const layout = readOverlay(dir) ?? {};
     res.json({ id, graph, layout });
+  }),
+);
+
+graphRouter.get(
+  "/api/changes/:id(*)/ia",
+  safe(async (req, res) => {
+    const id = String(req.params.id ?? "");
+    const dir = resolveChangeDir(id);
+    if (!dir) {
+      res.status(404).json({ error: "change_not_found" });
+      return;
+    }
+    res.json({ id, tree: buildIATree(dir).root });
   }),
 );
 
