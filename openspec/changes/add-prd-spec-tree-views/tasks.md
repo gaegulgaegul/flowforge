@@ -35,4 +35,4 @@
 - [x] `npm run build --workspace web` 통과 (TS strict + vite build)
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
-- [ ] VERIFY: 5단계 게이트 통과 — 빌드(shared→server→web) → 타입체크 → 린트 → 테스트(골든+신규 빌더) → UI(브라우저에서 PRD 5섹션·기능명세서 3단 트리 실제 렌더 확인) 전부 PASS
+- [x] VERIFY: 5단계 게이트 통과 — 빌드(shared→server→web) → 타입체크 → 린트 → 테스트(골든+신규 빌더) → UI(브라우저에서 PRD 5섹션·기능명세서 3단 트리 실제 렌더 확인) 전부 PASS
