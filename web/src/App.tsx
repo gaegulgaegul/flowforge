@@ -9,17 +9,18 @@ import {
   type NodeChange,
   type NodeTypes,
 } from "@xyflow/react";
-import type { LayoutOverlay, SpecGraph, IANode as IANodeT } from "@flowforge/shared";
-import { fetchChanges, fetchGraph, fetchIA, saveLayout } from "./api.js";
+import type { LayoutOverlay, SpecGraph, IANode as IANodeT, Wireframe } from "@flowforge/shared";
+import { fetchChanges, fetchGraph, fetchIA, fetchWireframe, saveLayout } from "./api.js";
 import { toFlowNodes, toFlowEdges, danglingCount, autoLayout } from "./graphAdapter.js";
 import { toIAFlow } from "./iaAdapter.js";
 import { SpecNode } from "./SpecNode.js";
 import { IANode } from "./IANode.js";
+import { WireframePanel } from "./WireframePanel.js";
 
 // 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지
 const nodeTypes: NodeTypes = { spec: SpecNode, ia: IANode };
 
-type Tab = "flow" | "ia";
+type Tab = "flow" | "ia" | "wire";
 
 export function App(): JSX.Element {
   const [changes, setChanges] = useState<string[]>([]);
@@ -39,6 +40,9 @@ export function App(): JSX.Element {
   const [iaNodes, setIaNodes] = useState<Node[]>([]);
   const [iaEdges, setIaEdges] = useState<Edge[]>([]);
 
+  // 와이어프레임 상태
+  const [wireframe, setWireframe] = useState<Wireframe | null>(null);
+
   useEffect(() => {
     fetchChanges()
       .then((cs) => {
@@ -48,7 +52,7 @@ export function App(): JSX.Element {
       .catch((e: unknown) => setStatus(`목록 로드 실패: ${String(e)}`));
   }, []);
 
-  // change 선택 시 유저플로우 로드
+  // change 선택 시 세 산출물 모두 로드
   useEffect(() => {
     if (!selected) return;
     fetchGraph(selected)
@@ -60,14 +64,12 @@ export function App(): JSX.Element {
         setStatus("");
       })
       .catch((e: unknown) => setStatus(`그래프 로드 실패: ${String(e)}`));
-  }, [selected]);
-
-  // change 선택 시 IA 트리 로드
-  useEffect(() => {
-    if (!selected) return;
     fetchIA(selected)
       .then((r) => setIaRoot(r.tree))
       .catch((e: unknown) => setStatus(`IA 로드 실패: ${String(e)}`));
+    fetchWireframe(selected)
+      .then((r) => setWireframe(r.wireframe))
+      .catch((e: unknown) => setStatus(`와이어 로드 실패: ${String(e)}`));
   }, [selected]);
 
   // IA 트리/뷰모드 바뀌면 레이아웃 재계산
@@ -98,47 +100,51 @@ export function App(): JSX.Element {
       .catch((e: unknown) => setStatus(`저장 실패: ${String(e)}`));
   }, [selected, flowNodes]);
 
-  const isFlow = tab === "flow";
+  const tabBtn = (key: Tab, label: string) => (
+    <button onClick={() => setTab(key)} aria-pressed={tab === key} data-testid={`tab-${key}`}
+      style={{ borderColor: tab === key ? "#b6e65a" : undefined }}>{label}</button>
+  );
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <header style={{ padding: "10px 16px", borderBottom: "1px solid #2a2e38", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <strong>flowforge</strong>
-        {/* 탭 토글: 유저플로우 / IA 트리 */}
         <div style={{ display: "flex", gap: 4 }}>
-          <button onClick={() => setTab("flow")} aria-pressed={isFlow} data-testid="tab-flow"
-            style={{ borderColor: isFlow ? "#b6e65a" : undefined }}>유저플로우</button>
-          <button onClick={() => setTab("ia")} aria-pressed={!isFlow} data-testid="tab-ia"
-            style={{ borderColor: !isFlow ? "#b6e65a" : undefined }}>IA 트리</button>
+          {tabBtn("flow", "유저플로우")}
+          {tabBtn("ia", "IA 트리")}
+          {tabBtn("wire", "와이어프레임")}
         </div>
         <select value={selected} onChange={(e) => setSelected(e.target.value)} data-testid="change-select">
           {changes.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
-        {isFlow ? (
+        {tab === "flow" && (
           <>
             <button onClick={relayout} data-testid="relayout-btn">자동정렬</button>
             <button onClick={persist} data-testid="save-btn">위치 저장</button>
             {dangling > 0 && <span style={{ color: "#f0a05a" }}>⚠ dangling {dangling}</span>}
           </>
-        ) : (
+        )}
+        {tab === "ia" && (
           <button onClick={() => setIaVerbose((v) => !v)} data-testid="ia-view-btn">
             {iaVerbose ? "간단히 보기" : "자세히 보기"}
           </button>
         )}
         <span style={{ color: "#9aa0ad", fontSize: 13 }}>{status}</span>
       </header>
-      <div style={{ flex: 1 }}>
-        {isFlow ? (
+      <div style={{ flex: 1, minHeight: 0 }}>
+        {tab === "flow" && (
           <ReactFlow key="flow" nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} onNodesChange={onFlowNodesChange} fitView>
             <Background />
             <Controls />
           </ReactFlow>
-        ) : (
+        )}
+        {tab === "ia" && (
           <ReactFlow key="ia" nodes={iaNodes} edges={iaEdges} nodeTypes={nodeTypes} nodesDraggable={false} fitView>
             <Background />
             <Controls />
           </ReactFlow>
         )}
+        {tab === "wire" && wireframe && <WireframePanel wireframe={wireframe} />}
       </div>
     </div>
   );

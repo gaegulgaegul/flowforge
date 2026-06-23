@@ -12,3 +12,10 @@ export type {
   IANode,
   IATree,
 } from './ia-types.js';
+
+export type {
+  WireBoxKind,
+  WireBox,
+  WireScreen,
+  Wireframe,
+} from './wireframe-types.js';
