@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2-b 유저플로우만 — flowforge 종착지 목업</title>
+<style>
+  :root{
+    --ink:#222; --line:#999; --line-soft:#ccc;
+    --fill:#f2f2f2; --fill-2:#e6e6e6; --muted:#777; --paper:#fff;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;
+    color:var(--ink); background:var(--paper); margin:0; padding:0 0 60px; line-height:1.5;
+    filter:grayscale(100%);
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 20px}
+  .mock-banner{background:var(--fill-2); border-bottom:2px solid var(--line); font-size:13px; font-weight:700; padding:8px 20px}
+  /* 공통 헤더 (a/b/c 동일) */
+  .page-hd{display:flex; align-items:baseline; justify-content:space-between; margin:18px 0 4px; flex-wrap:wrap; gap:8px}
+  .page-hd h1{font-size:19px; margin:0}
+  .page-hd .opt{font-size:12px; color:var(--muted)}
+  .back{font-size:12px; text-decoration:none; color:var(--ink); border:1px solid var(--line); padding:4px 8px; background:var(--paper)}
+  .back:hover{background:var(--fill-2)}
+  /* 빵부스러기 (공통 위치/형식) */
+  .crumbs{border:1px solid var(--line); background:var(--fill); padding:9px 12px; font-size:13px; margin:6px 0 14px}
+  .crumbs .sep{color:var(--muted); padding:0 6px}
+  .crumbs .here{font-weight:700; border:1px solid var(--ink); padding:1px 6px; background:var(--paper)}
+  .crumbs .key{color:var(--muted); font-size:11px}
+  /* 2단 골격 (공통) */
+  .layout{display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:start}
+  .side{border:1px solid var(--line-soft); background:var(--fill); padding:12px; font-size:12px}
+  .side h3{font-size:12px; margin:0 0 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px}
+  .side ul{list-style:none; margin:0 0 14px; padding:0}
+  .side li{padding:5px 7px; border:1px solid var(--line-soft); background:var(--paper); margin-bottom:4px}
+  .side li.on{border:1px solid var(--ink); background:var(--fill-2); font-weight:700}
+  .side li small{display:block; color:var(--muted); font-size:10px; font-weight:400}
+  .main{min-width:0}
+  /* 2-b 특유: 단일 초점 — 작은 "기타 뷰" 줄 + 큰 유저플로우 */
+  .mainbar{display:flex; align-items:center; justify-content:space-between; border:1px solid var(--line); border-bottom:none; background:var(--fill); padding:8px 12px}
+  .mainbar .focus{font-size:13px; font-weight:700}
+  .otherviews{font-size:12px; color:var(--muted); border:1px solid var(--line-soft); background:var(--paper); padding:3px 8px}
+  .stage{border:1px solid var(--line); padding:24px; min-height:380px; display:flex; align-items:center; justify-content:center}
+  /* 큰 유저플로우 그래프 골격 */
+  .flowgraph{display:flex; align-items:center; flex-wrap:wrap; gap:0}
+  .scrnode{border:1px solid var(--line); background:var(--fill); width:150px; min-height:92px; padding:12px; font-size:13px; text-align:center; display:flex; flex-direction:column; justify-content:center}
+  .scrnode b{display:block; font-size:14px}
+  .scrnode small{color:var(--muted); font-size:11px}
+  .fa{padding:0 14px; color:var(--muted); font-weight:700; font-size:16px}
+  .flowgraph .branch{display:flex; flex-direction:column; gap:12px}
+  .hint{font-size:11px; color:var(--muted); margin-top:14px}
+</style>
+</head>
+<body>
+<div class="mock-banner">🔲 목업 — 결정용, 구현 아님 / 2026-06-24</div>
+<div class="wrap">
+
+  <div class="page-hd">
+    <h1>2-b · change 클릭 → 유저플로우만 크게</h1>
+    <div>
+      <span class="opt">종착지 = change 내부 유저플로우 1종</span>
+      &nbsp;<a class="back" href="index.html">← 비교 허브</a>
+    </div>
+  </div>
+
+  <!-- 빵부스러기 (공통 위치 — a와 동일) -->
+  <div class="crumbs">
+    홈서버 <span class="sep">›</span>
+    쏙쏙 <span class="key">(ssoksok)</span> <span class="sep">›</span>
+    아이 <span class="key">(children)</span> <span class="sep">›</span>
+    <span class="here">사진 리액션 추가 <span class="key">(add-photo-reaction)</span></span>
+  </div>
+
+  <div class="layout">
+    <!-- 좌측 사이드 (공통) -->
+    <aside class="side">
+      <h3>capability (뼈대)</h3>
+      <ul>
+        <li class="on">아이 <small>children</small></li>
+        <li>업로드 <small>upload</small></li>
+        <li>성장기록 <small>milestones</small></li>
+        <li>로그인 <small>login</small></li>
+      </ul>
+      <h3>아이 안의 change</h3>
+      <ul>
+        <li class="on">사진 리액션 추가 <small>add-photo-reaction</small></li>
+        <li>타임라인 무한스크롤 <small>infinite-scroll-timeline</small></li>
+      </ul>
+    </aside>
+
+    <!-- 메인: 유저플로우 하나만, 나머지 4종은 작게 암시 -->
+    <main class="main">
+      <div class="mainbar">
+        <span class="focus">유저플로우</span>
+        <span class="otherviews">기타 뷰 ▾ &nbsp;(IA · 와이어 · PRD · 명세)</span>
+      </div>
+      <div class="stage">
+        <div class="flowgraph">
+          <div class="scrnode"><b>타임라인</b><small>사진 목록</small></div>
+          <span class="fa">▶</span>
+          <div class="scrnode"><b>사진 상세</b><small>한 장 보기</small></div>
+          <span class="fa">▶</span>
+          <div class="branch">
+            <div class="scrnode"><b>리액션 선택</b><small>이모지 팝업</small></div>
+            <div class="scrnode"><b>리액션 취소</b><small>되돌리기</small></div>
+          </div>
+          <span class="fa">▶</span>
+          <div class="scrnode"><b>리액션 반영</b><small>상세 갱신</small></div>
+        </div>
+      </div>
+      <p class="hint">유저플로우 하나에 집중 = "흐름 한눈에". 나머지 4종(IA·와이어·PRD·명세)은 상단 "기타 뷰 ▾"에 접혀 있어 필요할 때만 펼친다.</p>
+    </main>
+  </div>
+</div>
+</body>
+</html>

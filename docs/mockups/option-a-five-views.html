@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2-a 기존 5종 뷰 — flowforge 종착지 목업</title>
+<style>
+  :root{
+    --ink:#222; --line:#999; --line-soft:#ccc;
+    --fill:#f2f2f2; --fill-2:#e6e6e6; --muted:#777; --paper:#fff;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;
+    color:var(--ink); background:var(--paper); margin:0; padding:0 0 60px; line-height:1.5;
+    filter:grayscale(100%);
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 20px}
+  .mock-banner{background:var(--fill-2); border-bottom:2px solid var(--line); font-size:13px; font-weight:700; padding:8px 20px}
+  /* 공통 헤더 영역 (3 상세 페이지 동일) */
+  .page-hd{display:flex; align-items:baseline; justify-content:space-between; margin:18px 0 4px; flex-wrap:wrap; gap:8px}
+  .page-hd h1{font-size:19px; margin:0}
+  .page-hd .opt{font-size:12px; color:var(--muted)}
+  .back{font-size:12px; text-decoration:none; color:var(--ink); border:1px solid var(--line); padding:4px 8px; background:var(--paper)}
+  .back:hover{background:var(--fill-2)}
+  /* 빵부스러기 (3 상세 페이지 동일 위치/형식) */
+  .crumbs{border:1px solid var(--line); background:var(--fill); padding:9px 12px; font-size:13px; margin:6px 0 14px}
+  .crumbs .sep{color:var(--muted); padding:0 6px}
+  .crumbs .here{font-weight:700; border:1px solid var(--ink); padding:1px 6px; background:var(--paper)}
+  .crumbs .key{color:var(--muted); font-size:11px}
+  /* 2단: 좌측 사이드 + 메인 (3 상세 동일 골격) */
+  .layout{display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:start}
+  .side{border:1px solid var(--line-soft); background:var(--fill); padding:12px; font-size:12px}
+  .side h3{font-size:12px; margin:0 0 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px}
+  .side ul{list-style:none; margin:0 0 14px; padding:0}
+  .side li{padding:5px 7px; border:1px solid var(--line-soft); background:var(--paper); margin-bottom:4px}
+  .side li.on{border:1px solid var(--ink); background:var(--fill-2); font-weight:700}
+  .side li small{display:block; color:var(--muted); font-size:10px; font-weight:400}
+  .main{min-width:0}
+  /* 탭 */
+  .tabs{display:flex; gap:4px; border-bottom:2px solid var(--line); margin-bottom:0; flex-wrap:wrap}
+  .tab{border:1px solid var(--line); border-bottom:none; background:var(--fill); padding:8px 14px;
+       font-size:13px; cursor:pointer; font-weight:600; color:var(--ink); position:relative; top:2px}
+  .tab[aria-selected="true"]{background:var(--paper); border-bottom:2px solid var(--paper); font-weight:700}
+  .panel{border:1px solid var(--line); border-top:none; padding:18px; min-height:340px}
+  .panel[hidden]{display:none}
+  .ptitle{font-size:13px; color:var(--muted); margin:0 0 14px; border-bottom:1px dashed var(--line-soft); padding-bottom:6px}
+  /* 유저플로우 골격: 화면노드 + 화살표 */
+  .flowgraph{display:flex; align-items:center; flex-wrap:wrap; gap:0}
+  .scrnode{border:1px solid var(--line); background:var(--fill); width:120px; min-height:70px; padding:8px; font-size:12px; text-align:center; display:flex; flex-direction:column; justify-content:center}
+  .scrnode b{display:block}
+  .scrnode small{color:var(--muted); font-size:10px}
+  .fa{padding:0 10px; color:var(--muted); font-weight:700}
+  .flowgraph .branch{display:flex; flex-direction:column; gap:8px}
+  /* IA 트리 골격 */
+  .tree{font-size:13px; font-family:ui-monospace,Menlo,Consolas,monospace}
+  .tree .lv1{margin-left:0}
+  .tree .lv2{margin-left:20px}
+  .tree .lv3{margin-left:40px; color:var(--muted)}
+  .tree span.node{border:1px solid var(--line-soft); background:var(--fill); padding:1px 8px; display:inline-block; margin:2px 0}
+  /* 와이어 박스 골격 */
+  .wirebox{border:1px solid var(--line); background:var(--paper); width:240px; padding:10px}
+  .wirebox .wf-line{border:1px solid var(--line-soft); background:var(--fill); margin-bottom:7px; padding:7px; font-size:11px; color:var(--muted)}
+  .wirebox .wf-line.btn{text-align:center; border-style:solid; font-weight:700; color:var(--ink)}
+  /* PRD 섹션 골격 */
+  .prd-sec{border:1px solid var(--line-soft); margin-bottom:10px}
+  .prd-sec h4{margin:0; font-size:12px; background:var(--fill); padding:6px 10px; border-bottom:1px solid var(--line-soft)}
+  .prd-sec .body{padding:8px 10px}
+  .prd-sec .ln{height:9px; background:var(--fill-2); margin-bottom:6px}
+  .prd-sec .ln.s{width:60%}
+  .prd-sec .ln.m{width:85%}
+  /* 기능명세 요구사항 리스트 */
+  .reqlist{list-style:none; margin:0; padding:0; font-size:13px}
+  .reqlist li{border:1px solid var(--line-soft); background:var(--fill); padding:8px 10px; margin-bottom:6px}
+  .reqlist li .req{font-weight:700}
+  .reqlist li .sc{color:var(--muted); font-size:12px; margin-top:3px}
+  .seed{font-size:10px; border:1px solid var(--line); background:var(--paper); padding:0 4px; color:var(--muted)}
+  .hint{font-size:11px; color:var(--muted); margin-top:14px}
+</style>
+</head>
+<body>
+<div class="mock-banner">🔲 목업 — 결정용, 구현 아님 / 2026-06-24</div>
+<div class="wrap">
+
+  <div class="page-hd">
+    <h1>2-a · change 클릭 → 기존 5종 뷰 그대로</h1>
+    <div>
+      <span class="opt">종착지 = change 내부 5종 탭</span>
+      &nbsp;<a class="back" href="index.html">← 비교 허브</a>
+    </div>
+  </div>
+
+  <!-- 빵부스러기 (공통 위치) -->
+  <div class="crumbs">
+    홈서버 <span class="sep">›</span>
+    쏙쏙 <span class="key">(ssoksok)</span> <span class="sep">›</span>
+    아이 <span class="key">(children)</span> <span class="sep">›</span>
+    <span class="here">사진 리액션 추가 <span class="key">(add-photo-reaction)</span></span>
+  </div>
+
+  <div class="layout">
+    <!-- 좌측 사이드 -->
+    <aside class="side">
+      <h3>capability (뼈대)</h3>
+      <ul>
+        <li class="on">아이 <small>children</small></li>
+        <li>업로드 <small>upload</small></li>
+        <li>성장기록 <small>milestones</small></li>
+        <li>로그인 <small>login</small></li>
+      </ul>
+      <h3>아이 안의 change</h3>
+      <ul>
+        <li class="on">사진 리액션 추가 <small>add-photo-reaction</small></li>
+        <li>타임라인 무한스크롤 <small>infinite-scroll-timeline</small></li>
+      </ul>
+    </aside>
+
+    <!-- 메인: 5종 탭 -->
+    <main class="main">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true"  aria-controls="t-flow"  id="tab-flow"  onclick="pick('flow')">유저플로우</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="t-ia"    id="tab-ia"    onclick="pick('ia')">IA</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="t-wire"  id="tab-wire"  onclick="pick('wire')">와이어프레임</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="t-prd"   id="tab-prd"   onclick="pick('prd')">PRD</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="t-spec"  id="tab-spec"  onclick="pick('spec')">기능명세</button>
+      </div>
+
+      <!-- 유저플로우 -->
+      <section class="panel" id="t-flow" role="tabpanel" aria-labelledby="tab-flow">
+        <p class="ptitle">유저플로우 — 화면 노드 + 전이 화살표 (골격)</p>
+        <div class="flowgraph">
+          <div class="scrnode"><b>타임라인</b><small>사진 목록</small></div>
+          <span class="fa">▶</span>
+          <div class="scrnode"><b>사진 상세</b><small>한 장 보기</small></div>
+          <span class="fa">▶</span>
+          <div class="branch">
+            <div class="scrnode"><b>리액션 선택</b><small>이모지 팝업</small></div>
+            <div class="scrnode"><b>리액션 취소</b><small>되돌리기</small></div>
+          </div>
+          <span class="fa">▶</span>
+          <div class="scrnode"><b>리액션 반영</b><small>상세 갱신</small></div>
+        </div>
+      </section>
+
+      <!-- IA -->
+      <section class="panel" id="t-ia" role="tabpanel" aria-labelledby="tab-ia" hidden>
+        <p class="ptitle">IA — capability › 요구사항 › 시나리오 3단 트리 (골격)</p>
+        <div class="tree">
+          <div class="lv1"><span class="node">아이 (children)</span></div>
+          <div class="lv2">└ <span class="node">사진에 리액션 단다</span></div>
+          <div class="lv3">&nbsp;&nbsp;└ <span class="node">WHEN 사진 상세에서 이모지 탭 → THEN 리액션 저장</span></div>
+          <div class="lv3">&nbsp;&nbsp;└ <span class="node">WHEN 같은 리액션 재탭 → THEN 취소</span></div>
+          <div class="lv2">└ <span class="node">리액션 집계를 본다</span></div>
+          <div class="lv3">&nbsp;&nbsp;└ <span class="node">WHEN 상세 진입 → THEN 합계·내 리액션 표시</span></div>
+        </div>
+      </section>
+
+      <!-- 와이어프레임 -->
+      <section class="panel" id="t-wire" role="tabpanel" aria-labelledby="tab-wire" hidden>
+        <p class="ptitle">와이어프레임 — 화면별 스켈레톤 박스 (골격)</p>
+        <div style="display:flex; gap:16px; flex-wrap:wrap">
+          <div class="wirebox">
+            <div class="wf-line">제목 — 사진 상세 <span class="seed">SEED</span></div>
+            <div class="wf-line" style="height:90px">이미지 영역</div>
+            <div class="wf-line">표시 — 리액션 합계</div>
+            <div class="wf-line btn">버튼 — 리액션 ▶</div>
+          </div>
+          <div class="wirebox">
+            <div class="wf-line">제목 — 리액션 선택</div>
+            <div class="wf-line">목록 — 이모지 그리드</div>
+            <div class="wf-line btn">버튼 — 적용 ▶</div>
+            <div class="wf-line btn">버튼 — 닫기</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRD -->
+      <section class="panel" id="t-prd" role="tabpanel" aria-labelledby="tab-prd" hidden>
+        <p class="ptitle">PRD — 고정 5섹션 (골격)</p>
+        <div class="prd-sec"><h4>1. 개요</h4><div class="body"><div class="ln m"></div><div class="ln s"></div></div></div>
+        <div class="prd-sec"><h4>2. 핵심가치</h4><div class="body"><div class="ln m"></div><div class="ln"></div></div></div>
+        <div class="prd-sec"><h4>3. 타겟·시나리오</h4><div class="body"><div class="ln"></div><div class="ln s"></div></div></div>
+        <div class="prd-sec"><h4>4. 성공지표</h4><div class="body"><div class="ln s"></div></div></div>
+        <div class="prd-sec"><h4>5. 속성설정</h4><div class="body"><div class="ln m"></div></div></div>
+      </section>
+
+      <!-- 기능명세 -->
+      <section class="panel" id="t-spec" role="tabpanel" aria-labelledby="tab-spec" hidden>
+        <p class="ptitle">기능명세 — 요구사항 리스트 (골격)</p>
+        <ul class="reqlist">
+          <li><span class="req">REQ-1 사용자는 사진에 리액션을 달 수 있다</span>
+              <div class="sc">시나리오: 이모지 팝업에서 선택 → 즉시 저장 → 합계 +1</div></li>
+          <li><span class="req">REQ-2 같은 리액션을 다시 누르면 취소된다</span>
+              <div class="sc">시나리오: 토글 동작, 합계 −1</div></li>
+          <li><span class="req">REQ-3 상세에 리액션 합계가 표시된다 <span class="seed">SEED</span></span>
+              <div class="sc">시나리오: 상세 진입 시 집계·내 리액션 강조</div></li>
+        </ul>
+      </section>
+
+      <p class="hint">탭을 누르면 그 change의 해당 뷰로 전환됩니다 (JS는 탭 전환만). 5종 모두 같은 change 안에 살아있음 = 정보 최대.</p>
+    </main>
+  </div>
+</div>
+
+<script>
+  // 최소 JS — 탭 전환만
+  function pick(name){
+    var ids = ['flow','ia','wire','prd','spec'];
+    ids.forEach(function(n){
+      var tab = document.getElementById('tab-'+n);
+      var panel = document.getElementById('t-'+n);
+      var on = (n === name);
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      panel.hidden = !on;
+    });
+  }
+</script>
+</body>
+</html>

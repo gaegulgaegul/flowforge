@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>flowforge 종착지 결정 — 목업 비교 허브</title>
+<style>
+  :root{
+    --ink:#222;        /* 단색 텍스트 */
+    --line:#999;       /* 회색 테두리 */
+    --line-soft:#ccc;  /* 옅은 선 */
+    --fill:#f2f2f2;    /* 박스 배경 */
+    --fill-2:#e6e6e6;  /* 강조 박스 배경 */
+    --muted:#777;      /* 보조 텍스트 */
+    --paper:#fff;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;
+    color:var(--ink); background:var(--paper);
+    margin:0; padding:0 0 60px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    filter:grayscale(100%); /* 저충실도 강제: 채도 0 */
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:0 20px}
+  .mock-banner{
+    background:var(--fill-2); border-bottom:2px solid var(--line);
+    font-size:13px; font-weight:700; color:var(--ink);
+    padding:8px 20px; letter-spacing:.2px;
+  }
+  h1{font-size:22px; margin:22px 0 4px}
+  h2{font-size:16px; margin:28px 0 8px; border-bottom:1px solid var(--line-soft); padding-bottom:5px}
+  .sub{color:var(--muted); font-size:13px; margin:0 0 8px}
+  /* 공통 진입 흐름 박스열 */
+  .flow{
+    display:flex; align-items:stretch; flex-wrap:wrap; gap:0;
+    border:1px dashed var(--line); padding:14px; background:var(--fill);
+    font-size:13px; margin:10px 0 6px;
+  }
+  .flow .step{
+    border:1px solid var(--line); background:var(--paper);
+    padding:8px 12px; min-width:120px; text-align:center;
+  }
+  .flow .step b{display:block; font-size:13px}
+  .flow .step small{color:var(--muted); font-size:11px}
+  .flow .arr{display:flex; align-items:center; padding:0 8px; color:var(--muted); font-weight:700}
+  .flow .end{border:2px solid var(--ink); background:var(--fill-2); font-weight:700}
+  .flow-note{font-size:12px; color:var(--muted); margin:2px 0 0}
+  /* 3열 비교 */
+  .cols{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:8px}
+  .card{border:1px solid var(--line); background:var(--paper); display:flex; flex-direction:column}
+  .card .hd{background:var(--fill-2); border-bottom:1px solid var(--line); padding:10px 12px}
+  .card .hd .tag{font-size:11px; color:var(--muted); display:block}
+  .card .hd .name{font-size:15px; font-weight:700}
+  .card .bd{padding:12px; flex:1; display:flex; flex-direction:column; gap:10px}
+  .oneline{font-size:13px}
+  /* 미니 종착지 미리보기 (각 안이 무엇으로 끝나는지 그림으로) */
+  .mini{border:1px solid var(--line-soft); background:var(--fill); padding:10px; min-height:118px}
+  .mini .label{font-size:11px; color:var(--muted); margin-bottom:6px}
+  .mini-tabs{display:flex; gap:3px; margin-bottom:6px; flex-wrap:wrap}
+  .mini-tabs span{border:1px solid var(--line); background:var(--paper); font-size:10px; padding:2px 5px}
+  .mini-tabs span.on{background:var(--fill-2); font-weight:700}
+  .mini-box{border:1px solid var(--line); background:var(--paper); height:54px; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted)}
+  .mini-row{border:1px solid var(--line); background:var(--paper); padding:4px 6px; font-size:10px; margin-bottom:3px}
+  /* 장단점 표 */
+  table{border-collapse:collapse; width:100%; font-size:12px}
+  th,td{border:1px solid var(--line-soft); padding:6px 8px; text-align:left; vertical-align:top}
+  th{background:var(--fill); font-weight:700}
+  td.plus::before{content:"+ "; font-weight:700}
+  td.minus::before{content:"− "; font-weight:700}
+  .go{display:inline-block; margin-top:auto; border:1px solid var(--ink); background:var(--paper);
+      padding:7px 10px; font-size:12px; font-weight:700; text-decoration:none; color:var(--ink); text-align:center}
+  .go:hover{background:var(--fill-2)}
+  .legend{font-size:12px; color:var(--muted); margin-top:6px}
+  .matrix th:first-child{width:130px}
+  .pick{font-weight:700}
+</style>
+</head>
+<body>
+<div class="mock-banner">🔲 목업 — 결정용, 구현 아님 / 2026-06-24</div>
+<div class="wrap">
+
+  <h1>flowforge — "change 노드 클릭 → 무엇이 열리나?" 3안 비교</h1>
+  <p class="sub">결정 대상: <code>node-click-destination</code> (DIRECTION.md §5 parked). 진입 흐름은 3안 공통, <b>종착지만 다르다</b>.</p>
+
+  <h2>공통 진입 흐름 (3안 모두 동일)</h2>
+  <div class="flow">
+    <div class="step"><b>홈 카드 그리드</b><small>프로젝트들</small></div>
+    <div class="arr">▶</div>
+    <div class="step"><b>charter 뼈대 그래프</b><small>capability 노드(한글)</small></div>
+    <div class="arr">▶</div>
+    <div class="step"><b>capability 클릭</b><small>속한 change들</small></div>
+    <div class="arr">▶</div>
+    <div class="step end">change 노드 클릭<br><small>🔲 종착지 = 결정 대상</small></div>
+  </div>
+  <p class="flow-note">예: 쏙쏙(ssoksok) → 아이(children) → 사진 리액션 추가(add-photo-reaction) → <b>?</b></p>
+
+  <h2>3안 나란히 비교</h2>
+  <div class="cols">
+
+    <!-- 2-a -->
+    <div class="card">
+      <div class="hd"><span class="tag">2-a · option-a-five-views</span><span class="name">기존 5종 뷰 그대로</span></div>
+      <div class="bd">
+        <div class="oneline">change 클릭 → 그 change의 <b>5종 탭 뷰 전부</b>(유저플로우·IA·와이어프레임·PRD·기능명세)가 열린다.</div>
+        <div class="mini">
+          <div class="label">종착지 미리보기</div>
+          <div class="mini-tabs"><span class="on">유저플로우</span><span>IA</span><span>와이어</span><span>PRD</span><span>명세</span></div>
+          <div class="mini-box">[유저플로우 그래프]</div>
+        </div>
+        <table>
+          <tr><th>장점</th><th>단점</th></tr>
+          <tr>
+            <td class="plus">정보 가장 풍부</td>
+            <td class="minus">대시보드가 무거워짐</td>
+          </tr>
+          <tr>
+            <td class="plus">기존 flowforge 자산 100% 재사용</td>
+            <td class="minus">"조망" 성격이 흐려짐</td>
+          </tr>
+          <tr>
+            <td class="plus">한 곳에서 깊게 본다</td>
+            <td class="minus">탭마다 데이터·로딩 필요</td>
+          </tr>
+        </table>
+        <a class="go" href="option-a-five-views.html">상세 목업 열기 →</a>
+      </div>
+    </div>
+
+    <!-- 2-b -->
+    <div class="card">
+      <div class="hd"><span class="tag">2-b · option-b-flow-only</span><span class="name">유저플로우만</span></div>
+      <div class="bd">
+        <div class="oneline">change 클릭 → <b>유저플로우 그래프 하나만</b> 크게. 나머지 4종은 "기타 뷰 ▾"로만 암시.</div>
+        <div class="mini">
+          <div class="label">종착지 미리보기</div>
+          <div class="mini-tabs"><span class="on">유저플로우</span><span style="opacity:.5">기타 뷰 ▾</span></div>
+          <div class="mini-box" style="height:74px">[유저플로우 그래프 — 크게]</div>
+        </div>
+        <table>
+          <tr><th>장점</th><th>단점</th></tr>
+          <tr>
+            <td class="plus">"흐름 한눈에"에 집중</td>
+            <td class="minus">나머지 4종이 숨음</td>
+          </tr>
+          <tr>
+            <td class="plus">가볍고 빠름</td>
+            <td class="minus">PRD·명세 보려면 한 번 더</td>
+          </tr>
+          <tr>
+            <td class="plus">단일 초점 = 덜 헷갈림</td>
+            <td class="minus">자산 일부만 전면 노출</td>
+          </tr>
+        </table>
+        <a class="go" href="option-b-flow-only.html">상세 목업 열기 →</a>
+      </div>
+    </div>
+
+    <!-- 2-c -->
+    <div class="card">
+      <div class="hd"><span class="tag">2-c · option-c-capability-panel</span><span class="name">capability 패널 멈춤</span></div>
+      <div class="bd">
+        <div class="oneline">change 노드를 따로 안 연다. capability 패널에서 <b>change 목록/요약만</b> 보여주고 멈춤.</div>
+        <div class="mini">
+          <div class="label">종착지 미리보기</div>
+          <div class="mini-row">사진 리액션 추가 (add-photo-reaction)</div>
+          <div class="mini-row">타임라인 무한스크롤 (infinite-scroll-timeline)</div>
+          <div class="mini-row" style="color:var(--muted)">+ 더 파고들지 않음 (외부 도구로)</div>
+        </div>
+        <table>
+          <tr><th>장점</th><th>단점</th></tr>
+          <tr>
+            <td class="plus">대시보드는 "조망"까지만</td>
+            <td class="minus">세부는 못 봄(별도 도구 필요)</td>
+          </tr>
+          <tr>
+            <td class="plus">가장 가볍고 명료</td>
+            <td class="minus">5종 자산이 안 쓰임</td>
+          </tr>
+          <tr>
+            <td class="plus">구현 범위 최소</td>
+            <td class="minus">drill-down 깊이 얕음</td>
+          </tr>
+        </table>
+        <a class="go" href="option-c-capability-panel.html">상세 목업 열기 →</a>
+      </div>
+    </div>
+
+  </div>
+
+  <h2>한눈 비교표</h2>
+  <table class="matrix">
+    <tr>
+      <th></th>
+      <th>2-a 5종 뷰</th>
+      <th>2-b 유저플로우만</th>
+      <th>2-c capability 멈춤</th>
+    </tr>
+    <tr><th>종착 깊이</th><td>change 내부 (가장 깊음)</td><td>change 내부 (1종)</td><td>capability (멈춤)</td></tr>
+    <tr><th>정보량</th><td>최대</td><td>중</td><td>최소</td></tr>
+    <tr><th>기존 5종 자산</th><td>전부 재사용</td><td>유저플로우만 전면</td><td>거의 안 씀</td></tr>
+    <tr><th>무게감</th><td>무거움</td><td>가벼움</td><td>가장 가벼움</td></tr>
+    <tr><th>"조망 대시보드" 성격</th><td>약함</td><td>중간</td><td class="pick">강함</td></tr>
+    <tr><th>구현 범위(예광탄)</th><td>넓음</td><td>중간</td><td class="pick">좁음</td></tr>
+  </table>
+  <p class="legend">표는 비교용 정성 판단이며 결정이 아님. 각 안 상세는 위 링크 참조. (저충실도 흑백 와이어프레임 — 색·아이콘은 의미 없음)</p>
+
+</div>
+</body>
+</html>
