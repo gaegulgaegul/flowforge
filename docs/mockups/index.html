@@ -74,6 +74,20 @@
   .legend{font-size:12px; color:var(--muted); margin-top:6px}
   .matrix th:first-child{width:130px}
   .pick{font-weight:700}
+  /* 한눈 비교표 가로 스크롤 래퍼 */
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+  /* ── 모바일 반응형 (데스크탑은 위 기본 스타일 유지) ── */
+  @media (max-width: 720px){
+    /* 3열 비교 → 1열 세로 스택 */
+    .cols{grid-template-columns:1fr}
+    /* 공통 진입 흐름: 가로 넘침 방지 + 화살표 세로 꺾임 */
+    .flow{flex-direction:column; align-items:stretch}
+    .flow .step{min-width:0; width:100%}
+    .flow .arr{justify-content:center; padding:6px 0; transform:rotate(90deg)}
+    /* 비교표는 모바일에서 가로 스크롤 (래퍼가 처리) */
+    .matrix th:first-child{width:auto}
+    .matrix{min-width:520px}
+  }
 </style>
 </head>
 <body>
@@ -189,6 +203,7 @@
   </div>
 
   <h2>한눈 비교표</h2>
+  <div class="table-scroll">
   <table class="matrix">
     <tr>
       <th></th>
@@ -203,6 +218,7 @@
     <tr><th>"조망 대시보드" 성격</th><td>약함</td><td>중간</td><td class="pick">강함</td></tr>
     <tr><th>구현 범위(예광탄)</th><td>넓음</td><td>중간</td><td class="pick">좁음</td></tr>
   </table>
+  </div>
   <p class="legend">표는 비교용 정성 판단이며 결정이 아님. 각 안 상세는 위 링크 참조. (저충실도 흑백 와이어프레임 — 색·아이콘은 의미 없음)</p>
 
 </div>

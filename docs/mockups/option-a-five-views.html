@@ -76,6 +76,25 @@
   .reqlist li .sc{color:var(--muted); font-size:12px; margin-top:3px}
   .seed{font-size:10px; border:1px solid var(--line); background:var(--paper); padding:0 4px; color:var(--muted)}
   .hint{font-size:11px; color:var(--muted); margin-top:14px}
+  /* details 기반 사이드바: 데스크탑은 항상 펼침 + summary 숨김 */
+  details.side > summary{display:none}
+  details.side[open] > summary{display:none}
+  /* ── 모바일 반응형 (데스크탑은 위 기본 스타일 유지) ── */
+  @media (max-width: 720px){
+    /* 2단 → 1열, 메인(유저플로우/탭)을 사이드보다 위로 */
+    .layout{grid-template-columns:1fr}
+    .main{order:-1}
+    .side{order:2}
+    /* 사이드바는 모바일에서 details 네이티브 토글로 접기 */
+    details.side > summary{display:list-item; cursor:pointer; font-size:13px; font-weight:700; color:var(--ink); list-style:none; padding:2px 0}
+    details.side > summary::-webkit-details-marker{display:none}
+    /* 유저플로우 그래프: 가로 스크롤로 흐름 전체 추적 */
+    .flowgraph{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:8px}
+    .scrnode{flex:0 0 auto}
+    .branch{flex:0 0 auto}
+    /* 빵부스러기 줄바꿈 허용 */
+    .crumbs{word-break:break-word}
+  }
 </style>
 </head>
 <body>
@@ -99,8 +118,9 @@
   </div>
 
   <div class="layout">
-    <!-- 좌측 사이드 -->
-    <aside class="side">
+    <!-- 좌측 사이드 (모바일에선 details로 접힘, 데스크탑은 항상 펼침) -->
+    <details class="side" open>
+      <summary>📂 capability · change 목록 ▾</summary>
       <h3>capability (뼈대)</h3>
       <ul>
         <li class="on">아이 <small>children</small></li>
@@ -113,7 +133,7 @@
         <li class="on">사진 리액션 추가 <small>add-photo-reaction</small></li>
         <li>타임라인 무한스크롤 <small>infinite-scroll-timeline</small></li>
       </ul>
-    </aside>
+    </details>
 
     <!-- 메인: 5종 탭 -->
     <main class="main">
