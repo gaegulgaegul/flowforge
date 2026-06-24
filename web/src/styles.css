@@ -269,3 +269,113 @@ button:hover { border-color: var(--lime); }
   overflow: hidden;
 }
 .spec-tree-node-then { color: #b3b8c0; }
+
+/* === SEED(미검증) 배지 — 노드/와이어/타임라인 공통 === */
+.spec-node-seed,
+.wf-seed,
+.dt-seed {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-radius: 4px;
+  color: #f5d76e;
+  background: #3a3110;
+  border: 1px solid #6b5a17;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+/* === docs 모드 빈/미지원 안내 === */
+.docs-empty-note,
+.docs-unsupported-note {
+  padding: 24px;
+  color: #9aa0ad;
+  font-size: 14px;
+}
+
+/* === decision 타임라인 (docs 모드 PRD 탭) === */
+.dt-doc {
+  list-style: none;
+  margin: 0;
+  padding: 16px 24px;
+  max-width: 860px;
+  overflow: auto;
+  height: 100%;
+}
+.dt-empty-note {
+  color: #9aa0ad;
+  font-size: 14px;
+}
+.dt-item {
+  position: relative;
+  padding: 12px 14px 12px 18px;
+  margin: 0 0 14px;
+  border-left: 3px solid var(--lime);
+  background: #1b1e25;
+  border-radius: 0 8px 8px 0;
+}
+.dt-item--superseded {
+  border-left-color: #4b515e;
+}
+.dt-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.dt-item-id {
+  font-weight: 700;
+  color: var(--lime);
+}
+.dt-item-date {
+  font-size: 12px;
+  color: #9aa0ad;
+}
+.dt-superseded-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c0a6e0;
+  padding: 1px 6px;
+  border: 1px solid #574377;
+  border-radius: 4px;
+}
+.dt-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dt-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.dt-row-label {
+  flex: 0 0 78px;
+  color: #7aa2ff;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding-top: 2px;
+}
+.dt-row-value {
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* === 와이어프레임 원본 보기 링크/안내 (docs 모드) === */
+.wf-original-link,
+.wf-original-note {
+  flex-basis: 100%;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.wf-original-link { color: var(--lime); }
+.wf-original-note { color: #9aa0ad; }
