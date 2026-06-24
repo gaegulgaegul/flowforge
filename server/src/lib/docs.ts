@@ -55,8 +55,10 @@ export function listDocsProjects(): string[] {
 
 /** project 이름 → 절대 docs 디렉토리 경로 (스캔 루트 밖 탈출 방지). 없거나 docs 부재면 null. */
 export function resolveDocsDir(project: string): string | null {
-  // 경로 조작 방지(lib/changes.ts resolveChangeDir와 동일): '..' 금지, 영숫자/-/_/슬래시만.
-  if (project.includes("..") || !/^[A-Za-z0-9_\-/]+$/.test(project)) return null;
+  // 경로 조작 방지: '..' 금지 + 단일 세그먼트만(영숫자/-/_). 슬래시 불허 →
+  // changes(archive/<name> 때문에 '/' 허용)와 달리 docs project는 1단계 디렉토리명이라
+  // '/'를 막아 a/b/c 같은 추가 깊이 접근(:project(*) 와일드카드 경유)을 원천 차단한다.
+  if (project.includes("..") || !/^[A-Za-z0-9_-]+$/.test(project)) return null;
   const dir = join(docsRoot(), project, "docs");
   if (!existsSync(dir) || !hasDocs(dir)) return null;
   return dir;

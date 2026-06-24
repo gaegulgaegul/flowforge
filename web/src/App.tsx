@@ -159,7 +159,13 @@ export function App(): JSX.Element {
       setSpecEdges([]);
       return;
     }
-    // stale 플래시 방지 + docs에 없는 산출물(IA/기능명세서) 비우기
+    // stale 플래시 방지: 이전 프로젝트의 그래프/와이어가 새 데이터 도착 전 잠깐 남는 것을 막는다.
+    setGraph(null);
+    setFlowNodes([]);
+    setFlowEdges([]);
+    setDangling(0);
+    setWireframe(null);
+    // docs에 없는 산출물(IA/기능명세서) + 직전 타임라인 비우기
     setTimeline(null);
     setPrd(null);
     setIaRoot(null);

@@ -81,6 +81,12 @@ describe("docs lib", () => {
     expect(resolveDocsDir("a/../b")).toBeNull();
   });
 
+  it("resolveDocsDir는 슬래시(추가 깊이 접근)를 거부한다 → null", () => {
+    // docs project는 1단계 디렉토리명 → '/'를 막아 :project(*) 와일드카드 경유 a/b/c 접근 차단.
+    expect(resolveDocsDir("a/b/c")).toBeNull();
+    expect(resolveDocsDir("myproj/sub")).toBeNull();
+  });
+
   it("resolveDocsDir는 화이트리스트 밖 문자를 거부한다 → null", () => {
     expect(resolveDocsDir("a b")).toBeNull(); // 공백
     expect(resolveDocsDir("a$b")).toBeNull(); // 특수문자
