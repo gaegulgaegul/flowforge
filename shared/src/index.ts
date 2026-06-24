@@ -31,3 +31,8 @@ export type {
   SpecTreeNode,
   SpecTree,
 } from './spec-tree-types.js';
+
+export type {
+  DocsDecision,
+  DecisionTimeline,
+} from './docs-decision-types.js';

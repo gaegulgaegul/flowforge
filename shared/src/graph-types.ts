@@ -18,6 +18,11 @@ export interface GraphNode {
   readonly label: string;
   /** 이 노드를 파생시킨 spec 디렉토리명. 오버레이 GC·재생성 머지에 사용. */
   readonly specName: string;
+  /**
+   * charter 상주 docs(user-flow.md)의 SEED(사람검토 전 = 미검증) 마킹 여부.
+   * docs 입력에서만 세팅될 수 있는 옵셔널 필드 — change 경로(기존 빌더)는 채우지 않으므로 undefined(비파괴).
+   */
+  readonly seed?: boolean;
 }
 
 /** 화면 간 전이. spec 시나리오의 THEN 문장에서 파생된다. */
