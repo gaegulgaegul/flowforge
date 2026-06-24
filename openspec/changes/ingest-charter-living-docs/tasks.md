@@ -35,4 +35,9 @@
 - [x] GREEN: 상주 모드 빈 상태("상주 문서를 찾을 수 없음") + 변경 모드 완전 복귀(동작 불변) 확인
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
-- [ ] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트 → UI(프론트 변경 있음: 실제 `flowforge/docs/`·`ssoksok/docs/` 를 DOCS_ROOT 로 서버 띄워 소스 토글·flow/wire/prd·SEED 배지·dangling·원본 보기 링크 브라우저 직접 관찰) 전부 PASS
+- [~] VERIFY: 5단계 게이트 — **코드 4단계 PASS / UI 1단계 미관찰**. (2026-06-24 검증)
+  - ✅ 빌드: `npm run build` shared+server+web 전부 PASS (vite 204 modules, EXIT=0)
+  - ✅ 타입체크: `npm run typecheck` 3 workspace 전부 PASS (EXIT=0)
+  - ✅ 린트: `npm run lint` PASS (EXIT=0)
+  - ✅ 테스트: `npm test` **82/82 passed** (11 suites — golden test 포함 = 기존 동작 무손상 확인)
+  - ⚠️ UI(브라우저 직접 관찰): **미관찰**. 이 환경엔 브라우저(gstack/chromium)가 없어 DOCS_ROOT 서버 띄워 소스 토글·flow/wire/prd·SEED 배지·dangling·원본 보기 링크를 픽셀로 직접 확인 불가. 코드 레벨(타입+빌드+테스트)까지만 검증됨. 실픽셀 관찰은 브라우저 있는 환경(또는 사용자 직접)에서 필요.
