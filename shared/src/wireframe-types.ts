@@ -17,6 +17,8 @@ export interface WireBox {
   /** 이 박스가 화면 이동 트리거면 대상 화면 id. dangling이면 '__dangling__', 아니면 null. */
   readonly goto: string | null;
   readonly dangling: boolean;
+  /** charter docs SEED(미검증) 마킹 여부. docs 입력에서만 세팅, change 경로는 미세팅(비파괴). */
+  readonly seed?: boolean;
 }
 
 /** 화면 1개의 와이어프레임(모바일 프레임). */
@@ -25,9 +27,16 @@ export interface WireScreen {
   readonly id: string;
   readonly title: string;
   readonly boxes: readonly WireBox[];
+  /** charter docs SEED(미검증) 마킹 여부. docs 입력에서만 세팅, change 경로는 미세팅(비파괴). */
+  readonly seed?: boolean;
 }
 
 /** change 전체의 와이어프레임(화면 여러 개). */
 export interface Wireframe {
   readonly screens: readonly WireScreen[];
+  /**
+   * charter 원본 wireframe.html이 docs/에 존재하면 true → 프론트가 "원본 보기" 링크 노출.
+   * docs 입력에서만 세팅, change 경로는 미세팅(비파괴).
+   */
+  readonly originalHtml?: boolean;
 }

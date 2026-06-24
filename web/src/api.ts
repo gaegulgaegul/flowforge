@@ -1,5 +1,13 @@
 /** flowforge API 클라이언트 (dev: vite 프록시 /api → :8811) */
-import type { SpecGraph, LayoutOverlay, IANode, Wireframe, Prd, SpecTreeNode } from "@flowforge/shared";
+import type {
+  SpecGraph,
+  LayoutOverlay,
+  IANode,
+  Wireframe,
+  Prd,
+  SpecTreeNode,
+  DecisionTimeline,
+} from "@flowforge/shared";
 
 export interface GraphResponse {
   id: string;
@@ -62,6 +70,35 @@ export async function fetchSpecTree(id: string): Promise<SpecTreeResponse> {
   const res = await fetch(`/api/changes/${id}/spec-tree`);
   if (!res.ok) throw new Error(`spec-tree ${res.status}`);
   return (await res.json()) as SpecTreeResponse;
+}
+
+export interface DocsProjectsResponse {
+  projects: string[];
+}
+
+export async function fetchDocsProjects(): Promise<string[]> {
+  const res = await fetch("/api/docs/projects");
+  if (!res.ok) throw new Error(`docs projects ${res.status}`);
+  const data = (await res.json()) as DocsProjectsResponse;
+  return data.projects;
+}
+
+export async function fetchDocsGraph(project: string): Promise<{ project: string; graph: SpecGraph }> {
+  const res = await fetch(`/api/docs/${project}/graph`);
+  if (!res.ok) throw new Error(`docs graph ${res.status}`);
+  return (await res.json()) as { project: string; graph: SpecGraph };
+}
+
+export async function fetchDocsWireframe(project: string): Promise<{ project: string; wireframe: Wireframe }> {
+  const res = await fetch(`/api/docs/${project}/wireframe`);
+  if (!res.ok) throw new Error(`docs wireframe ${res.status}`);
+  return (await res.json()) as { project: string; wireframe: Wireframe };
+}
+
+export async function fetchDocsPrd(project: string): Promise<{ project: string; timeline: DecisionTimeline }> {
+  const res = await fetch(`/api/docs/${project}/prd`);
+  if (!res.ok) throw new Error(`docs prd ${res.status}`);
+  return (await res.json()) as { project: string; timeline: DecisionTimeline };
 }
 
 export async function saveLayout(id: string, layout: LayoutOverlay): Promise<void> {

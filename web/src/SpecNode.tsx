@@ -12,7 +12,7 @@ const KIND_STYLE: Record<NodeKind, { accent: string; bg: string; icon: string; t
 };
 
 export function SpecNode({ data }: NodeProps): JSX.Element {
-  const { label, kind } = data as SpecNodeData;
+  const { label, kind, seed } = data as SpecNodeData;
   const s = KIND_STYLE[kind] ?? KIND_STYLE.screen;
   return (
     <div
@@ -23,7 +23,14 @@ export function SpecNode({ data }: NodeProps): JSX.Element {
       <Handle type="target" position={Position.Top} className="spec-handle" />
       <span className="spec-node-icon" style={{ color: s.accent }}>{s.icon}</span>
       <div className="spec-node-body">
-        <span className="spec-node-tag" style={{ color: s.accent }}>{s.tag}</span>
+        <span className="spec-node-tag" style={{ color: s.accent }}>
+          {s.tag}
+          {seed && (
+            <span className="spec-node-seed" data-testid="seed-badge" title="미검증(SEED) — 사람 검토 전">
+              🟡 SEED
+            </span>
+          )}
+        </span>
         <span className="spec-node-label">{label}</span>
       </div>
       <Handle type="source" position={Position.Bottom} className="spec-handle" />

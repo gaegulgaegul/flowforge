@@ -7,6 +7,8 @@ import type { SpecGraph, LayoutOverlay, NodeKind } from "@flowforge/shared";
 export interface SpecNodeData extends Record<string, unknown> {
   label: string;
   kind: NodeKind;
+  /** charter 상주 docs의 SEED(미검증) 마킹. change 경로는 undefined → 배지 미표시. */
+  seed?: boolean;
 }
 
 const NODE_W = 200;
@@ -55,10 +57,12 @@ export function toFlowNodes(graph: SpecGraph, layout: LayoutOverlay): Node<SpecN
   const auto = autoLayout(graph);
   return graph.nodes.map((n) => {
     const position = layout[n.id] ?? auto[n.id]!;
+    // exactOptionalPropertyTypes: seed가 undefined면 키 자체를 빼야 SpecNodeData(optional)와 호환된다.
+    const data: SpecNodeData = { label: n.label, kind: n.kind, ...(n.seed !== undefined ? { seed: n.seed } : {}) };
     return {
       id: n.id,
       position,
-      data: { label: n.label, kind: n.kind },
+      data,
       type: "spec",
     };
   });
