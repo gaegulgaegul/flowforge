@@ -34,8 +34,8 @@
 - date: 2026-06-24
 
 ## hypothesis: node-click-destination
-- status: parked
+- status: resolved
 - claim: change 노드 클릭 종착지를 무엇으로 할지. 후보 2-a(기존 5종 뷰 그대로)/2-b(유저플로우만)/2-c(capability 패널 멈춤).
-- evidence: 미검증 — 정적 HTML 목업 비교 예정.
-- verdict: 사용자가 "세 안을 화면 목업으로 비교한 뒤 결정"하기로 함 → 보류. 구현 전 정적 HTML 3개를 비교한다.
+- evidence: 정적 HTML 목업 3안(docs/mockups/) 제작·배포(flowforge.gaegul.house/mockups/), 모바일 반응형 수정 후 사용자가 직접 비교.
+- verdict: ✅ **2-a (기존 5종 뷰 그대로) 채택** — 사용자 선택(2026-06-24, "2-a가 내가 원하는 느낌"). 종착 깊이·정보량 최대, flowforge 기존 5종 뷰를 재사용하므로 신규 뷰 설계 0. 예광탄 착수 가능.
 - date: 2026-06-24
