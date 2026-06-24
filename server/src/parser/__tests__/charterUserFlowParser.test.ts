@@ -102,4 +102,35 @@ describe("parseCharterUserFlow", () => {
     expect(uf.flows[0]!.key).toBe("(unscoped)");
     expect(uf.flows[0]!.screens[0]!.name).toBe("외톨이");
   });
+
+  // --- 에러경로/엣지 입력 (검증 불충분 게이트 해소: 깨진·빈 입력에도 안전) ---
+
+  it("빈 문자열은 flows 없이 안전하게 파싱된다 (throw 없음)", () => {
+    const uf = parseCharterUserFlow("");
+    expect(uf.flows).toEqual([]);
+    expect(uf.seed).toBe(false);
+  });
+
+  it("flow/화면 없는 잡음 줄은 전부 무시되고 화면 없는 orphan step도 버려진다", () => {
+    const uf = parseCharterUserFlow(["random text", "## 아무 섹션", "- step: orphan"].join("\n"));
+    expect(uf.flows).toEqual([]); // ## flow도 ### 화면도 없음 → 화면 0, orphan step 귀속 불가
+  });
+
+  it("빈 goto( - goto: )는 \\S 미충족으로 무시된다", () => {
+    const uf = parseCharterUserFlow(["## flow: f", "### 화면: A", "- goto: "].join("\n"));
+    expect(uf.flows[0]!.screens[0]!.gotos).toEqual([]);
+  });
+
+  it("미완성 endpoint goto( - goto: GET )는 endpoint가 아니라 화면 goto로 강등된다", () => {
+    // RE_GOTO_EP는 METHOD + /path를 둘 다 요구 → path 없으면 일반 화면 goto로 폴백(깨져도 안전).
+    const uf = parseCharterUserFlow(["## flow: f", "### 화면: A", "- goto: GET"].join("\n"));
+    expect(uf.flows[0]!.screens[0]!.gotos).toEqual([{ kind: "screen", target: "GET" }]);
+  });
+
+  it("step/goto 없는 화면은 빈 배열을 가진 노드로 남는다", () => {
+    const uf = parseCharterUserFlow(["## flow: f", "### 화면: 외톨이화면"].join("\n"));
+    const sc = uf.flows[0]!.screens[0]!;
+    expect(sc.steps).toEqual([]);
+    expect(sc.gotos).toEqual([]);
+  });
 });
