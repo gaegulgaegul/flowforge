@@ -1,0 +1,443 @@
+{
+  "spec": "/home/gaegul/flowforge/docs/spec.md",
+  "scanRoot": "/home/gaegul/flowforge",
+  "finalJudgment": "조건부",
+  "counts": {
+    "PASS": 2,
+    "FAIL": 0,
+    "UNVERIFIABLE": 16
+  },
+  "reason": "미검증(UNVERIFIABLE) 16건 — 100% 검증 아님",
+  "items": [
+    {
+      "capability": "spec-tree-view",
+      "feature": "기능명세서 3단 트리 파생 (`GET /api/changes/:id/spec-tree`)",
+      "line": 11,
+      "kind": "assert:endpoint(heading)",
+      "claim": "GET /api/changes/:id/spec-tree",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/graph.ts:107"
+    },
+    {
+      "capability": "spec-tree-view",
+      "feature": "기능명세서 3단 트리 파생 (`GET /api/changes/:id/spec-tree`)",
+      "line": 12,
+      "kind": "freetext",
+      "claim": "change의 capability→Requirement→Scenario를 3단 트리로 파생해 반환한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "spec-tree-view",
+      "feature": "기능명세서 3단 트리 파생 (`GET /api/changes/:id/spec-tree`)",
+      "line": 13,
+      "kind": "freetext",
+      "claim": "상세기능(Scenario) 노드는 title + WHEN/THEN 요약을 담는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "spec-tree-view",
+      "feature": "기능명세서 3단 트리 파생 (`GET /api/changes/:id/spec-tree`)",
+      "line": 14,
+      "kind": "freetext",
+      "claim": "Scenario는 개수가 아니라 개별 노드로 펼친다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "spec-tree-view",
+      "feature": "기능명세서 3단 트리 파생 (`GET /api/changes/:id/spec-tree`)",
+      "line": 15,
+      "kind": "freetext",
+      "claim": "Scenario 없는 Requirement도 단독 노드로 처리하고 실패하지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "spec-tree-view",
+      "feature": "기능명세서 3단 트리 파생 (`GET /api/changes/:id/spec-tree`)",
+      "line": 16,
+      "kind": "freetext",
+      "claim": "읽기전용 — 트리 편집·저장 기능 없음.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "spec-tree-view",
+      "feature": "기능명세서 3단 트리 파생 (`GET /api/changes/:id/spec-tree`)",
+      "line": 17,
+      "kind": "freetext",
+      "claim": "path traversal(`..`)·존재하지 않는 id → 4xx, 디렉토리 밖 파일 안 읽음.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "spec-tree-view",
+      "feature": "기능명세서 트리 웹 렌더",
+      "line": 20,
+      "kind": "freetext",
+      "claim": "기능명세서 탭에서 3단 트리를 읽기전용으로 렌더한다(단별 시각 구분).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "spec-tree-view",
+      "feature": "기능명세서 트리 웹 렌더",
+      "line": 21,
+      "kind": "freetext",
+      "claim": "상세기능 노드는 Scenario title + WHEN/THEN 요약을 노출한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "prd-view",
+      "feature": "PRD 5섹션 파생 (`GET /api/changes/:id/prd`)",
+      "line": 27,
+      "kind": "assert:endpoint(heading)",
+      "claim": "GET /api/changes/:id/prd",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/graph.ts:94"
+    },
+    {
+      "capability": "prd-view",
+      "feature": "PRD 5섹션 파생 (`GET /api/changes/:id/prd`)",
+      "line": 28,
+      "kind": "freetext",
+      "claim": "proposal.md+design.md를 고정 5섹션(overview/value/target/metrics/attributes)으로 파생한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "prd-view",
+      "feature": "PRD 5섹션 파생 (`GET /api/changes/:id/prd`)",
+      "line": 29,
+      "kind": "freetext",
+      "claim": "섹션 순서: 개요→핵심가치→타겟·시나리오→성공지표→속성설정.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "prd-view",
+      "feature": "PRD 5섹션 파생 (`GET /api/changes/:id/prd`)",
+      "line": 30,
+      "kind": "freetext",
+      "claim": "섹션별 소스 매핑: 개요=proposal `## Why`+`## What Changes`, 핵심가치=proposal `## Why`+design `## Goals / Non-Goals`, 타겟=design `## Context`+`## 화면 구성 / UI`, 성공지표=design `## Risks / Trade-offs`+`## Open Questions`, 속성=proposal `## Impact`.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "prd-view",
+      "feature": "PRD 5섹션 파생 (`GET /api/changes/:id/prd`)",
+      "line": 31,
+      "kind": "freetext",
+      "claim": "매핑 소스 헤더 없으면 빈 섹션(empty:true)으로 표면화, 내용 지어내지 않음.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "prd-view",
+      "feature": "PRD 5섹션 파생 (`GET /api/changes/:id/prd`)",
+      "line": 32,
+      "kind": "freetext",
+      "claim": "design.md 없으면 4xx 대신 PRD 반환하되 design 기반 섹션만 빈 섹션 처리.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "prd-view",
+      "feature": "PRD 5섹션 파생 (`GET /api/changes/:id/prd`)",
+      "line": 33,
+      "kind": "freetext",
+      "claim": "path traversal(`..`)·존재하지 않는 id → 4xx, 디렉토리 밖 파일 안 읽음.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "prd-view",
+      "feature": "PRD 웹 렌더",
+      "line": 36,
+      "kind": "freetext",
+      "claim": "PRD 탭에서 5섹션을 고정 순서로 읽기전용 렌더한다(마크다운).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "prd-view",
+      "feature": "PRD 웹 렌더",
+      "line": 37,
+      "kind": "freetext",
+      "claim": "빈 섹션은 \"해당 문서에 없음\" 플레이스홀더로 시각 구분한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    }
+  ],
+  "ghosts": [
+    {
+      "type": "endpoint",
+      "what": "GET /api/changes/:id(*)/graph",
+      "source": "server/src/routes/graph.ts:53"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/changes/:id(*)/ia",
+      "source": "server/src/routes/graph.ts:68"
+    },
+    {
+      "type": "endpoint",
+      "what": "PUT /api/changes/:id(*)/layout",
+      "source": "server/src/routes/graph.ts:120"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/changes/:id(*)/wireframe",
+      "source": "server/src/routes/graph.ts:81"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/health",
+      "source": "server/src/index.ts:13"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/projects",
+      "source": "server/src/routes/graph.ts:46"
+    },
+    {
+      "type": "symbol",
+      "what": "App",
+      "source": "web/src/App.tsx:36"
+    },
+    {
+      "type": "symbol",
+      "what": "IANode",
+      "source": "web/src/IANode.tsx:13"
+    },
+    {
+      "type": "symbol",
+      "what": "PrdPanel",
+      "source": "web/src/PrdPanel.tsx:113"
+    },
+    {
+      "type": "symbol",
+      "what": "SpecNode",
+      "source": "web/src/SpecNode.tsx:14"
+    },
+    {
+      "type": "symbol",
+      "what": "SpecTreeNode",
+      "source": "web/src/SpecTreeNode.tsx:15"
+    },
+    {
+      "type": "symbol",
+      "what": "WireframePanel",
+      "source": "web/src/WireframePanel.tsx:12"
+    },
+    {
+      "type": "symbol",
+      "what": "autoLayout",
+      "source": "web/src/graphAdapter.ts:25"
+    },
+    {
+      "type": "symbol",
+      "what": "buildGraph",
+      "source": "server/src/parser/graphBuilder.ts:32"
+    },
+    {
+      "type": "symbol",
+      "what": "buildIATree",
+      "source": "server/src/parser/iaBuilder.ts:14"
+    },
+    {
+      "type": "symbol",
+      "what": "buildPrd",
+      "source": "server/src/parser/prdBuilder.ts:24"
+    },
+    {
+      "type": "symbol",
+      "what": "buildSpecTree",
+      "source": "server/src/parser/specTreeBuilder.ts:15"
+    },
+    {
+      "type": "symbol",
+      "what": "buildWireframe",
+      "source": "server/src/parser/wireframeBuilder.ts:25"
+    },
+    {
+      "type": "symbol",
+      "what": "changesRoot",
+      "source": "server/src/lib/changes.ts:13"
+    },
+    {
+      "type": "symbol",
+      "what": "danglingCount",
+      "source": "web/src/graphAdapter.ts:80"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchChanges",
+      "source": "web/src/api.ts:30"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchGraph",
+      "source": "web/src/api.ts:37"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchIA",
+      "source": "web/src/api.ts:43"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchPrd",
+      "source": "web/src/api.ts:55"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchSpecTree",
+      "source": "web/src/api.ts:61"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchWireframe",
+      "source": "web/src/api.ts:49"
+    },
+    {
+      "type": "symbol",
+      "what": "flowTarget",
+      "source": "server/src/parser/flowBinder.ts:120"
+    },
+    {
+      "type": "symbol",
+      "what": "isScreenSpec",
+      "source": "server/src/parser/flowBinder.ts:81"
+    },
+    {
+      "type": "symbol",
+      "what": "listChanges",
+      "source": "server/src/lib/changes.ts:33"
+    },
+    {
+      "type": "symbol",
+      "what": "parseSpecText",
+      "source": "server/src/parser/specParser.ts:37"
+    },
+    {
+      "type": "symbol",
+      "what": "readOverlay",
+      "source": "server/src/lib/changes.ts:73"
+    },
+    {
+      "type": "symbol",
+      "what": "resolveChangeDir",
+      "source": "server/src/lib/changes.ts:59"
+    },
+    {
+      "type": "symbol",
+      "what": "safe",
+      "source": "server/src/lib/safe-error.ts:7"
+    },
+    {
+      "type": "symbol",
+      "what": "saveLayout",
+      "source": "web/src/api.ts:67"
+    },
+    {
+      "type": "symbol",
+      "what": "screenAliases",
+      "source": "server/src/parser/flowBinder.ts:88"
+    },
+    {
+      "type": "symbol",
+      "what": "sectionBody",
+      "source": "server/src/parser/markdown.ts:50"
+    },
+    {
+      "type": "symbol",
+      "what": "slug",
+      "source": "server/src/parser/specParser.ts:64"
+    },
+    {
+      "type": "symbol",
+      "what": "splitSections",
+      "source": "server/src/parser/markdown.ts:21"
+    },
+    {
+      "type": "symbol",
+      "what": "toFlowEdges",
+      "source": "web/src/graphAdapter.ts:67"
+    },
+    {
+      "type": "symbol",
+      "what": "toFlowNodes",
+      "source": "web/src/graphAdapter.ts:54"
+    },
+    {
+      "type": "symbol",
+      "what": "toIAFlow",
+      "source": "web/src/iaAdapter.ts:35"
+    },
+    {
+      "type": "symbol",
+      "what": "toSpecTreeFlow",
+      "source": "web/src/specTreeAdapter.ts:42"
+    },
+    {
+      "type": "symbol",
+      "what": "writeOverlay",
+      "source": "server/src/lib/changes.ts:84"
+    }
+  ],
+  "scanSkipped": [
+    {
+      "what": "GET (regex route)",
+      "reason": "정규식 라우트 — 정적 path 대조 불가",
+      "source": "server/src/index.ts:24"
+    },
+    {
+      "what": "GET (no static path)",
+      "reason": "첫 인자가 문자열 리터럴이 아님 — path 추출 불가",
+      "source": "server/src/parser/markdown.ts:53"
+    }
+  ],
+  "reportHtml": "audit.html",
+  "historyHtml": "audit-20260623-1435.html",
+  "runId": "run-20260623-1435"
+}
