@@ -6,6 +6,7 @@ import express from "express";
 import cors from "cors";
 import { graphRouter } from "./routes/graph.js";
 import { docsRouter } from "./routes/docs.js";
+import { projectsRouter } from "./routes/projects.js";
 
 const app = express();
 app.use(cors());
@@ -17,6 +18,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use(graphRouter);
 app.use(docsRouter);
+app.use(projectsRouter);
 
 // web 빌드 산출물 정적 서빙(배포 단일 컨테이너 패턴). dist 없으면 스킵.
 const __dirname = dirname(fileURLToPath(import.meta.url));

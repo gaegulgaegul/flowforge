@@ -20,9 +20,9 @@ describe("graph API", () => {
     process.env.OPENSPEC_ROOT = WOWA_OPENSPEC;
   });
 
-  it("GET /api/projects — change 목록에 archive change 포함", async () => {
+  it("GET /api/changes — change 목록에 archive change 포함", async () => {
     const app = await loadApp();
-    const res = await request(app).get("/api/projects");
+    const res = await request(app).get("/api/changes");
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.changes)).toBe(true);
     expect(res.body.changes).toContain("archive/2026-06-18-extract-wod-photo-logger");

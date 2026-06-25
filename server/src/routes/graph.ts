@@ -43,8 +43,10 @@ function toSpecGraph(changeDir: string): SpecGraph {
   return { nodes, edges };
 }
 
+// 전체 change 목록(archive 포함). 과거엔 /api/projects였으나 hierarchical-project-dashboard
+// 의 카드 그리드가 /api/projects를 점유하면서 의미에 맞게 /api/changes로 이동.
 graphRouter.get(
-  "/api/projects",
+  "/api/changes",
   safe(async (_req, res) => {
     res.json({ changes: listChanges() });
   }),

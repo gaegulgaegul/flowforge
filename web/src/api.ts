@@ -36,8 +36,8 @@ export interface SpecTreeResponse {
 }
 
 export async function fetchChanges(): Promise<string[]> {
-  const res = await fetch("/api/projects");
-  if (!res.ok) throw new Error(`projects ${res.status}`);
+  const res = await fetch("/api/changes");
+  if (!res.ok) throw new Error(`changes ${res.status}`);
   const data = (await res.json()) as { changes: string[] };
   return data.changes;
 }

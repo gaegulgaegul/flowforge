@@ -1,0 +1,106 @@
+/**
+ * projects API 통합 테스트 (task 4.1 RED → 4.2/4.3 GREEN).
+ *
+ * PROJECTS_ROOT를 임시 픽스처로 잡고 supertest로 검증.
+ * - GET /api/projects                                   카드 그리드(단일 change로 곧장 안 들어감)
+ * - GET /api/projects/:project/capabilities            charter 뼈대 capability + 한글명 + change 수
+ * - GET /api/projects/:project/capabilities/:cap/changes  그 capability의 change 목록(0개면 빈 배열)
+ * - 404: 존재하지 않는 프로젝트
+ */
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import request from "supertest";
+
+let ROOT: string;
+
+/** <ROOT>/<project>/openspec/changes/<change>/specs/<cap>/spec.md + proposal.md 픽스처. */
+function makeChange(project: string, change: string, caps: string[], proposalTitle?: string): void {
+  const changeRoot = join(ROOT, project, "openspec", "changes", change);
+  for (const cap of caps) {
+    const dir = join(changeRoot, "specs", cap);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "spec.md"), `## capability: ${cap}\n`);
+  }
+  if (proposalTitle !== undefined) {
+    writeFileSync(join(changeRoot, "proposal.md"), `# ${proposalTitle}\n\n## Why\n`);
+  }
+}
+
+/** <ROOT>/<project>/docs/spec.md (charter 뼈대 — capability 병기 한글명). */
+function makeCharterSpec(project: string, body: string): void {
+  const dir = join(ROOT, project, "docs");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "spec.md"), body);
+  writeFileSync(join(dir, "PRD.md"), "## decision: D1\n"); // hasCharter 신호
+}
+
+async function loadApp() {
+  const mod = await import("../../index.js");
+  return mod.app;
+}
+
+beforeEach(() => {
+  ROOT = mkdtempSync(join(tmpdir(), "projects-api-"));
+  process.env.PROJECTS_ROOT = ROOT;
+});
+afterEach(() => {
+  rmSync(ROOT, { recursive: true, force: true });
+  delete process.env.PROJECTS_ROOT;
+});
+
+describe("GET /api/projects", () => {
+  it("change 있는 프로젝트를 카드로 반환한다(charter 유무 무관)", async () => {
+    makeChange("alpha", "ch1", ["cap-a"]);
+    makeCharterSpec("beta", "## capability: cap-b — 베타기능\n");
+    makeChange("beta", "ch1", ["cap-b"]);
+    const res = await request(await loadApp()).get("/api/projects");
+    expect(res.status).toBe(200);
+    const names = res.body.projects.map((p: { name: string }) => p.name);
+    expect(names).toEqual(["alpha", "beta"]);
+    const beta = res.body.projects.find((p: { name: string }) => p.name === "beta");
+    expect(beta.hasCharter).toBe(true);
+    expect(beta.changeCount).toBe(1);
+  });
+});
+
+describe("GET /api/projects/:project/capabilities", () => {
+  it("charter 뼈대 capability를 한글명·연결 change 수와 함께 반환한다", async () => {
+    makeCharterSpec("proj", "## capability: cap-a — 가나다\n## capability: cap-b\n");
+    makeChange("proj", "ch1", ["cap-a"], "에이 체인지");
+    const res = await request(await loadApp()).get("/api/projects/proj/capabilities");
+    expect(res.status).toBe(200);
+    const a = res.body.capabilities.find((c: { key: string }) => c.key === "cap-a");
+    expect(a.key).toBe("cap-a"); // 영문 키 불변
+    expect(a.koreanLabel).toBe("가나다"); // 출처1 병기
+    expect(a.changeKeys).toContain("ch1"); // 연결된 change
+    const b = res.body.capabilities.find((c: { key: string }) => c.key === "cap-b");
+    expect(b.koreanLabel).toBe("cap-b"); // 병기 없음 → 영문키 폴백
+  });
+
+  it("존재하지 않는 프로젝트는 404", async () => {
+    makeChange("real", "ch1", ["cap-a"]);
+    const res = await request(await loadApp()).get("/api/projects/ghost/capabilities");
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /api/projects/:project/capabilities/:cap/changes", () => {
+  it("그 capability에 연결된 change 목록(한글 제목)을 반환한다", async () => {
+    makeCharterSpec("proj", "## capability: cap-a — 가나다\n");
+    makeChange("proj", "ch1", ["cap-a"], "첫 체인지");
+    const res = await request(await loadApp()).get("/api/projects/proj/capabilities/cap-a/changes");
+    expect(res.status).toBe(200);
+    expect(res.body.changes).toHaveLength(1);
+    expect(res.body.changes[0].key).toBe("ch1");
+    expect(res.body.changes[0].displayName).toBe("첫 체인지"); // 출처3 proposal 제목
+  });
+
+  it("연결된 change가 없으면 빈 배열(404 아님)", async () => {
+    makeCharterSpec("proj", "## capability: cap-a\n");
+    makeChange("proj", "ch1", ["cap-a"]);
+    const res = await request(await loadApp()).get("/api/projects/proj/capabilities/cap-zzz/changes");
+    expect(res.status).toBe(200);
+    expect(res.body.changes).toEqual([]);
+  });
+});

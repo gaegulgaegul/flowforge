@@ -25,7 +25,7 @@ const RE_CAP_LABEL = /^(.*?\S)\s+(?:—|-)\s+(\S.*)$/;
 /** capability 토큰을 (key, label)로 분리. 병기 없으면 label=undefined, key는 trim만. */
 export function splitCapabilityLabel(name: string): { key: string; label?: string } {
   const m = RE_CAP_LABEL.exec(name);
-  if (m) return { key: m[1].trim(), label: m[2].trim() };
+  if (m && m[1] && m[2]) return { key: m[1].trim(), label: m[2].trim() };
   return { key: name.trim() };
 }
 
@@ -37,7 +37,7 @@ export function parseCapabilityLabels(specMd: string): Map<string, string> {
   const out = new Map<string, string>();
   for (const raw of specMd.split(/\r?\n/)) {
     const mc = RE_CAP.exec(raw);
-    if (!mc) continue;
+    if (!mc || !mc[1]) continue;
     const { key, label } = splitCapabilityLabel(mc[1]);
     if (label) out.set(key, label);
   }

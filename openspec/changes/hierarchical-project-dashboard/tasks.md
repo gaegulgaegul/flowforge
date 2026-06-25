@@ -19,9 +19,9 @@
 
 ### Sequential: 라우트 통합 (Group 2 산출물 의존 — 한 파일에 합류)
 
-- [ ] 4.1 RED: `server/src/routes/projects.ts` 테스트 작성 — `/api/projects`(카드 그리드, 단일 change로 곧장 안 들어감), `/api/projects/:project/capabilities`(뼈대 capability + 한글명), `/api/projects/:project/capabilities/:cap/changes`(그 capability의 change만, change 0개면 빈 상태) 응답 검증
-- [ ] 4.2 GREEN: `server/src/routes/projects.ts` 구현 — 위 3 라우트를 projects/capabilityIndex/koreanLabels 합성으로 제공. 기존 `/api/changes/*`·`/api/docs/*`·`graph.ts`는 **무손상**(import만, 수정 0)
-- [ ] 4.3 GREEN: 라우트 등록 — 서버 진입점에 `/api/projects` 라우터 마운트(기존 라우터 등록부 비파괴 추가)
+- [x] 4.1 RED: `server/src/routes/projects.ts` 테스트 작성 — `/api/projects`(카드 그리드, 단일 change로 곧장 안 들어감), `/api/projects/:project/capabilities`(뼈대 capability + 한글명), `/api/projects/:project/capabilities/:cap/changes`(그 capability의 change만, change 0개면 빈 상태) 응답 검증
+- [x] 4.2 GREEN: `server/src/routes/projects.ts` 구현 — 위 3 라우트를 projects/capabilityIndex/koreanLabels 합성으로 제공. 기존 `/api/changes/*`·`/api/docs/*`·`graph.ts`는 **무손상**(import만, 수정 0)
+- [x] 4.3 GREEN: 라우트 등록 — 서버 진입점에 `/api/projects` 라우터 마운트(기존 라우터 등록부 비파괴 추가)
 
 ### Parallel Group 3 (백엔드 API 완료 후 - 서로 다른 컴포넌트 파일, 동시 실행 가능)
 

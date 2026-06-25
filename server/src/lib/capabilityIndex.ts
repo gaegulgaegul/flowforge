@@ -24,7 +24,7 @@ export function parseCharterCapabilities(specMd: string): Set<string> {
   const out = new Set<string>();
   for (const raw of specMd.split(/\r?\n/)) {
     const m = RE_CAP.exec(raw);
-    if (!m) continue;
+    if (!m || !m[1]) continue;
     const { key } = splitCapabilityLabel(m[1]);
     if (key) out.add(key);
   }
