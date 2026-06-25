@@ -2,8 +2,8 @@
 
 ### Sequential: 공유타입 기초 (선행 필수 — 백엔드·프론트 모두 의존)
 
-- [ ] 1.1 RED: `@flowforge/shared` 타입 테스트 — `ProjectCard`(name·displayName·hasCharter·changeCount·auditStatus), `CapabilityNode`(key·koreanLabel·changeKeys[]), `CapabilityChangeLink`(capabilityKey·changeKey·linked) 형태 단언
-- [ ] 1.2 GREEN: `@flowforge/shared`에 위 타입 추가 (영문 `key`와 한글 `displayName` 분리 — korean-display-labels "연결 키 영문 유지" 충족). 기존 타입 비파괴(옵셔널 추가만)
+- [x] 1.1 RED: `@flowforge/shared` 타입 테스트 — `ProjectCard`(name·displayName·hasCharter·changeCount·auditStatus), `CapabilityNode`(key·koreanLabel·changeKeys[]), `CapabilityChangeLink`(capabilityKey·changeKey·linked) 형태 단언
+- [x] 1.2 GREEN: `@flowforge/shared`에 위 타입 추가 (영문 `key`와 한글 `displayName` 분리 — korean-display-labels "연결 키 영문 유지" 충족). 기존 타입 비파괴(옵셔널 추가만)
 
 ### Parallel Group 1 (독립 - 서로 다른 파일, 동시 실행 가능)
 

@@ -36,3 +36,10 @@ export type {
   DocsDecision,
   DecisionTimeline,
 } from './docs-decision-types.js';
+
+export type {
+  AuditStatus,
+  ProjectCard,
+  CapabilityNode,
+  CapabilityChangeLink,
+} from './dashboard-types.js';
