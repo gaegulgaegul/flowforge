@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -103,12 +103,18 @@ export function App(): JSX.Element {
   const [capabilities, setCapabilities] = useState<CapabilitySummary[]>([]);
   const [dashCapability, setDashCapability] = useState<CapabilitySummary | null>(null);
   const [capChanges, setCapChanges] = useState<ChangeSummary[]>([]);
+  // 드릴다운 비동기 race 가드: 매 클릭마다 증가하는 토큰. 늦게 도착한 응답이
+  // 다른 항목을 클릭한 뒤의 상태를 덮어쓰지 않도록, 응답 처리 전 토큰 일치를 확인한다.
+  const dashReqToken = useRef(0);
 
   // 소스 모드에 맞는 목록 로드. source 전환 시 이전 모드 선택값을 초기화해 교차 오염 방지.
   useEffect(() => {
     if (source === "change") {
       setDocsProject("");
       setDocsProjects([]);
+      // dashboard views 단계에서 넘어올 때 stale selected로 5종 뷰가 한 번 더 로드되는 것을
+      // 막기 위해 먼저 비운다(docs 브랜치와 동일 패턴). 목록 도착 후 첫 항목으로 다시 채운다.
+      setSelected("");
       fetchChanges()
         .then((cs) => {
           setChanges(cs);
@@ -259,19 +265,27 @@ export function App(): JSX.Element {
   }, [selected, flowNodes]);
 
   // ── dashboard 드릴다운 핸들러 ──
+  // deps가 비어도 안전한 이유: set* 함수는 React가 보장하는 stable reference이고,
+  // 클로저로 캡처하는 가변값(dashProject 등)은 비동기 콜백에서 race 가드(dashReqToken)로
+  // 처리하므로 stale 클로저 위험이 없다.
   // 카드 클릭: charter 있으면 뼈대(skeleton)로, 없으면 change 목록으로 단축(1-a).
   const openProject = useCallback((card: ProjectCard) => {
+    const token = ++dashReqToken.current; // 이 클릭의 요청 토큰
     setDashProject(card);
     setDashCapability(null);
     setCapChanges([]);
     if (card.hasCharter) {
       fetchCapabilities(card.name)
         .then((caps) => {
+          if (token !== dashReqToken.current) return; // 더 최근 클릭이 있었으면 폐기
           setCapabilities(caps);
           setDashStage("skeleton");
           setStatus("");
         })
-        .catch((e: unknown) => setStatus(`capability 로드 실패: ${String(e)}`));
+        .catch((e: unknown) => {
+          if (token !== dashReqToken.current) return;
+          setStatus(`capability 로드 실패: ${String(e)}`);
+        });
     } else {
       // 뼈대 없는 프로젝트: 전체 change를 "미연결" 묶음처럼 보여줄 수 있으나, 예광탄은
       // capability 경유 경로를 grounding하므로 빈 capability 목록 + 안내로 단축한다.
@@ -284,14 +298,19 @@ export function App(): JSX.Element {
   // capability 클릭: 그 capability의 change 목록(capChanges)으로.
   const openCapability = useCallback((cap: CapabilitySummary) => {
     if (!dashProject) return;
+    const token = ++dashReqToken.current;
     setDashCapability(cap);
     fetchCapabilityChanges(dashProject.name, cap.key)
       .then((cs) => {
+        if (token !== dashReqToken.current) return; // race 가드
         setCapChanges(cs);
         setDashStage("capChanges");
         setStatus("");
       })
-      .catch((e: unknown) => setStatus(`change 목록 로드 실패: ${String(e)}`));
+      .catch((e: unknown) => {
+        if (token !== dashReqToken.current) return;
+        setStatus(`change 목록 로드 실패: ${String(e)}`);
+      });
   }, [dashProject]);
 
   // change 클릭: 기존 5종 뷰 재사용 — selected를 그 change로 세팅하면 기존 로딩 effect가 동작.

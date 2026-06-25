@@ -1,7 +1,7 @@
 /**
  * graph 라우트 — change 목록 / 그래프·IA·와이어·PRD·기능명세서(파서) / 레이아웃 오버레이 저장
  *
- * GET  /api/projects               change id 목록
+ * GET  /api/changes                change id 목록(과거 /api/projects — 대시보드가 그 경로를 점유해 이동)
  * GET  /api/changes/:id/graph      spec.md 파싱 → SpecGraph(shared 계약) + 레이아웃 머지
  * GET  /api/changes/:id/ia         IA 트리
  * GET  /api/changes/:id/wireframe  와이어프레임
