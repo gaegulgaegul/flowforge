@@ -7,6 +7,7 @@ import type {
   Prd,
   SpecTreeNode,
   DecisionTimeline,
+  ProjectCard,
 } from "@flowforge/shared";
 
 export interface GraphResponse {
@@ -39,6 +40,51 @@ export async function fetchChanges(): Promise<string[]> {
   const res = await fetch("/api/changes");
   if (!res.ok) throw new Error(`changes ${res.status}`);
   const data = (await res.json()) as { changes: string[] };
+  return data.changes;
+}
+
+// ─── 계층형 대시보드 (hierarchical-project-dashboard) ───
+// 표시명은 한글(displayName/koreanLabel), 연결·라우팅 키는 영문(name/key) — 분리 유지.
+
+/** 한 capability 노드(뼈대 그래프용): 영문 key + 한글 koreanLabel + 연결된 change 키 목록. */
+export interface CapabilitySummary {
+  key: string;
+  koreanLabel: string;
+  changeKeys: string[];
+}
+
+/** capability에 속한 change 한 줄: 영문 key + 한글 displayName(proposal 제목 폴백=key). */
+export interface ChangeSummary {
+  key: string;
+  displayName: string;
+}
+
+/** 홈 랜딩: change 있는 모든 프로젝트 카드(charter 유무 무관). */
+export async function fetchProjects(): Promise<ProjectCard[]> {
+  const res = await fetch("/api/projects");
+  if (!res.ok) throw new Error(`projects ${res.status}`);
+  const data = (await res.json()) as { projects: ProjectCard[] };
+  return data.projects;
+}
+
+/** 한 프로젝트의 charter 뼈대 capability 목록(한글명 + 연결 change). */
+export async function fetchCapabilities(project: string): Promise<CapabilitySummary[]> {
+  const res = await fetch(`/api/projects/${encodeURIComponent(project)}/capabilities`);
+  if (!res.ok) throw new Error(`capabilities ${res.status}`);
+  const data = (await res.json()) as { capabilities: CapabilitySummary[] };
+  return data.capabilities;
+}
+
+/** 한 capability에 연결된 change 목록(미연결이면 빈 배열, 404 아님). */
+export async function fetchCapabilityChanges(
+  project: string,
+  capability: string,
+): Promise<ChangeSummary[]> {
+  const res = await fetch(
+    `/api/projects/${encodeURIComponent(project)}/capabilities/${encodeURIComponent(capability)}/changes`,
+  );
+  if (!res.ok) throw new Error(`capability-changes ${res.status}`);
+  const data = (await res.json()) as { changes: ChangeSummary[] };
   return data.changes;
 }
 

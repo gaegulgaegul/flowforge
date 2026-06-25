@@ -25,9 +25,9 @@
 
 ### Parallel Group 3 (백엔드 API 완료 후 - 서로 다른 컴포넌트 파일, 동시 실행 가능)
 
-- [ ] 5.1 GREEN: `web/src/ProjectGrid.tsx` 작성 [parallel] [frontend] — 카드 그리드 렌더(charter 유무·change 개수·audit 배지·한글 표시명), **charter 있는 카드 클릭→뼈대 그래프 이동 / charter 없는 카드 클릭→change 목록 이동**(spec project-card-grid THEN 액션 직접 구현)
-- [ ] 5.2 GREEN: `web/src/CapabilityChangeList.tsx` 작성 [parallel] [frontend] — capability별 change 목록 렌더(한글 제목), **change 클릭→기존 5종 뷰(`prd|spec|flow|ia|wire` 탭) 이동**, change 0개 capability는 빈 상태 표시(spec capability-change-navigation THEN 액션 직접 구현)
-- [ ] 5.3 GREEN: `web/src/api.ts`에 fetch 함수 추가 [parallel] [frontend] — `/api/projects`, `/api/projects/:p/capabilities`, `/api/projects/:p/capabilities/:c/changes` 호출 함수
+- [x] 5.1 GREEN: `web/src/ProjectGrid.tsx` 작성 [parallel] [frontend] — 카드 그리드 렌더(charter 유무·change 개수·audit 배지·한글 표시명), **charter 있는 카드 클릭→뼈대 그래프 이동 / charter 없는 카드 클릭→change 목록 이동**(spec project-card-grid THEN 액션 직접 구현)
+- [x] 5.2 GREEN: `web/src/CapabilityChangeList.tsx` 작성 [parallel] [frontend] — capability별 change 목록 렌더(한글 제목), **change 클릭→기존 5종 뷰(`prd|spec|flow|ia|wire` 탭) 이동**, change 0개 capability는 빈 상태 표시(spec capability-change-navigation THEN 액션 직접 구현)
+- [x] 5.3 GREEN: `web/src/api.ts`에 fetch 함수 추가 [parallel] [frontend] — `/api/projects`, `/api/projects/:p/capabilities`, `/api/projects/:p/capabilities/:c/changes` 호출 함수
 
 ### Sequential: 네비게이션 셸 통합 (위 컴포넌트들 합류 — App.tsx 단일 파일)
 
