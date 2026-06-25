@@ -16,6 +16,10 @@ services:
       # 스캔은 <DOCS_ROOT>/<project>/docs/{user-flow.md|PRD.md} 1단계만, 읽는 파일은
       # 하드코딩(user-flow.md/PRD.md/wireframe.html)뿐 → 홈 노출은 RO(쓰기 불가)로 제한.
       DOCS_ROOT: /data/docs-root
+      # 계층 대시보드(hierarchical-project-dashboard) 카드그리드 스캔 루트.
+      # docs-root와 동일한 호스트 홈 RO 마운트를 재사용 — <project>/openspec/changes/*/specs/
+      # 가진 프로젝트를 카드로 노출(읽기전용 스캔이라 RW 불필요).
+      PROJECTS_ROOT: /data/docs-root
     volumes:
       # 시각화 대상 = wowa-app openspec(change 6개, 데모 풍부). spec.md=읽기, viz/graph-overlay.json=쓰기라 RW.
       # wowa .gitignore에 openspec/**/viz/ 추가해 시각화 산출물 git 오염 차단함.
