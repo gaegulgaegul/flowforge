@@ -31,9 +31,9 @@
 
 ### Sequential: 네비게이션 셸 통합 (위 컴포넌트들 합류 — App.tsx 단일 파일)
 
-- [ ] 6.1 GREEN: `web/src/App.tsx` 라우팅 셸 — 4단(grid→skeleton 뼈대그래프→capability-changes→기존 5종뷰) 상태머신. **capability 노드 클릭→그 capability의 change 목록 이동**(뼈대 그래프 측 핸들러 배선), charter 없는 프로젝트는 grid→capability-changes 단축(뼈대 스킵)
-- [ ] 6.2 GREEN: 브레드크럼 + 뒤로가기 — **브레드크럼 상위 항목 클릭→해당 상위 단계 이동**, **뒤로가기→히스토리 직전 단계 복귀**(spec capability-change-navigation THEN 액션 직접 구현). 기존 단일-change 직접 진입(URL) 하위호환 유지
-- [ ] 6.3 GREEN: 표시/라우팅 분리 적용 — 모든 카드·목록·뷰에서 표시는 `displayName`(한글), 라우팅·연결은 `key`(영문) 사용(korean-display-labels THEN "연결 키 영문 유지" 충족)
+- [x] 6.1 GREEN: `web/src/App.tsx` 라우팅 셸 — 4단(grid→skeleton 뼈대그래프→capability-changes→기존 5종뷰) 상태머신. **capability 노드 클릭→그 capability의 change 목록 이동**(뼈대 그래프 측 핸들러 배선), charter 없는 프로젝트는 grid→capability-changes 단축(뼈대 스킵)
+- [x] 6.2 GREEN: 브레드크럼 + 뒤로가기 — **브레드크럼 상위 항목 클릭→해당 상위 단계 이동**, **뒤로가기→히스토리 직전 단계 복귀**(spec capability-change-navigation THEN 액션 직접 구현). 기존 단일-change 직접 진입(URL) 하위호환 유지
+- [x] 6.3 GREEN: 표시/라우팅 분리 적용 — 모든 카드·목록·뷰에서 표시는 `displayName`(한글), 라우팅·연결은 `key`(영문) 사용(korean-display-labels THEN "연결 키 영문 유지" 충족)
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 

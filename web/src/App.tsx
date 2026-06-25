@@ -30,7 +30,15 @@ import {
   fetchDocsGraph,
   fetchDocsWireframe,
   fetchDocsPrd,
+  fetchProjects,
+  fetchCapabilities,
+  fetchCapabilityChanges,
+  type CapabilitySummary,
+  type ChangeSummary,
 } from "./api.js";
+import type { ProjectCard } from "@flowforge/shared";
+import { ProjectGrid } from "./ProjectGrid.js";
+import { CapabilityChangeList } from "./CapabilityChangeList.js";
 import { toFlowNodes, toFlowEdges, danglingCount, autoLayout } from "./graphAdapter.js";
 import { toIAFlow } from "./iaAdapter.js";
 import { toSpecTreeFlow } from "./specTreeAdapter.js";
@@ -46,8 +54,12 @@ const nodeTypes: NodeTypes = { spec: SpecNode, ia: IANode, specTree: SpecTreeNod
 
 // manyfast 파이프라인 순서: PRD → 기능명세서 → 유저플로우 → IA → 와이어프레임
 type Tab = "prd" | "spec" | "flow" | "ia" | "wire";
-// 소스 모드: change(기존 빌더 산출물) | docs(charter 상주 문서)
-type Source = "change" | "docs";
+// 소스 모드: change(기존 빌더 산출물) | docs(charter 상주 문서) | dashboard(계층 대시보드)
+type Source = "change" | "docs" | "dashboard";
+// dashboard 모드 4단 드릴다운(hierarchical-project-dashboard):
+//   grid(카드) → skeleton(뼈대 capability) → capChanges(capability별 change) → views(기존 5종 뷰)
+// charter 없는 프로젝트는 skeleton을 건너뛰어 grid→capChanges로 단축한다.
+type DashStage = "grid" | "skeleton" | "capChanges" | "views";
 
 export function App(): JSX.Element {
   const [source, setSource] = useState<Source>("change");
@@ -84,6 +96,14 @@ export function App(): JSX.Element {
   const [specNodes, setSpecNodes] = useState<Node[]>([]);
   const [specEdges, setSpecEdges] = useState<Edge[]>([]);
 
+  // ── 계층 대시보드 상태(dashboard 모드) ──
+  const [dashStage, setDashStage] = useState<DashStage>("grid");
+  const [projects, setProjects] = useState<ProjectCard[]>([]);
+  const [dashProject, setDashProject] = useState<ProjectCard | null>(null);
+  const [capabilities, setCapabilities] = useState<CapabilitySummary[]>([]);
+  const [dashCapability, setDashCapability] = useState<CapabilitySummary | null>(null);
+  const [capChanges, setCapChanges] = useState<ChangeSummary[]>([]);
+
   // 소스 모드에 맞는 목록 로드. source 전환 시 이전 모드 선택값을 초기화해 교차 오염 방지.
   useEffect(() => {
     if (source === "change") {
@@ -95,7 +115,7 @@ export function App(): JSX.Element {
           setSelected(cs.length > 0 ? cs[0]! : "");
         })
         .catch((e: unknown) => setStatus(`목록 로드 실패: ${String(e)}`));
-    } else {
+    } else if (source === "docs") {
       setSelected("");
       setChanges([]);
       fetchDocsProjects()
@@ -104,12 +124,23 @@ export function App(): JSX.Element {
           setDocsProject(ps.length > 0 ? ps[0]! : "");
         })
         .catch((e: unknown) => setStatus(`상주 목록 로드 실패: ${String(e)}`));
+    } else {
+      // dashboard 모드: 카드 그리드(첫 단계)부터. 드릴다운 상태를 초기화한다.
+      setDashStage("grid");
+      setDashProject(null);
+      setDashCapability(null);
+      setCapabilities([]);
+      setCapChanges([]);
+      fetchProjects()
+        .then((ps) => setProjects(ps))
+        .catch((e: unknown) => setStatus(`프로젝트 로드 실패: ${String(e)}`));
     }
   }, [source]);
 
-  // change 선택 시 다섯 산출물 모두 로드 (change 모드 전용)
+  // change 선택 시 다섯 산출물 모두 로드 (change 모드 + dashboard views 단계 공용).
+  // dashboard에서 change 클릭 시 selected를 세팅하면 기존 5종 뷰가 그대로 재사용된다(D-C).
   useEffect(() => {
-    if (source !== "change") return;
+    if (source !== "change" && source !== "dashboard") return;
     if (!selected) return;
     // 이전 change 데이터를 먼저 비워 새 데이터 도착 전 stale 잔류(플래시)를 막는다
     setPrd(null);
@@ -227,6 +258,56 @@ export function App(): JSX.Element {
       .catch((e: unknown) => setStatus(`저장 실패: ${String(e)}`));
   }, [selected, flowNodes]);
 
+  // ── dashboard 드릴다운 핸들러 ──
+  // 카드 클릭: charter 있으면 뼈대(skeleton)로, 없으면 change 목록으로 단축(1-a).
+  const openProject = useCallback((card: ProjectCard) => {
+    setDashProject(card);
+    setDashCapability(null);
+    setCapChanges([]);
+    if (card.hasCharter) {
+      fetchCapabilities(card.name)
+        .then((caps) => {
+          setCapabilities(caps);
+          setDashStage("skeleton");
+          setStatus("");
+        })
+        .catch((e: unknown) => setStatus(`capability 로드 실패: ${String(e)}`));
+    } else {
+      // 뼈대 없는 프로젝트: 전체 change를 "미연결" 묶음처럼 보여줄 수 있으나, 예광탄은
+      // capability 경유 경로를 grounding하므로 빈 capability 목록 + 안내로 단축한다.
+      setCapabilities([]);
+      setDashStage("skeleton");
+      setStatus("이 프로젝트는 charter 뼈대가 없습니다(change는 capability 경유로만 표시).");
+    }
+  }, []);
+
+  // capability 클릭: 그 capability의 change 목록(capChanges)으로.
+  const openCapability = useCallback((cap: CapabilitySummary) => {
+    if (!dashProject) return;
+    setDashCapability(cap);
+    fetchCapabilityChanges(dashProject.name, cap.key)
+      .then((cs) => {
+        setCapChanges(cs);
+        setDashStage("capChanges");
+        setStatus("");
+      })
+      .catch((e: unknown) => setStatus(`change 목록 로드 실패: ${String(e)}`));
+  }, [dashProject]);
+
+  // change 클릭: 기존 5종 뷰 재사용 — selected를 그 change로 세팅하면 기존 로딩 effect가 동작.
+  const openChangeViews = useCallback((change: ChangeSummary) => {
+    setSelected(change.key);
+    setTab("prd");
+    setDashStage("views");
+    setStatus("");
+  }, []);
+
+  // 브레드크럼/뒤로가기: 지정 단계로 복귀(상위 선택은 유지).
+  const goToStage = useCallback((stage: DashStage) => {
+    setDashStage(stage);
+    setStatus("");
+  }, []);
+
   const tabBtn = (key: Tab, label: string) => (
     <button onClick={() => setTab(key)} aria-pressed={tab === key} data-testid={`tab-${key}`}
       style={{ borderColor: tab === key ? "#b6e65a" : undefined }}>{label}</button>
@@ -252,24 +333,55 @@ export function App(): JSX.Element {
       <header style={{ padding: "10px 16px", borderBottom: "1px solid #2a2e38", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <strong>flowforge</strong>
         <div style={{ display: "flex", gap: 4 }} data-testid="source-toggle">
+          {sourceBtn("dashboard", "대시보드")}
           {sourceBtn("change", "변경(change)")}
           {sourceBtn("docs", "상주(docs)")}
         </div>
-        <div style={{ display: "flex", gap: 4 }}>
-          {tabBtn("prd", "PRD")}
-          {tabBtn("spec", "기능명세서")}
-          {tabBtn("flow", "유저플로우")}
-          {tabBtn("ia", "IA 트리")}
-          {tabBtn("wire", "와이어프레임")}
-        </div>
-        {source === "change" ? (
+        {/* 5종 탭: change/docs 모드는 항상, dashboard 모드는 views 단계에서만. */}
+        {(source !== "dashboard" || dashStage === "views") && (
+          <div style={{ display: "flex", gap: 4 }}>
+            {tabBtn("prd", "PRD")}
+            {tabBtn("spec", "기능명세서")}
+            {tabBtn("flow", "유저플로우")}
+            {tabBtn("ia", "IA 트리")}
+            {tabBtn("wire", "와이어프레임")}
+          </div>
+        )}
+        {source === "change" && (
           <select value={selected} onChange={(e) => setSelected(e.target.value)} data-testid="change-select">
             {changes.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-        ) : (
+        )}
+        {source === "docs" && (
           <select value={docsProject} onChange={(e) => setDocsProject(e.target.value)} data-testid="docs-select">
             {docsProjects.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
+        )}
+        {/* dashboard 모드 브레드크럼: ⌂ 처음으로 > 프로젝트 > capability > change 뷰 */}
+        {source === "dashboard" && (
+          <nav className="dash-breadcrumb" data-testid="dash-breadcrumb" aria-label="브레드크럼">
+            <button type="button" className="dash-crumb" onClick={() => goToStage("grid")} data-testid="crumb-home">⌂ 프로젝트</button>
+            {dashProject && (
+              <>
+                <span className="dash-sep" aria-hidden="true">›</span>
+                <button type="button" className="dash-crumb" onClick={() => goToStage("skeleton")} disabled={!dashProject.hasCharter}>
+                  {dashProject.displayName}
+                </button>
+              </>
+            )}
+            {dashCapability && (
+              <>
+                <span className="dash-sep" aria-hidden="true">›</span>
+                <button type="button" className="dash-crumb" onClick={() => goToStage("capChanges")}>{dashCapability.koreanLabel}</button>
+              </>
+            )}
+            {dashStage === "views" && selected && (
+              <>
+                <span className="dash-sep" aria-hidden="true">›</span>
+                <span className="dash-crumb dash-crumb--current">{selected}</span>
+              </>
+            )}
+          </nav>
         )}
         {tab === "flow" && (
           <>
@@ -290,7 +402,64 @@ export function App(): JSX.Element {
         <span style={{ color: "#9aa0ad", fontSize: 13 }}>{status}</span>
       </header>
       <div style={{ flex: 1, minHeight: 0 }}>
-        {docsNoProjects ? (
+        {source === "dashboard" ? (
+          // ── 계층 대시보드 본문(4단). views 단계는 아래 기존 5종 뷰로 폴스루. ──
+          dashStage === "grid" ? (
+            <div className="dash-body">
+              <ProjectGrid projects={projects} onOpenProject={openProject} />
+            </div>
+          ) : dashStage === "skeleton" ? (
+            <div className="dash-body">
+              <h3 className="dash-h">{dashProject?.displayName} — charter 뼈대(capability)</h3>
+              {capabilities.length === 0 ? (
+                <p className="dash-empty">표시할 capability가 없습니다(charter 뼈대 없음).</p>
+              ) : (
+                <ul className="dash-cap-list">
+                  {capabilities.map((cap) => (
+                    <li key={cap.key}>
+                      <button type="button" className="dash-cap" onClick={() => openCapability(cap)}>
+                        <span className="dash-cap-label">{cap.koreanLabel}</span>
+                        <span className="dash-cap-count">change {cap.changeKeys.length}개</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : dashStage === "capChanges" ? (
+            <div className="dash-body">
+              <CapabilityChangeList
+                capabilityLabel={dashCapability?.koreanLabel ?? ""}
+                changes={capChanges}
+                onOpenChange={openChangeViews}
+              />
+            </div>
+          ) : (
+            // views: 기존 5종 뷰 재사용(아래 공통 블록과 동일). dashStage==="views"
+            <>
+              {tab === "prd" && (prd ? <PrdPanel prd={prd} /> : <div className="prd-loading">PRD 불러오는 중…</div>)}
+              {tab === "spec" && (
+                <ReactFlow key="d-spec" nodes={specNodes} edges={specEdges} nodeTypes={nodeTypes} nodesDraggable={false} fitView>
+                  <Background />
+                  <Controls />
+                </ReactFlow>
+              )}
+              {tab === "flow" && (
+                <ReactFlow key="d-flow" nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} onNodesChange={onFlowNodesChange} fitView>
+                  <Background />
+                  <Controls />
+                </ReactFlow>
+              )}
+              {tab === "ia" && (
+                <ReactFlow key="d-ia" nodes={iaNodes} edges={iaEdges} nodeTypes={nodeTypes} nodesDraggable={false} fitView>
+                  <Background />
+                  <Controls />
+                </ReactFlow>
+              )}
+              {tab === "wire" && wireframe && <WireframePanel wireframe={wireframe} />}
+            </>
+          )
+        ) : docsNoProjects ? (
           docsEmptyBody
         ) : (
           <>
