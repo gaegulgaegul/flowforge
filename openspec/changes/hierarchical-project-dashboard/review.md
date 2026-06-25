@@ -1,5 +1,18 @@
 # 배포 전 최종 검토 — hierarchical-project-dashboard
 
+## [2026-06-25 재검토 #2] verify PASS 반영 + race 가드 무결성 검증 → **배포 가능**
+검토 입력: verify.json **PASS**(server 108/108, web Playwright 헤드리스 20/20, SKIPPED 0). 지난 검토(조건부 verify 기준) 이후 추가된 race 가드 수정 코드(커밋 65899ea)를 신규 검토.
+
+**최종 verdict: 배포 가능** (반드시 수정 0건). code-reviewer 에이전트 재검토 + 3페르소나 적대적 패스.
+- ✅ **HIGH-1 해결 검증**: race 가드(`dashReqToken` useRef) 무결 — `.then`/`.catch` 양쪽 토큰 비교 완전(App.tsx:280·286·305·311), 동기 setState 순서(React18 배칭)·토큰 오버플로우(2.8억년)·언마운트 전부 검토, 허점 없음.
+- ✅ **HIGH-2 해결 검증**: `setSelected("")` → `if (!selected) return` 가드(App.tsx:150)에 걸려 stale 이중 로드 차단, 부작용 없음.
+- **수정하면 좋은(배포 블로커 아님)**: [MEDIUM] AbortController 미사용(dev Strict Mode setState 경고 가능, 프로덕션 단일 App 언마운트 안 됨—실해 없음) / [LOW] listProjectCards labelMap 미주입(displayName 영문 폴백, 한글 표시 필요 시 TODO) / [LOW] dashReqToken 교차핸들러 공유 의도 주석 1줄.
+- **리팩토링**: indexFor 매 요청 spec.md 재파싱(홈서버 규모 무해, request 캐시 여지).
+- **적대적 3페르소나**: 파괴자(race 가드 못 막는 시나리오 탐색 → 전부 올바르게 처리 확인) / 신입(dashReqToken 공유 의도 주석 보강 권장) / 보안(신규 코드 injection·노출 벡터 0, project/cap JSON 반사라 XSS 불가, resolveProjectDir 정규식+existsSync 이중가드).
+- **2+ 페르소나 중복**: 없음(지난 검토의 openProject race는 이번에 수정 확인됨).
+
+---
+
 ## [2026-06-25 후속] 리뷰 지적 수정 반영
 - ✅ **HIGH-1 해결**: openProject/openCapability에 race 가드(`dashReqToken` useRef) 추가 — 늦게 도착한 응답이 다른 항목 클릭 후 상태를 덮어쓰지 않음(`App.tsx`). useCallback `[]` 이유 주석도 추가.
 - ✅ **HIGH-2 해결**: source "change" 전환 시 `setSelected("")` 동기 추가 — stale selected 이중 로드 제거(`App.tsx`).
