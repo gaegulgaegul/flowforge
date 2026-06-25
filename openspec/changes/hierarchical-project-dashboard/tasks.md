@@ -9,13 +9,13 @@
 
 - [ ] 2.1 RED: `server/src/lib/projects.ts` 테스트 작성 [parallel] — 픽스처 디렉토리로 (a)change 있는 프로젝트 전부 반환 (b)charter 없는 프로젝트도 포함 (c)각 항목에 hasCharter·changeCount·auditStatus·displayName 채움 검증
 - [ ] 2.2 RED: `server/src/lib/capabilityIndex.ts` 테스트 작성 [parallel] — (a)`specs/<X>/` 디렉토리명 == `## capability: <X>` 글자단위 일치 시 연결 (b)유사하지만 다른 이름은 **비연결**(거짓연결 0) (c)미연결 change는 "미연결"로 분류(누락 아님). charter `## capability:` 읽기전용 정규식(RE_CAP 동치)
-- [ ] 2.3 RED: `server/src/lib/koreanLabels.ts` 테스트 작성 [parallel] — (a)capability 한글명 출처1(spec.md `키 — 한글` 병기)→출처2(키맵)→영문키 폴백 (b)change 한글명 출처3(proposal 제목)→영문키 폴백 (c)표시명 한글화가 영문 연결 키 불변
+- [x] 2.3 RED: `server/src/lib/koreanLabels.ts` 테스트 작성 [parallel] — (a)capability 한글명 출처1(spec.md `키 — 한글` 병기)→출처2(키맵)→영문키 폴백 (b)change 한글명 출처3(proposal 제목)→영문키 폴백 (c)표시명 한글화가 영문 연결 키 불변
 
 ### Parallel Group 2 (Group 1 RED 후 - 서로 다른 파일, 동시 실행 가능)
 
 - [ ] 3.1 GREEN: `server/src/lib/projects.ts` 구현 [parallel] — 홈서버 디렉토리 스캔(change 유무·docs/ 유무·change 개수·정적 audit 집계), `changes.ts`/`docs.ts` 패턴 차용. 실패 시 추측 수정 금지·근본원인부터
 - [ ] 3.2 GREEN: `server/src/lib/capabilityIndex.ts` 구현 [parallel] — `## capability:` 읽기전용 정규식 포팅 + `specs/` 디렉토리명 set 멤버십 역방향 인덱스(`capabilityKey→change[]`) + 미연결 분류. 실패 시 근본원인부터
-- [ ] 3.3 GREEN: `server/src/lib/koreanLabels.ts` 구현 [parallel] — capability(출처1 spec.md 병기 파싱→출처2 키맵 폴백→영문키), change(출처3 proposal 제목→영문키) 해석 순수 함수. 실패 시 근본원인부터
+- [x] 3.3 GREEN: `server/src/lib/koreanLabels.ts` 구현 [parallel] — capability(출처1 spec.md 병기 파싱→출처2 키맵 폴백→영문키), change(출처3 proposal 제목→영문키) 해석 순수 함수. 실패 시 근본원인부터
 
 ### Sequential: 라우트 통합 (Group 2 산출물 의존 — 한 파일에 합류)
 
