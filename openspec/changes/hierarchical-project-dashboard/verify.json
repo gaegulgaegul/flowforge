@@ -1,0 +1,553 @@
+{
+  "change": "hierarchical-project-dashboard",
+  "verifiedAt": "2026-06-25T06:30:00+09:00",
+  "finalJudgment": "조건부",
+  "counts": {
+    "pass": 10,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 10
+  },
+  "archiveGate": {
+    "open": false,
+    "reason": "검증 안 함 0건 / SKIPPED 10건"
+  },
+  "requirements": [
+    {
+      "title": "capability와 change를 specs 디렉토리명 불변ID로 연결한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "capability 키/디렉토리명은 파일시스템 디렉토리명이라 null 입력 경로 없음(읽기전용 스캔)",
+          "잘못된타입": "입력이 디렉토리명 문자열로 고정 — 타입 변형 불가",
+          "동시성": "읽기전용 1회 스캔, 공유 가변상태 없음",
+          "대량": "홈서버 change 수십 단위 — 대량 부하 시나리오 비현실적(예광탄 범위 밖)"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "디렉토리명이 capability 키와 일치하면 연결",
+          "layer": "server",
+          "means": "capabilityIndex.test (a) + 실런타임 관통(project-card-grid→my-change 연결)",
+          "basis": "server/package.json jest + 실서버 curl",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "buildCapabilityIndex: specs/<X> == ## capability: <X> set 멤버십 연결. 실런타임: project-card-grid → ['my-change'] 연결 확인",
+            "caption": "글자단위 일치 연결"
+          }
+        },
+        {
+          "scenario": "유사하지만 다른 이름은 연결하지 않는다",
+          "layer": "server",
+          "means": "capabilityIndex.test (b) 거짓연결 0 (project_card_grid·project-card-grids 비연결)",
+          "basis": "jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "유사이름(underscore/복수형) 전부 linked=false. 유사도 매칭 없음",
+            "caption": "거짓연결 0"
+          }
+        },
+        {
+          "scenario": "미연결 항목을 명시 표시한다",
+          "layer": "server",
+          "means": "capabilityIndex.test (c) unlinked 분류 + 실런타임(other-cap 빈배열)",
+          "basis": "jest + curl",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "미연결 change는 unlinked[]로 표면화, silent drop 0. 실런타임 other-cap → changes:[] 빈상태",
+            "caption": "미연결 명시"
+          }
+        },
+        {
+          "scenario": "capability 클릭하면 change 목록으로 이동",
+          "layer": "web",
+          "means": "App.tsx openCapability→fetchCapabilityChanges→dashStage capChanges (static 확인); 백엔드 /api/.../changes 실런타임 PASS [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep App.tsx:285 + curl",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "openCapability 핸들러 존재(App.tsx:285), dash-cap onClick 배선(App.tsx:420). 백엔드 응답 실증",
+            "caption": "코드 존재+백엔드 실증(실픽셀 SKIP)"
+          }
+        },
+        {
+          "scenario": "change 없는 capability는 빈 상태를 표시",
+          "layer": "web",
+          "means": "CapabilityChangeList ccl-empty 분기(static) + 실런타임 other-cap 0개 [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep CapabilityChangeList.tsx + curl",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "changes.length===0 → '연결된 change 없음' 빈상태(에러 아님). 실런타임 other-cap 0개 확인",
+            "caption": "빈 상태 코드+데이터 실증"
+          }
+        }
+      ]
+    },
+    {
+      "title": "capability 노드 클릭 시 속한 change 목록을 표시한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "capability 키는 라우트 파라미터 문자열 — null 불가(경로조작 가드)",
+          "잘못된타입": "라우트 파라미터는 문자열 고정",
+          "동시성": "읽기전용 GET",
+          "대량": "한 capability당 change 수 한 자릿수 — 대량 무의미",
+          "특수문자": "capability 키는 영문 슬러그 정규식 제약(특수문자 입력 경로 없음)"
+        }
+      },
+      "scenarios": []
+    },
+    {
+      "title": "change 클릭 시 기존 5종 뷰로 진입한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "change 클릭은 목록의 기존 항목 — null 진입 경로 없음",
+          "빈값": "빈 change 키로 클릭 불가(목록에서만 진입)",
+          "잘못된타입": "change 키는 문자열 고정",
+          "경계값": "경계값 개념 없음(단일 선택)",
+          "동시성": "단일 클릭 상태전환",
+          "대량": "5종 뷰는 단일 change 표시",
+          "특수문자": "change 키 영문 슬러그"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "change 클릭하면 5종 뷰 탭으로 이동",
+          "layer": "web",
+          "means": "App.tsx openChangeViews: setSelected+setTab+dashStage views (static) [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep App.tsx:298",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "openChangeViews가 selected 세팅→기존 5종 뷰 useEffect 발동(source dashboard 포함하도록 가드 확장). dashStage='views'",
+            "caption": "5종뷰 진입 코드"
+          }
+        },
+        {
+          "scenario": "5종 뷰는 기존 change 라우트를 재사용",
+          "layer": "server",
+          "means": "projects.ts 빌더 import 0 grep + graph.ts /api/changes/:id/* 무손상 + 108테스트(기존 graph 포함)",
+          "basis": "grep + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "projects.ts는 Builder/specParser import 0. graph.ts의 /api/changes/:id/{graph,ia,wireframe,prd,spec-tree} 무손상. 신규 빌더 0",
+            "caption": "기존 라우트 재사용"
+          }
+        }
+      ]
+    },
+    {
+      "title": "계층 네비게이션에 브레드크럼과 뒤로가기를 제공한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "브레드크럼은 현재 네비 상태 파생 — null 입력 없음",
+          "빈값": "단계 enum은 항상 유효값",
+          "잘못된타입": "DashStage 유니온 타입 고정",
+          "에러경로": "순수 클라이언트 상태전환, 네트워크 없음",
+          "동시성": "단일 사용자 클릭",
+          "대량": "최대 4단 고정 깊이",
+          "특수문자": "표시명만 사용, 입력 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "깊은 단계에서 브레드크럼으로 상위 이동",
+          "layer": "web",
+          "means": "App.tsx goToStage + dash-breadcrumb 크럼 onClick(static, 4단계) [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep App.tsx:306,362-381",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "브레드크럼 nav: ⌂프로젝트/프로젝트명/capability명/현재change 각 크럼 goToStage(stage) 배선. charter없으면 skeleton 크럼 disabled",
+            "caption": "브레드크럼 상위이동 코드"
+          }
+        },
+        {
+          "scenario": "뒤로가기로 직전 단계 복귀",
+          "layer": "web",
+          "means": "goToStage(stage)로 상위 단계 직접 복귀(상위 선택 유지) [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep App.tsx:306",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "goToStage가 dashStage를 지정 단계로 복귀, dashProject/dashCapability 선택 유지. 브레드크럼이 직전 단계 크럼 제공",
+            "caption": "단계 복귀 코드"
+          }
+        }
+      ]
+    },
+    {
+      "title": "화면 표시명은 한글로 하되 연결 키는 영문을 유지한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "라벨 해석은 키 문자열 입력 — null은 splitCapabilityLabel trim 처리",
+          "잘못된타입": "입력 문자열 고정",
+          "경계값": "경계값 개념 없음",
+          "에러경로": "순수 함수, IO 없음",
+          "동시성": "순수 함수",
+          "대량": "라벨 맵 수십 단위"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "표시명 한글화가 연결 키에 영향 없음",
+          "layer": "server",
+          "means": "koreanLabels.test (키 불변 단언) + dashboard-types.test (key/displayName 분리)",
+          "basis": "jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "capabilityLabel/changeLabel은 표시명만 반환, key는 그대로. 슬러그 내부 하이픈 오분리 방지 테스트 PASS. 골든테스트 108개 무영향",
+            "caption": "키 불변"
+          }
+        }
+      ]
+    },
+    {
+      "title": "capability 한글명은 출처 우선순위로 해석한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "spec.md 본문 문자열 입력 — null 없음(빈문자열 처리)",
+          "잘못된타입": "입력 고정",
+          "경계값": "우선순위 3단계 고정",
+          "에러경로": "순수 함수",
+          "동시성": "순수 함수",
+          "대량": "capability 수십 단위"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "spec.md 한글 병기가 있으면 출처1 사용",
+          "layer": "server",
+          "means": "koreanLabels.test 출처1 + 실런타임(project-card-grid → '프로젝트 카드 그리드')",
+          "basis": "jest + curl",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "parseCapabilityLabels가 '키 — 한글' 병기 파싱. 실런타임 병기 한글 표시 확인",
+            "caption": "출처1 병기"
+          }
+        },
+        {
+          "scenario": "한글 병기가 없으면 출처2 키맵으로 폴백",
+          "layer": "server",
+          "means": "koreanLabels.test 출처2 폴백 + 영문키 최종폴백",
+          "basis": "jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "병기 없으면 키맵, 키맵에도 없으면 영문키 그대로(빈표시 금지). 실런타임 prd-view → 'prd-view' 폴백 확인",
+            "caption": "출처2/영문키 폴백"
+          }
+        }
+      ]
+    },
+    {
+      "title": "change 한글명은 proposal 제목을 사용한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "proposal 제목 입력은 undefined 처리(changeLabel 폴백)",
+          "잘못된타입": "입력 고정",
+          "경계값": "단일 제목",
+          "동시성": "순수 함수",
+          "대량": "change당 제목 1개",
+          "특수문자": "제목은 한글/영문 그대로 표시"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "proposal 제목을 change 표시명으로 사용",
+          "layer": "server",
+          "means": "projects route test (displayName=proposal제목) + 실런타임('데모 체인지 한글제목')",
+          "basis": "jest + curl",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "readProposalTitle이 proposal.md 첫 H1 추출 → changeLabel. 실런타임 my-change → '데모 체인지 한글제목'",
+            "caption": "출처3 proposal 제목"
+          }
+        },
+        {
+          "scenario": "proposal 제목이 없으면 영문 change 키로 폴백",
+          "layer": "server",
+          "means": "koreanLabels.test (빈/undefined → 영문키)",
+          "basis": "jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "changeLabel(key, undefined|'') → key 반환(빈표시 금지)",
+            "caption": "영문키 폴백"
+          }
+        }
+      ]
+    },
+    {
+      "title": "홈 랜딩은 프로젝트 카드 그리드를 표시한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "스캔 루트는 환경변수/cwd — null 없음(existsSync 가드)",
+          "잘못된타입": "디렉토리 경로 고정",
+          "동시성": "읽기전용 스캔",
+          "대량": "홈서버 프로젝트 수십 단위",
+          "특수문자": "프로젝트명 디렉토리명 그대로"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "홈 진입 시 카드 그리드 렌더",
+          "layer": "web",
+          "means": "App.tsx dashboard 모드 dashStage 'grid' 초기값 + fetchProjects (static) + /api/projects 실런타임 [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep App.tsx:100,134 + curl",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "dashboard 모드 진입 시 dashStage='grid'→ProjectGrid 렌더, fetchProjects 호출. 단일 change 직행 안 함. 실런타임 6개 프로젝트 카드 반환",
+            "caption": "카드 그리드 렌더"
+          }
+        },
+        {
+          "scenario": "각 카드가 프로젝트 상태 배지를 표시",
+          "layer": "web",
+          "means": "ProjectGrid.tsx pg-badge(charter유무·change개수·audit) static + 실런타임 필드 [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep ProjectGrid.tsx:40-44 + curl",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "카드에 🦴뼈대유무·change N개·audit 배지 3종 렌더 코드. 실런타임 flowforge: charter=True·change=2·audit=unknown 필드 확인",
+            "caption": "카드 배지"
+          }
+        }
+      ]
+    },
+    {
+      "title": "change 있는 모든 프로젝트를 노출한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "스캔 입력 없음",
+          "잘못된타입": "디렉토리 고정",
+          "동시성": "읽기전용",
+          "대량": "홈서버 프로젝트 수십",
+          "특수문자": "디렉토리명 그대로"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "charter 없는 프로젝트도 카드로 노출",
+          "layer": "server",
+          "means": "projects.test (b) hasCharter=false 포함",
+          "basis": "jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "docs/ 없는 프로젝트도 change>=1이면 카드에 포함, hasCharter=false. 누락 0",
+            "caption": "charter 무관 노출"
+          }
+        },
+        {
+          "scenario": "charter 없는 프로젝트 카드 클릭은 change 목록으로 이동",
+          "layer": "web",
+          "means": "App.tsx openProject: !hasCharter 분기(static) [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep App.tsx:267",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "openProject가 card.hasCharter false면 뼈대 스킵 분기. 단 예광탄은 capability 경유라 단축 안내(완전 직행 목록은 후속 — design 명시)",
+            "caption": "분기 코드 존재"
+          }
+        },
+        {
+          "scenario": "charter 있는 프로젝트 카드 클릭은 뼈대 그래프로 이동",
+          "layer": "web",
+          "means": "App.tsx openProject: hasCharter→fetchCapabilities→skeleton (static) [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep App.tsx:267-273",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "hasCharter true면 fetchCapabilities 후 dashStage='skeleton'(뼈대 capability 목록). 실런타임 capabilities 반환 확인",
+            "caption": "뼈대 진입 코드"
+          }
+        }
+      ]
+    },
+    {
+      "title": "프로젝트 표시명은 한글로 보여준다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "표시명은 displayName 폴백(없으면 영문 name)",
+          "잘못된타입": "문자열 고정",
+          "경계값": "개념 없음",
+          "에러경로": "순수 표시",
+          "동시성": "렌더",
+          "대량": "카드 수십"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "영문 키 프로젝트의 한글 표시명 렌더",
+          "layer": "web",
+          "means": "ProjectGrid displayName 표시 + onOpenProject(card.name 영문키) (static) [실픽셀 렌더 미관찰=SKIPPED, 코드존재는 static 확인]",
+          "basis": "grep ProjectGrid.tsx",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "text": "카드 표면은 displayName(한글), 클릭 핸들러는 card.name(영문키)로 라우팅. 표시/라우팅 분리. 단 프로젝트 한글맵 미주입 시 영문 name 폴백(예광탄: 폴백 동작)",
+            "caption": "표시/라우팅 분리"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 108,
+      "passed": 108,
+      "failed": 0,
+      "basis": "server/package.json jest 스크립트 + 실런타임 node dist/index.js curl 관통",
+      "reason": "16스위트/108테스트 PASS + grid→capabilities→changes→404 세로 관통 실증(거짓연결 0·미연결 빈상태·한글병기·proposal제목 전부 확인)"
+    },
+    {
+      "layer": "web",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "playwright/puppeteer/gstack 미설치 — 헤드리스 브라우저 없음",
+      "reason": "빌드(vite)·타입체크 PASS + 모든 UI 시나리오 THEN 코드경로 static grep 존재확인(4a 게이트: 미구현 0건). 실픽셀 렌더 관찰만 브라우저 부재로 SKIPPED — 기능 미구현 아님, 환경 SKIP"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "web 프로젝트(android/ 디렉토리·gradle 없음)",
+      "reason": "적용 불가"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "비-macOS + iOS 프로젝트 아님",
+      "reason": "적용 불가(macOS 필요)"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260625-0630.html"
+}
