@@ -97,3 +97,41 @@ change의 `proposal.md`+`design.md`를 manyfast 고정 5섹션으로 파생해 �
 - assert:symbol ProjectGrid
 - 홈 랜딩에서 프로젝트들을 카드 그리드로 읽기전용 렌더한다(카드 클릭으로 드릴다운 진입).
 - 카드 표면은 displayName(한글)을 쓰고, 카드 클릭은 charter 있으면 뼈대(capability)로·없으면 빈 안내로 분기한다.
+
+## capability: docs-ingest
+
+charter가 만든 상주 `docs/`(user-flow.md·PRD.md·wireframe.html)를 flowforge의 두 번째 입력 모드로 읽는 읽기전용 백엔드. 화면·goto를 휴리스틱으로 추론하는 대신 charter가 명시한 정답지(ground truth)를 직역해 그래프·와이어프레임·decision 타임라인으로 변환한다. 기존 change 경로(specParser/golden)는 무손상(additive).
+
+### 기능: DOCS_ROOT 다중 docs 스캔 (`GET /api/docs/projects`)
+- assert:endpoint GET /api/docs/projects
+- assert:symbol listDocsProjects
+- `DOCS_ROOT`(기본 cwd) 아래 1단계에서 `docs/user-flow.md` 또는 `docs/PRD.md`를 가진 프로젝트만 `{projects:string[]}`로 반환한다. docs 없으면 빈 배열 200(에러 아님).
+- invariant: 스캔 깊이는 `<DOCS_ROOT>/<project>/docs/` 1단계로 한정하고 심링크는 추적하지 않는다.
+- metric: docs.test.ts 스캔(픽스처 2프로젝트+docs없는 1개) PASS + 라이브 `GET /api/docs/projects` 200 실증(projects: flowforge/ssoksok/wowa-app).
+
+### 기능: charter user-flow.md → 그래프 직역 (`GET /api/docs/:project/graph`)
+- assert:endpoint GET /api/docs/:project/graph
+- assert:symbol parseCharterUserFlow
+- assert:symbol buildDocsGraph
+- charter `user-flow.md` 라인문법(`## flow:`/`### 화면:`/`- step:`/`- goto:`)을 읽기전용 파서로 해석해 `@flowforge/shared` SpecGraph로 직역한다. 화면→`GraphNode{kind:"screen"}`, 명시 goto→`GraphEdge`, 미정의 대상 화면→`dangling:true`, `- goto:(METHOD /path)`→API 호출 엣지.
+- invariant: 휴리스틱 `isScreenSpec`/`flowTarget`을 쓰지 않는다(명시 데이터만). 기존 `specParser.ts`(OpenSpec WHEN/THEN)를 개조하지 않고 charter 산출물 파일을 쓰지 않는다(읽기전용).
+- invariant: docs project 식별자에 `..` 포함 또는 화이트리스트(`^[A-Za-z0-9_\-/]+$`) 위반 입력은 404로 거부해 DOCS_ROOT 밖 파일 접근을 차단한다(no-traversal).
+- metric: docsAdapter/charterUserFlowParser 단위 테스트(화면→노드·goto→엣지·미정의→dangling·엔드포인트 goto 분류) + traversal 거부 테스트 PASS.
+
+### 기능: charter user-flow.md → 와이어프레임 재렌더 (`GET /api/docs/:project/wireframe`)
+- assert:endpoint GET /api/docs/:project/wireframe
+- assert:symbol buildDocsWireframe
+- user-flow.md를 `@flowforge/shared` Wireframe로 변환한다(화면→WireScreen, step→WireBox). boxKind는 charter `charter_wireframe.py`와 동일 키워드 규칙. `docs/wireframe.html` 존재 시 "원본 보기" 링크용 메타(originalHtml)를 포함한다.
+- metric: wireframe boxKind 키워드 매핑 + 원본 HTML 메타 테스트 PASS.
+
+### 기능: charter PRD.md → decision 타임라인 (`GET /api/docs/:project/prd`)
+- assert:endpoint GET /api/docs/:project/prd
+- assert:symbol buildDocsDecisionTimeline
+- `docs/PRD.md`의 `## decision:` 이력을 시간순 타임라인으로 파싱한다(date/capability/why/what/success/status 보존). superseded 상태는 표시용으로 보존한다.
+- invariant: change 모드의 5섹션 매핑(buildPrd)을 docs 모드에 적용하지 않는다(별도 decision 타임라인).
+- metric: decision 배열 파싱 + superseded 상태 테스트 PASS.
+
+### 기능: SEED 마킹 보존 + change 경로 하위호환
+- charter docs의 SEED(사람검토 전=미검증) 마킹을 어댑터 출력에 `seed:true`로 보존하고, SEED 없는 데이터는 seed를 세팅하지 않는다(미검증 오표시 방지).
+- invariant: docs 기능 추가는 additive — 기존 change 경로(`/api/projects`·`/api/changes/:id/*`)·빌더·specParser·golden test의 응답을 변경하지 않는다(SHALL NOT change). golden test 전부 통과로 보증.
+- metric: SEED 플래그 세팅/미세팅 테스트 + golden test PASS(기존 change 라우트 불변), server 전체 81/81 PASS.

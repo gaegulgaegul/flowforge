@@ -35,9 +35,9 @@
 - [x] GREEN: 상주 모드 빈 상태("상주 문서를 찾을 수 없음") + 변경 모드 완전 복귀(동작 불변) 확인
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
-- [~] VERIFY: 5단계 게이트 — **코드 4단계 PASS / UI 1단계 미관찰**. (2026-06-24 검증)
+- [~] VERIFY: 5단계 게이트 — **코드 4단계 PASS / UI 1단계 미관찰(진입로 제거됨)**. (2026-06-24 검증, 2026-06-25 갱신)
   - ✅ 빌드: `npm run build` shared+server+web 전부 PASS (vite 204 modules, EXIT=0)
   - ✅ 타입체크: `npm run typecheck` 3 workspace 전부 PASS (EXIT=0)
   - ✅ 린트: `npm run lint` PASS (EXIT=0)
   - ✅ 테스트: `npm test` **82/82 passed** (11 suites — golden test 포함 = 기존 동작 무손상 확인)
-  - ⚠️ UI(브라우저 직접 관찰): **미관찰**. 이 환경엔 브라우저(gstack/chromium)가 없어 DOCS_ROOT 서버 띄워 소스 토글·flow/wire/prd·SEED 배지·dangling·원본 보기 링크를 픽셀로 직접 확인 불가. 코드 레벨(타입+빌드+테스트)까지만 검증됨. 실픽셀 관찰은 브라우저 있는 환경(또는 사용자 직접)에서 필요.
+  - ⚠️ UI(브라우저 직접 관찰): **미관찰 — 사유 변경**. 2026-06-25 후속 작업 'refactor(web): 소스 토글 제거'(커밋 f939a3d)에서 D5/D6의 source 토글·docs 드롭다운 진입로가 대시보드 단일화로 **의도적 제거**됨. 따라서 이 UI는 현재 화면에 존재하지 않아 실픽셀 관찰 대상이 아님(브라우저 부재가 아니라 진입로 제거). **단 docs 백엔드는 생존**: 라이브 `GET /api/docs/projects` → 200, `{projects:[flowforge,ssoksok,wowa-app]}` 실증. server.ts docsRouter 4라우트 + web api.ts fetchDocs* 무손상. 향후 대시보드 내 docs 뷰 재통합 시 프론트 진입로 복원 예정. **사용자 결정(2026-06-25): 백엔드만 살아있는 상태로 archive 승인.**

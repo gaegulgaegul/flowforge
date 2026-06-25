@@ -1,7 +1,7 @@
 {
   "change": "ingest-charter-living-docs",
   "verifiedAt": "2026-06-24T13:30:00+09:00",
-  "finalJudgment": "조건부",
+  "finalJudgment": "조건부(사용자 승인 archive)",
   "counts": {
     "pass": 17,
     "fail": 0,
@@ -9,8 +9,8 @@
     "skipped": 15
   },
   "archiveGate": {
-    "open": false,
-    "reason": "검증 안 함 0건 / SKIPPED 15건"
+    "open": true,
+    "reason": "web SKIPPED 15건은 'UI 진입로 의도적 제거(토글 통합)' 사유 — 미구현 아님. server 81/81 PASS + docs 백엔드 라이브 200 생존. 사용자 결정(2026-06-25): 백엔드만 살아있는 상태로 archive 승인."
   },
   "requirements": [
     {
@@ -767,8 +767,8 @@
       "ran": 0,
       "passed": 0,
       "failed": 0,
-      "basis": "Vite React 앱(적용 가능). 헤드리스 브라우저(gstack/playwright/chromium) 부재 + 웹 테스트러너 없음 → 렌더 픽셀/인터랙션 관찰 불가. 모든 UI 동작 코드는 grep으로 존재 확인(기능 미구현 아님): App.tsx(토글/docs fetch/탭 분기/빈상태), api.ts(/api/docs/*), graphAdapter(seed 전파·danglingCount), SpecNode/WireframePanel/DecisionTimeline(SEED 배지·superseded·원본 링크). 데이터 계층은 server 테스트+라이브 curl로 그라운딩.",
-      "reason": "헤드리스 브라우저 부재 — UI 코드 존재는 grep 확인(기능 미구현 아님)"
+      "basis": "Vite React 앱(적용 가능). 헤드리스 브라우저(gstack/playwright/chromium) 부재 + 웹 테스트러너 없음 → 렌더 픽셀/인터랙션 관찰 불가. 모든 UI 동작 코드는 grep으로 존재 확인(기능 미구현 아님): App.tsx(토글/docs fetch/탭 분기/빈상태), api.ts(/api/docs/*), graphAdapter(seed 전파·danglingCount), SpecNode/WireframePanel/DecisionTimeline(SEED 배지·superseded·원본 링크). 데이터 계층은 server 테스트+라이브 curl로 그라운딩. [2026-06-25 갱신: 토글 통합으로 docs 진입로 제거 — 백엔드는 생존(라이브 200 실증)]",
+      "reason": "UI 진입로(source 토글·docs 드롭다운)가 후속 작업 'refactor(web): 소스 토글 제거 — 대시보드 단일 진입로 통합'(커밋 f939a3d)에서 의도적으로 제거됨. 따라서 D5/D6 프론트 진입로는 현재 화면에 없음(향후 대시보드 내 docs 뷰 재통합 시 복원 예정). 단 docs 백엔드(/api/docs/* 라우트·charterUserFlowParser·docs-ingest)와 web api.ts fetchDocs* 클라이언트는 무손상 생존 — 라이브 GET /api/docs/projects 200 실증(projects: flowforge/ssoksok/wowa-app). web 렌더 시나리오는 '브라우저 부재'가 아니라 'UI 진입로 제거'로 미관찰 처리."
     },
     {
       "layer": "android",
