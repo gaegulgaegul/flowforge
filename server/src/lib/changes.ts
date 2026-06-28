@@ -86,3 +86,17 @@ export function writeOverlay(changeDir: string, overlay: LayoutOverlay): void {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(overlayPath(changeDir), JSON.stringify(overlay, null, 2), "utf-8");
 }
+
+/**
+ * 런타임 검증: LayoutOverlay = `{nodeId: {x:number, y:number}}` 형태인가.
+ * PUT layout 라우트(change·docs 양쪽)가 body를 쓰기 전에 통과시켜야 한다.
+ */
+export function isLayoutOverlay(v: unknown): v is LayoutOverlay {
+  if (typeof v !== "object" || v === null) return false;
+  for (const val of Object.values(v as Record<string, unknown>)) {
+    if (typeof val !== "object" || val === null) return false;
+    const p = val as Record<string, unknown>;
+    if (typeof p["x"] !== "number" || typeof p["y"] !== "number") return false;
+  }
+  return true;
+}

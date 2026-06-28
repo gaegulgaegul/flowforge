@@ -67,6 +67,16 @@ const PLANNING_FEATURES = [
   "#### 파일 선택",
 ].join("\n");
 
+// 기획 유저플로우(user-flow/main-v1.md) — Mermaid flowchart.
+const PLANNING_USERFLOW = [
+  "# 유저 플로우",
+  "```mermaid",
+  "flowchart TD",
+  '  A(["시작"]) --> B["로그인"]',
+  '  B -->|성공| C["홈"]',
+  "```",
+].join("\n");
+
 async function loadApp() {
   const mod = await import("../../index.js");
   return mod.app;
@@ -84,6 +94,9 @@ describe("docs API", () => {
     mkdirSync(planonlyDir, { recursive: true });
     writeFileSync(join(planonlyDir, "prd.md"), PLANNING_PRD);
     writeFileSync(join(planonlyDir, "features.md"), PLANNING_FEATURES);
+    const uflowDir = join(planonlyDir, "user-flow");
+    mkdirSync(uflowDir, { recursive: true });
+    writeFileSync(join(uflowDir, "main-v1.md"), PLANNING_USERFLOW);
     // docs 없는 프로젝트(스캔에서 제외돼야 함)
     mkdirSync(join(ROOT, "empty", "docs"), { recursive: true });
     writeFileSync(join(ROOT, "empty", "docs", "notes.md"), "x");
@@ -143,6 +156,52 @@ describe("docs API", () => {
     const app = await loadApp();
     const res = await request(app).get("/api/docs/..%2f..%2fetc/planning-features");
     expect(res.status).toBe(404);
+  });
+
+  it("GET /api/docs/:project/planning-user-flow — Mermaid → SpecGraph + layout + versions", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/planonly/planning-user-flow?flow=main-v1");
+    expect(res.status).toBe(200);
+    expect(res.body.project).toBe("planonly");
+    // 노드 3개(시작/로그인/홈), 엣지 2개
+    expect(res.body.graph.nodes).toHaveLength(3);
+    expect(res.body.graph.edges).toHaveLength(2);
+    expect(res.body.layout).toEqual({}); // 저장 전 빈 layout
+    expect(res.body.versions).toContain("main-v1"); // 버전 목록
+  });
+
+  it("PUT planning-user-flow/layout — 좌표 저장 후 재조회 반영", async () => {
+    const app = await loadApp();
+    // graph에서 첫 노드 id 얻기
+    const g = await request(app).get("/api/docs/planonly/planning-user-flow?flow=main-v1");
+    const nodeId = g.body.graph.nodes[0].id as string;
+    const put = await request(app)
+      .put("/api/docs/planonly/planning-user-flow/layout?flow=main-v1")
+      .send({ [nodeId]: { x: 123, y: 456 } });
+    expect(put.status).toBe(200);
+    // 재조회 시 저장 좌표 반영
+    const re = await request(app).get("/api/docs/planonly/planning-user-flow?flow=main-v1");
+    expect(re.body.layout[nodeId]).toEqual({ x: 123, y: 456 });
+  });
+
+  it("planning-user-flow — 파일 없으면 404", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/planonly/planning-user-flow?flow=nope-v9");
+    expect(res.status).toBe(404);
+  });
+
+  it("planning-user-flow — 경로 조작(..) 차단 404", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/..%2f..%2fetc/planning-user-flow?flow=main-v1");
+    expect(res.status).toBe(404);
+  });
+
+  it("planning-user-flow/layout — 잘못된 body 거부 400", async () => {
+    const app = await loadApp();
+    const res = await request(app)
+      .put("/api/docs/planonly/planning-user-flow/layout?flow=main-v1")
+      .send({ bad: "not-a-coordinate" });
+    expect(res.status).toBe(400);
   });
 
   it("GET /api/docs/:project/graph — SpecGraph + dangling/endpoint 엣지", async () => {

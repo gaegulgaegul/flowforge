@@ -18,7 +18,7 @@ import { buildIATree } from "../parser/iaBuilder.js";
 import { buildWireframe } from "../parser/wireframeBuilder.js";
 import { buildPrd } from "../parser/prdBuilder.js";
 import { buildSpecTree } from "../parser/specTreeBuilder.js";
-import { listChanges, resolveChangeDir, readOverlay, writeOverlay } from "../lib/changes.js";
+import { listChanges, resolveChangeDir, readOverlay, writeOverlay, isLayoutOverlay } from "../lib/changes.js";
 import { safe } from "../lib/safe-error.js";
 
 export const graphRouter = Router();
@@ -137,14 +137,3 @@ graphRouter.put(
     res.json({ ok: true, saved: Object.keys(body).length });
   }),
 );
-
-/** 런타임 검증: {nodeId: {x:number, y:number}} 형태 */
-function isLayoutOverlay(v: unknown): v is LayoutOverlay {
-  if (typeof v !== "object" || v === null) return false;
-  for (const val of Object.values(v as Record<string, unknown>)) {
-    if (typeof val !== "object" || val === null) return false;
-    const p = val as Record<string, unknown>;
-    if (typeof p["x"] !== "number" || typeof p["y"] !== "number") return false;
-  }
-  return true;
-}
