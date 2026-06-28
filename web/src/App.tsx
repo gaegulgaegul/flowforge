@@ -15,6 +15,7 @@ import type {
   Wireframe,
   Prd,
   SpecTreeNode as SpecTreeNodeT,
+  FeatureTreeNode as FeatureTreeNodeT,
 } from "@flowforge/shared";
 import {
   fetchGraph,
@@ -26,6 +27,7 @@ import {
   fetchCapabilities,
   fetchCapabilityChanges,
   fetchDocsPlanningPrd,
+  fetchDocsPlanningFeatures,
   type CapabilitySummary,
   type ChangeSummary,
 } from "./api.js";
@@ -35,14 +37,17 @@ import { CapabilityChangeList } from "./CapabilityChangeList.js";
 import { toFlowNodes, toFlowEdges, danglingCount } from "./graphAdapter.js";
 import { toIAFlow } from "./iaAdapter.js";
 import { toSpecTreeFlow } from "./specTreeAdapter.js";
+import { toFeatureTreeFlow } from "./featureTreeAdapter.js";
 import { SpecNode } from "./SpecNode.js";
 import { IANode } from "./IANode.js";
 import { SpecTreeNode } from "./SpecTreeNode.js";
+import { FeatureNode } from "./FeatureNode.js";
 import { WireframePanel } from "./WireframePanel.js";
 import { PrdPanel } from "./PrdPanel.js";
 
-// 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지
-const nodeTypes: NodeTypes = { spec: SpecNode, ia: IANode, specTree: SpecTreeNode };
+// 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지.
+// featureTree는 기획 기능명세서 전용(specTree와 분리, 타입 전략 B).
+const nodeTypes: NodeTypes = { spec: SpecNode, ia: IANode, specTree: SpecTreeNode, featureTree: FeatureNode };
 
 // manyfast 파이프라인 순서: PRD → 기능명세서 → 유저플로우 → IA → 와이어프레임
 type Tab = "prd" | "spec" | "flow" | "ia" | "wire";
@@ -77,6 +82,11 @@ export function App(): JSX.Element {
   const [prd, setPrd] = useState<Prd | null>(null);
   // 기획 단계 PRD(docs/planning/prd.md) — 프로젝트 단위(skeleton에서 표시). change PRD와 분리.
   const [planningPrd, setPlanningPrd] = useState<Prd | null>(null);
+  // 기획 단계 기능명세서(docs/planning/features.md) — 프로젝트 단위(skeleton에서 표시).
+  // 가상 루트 노드(children=요구사항들)를 보관, adapter로 RF nodes/edges로 변환해 렌더.
+  const [planningFeatures, setPlanningFeatures] = useState<FeatureTreeNodeT | null>(null);
+  const [featureNodes, setFeatureNodes] = useState<Node[]>([]);
+  const [featureEdges, setFeatureEdges] = useState<Edge[]>([]);
 
   // 기능명세서 3단 트리 상태
   const [specRoot, setSpecRoot] = useState<SpecTreeNodeT | null>(null);
@@ -147,6 +157,18 @@ export function App(): JSX.Element {
     setSpecEdges(edges);
   }, [specRoot]);
 
+  // 기획 기능명세서(planningFeatures) 바뀌면 레이아웃 재계산. null이면 비운다.
+  useEffect(() => {
+    if (!planningFeatures) {
+      setFeatureNodes([]);
+      setFeatureEdges([]);
+      return;
+    }
+    const { nodes, edges } = toFeatureTreeFlow(planningFeatures);
+    setFeatureNodes(nodes);
+    setFeatureEdges(edges);
+  }, [planningFeatures]);
+
   const onFlowNodesChange = useCallback((changes: NodeChange[]) => {
     setFlowNodes((nds) => applyNodeChanges(changes, nds));
   }, []);
@@ -171,6 +193,17 @@ export function App(): JSX.Element {
       .catch(() => {
         if (token !== dashReqToken.current) return;
         setPlanningPrd(null); // 기획 PRD 미작성 — 정상(빈 안내)
+      });
+    // 기획 단계 기능명세서(docs/planning/features.md) 로드 — 없으면(404) null로 비움(에러 아님).
+    setPlanningFeatures(null);
+    fetchDocsPlanningFeatures(card.name)
+      .then((r) => {
+        if (token !== dashReqToken.current) return;
+        setPlanningFeatures(r.tree.root);
+      })
+      .catch(() => {
+        if (token !== dashReqToken.current) return;
+        setPlanningFeatures(null); // 기획 기능명세서 미작성 — 정상(미표시)
       });
     if (card.hasCharter) {
       fetchCapabilities(card.name)
@@ -291,6 +324,25 @@ export function App(): JSX.Element {
               <section className="dash-planning-prd" data-testid="planning-prd">
                 <h3 className="dash-h">{dashProject?.displayName} — 기획 PRD</h3>
                 <PrdPanel prd={planningPrd} />
+              </section>
+            )}
+            {/* 기획 단계 기능명세서(docs/planning/features.md) — 있으면 3단 트리(FeatureTree)로 렌더 */}
+            {planningFeatures && (
+              <section className="dash-planning-features" data-testid="planning-features">
+                <h3 className="dash-h">{dashProject?.displayName} — 기획 기능명세서</h3>
+                <div className="dash-feature-flow">
+                  <ReactFlow
+                    key="d-planning-features"
+                    nodes={featureNodes}
+                    edges={featureEdges}
+                    nodeTypes={nodeTypes}
+                    nodesDraggable={false}
+                    fitView
+                  >
+                    <Background />
+                    <Controls />
+                  </ReactFlow>
+                </div>
               </section>
             )}
             <h3 className="dash-h">{dashProject?.displayName} — charter 뼈대(capability)</h3>

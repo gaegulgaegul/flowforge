@@ -270,6 +270,48 @@ button:hover { border-color: var(--lime); }
 }
 .spec-tree-node-then { color: #b3b8c0; }
 
+/* === 기획 기능명세서(FeatureTree) 노드 — specTree와 분리(타입 전략 B) === */
+.feature-handle { width: 7px; height: 7px; background: #5b6270; border: none; }
+.feature-tree-node {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 240px;
+  padding: 7px 11px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+}
+.feature-tree-node-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.feature-tree-node-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.feature-tree-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 0 5px;
+  border: 1px solid;
+  border-radius: 999px;
+  line-height: 1.5;
+}
+.feature-tree-node-label { font-weight: 500; white-space: normal; }
+.feature-tree-cap {
+  align-self: flex-start;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  color: #9aa0ad;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+/* skeleton 단계의 기능명세서 플로우는 부모가 flex-fill이 아니므로 고정 높이를 준다. */
+.dash-feature-flow { height: 480px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; }
+.dash-planning-features { margin-bottom: 8px; }
+
 /* === SEED(미검증) 배지 — 노드/와이어/타임라인 공통 === */
 .spec-node-seed,
 .wf-seed,

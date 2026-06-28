@@ -8,6 +8,7 @@ import type {
   SpecTreeNode,
   DecisionTimeline,
   ProjectCard,
+  FeatureTree,
 } from "@flowforge/shared";
 
 export interface GraphResponse {
@@ -152,6 +153,15 @@ export async function fetchDocsPlanningPrd(project: string): Promise<{ project: 
   const res = await fetch(`/api/docs/${project}/planning-prd`);
   if (!res.ok) throw new Error(`docs planning-prd ${res.status}`);
   return (await res.json()) as { project: string; prd: Prd };
+}
+
+/** 기획 단계 산출물 docs/planning/features.md → 기능명세 3단 트리(FeatureTree, 전용 렌더). */
+export async function fetchDocsPlanningFeatures(
+  project: string,
+): Promise<{ project: string; tree: FeatureTree }> {
+  const res = await fetch(`/api/docs/${project}/planning-features`);
+  if (!res.ok) throw new Error(`docs planning-features ${res.status}`);
+  return (await res.json()) as { project: string; tree: FeatureTree };
 }
 
 export async function saveLayout(id: string, layout: LayoutOverlay): Promise<void> {
