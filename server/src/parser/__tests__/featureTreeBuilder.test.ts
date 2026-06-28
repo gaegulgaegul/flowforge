@@ -125,6 +125,27 @@ describe("featureTreeBuilder", () => {
     }
   });
 
+  it("본문 산문 중간의 (중요도:…, 상태:…) 패턴은 속성으로 오매칭하지 않는다", () => {
+    const md = [
+      "# 기능명세서",
+      "## 결제",
+      "<!-- capability: payment -->",
+      "이 기능은 (중요도: 높음, 상태: 진행중) 수준의 본문 산문이다.",
+    ].join("\n");
+    const { docsDir, cleanup } = makeFeatures(md);
+    try {
+      const tree = buildDocsPlanningFeatures(docsDir)!;
+      const req = tree.root.children[0]!;
+      // 속성 줄이 아닌 본문에 들어간 패턴 → priority/status는 빈 문자열이어야 한다.
+      expect(req.priority).toBe("");
+      expect(req.status).toBe("");
+      // capability 주석은 줄 단독이므로 정상 파싱.
+      expect(req.capability).toBe("payment");
+    } finally {
+      cleanup();
+    }
+  });
+
   it("features.md가 없으면 null", () => {
     const root = mkdtempSync(join(tmpdir(), "feat-none-"));
     try {

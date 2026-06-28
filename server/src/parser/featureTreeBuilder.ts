@@ -18,7 +18,9 @@ import { slug } from "./specParser.js";
 
 const RE_HEADER = /^(#{2,4})\s+(.+?)\s*$/; // ## / ### / #### 헤더
 const RE_CAPABILITY = /<!--\s*capability:\s*([A-Za-z0-9_-]+)\s*-->/;
-const RE_ATTRS = /\(\s*중요도:\s*(낮음|중간|높음)?\s*,\s*상태:\s*(시작전|진행중|완료|중단)?\s*\)/;
+// 속성은 줄 전체가 `(중요도:…, 상태:…)`인 속성 줄에서만 인식한다(^…$ 앵커). 본문 산문 중간에
+// 같은 패턴이 들어가도 오매칭하지 않도록 줄 시작·끝에 고정(review CONCERN 2026-06-28).
+const RE_ATTRS = /^\s*\(\s*중요도:\s*(낮음|중간|높음)?\s*,\s*상태:\s*(시작전|진행중|완료|중단)?\s*\)\s*$/;
 
 const KIND_BY_LEVEL = { 2: "requirement", 3: "feature", 4: "detail" } as const;
 
