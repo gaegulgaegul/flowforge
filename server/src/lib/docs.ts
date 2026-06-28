@@ -1,14 +1,18 @@
 /**
- * docs — charter 상주 docs(user-flow.md / PRD.md) 디렉토리 스캔 + 경로 안전 해석 (읽기전용).
+ * docs — charter 상주 docs(user-flow.md / PRD.md) 디렉토리 스캔 + 경로 안전 해석.
  *
  * 스캔 루트는 DOCS_ROOT 환경변수(기본=cwd). 루트 1단계 하위 <project>/docs/ 에
  * user-flow.md / PRD.md(charter 산출물) 또는 planning/prd.md(기획 단계 산출물)가
  * 하나라도 있으면 docs 프로젝트로 본다. lib/changes.ts와 같은
  * 경로 조작 방지 규칙(.. 금지 + 화이트리스트)을 그대로 재사용한다.
- * docs는 SSOT(charter가 생성) — 여기서는 절대 쓰지 않는다(읽기전용).
+ *
+ * 명세 문서(user-flow.md/PRD.md/planning/*.md)는 SSOT(charter·plan이 생성) — 읽기전용.
+ * 단 기획 유저플로우의 **드래그 좌표 overlay**(planning/user-flow/<group>-vN.overlay.json)만
+ * 예외로 여기서 쓴다(명세 .md는 절대 안 건드림 — changes.ts viz/graph-overlay.json 패턴).
  */
-import { readdirSync, statSync, lstatSync, existsSync, readFileSync } from "node:fs";
+import { readdirSync, statSync, lstatSync, existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import type { LayoutOverlay } from "@flowforge/shared";
 
 /** docs 스캔 루트. 기본: cwd. */
 export function docsRoot(): string {
@@ -83,4 +87,61 @@ export function readDocsFile(docsDir: string, name: string): string | null {
   } catch {
     return null;
   }
+}
+
+// ── 기획 유저플로우 (planning/user-flow/) ──────────────────────────────
+// 명세는 <group>-vN.md(Mermaid, 읽기전용), 좌표는 <group>-vN.overlay.json(읽기+쓰기).
+
+/** user-flow 파일명 토큰(group/version) 화이트리스트: 영숫자/-/_ 만. '..'·슬래시 차단. */
+function isSafeFlowToken(s: string): boolean {
+  return /^[A-Za-z0-9_-]+$/.test(s);
+}
+
+/** planning/user-flow 디렉토리 절대경로(없을 수도 있음 — 호출부에서 존재 확인). */
+function userFlowDir(docsDir: string): string {
+  return join(docsDir, "planning", "user-flow");
+}
+
+/** `<group>-vN.md` 목록(확장자 뗀 stem). user-flow 디렉토리 없으면 빈 배열. 정렬. */
+export function listDocsUserFlows(docsDir: string): string[] {
+  const dir = userFlowDir(docsDir);
+  if (!existsSync(dir)) return [];
+  try {
+    return readdirSync(dir)
+      .filter((f) => f.endsWith(".md"))
+      .map((f) => f.slice(0, -3))
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+/** `<group>-vN.md`(Mermaid 명세) 읽기. 토큰 부정·파일 부재면 null. */
+export function readDocsUserFlowSpec(docsDir: string, stem: string): string | null {
+  if (!isSafeFlowToken(stem)) return null;
+  return readDocsFile(userFlowDir(docsDir), `${stem}.md`);
+}
+
+/** `<group>-vN.overlay.json`(드래그 좌표) 읽기. 없거나 못 읽으면 null. */
+export function readDocsUserFlowOverlay(docsDir: string, stem: string): LayoutOverlay | null {
+  if (!isSafeFlowToken(stem)) return null;
+  const p = join(userFlowDir(docsDir), `${stem}.overlay.json`);
+  if (!existsSync(p)) return null;
+  try {
+    return JSON.parse(readFileSync(p, "utf-8")) as LayoutOverlay;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * `<group>-vN.overlay.json`에 드래그 좌표 저장(docs 첫 쓰기 — 명세 .md는 안 건드림).
+ * 토큰 부정이면 쓰지 않고 false. user-flow 디렉토리 자동 생성. 성공 시 true.
+ */
+export function writeDocsUserFlowOverlay(docsDir: string, stem: string, overlay: LayoutOverlay): boolean {
+  if (!isSafeFlowToken(stem)) return false;
+  const dir = userFlowDir(docsDir);
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, `${stem}.overlay.json`), JSON.stringify(overlay, null, 2), "utf-8");
+  return true;
 }
