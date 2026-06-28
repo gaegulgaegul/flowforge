@@ -135,3 +135,16 @@ charter가 만든 상주 `docs/`(user-flow.md·PRD.md·wireframe.html)를 flowfo
 - charter docs의 SEED(사람검토 전=미검증) 마킹을 어댑터 출력에 `seed:true`로 보존하고, SEED 없는 데이터는 seed를 세팅하지 않는다(미검증 오표시 방지).
 - invariant: docs 기능 추가는 additive — 기존 change 경로(`/api/projects`·`/api/changes/:id/*`)·빌더·specParser·golden test의 응답을 변경하지 않는다(SHALL NOT change). golden test 전부 통과로 보증.
 - metric: SEED 플래그 세팅/미세팅 테스트 + golden test PASS(기존 change 라우트 불변), server 전체 81/81 PASS.
+
+## capability: planning-prd-view — 기획 PRD 뷰
+
+flowforge가 `docs/planning/prd.md`(기획 단계 산출물)를 읽어 기존 PrdPanel로 PRD 5섹션을 렌더한다. 새 PRD 파서·컴포넌트를 만들지 않고 기존 5섹션 파서와 PrdPanel을 재사용한다(그림자 아닌 실체 — proposal 변환이 아니라 planning/prd.md 원본).
+
+### 기능: planning PRD 조회 (GET /api/docs/:project/planning-prd)
+- assert:endpoint GET /api/docs/:project/planning-prd
+- assert:symbol buildDocsPlanningPrd
+- invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 디렉토리 밖 파일 미접근
+- invariant:safe-4xx planning/prd.md 없거나 없는 project면 500 아닌 404 반환
+- invariant:readonly 읽기전용 조회 — planning PRD를 쓰거나 수정하는 라우트 없음
+- behavior: planning/prd.md를 manyfast 5섹션(개요·핵심가치·타겟·시나리오·성공지표·속성설정) Prd로 파싱해 반환
+- metric: planning PRD 조회 응답 시간 목표 200ms
