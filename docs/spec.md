@@ -173,3 +173,24 @@ flowforge가 `docs/planning/features.md`(기획 단계 산출물)를 읽어 전�
 - invariant:readonly 읽기전용 조회 — features.md를 쓰거나 수정하는 라우트 없음(readFileSync만)
 - behavior: features.md를 헤더 레벨(##/###/####)로 3단 위계 파싱, 요구사항에 capability 키(`<!-- capability: -->`)·노드에 중요도/상태 속성을 채운 FeatureTree로 반환
 - metric: planning features 조회 응답 시간 목표 200ms
+
+## capability: planning-userflow-view — 기획 유저플로우 뷰
+
+flowforge가 `docs/planning/user-flow/<group>-vN.md`의 Mermaid flowchart를 mermaid 라이브러리 없이 정규식으로 파싱해 공용 SpecGraph(노드+엣지)로 렌더하고, 드래그한 좌표를 `<group>-vN.overlay.json`에 저장한다(docs 첫 쓰기). SpecGraph 타입·web graphAdapter/SpecNode 4타입을 재사용한다(타입 분리 안 함). 명세 .md는 읽기만 하고, overlay JSON에만 쓴다.
+
+### 기능: 유저플로우 그래프 조회 (GET /api/docs/:project/planning-user-flow)
+- assert:endpoint GET /api/docs/:project/planning-user-flow
+- assert:symbol buildDocsPlanningUserFlow
+- assert:symbol listDocsUserFlows
+- invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를, group/version은 파일명 화이트리스트가 차단해 디렉토리 밖 파일 미접근
+- invariant:safe-4xx user-flow 파일/버전이 없으면 500 아닌 404 반환
+- behavior: Mermaid flowchart 노드 모양(([..]) stadium→start, ["..."] box→screen, {"..."} diamond→action 등)·엣지(`-->`, `-->|라벨|`)를 정규식으로 파싱해 SpecGraph로 변환, 저장된 layout과 버전 목록을 함께 반환
+- metric: planning user-flow 그래프 조회 응답 시간 목표 200ms
+
+### 기능: 드래그 좌표 저장 (PUT /api/docs/:project/planning-user-flow/layout)
+- assert:endpoint PUT /api/docs/:project/planning-user-flow/layout
+- assert:symbol writeDocsUserFlowOverlay
+- invariant:no-traversal project=resolveDocsDir, group/version=파일명 화이트리스트로 디렉토리 밖 쓰기 차단
+- invariant:safe-4xx isLayoutOverlay 검증 실패(좌표 아닌 body)·토큰 부정이면 4xx 반환하고 파일 미작성
+- behavior: 드래그 좌표(LayoutOverlay)를 `<group>-vN.overlay.json`에만 기록하고 명세 .md는 변경하지 않음, 재조회 시 저장 좌표가 dagre 자동배치보다 우선 적용
+- metric: 좌표 저장 PUT 성공률 목표 100%(유효 body 기준)
