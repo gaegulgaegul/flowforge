@@ -1,0 +1,256 @@
+{
+  "change": "planning-stage-tracer",
+  "verifiedAt": "2026-06-28T23:20:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 8,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "openspec-plan 스킬이 PRD를 생성한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "PRD 생성 입력은 사람의 산문 설명 — null 입력 개념 없음",
+          "잘못된타입": "문자열 산문만 받음 — 타입 분기 없음",
+          "경계값": "5섹션 고정 스키마 — 수치 경계 없음",
+          "동시성": "단일 파일 1회 생성 — 동시 쓰기 경로 없음",
+          "대량": "프로젝트당 PRD 1개 — 대량 입력 개념 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "PRD 5섹션 생성 (개요·핵심가치·타겟·시나리오·성공지표·속성설정)",
+          "layer": "server",
+          "means": "도그푸딩 산출물 docs/planning/prd.md 실재 + 5섹션 헤더 grep",
+          "basis": "grep -c '^## ' docs/planning/prd.md = 5, 5섹션 제목 일치",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "## 개요 / ## 핵심가치 / ## 타겟·시나리오 / ## 성공지표 / ## 속성설정 (5개 헤더 실재)",
+            "caption": "도그푸딩 PRD 5섹션"
+          }
+        },
+        {
+          "scenario": "빈 섹션은 지어내지 않는다 (일부 섹션만 있으면 나머지 empty:true 표면화)",
+          "layer": "server",
+          "means": "단위 테스트 docsPlanningPrd.test.ts '일부 섹션만 있으면 나머지는 empty:true'",
+          "basis": "npm test -w server -- docsPlanningPrd (재실행 PASS)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "테스트: 개요만 있는 입력 → overview empty=false, metrics empty=true, body='' (지어내지 않음)",
+            "caption": "빈 섹션 표면화 단위 테스트"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PRD는 charter 상주문서와 분리된 위치에 저장된다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "저장 위치 분리 불변식 — 입력 변형 클래스가 적용되지 않는 구조 단언",
+          "빈값": "동일",
+          "잘못된타입": "동일",
+          "경계값": "동일",
+          "에러경로": "동일",
+          "동시성": "동일",
+          "대량": "동일",
+          "특수문자": "동일"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "신규 디렉토리 docs/planning/에만 쓰고 charter docs(docs/PRD.md·docs/spec.md)는 변경 안 함",
+          "layer": "server",
+          "means": "git status로 charter docs 무변경 확인 + 도그푸딩 PRD는 docs/planning/prd.md에만 신규 생성",
+          "basis": "git status -sb docs/PRD.md docs/spec.md = 변경 없음; docs/planning/prd.md만 신규 add",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "charter docs/PRD.md·docs/spec.md 이번 change에서 미변경(git). docs/planning/prd.md 신규 생성만.",
+            "caption": "charter 무수정"
+          }
+        }
+      ]
+    },
+    {
+      "title": "flowforge가 docs/planning/prd.md를 읽어 PRD를 제공한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "라우트 파라미터는 문자열 project — null 불가(express)",
+          "잘못된타입": "project는 문자열 path param — 타입 분기 없음",
+          "경계값": "단일 파일 조회 — 수치 경계 없음",
+          "동시성": "읽기전용 GET — 동시 쓰기 경합 없음",
+          "대량": "PRD 1개 조회 — 대량 응답 개념 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "planning PRD 조회 성공 — GET /api/docs/flowforge/planning-prd → 200 + 5섹션",
+          "layer": "web",
+          "means": "런타임 API curl (서버 DOCS_ROOT=/home/gaegul 기동)",
+          "basis": "detect: server/ + web/ 워크스페이스 존재; 런타임 8899",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "curl status=200, sections=5 ['overview','value','target','metrics','attributes']",
+            "caption": "조회 200+5섹션"
+          }
+        },
+        {
+          "scenario": "파일 없으면 안전한 4xx (없는 project → 404, 500 아님)",
+          "layer": "web",
+          "means": "런타임 API curl 없는 project",
+          "basis": "GET /api/docs/nope-not-real/planning-prd",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "curl status=404 (500 아님, safe-4xx)",
+            "caption": "파일 없음 404"
+          }
+        },
+        {
+          "scenario": "경로 조작(..) 차단 — resolveDocsDir 경로안전으로 디렉토리 밖 미접근",
+          "layer": "web",
+          "means": "런타임 API curl 경로조작 페이로드",
+          "basis": "GET /api/docs/..%2f..%2fetc/planning-prd",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "curl status=404 (resolveDocsDir이 .. 및 비화이트리스트 차단)",
+            "caption": "경로조작 차단"
+          }
+        }
+      ]
+    },
+    {
+      "title": "렌더된 PRD는 docs/planning/prd.md 원본을 비춘다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "읽기전용 렌더 — null 입력 경로 없음",
+          "잘못된타입": "Prd 타입 고정 — 분기 없음",
+          "경계값": "5섹션 고정 — 경계 없음",
+          "동시성": "읽기전용 뷰 — 동시 편집 경로 없음(D3 편집은 다음 change)",
+          "대량": "PRD 1개 렌더 — 대량 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "PrdPanel에 5섹션 렌더 (기존 컴포넌트 재사용)",
+          "layer": "web",
+          "means": "Playwright 실픽셀 — flowforge 카드 클릭 → skeleton 단계 [data-testid=planning-prd] 패널",
+          "basis": "headless chromium, button.pg-card(flowforge) 클릭",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/planning-prd-render.png",
+            "caption": "PrdPanel 5섹션 실픽셀(panelCount=1, sectionsFound=5, 콘솔에러 0)"
+          }
+        },
+        {
+          "scenario": "원본 내용 일치 — planning/prd.md 고유 문구가 화면에 표시(proposal 변환 아님)",
+          "layer": "web",
+          "means": "Playwright 패널 innerText에 원본 고유문구 포함 확인",
+          "basis": "hasUniqueOriginalPhrase: '그림자'/'1층 빈칸' 포함",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/planning-prd-render.png",
+            "caption": "화면에 '그림자였다'·'1층 빈칸' 원본 문구 표시 — 그림자 아닌 실체"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 8,
+      "passed": 8,
+      "failed": 0,
+      "basis": "server/ 워크스페이스(jest); planning 테스트 8개(docsPlanningPrd 4 + planningPrd 4) 재실행. 전체 116/116.",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 6,
+      "passed": 6,
+      "failed": 0,
+      "basis": "web/ 워크스페이스(vite build+typecheck PASS); 런타임 API 3 + Playwright 실픽셀 2 + 빌드. 콘솔에러 0.",
+      "reason": ""
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "gradle/android 디렉토리 없음",
+      "reason": "적용 불가: 안드로이드 레이어 없음"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "호스트 uname=Linux",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260628-2320.html"
+}
