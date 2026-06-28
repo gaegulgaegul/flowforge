@@ -8,14 +8,14 @@
 - [x] GREEN: `server/src/parser/prdBuilder.ts`에 `buildDocsPlanningPrd(docsDir)` 추가 — `readDocsFile(docsDir, "planning/prd.md")`로 읽어 기존 5섹션 파서 재사용(중복 구현 금지).
 
 ### Parallel Group 2 (빌더 완료 후 - 동시 실행: 서로 다른 파일)
-- [ ] RED: 라우트 통합 테스트 작성 [parallel] — `GET /api/docs/:project/planning-prd` 200+5섹션 / 없는 project 404 / `..` 경로조작 차단(safe-4xx).
-- [ ] RED: "원본 일치" 검증 테스트 작성 [parallel] — planning/prd.md 고유 문구가 응답 prd에 포함(proposal.md 변환 아님).
+- [x] RED: 라우트 통합 테스트 작성 [parallel] — `GET /api/docs/:project/planning-prd` 200+5섹션 / 없는 project 404 / `..` 경로조작 차단(safe-4xx).
+- [x] RED: "원본 일치" 검증 테스트 작성 [parallel] — planning/prd.md 고유 문구가 응답 prd에 포함(proposal.md 변환 아님).
 
 ### Sequential: server 라우트 구현
-- [ ] GREEN: `server/src/routes/docs.ts`에 `GET /api/docs/:project/planning-prd` 라우트 추가 — `resolveDocsDir`로 경로 해석(경로안전 재사용) 후 `buildDocsPlanningPrd` 호출, `{ project, prd }` 반환.
+- [x] GREEN: `server/src/routes/docs.ts`에 `GET /api/docs/:project/planning-prd` 라우트 추가 — `resolveDocsDir`로 경로 해석(경로안전 재사용) 후 `buildDocsPlanningPrd` 호출, `{ project, prd }` 반환.
 
 ### Sequential: web 배선 (server API 완료 후)
-- [ ] GREEN: `web/src/api.ts`에 `fetchDocsPlanningPrd(project)` 추가 + `App.tsx`에서 호출해 기존 `PrdPanel`에 전달 (새 컴포넌트/타입 만들지 않음).
+- [x] GREEN: `web/src/api.ts`에 `fetchDocsPlanningPrd(project)` 추가 + `App.tsx`에서 호출해 기존 `PrdPanel`에 전달 (새 컴포넌트/타입 만들지 않음).
 
 ### Sequential: 도그푸딩 입력 생성
 - [ ] openspec-plan 절차대로 flowforge 자체의 PRD를 생성해 `flowforge/docs/planning/prd.md`로 저장 (이 "기획 단계 신설"을 5섹션 PRD로). 기존 `docs/PRD.md`·`docs/spec.md`는 건드리지 않음.

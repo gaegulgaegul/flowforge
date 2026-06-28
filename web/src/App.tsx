@@ -25,6 +25,7 @@ import {
   fetchProjects,
   fetchCapabilities,
   fetchCapabilityChanges,
+  fetchDocsPlanningPrd,
   type CapabilitySummary,
   type ChangeSummary,
 } from "./api.js";
@@ -72,8 +73,10 @@ export function App(): JSX.Element {
   // 와이어프레임 상태
   const [wireframe, setWireframe] = useState<Wireframe | null>(null);
 
-  // PRD 상태(5섹션)
+  // PRD 상태(5섹션) — change 단위(views의 fetchPrd)
   const [prd, setPrd] = useState<Prd | null>(null);
+  // 기획 단계 PRD(docs/planning/prd.md) — 프로젝트 단위(skeleton에서 표시). change PRD와 분리.
+  const [planningPrd, setPlanningPrd] = useState<Prd | null>(null);
 
   // 기능명세서 3단 트리 상태
   const [specRoot, setSpecRoot] = useState<SpecTreeNodeT | null>(null);
@@ -158,6 +161,17 @@ export function App(): JSX.Element {
     setDashProject(card);
     setDashCapability(null);
     setCapChanges([]);
+    // 기획 단계 PRD(docs/planning/prd.md) 로드 — 없으면(404) null로 비움(안내만, 에러 아님).
+    setPlanningPrd(null);
+    fetchDocsPlanningPrd(card.name)
+      .then((r) => {
+        if (token !== dashReqToken.current) return;
+        setPlanningPrd(r.prd);
+      })
+      .catch(() => {
+        if (token !== dashReqToken.current) return;
+        setPlanningPrd(null); // 기획 PRD 미작성 — 정상(빈 안내)
+      });
     if (card.hasCharter) {
       fetchCapabilities(card.name)
         .then((caps) => {
@@ -272,6 +286,13 @@ export function App(): JSX.Element {
           </div>
         ) : dashStage === "skeleton" ? (
           <div className="dash-body">
+            {/* 기획 단계 PRD(docs/planning/prd.md) — 있으면 프로젝트 기획을 PrdPanel로 렌더 */}
+            {planningPrd && (
+              <section className="dash-planning-prd" data-testid="planning-prd">
+                <h3 className="dash-h">{dashProject?.displayName} — 기획 PRD</h3>
+                <PrdPanel prd={planningPrd} />
+              </section>
+            )}
             <h3 className="dash-h">{dashProject?.displayName} — charter 뼈대(capability)</h3>
             {capabilities.length === 0 ? (
               <p className="dash-empty">표시할 capability가 없습니다(charter 뼈대 없음).</p>

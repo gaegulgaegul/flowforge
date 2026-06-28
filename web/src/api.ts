@@ -147,6 +147,13 @@ export async function fetchDocsPrd(project: string): Promise<{ project: string; 
   return (await res.json()) as { project: string; timeline: DecisionTimeline };
 }
 
+/** 기획 단계 산출물 docs/planning/prd.md → manyfast 5섹션 PRD(기존 PrdPanel로 렌더). */
+export async function fetchDocsPlanningPrd(project: string): Promise<{ project: string; prd: Prd }> {
+  const res = await fetch(`/api/docs/${project}/planning-prd`);
+  if (!res.ok) throw new Error(`docs planning-prd ${res.status}`);
+  return (await res.json()) as { project: string; prd: Prd };
+}
+
 export async function saveLayout(id: string, layout: LayoutOverlay): Promise<void> {
   const res = await fetch(`/api/changes/${id}/layout`, {
     method: "PUT",
