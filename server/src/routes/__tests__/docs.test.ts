@@ -41,6 +41,21 @@ const PRD = [
   "- status: active",
 ].join("\n");
 
+// planning-only 프로젝트용 manyfast 5섹션 PRD(charter 문서 없이 이것만 있어야 함).
+const PLANNING_PRD = [
+  "# 제품 요구사항",
+  "## 개요",
+  "planning-only 인식 검증용 PRD.",
+  "## 핵심가치",
+  "charter 없이 기획만으로 인식.",
+  "## 타겟·시나리오",
+  "기획 단계 사용자.",
+  "## 성공지표",
+  "planning-prd API 200.",
+  "## 속성설정",
+  "읽기전용.",
+].join("\n");
+
 async function loadApp() {
   const mod = await import("../../index.js");
   return mod.app;
@@ -53,6 +68,10 @@ describe("docs API", () => {
     ROOT = mkdtempSync(join(tmpdir(), "docs-api-"));
     makeProject("ssok", { "user-flow.md": USER_FLOW, "PRD.md": PRD });
     makeProject("only-prd", { "PRD.md": PRD });
+    // planning-only 프로젝트: charter 문서 없이 docs/planning/prd.md만 (하위 디렉토리 필요).
+    const planonlyDir = join(ROOT, "planonly", "docs", "planning");
+    mkdirSync(planonlyDir, { recursive: true });
+    writeFileSync(join(planonlyDir, "prd.md"), PLANNING_PRD);
     // docs 없는 프로젝트(스캔에서 제외돼야 함)
     mkdirSync(join(ROOT, "empty", "docs"), { recursive: true });
     writeFileSync(join(ROOT, "empty", "docs", "notes.md"), "x");
@@ -65,11 +84,23 @@ describe("docs API", () => {
     else process.env.DOCS_ROOT = ORIG;
   });
 
-  it("GET /api/docs/projects — charter 프로젝트만 목록", async () => {
+  it("GET /api/docs/projects — charter + planning-only 프로젝트 목록(empty 제외)", async () => {
     const app = await loadApp();
     const res = await request(app).get("/api/docs/projects");
     expect(res.status).toBe(200);
-    expect(res.body.projects).toEqual(["only-prd", "ssok"]);
+    // charter(only-prd, ssok) + planning-only(planonly) 모두 포함, docs없는 empty는 제외, 정렬.
+    expect(res.body.projects).toEqual(["only-prd", "planonly", "ssok"]);
+  });
+
+  it("planning-only 프로젝트(planning/prd.md만)도 planning-prd가 200+5섹션", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/planonly/planning-prd");
+    expect(res.status).toBe(200); // 인식 실패였다면 404였을 것(예광탄 빚 해소 확인)
+    expect(res.body.project).toBe("planonly");
+    expect(res.body.prd.sections).toHaveLength(5);
+    const overview = res.body.prd.sections.find((s: { key: string }) => s.key === "overview");
+    expect(overview.body).toContain("planning-only 인식 검증용");
+    expect(overview.empty).toBe(false);
   });
 
   it("GET /api/docs/:project/graph — SpecGraph + dangling/endpoint 엣지", async () => {

@@ -2,7 +2,8 @@
  * docs — charter 상주 docs(user-flow.md / PRD.md) 디렉토리 스캔 + 경로 안전 해석 (읽기전용).
  *
  * 스캔 루트는 DOCS_ROOT 환경변수(기본=cwd). 루트 1단계 하위 <project>/docs/ 에
- * user-flow.md 또는 PRD.md가 있으면 charter 프로젝트로 본다. lib/changes.ts와 같은
+ * user-flow.md / PRD.md(charter 산출물) 또는 planning/prd.md(기획 단계 산출물)가
+ * 하나라도 있으면 docs 프로젝트로 본다. lib/changes.ts와 같은
  * 경로 조작 방지 규칙(.. 금지 + 화이트리스트)을 그대로 재사용한다.
  * docs는 SSOT(charter가 생성) — 여기서는 절대 쓰지 않는다(읽기전용).
  */
@@ -14,9 +15,18 @@ export function docsRoot(): string {
   return process.env.DOCS_ROOT ?? process.cwd();
 }
 
-/** docs/ 하위에 user-flow.md 또는 PRD.md가 있으면 charter 프로젝트. */
+/**
+ * docs/ 하위에 charter 산출물(user-flow.md / PRD.md) 또는 기획 산출물(planning/prd.md)이
+ * 하나라도 있으면 docs 프로젝트로 본다. planning-only 프로젝트(charter 없이 기획 단계
+ * 산출물만 있는 경우)도 인식하기 위해 planning/prd.md를 OR로 포함한다 — 인식 경로는
+ * planning-prd 라우트/빌더가 읽는 경로와 동일하게 맞춘다.
+ */
 function hasDocs(docsDir: string): boolean {
-  return existsSync(join(docsDir, "user-flow.md")) || existsSync(join(docsDir, "PRD.md"));
+  return (
+    existsSync(join(docsDir, "user-flow.md")) ||
+    existsSync(join(docsDir, "PRD.md")) ||
+    existsSync(join(docsDir, "planning", "prd.md"))
+  );
 }
 
 /**

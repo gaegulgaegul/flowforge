@@ -93,11 +93,28 @@ describe("docs lib", () => {
     expect(resolveDocsDir("프로젝트")).toBeNull(); // 비ASCII
   });
 
-  it("resolveDocsDir는 docs가 없는(또는 user-flow/PRD 둘 다 없는) 프로젝트면 null", () => {
+  it("resolveDocsDir는 docs가 없는(또는 user-flow/PRD/planning-prd 모두 없는) 프로젝트면 null", () => {
     mkdirSync(join(root, "empty", "docs"), { recursive: true });
     writeFileSync(join(root, "empty", "docs", "notes.md"), "x");
     expect(resolveDocsDir("empty")).toBeNull();
     expect(resolveDocsDir("does-not-exist")).toBeNull();
+  });
+
+  // planning-only 프로젝트: charter 문서 없이 docs/planning/prd.md만 있어도 인식해야 한다.
+  // (예광탄 planning-stage-tracer가 남긴 빚 — hasDocs가 charter 문서만 인정하던 한계 해소)
+  it("resolveDocsDir는 planning/prd.md만 있는 프로젝트도 인식한다", () => {
+    const planningDir = join(root, "planonly", "docs", "planning");
+    mkdirSync(planningDir, { recursive: true });
+    writeFileSync(join(planningDir, "prd.md"), "## 개요\nplanning-only");
+    expect(resolveDocsDir("planonly")).toBe(join(root, "planonly", "docs"));
+  });
+
+  it("listDocsProjects는 planning/prd.md만 있는 프로젝트를 목록에 포함한다", () => {
+    const planningDir = join(root, "planonly", "docs", "planning");
+    mkdirSync(planningDir, { recursive: true });
+    writeFileSync(join(planningDir, "prd.md"), "## 개요\nx");
+    makeProject(root, "charterproj", { "user-flow.md": "## flow: x\n" });
+    expect(listDocsProjects()).toEqual(["charterproj", "planonly"]);
   });
 
   it("readDocsFile은 파일이 있으면 내용을, 없으면 null을 반환한다", () => {
