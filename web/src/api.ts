@@ -172,3 +172,39 @@ export async function saveLayout(id: string, layout: LayoutOverlay): Promise<voi
   });
   if (!res.ok) throw new Error(`layout ${res.status}`);
 }
+
+/** 기획 단계 산출물 docs/planning/user-flow/<flow>.md(Mermaid) → 공용 SpecGraph + 저장 좌표(layout) + 버전 목록. */
+export interface DocsPlanningUserFlowResponse {
+  project: string;
+  flow: string;
+  graph: SpecGraph;
+  layout: LayoutOverlay;
+  versions: string[];
+}
+
+export async function fetchDocsPlanningUserFlow(
+  project: string,
+  flow?: string,
+): Promise<DocsPlanningUserFlowResponse> {
+  const qs = flow ? `?flow=${encodeURIComponent(flow)}` : "";
+  const res = await fetch(`/api/docs/${project}/planning-user-flow${qs}`);
+  if (!res.ok) throw new Error(`docs planning-user-flow ${res.status}`);
+  return (await res.json()) as DocsPlanningUserFlowResponse;
+}
+
+/** 기획 유저플로우 드래그 좌표 저장(명세 .md는 안 건드림 — overlay JSON만). */
+export async function saveDocsPlanningUserFlowLayout(
+  project: string,
+  flow: string,
+  layout: LayoutOverlay,
+): Promise<void> {
+  const res = await fetch(
+    `/api/docs/${project}/planning-user-flow/layout?flow=${encodeURIComponent(flow)}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(layout),
+    },
+  );
+  if (!res.ok) throw new Error(`docs planning-user-flow layout ${res.status}`);
+}
