@@ -16,6 +16,33 @@ function readIfExists(path: string): string {
   return existsSync(path) ? readFileSync(path, "utf-8") : "";
 }
 
+/** PrdSection 생성 헬퍼(body가 비면 empty:true — 대체 텍스트 미생성). */
+function makeSection(key: PrdSectionKey, title: string, body: string): PrdSection {
+  return { key, title, body, empty: body === "" };
+}
+
+/**
+ * docs/planning/prd.md(openspec-plan이 직접 쓴 manyfast 5섹션 MD) → Prd.
+ * change PRD(buildPrd)가 proposal+design의 영어 헤더를 매핑하는 것과 달리,
+ * 이쪽은 기획 단계가 직접 쓴 한국어 5섹션을 그대로 읽는다(그림자 아닌 실체).
+ * 파일이 없으면 null(라우트가 404로 변환). 일부 섹션만 있으면 나머지는 empty로 표면화.
+ */
+export function buildDocsPlanningPrd(docsDir: string): Prd | null {
+  const path = join(docsDir, "planning", "prd.md");
+  if (!existsSync(path)) return null;
+  const sectionsMap = splitSections(readFileSync(path, "utf-8"));
+
+  // 한국어 5섹션 제목으로 직접 매칭(splitSections가 헤더키를 정규화하므로 그대로 키가 됨).
+  const sections: readonly PrdSection[] = [
+    makeSection("overview", "개요", sectionBody(sectionsMap, ["개요"])),
+    makeSection("value", "핵심가치", sectionBody(sectionsMap, ["핵심가치"])),
+    makeSection("target", "타겟·시나리오", sectionBody(sectionsMap, ["타겟·시나리오"])),
+    makeSection("metrics", "성공지표", sectionBody(sectionsMap, ["성공지표"])),
+    makeSection("attributes", "속성설정", sectionBody(sectionsMap, ["속성설정"])),
+  ];
+  return { sections };
+}
+
 /**
  * change 디렉토리 절대경로 → manyfast 고정 5섹션 PRD.
  * proposal.md / design.md를 `## 헤더` 단위로 쪼개 매핑 테이블대로 조립한다.

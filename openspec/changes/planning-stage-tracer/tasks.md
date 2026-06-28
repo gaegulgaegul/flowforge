@@ -1,11 +1,11 @@
 ## Tasks
 
 ### Parallel Group 1 (독립 - 동시 실행 가능: 서로 다른 레포/파일)
-- [ ] openspec-plan 스킬 SKILL.md 신설 (PRD 5섹션 생성 단계만) — agentic-harness 소스 `/home/gaegul/agentic-harness/plugins/agentic-harness/skills/openspec-plan/SKILL.md`. 저장 위치 `docs/planning/prd.md`, manyfast 원형 5섹션 고정, 빈 섹션 표면화 규칙 명시. [parallel]
-- [ ] RED: `buildDocsPlanningPrd` 단위 테스트 작성 [parallel] — `server/`에 임시 docs 픽스처로 planning/prd.md 주면 5섹션 Prd 반환, 없으면 빈 PRD/null.
+- [x] openspec-plan 스킬 SKILL.md 신설 (PRD 5섹션 생성 단계만) — agentic-harness 소스 `/home/gaegul/agentic-harness/plugins/agentic-harness/skills/openspec-plan/SKILL.md`. 저장 위치 `docs/planning/prd.md`, manyfast 원형 5섹션 고정, 빈 섹션 표면화 규칙 명시. [parallel]
+- [x] RED: `buildDocsPlanningPrd` 단위 테스트 작성 [parallel] — `server/`에 임시 docs 픽스처로 planning/prd.md 주면 5섹션 Prd 반환, 없으면 빈 PRD/null.
 
 ### Sequential: server 빌더 구현
-- [ ] GREEN: `server/src/parser/prdBuilder.ts`에 `buildDocsPlanningPrd(docsDir)` 추가 — `readDocsFile(docsDir, "planning/prd.md")`로 읽어 기존 5섹션 파서 재사용(중복 구현 금지).
+- [x] GREEN: `server/src/parser/prdBuilder.ts`에 `buildDocsPlanningPrd(docsDir)` 추가 — `readDocsFile(docsDir, "planning/prd.md")`로 읽어 기존 5섹션 파서 재사용(중복 구현 금지).
 
 ### Parallel Group 2 (빌더 완료 후 - 동시 실행: 서로 다른 파일)
 - [ ] RED: 라우트 통합 테스트 작성 [parallel] — `GET /api/docs/:project/planning-prd` 200+5섹션 / 없는 project 404 / `..` 경로조작 차단(safe-4xx).
