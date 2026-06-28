@@ -148,3 +148,15 @@ flowforge가 `docs/planning/prd.md`(기획 단계 산출물)를 읽어 기존 Pr
 - invariant:readonly 읽기전용 조회 — planning PRD를 쓰거나 수정하는 라우트 없음
 - behavior: planning/prd.md를 manyfast 5섹션(개요·핵심가치·타겟·시나리오·성공지표·속성설정) Prd로 파싱해 반환
 - metric: planning PRD 조회 응답 시간 목표 200ms
+
+## capability: planning-only-recognition — planning-only 프로젝트 인식
+
+charter 산출물(`user-flow.md`/`PRD.md`) 없이 `docs/planning/prd.md`만 가진 planning-only 프로젝트도 flowforge가 docs 프로젝트로 인식한다. 인식 판정은 내부 `hasDocs` 단일 게이트로 수렴하므로 `resolveDocsDir`(단일 해석)·`listDocsProjects`(전체 스캔)가 동일 규칙을 따른다.
+
+### 기능: planning-only 프로젝트 인식
+- assert:symbol resolveDocsDir
+- assert:symbol listDocsProjects
+- invariant:readonly 인식은 파일 존재 확인(existsSync)뿐 — docs 모듈은 어떤 파일도 쓰거나 수정하지 않음(쓰기 라우트/함수 부재)
+- invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 디렉토리 밖 파일 미접근(인식 범위 확장과 무관하게 불변)
+- behavior: hasDocs가 user-flow.md / PRD.md(charter) 또는 planning/prd.md(기획) 중 하나라도 있으면 docs 프로젝트로 인정한다. planning/prd.md OR 추가는 인식 범위를 넓힐 뿐 charter 프로젝트 인식을 보존한다.
+- metric: planning-only 프로젝트 인식 후 planning PRD 조회까지 추가 지연 0(인식 게이트는 existsSync 1회)
