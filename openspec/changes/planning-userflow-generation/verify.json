@@ -1,0 +1,312 @@
+{
+  "change": "planning-userflow-generation",
+  "verifiedAt": "2026-06-29T01:15:11+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 11,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "openspec-plan이 유저플로우를 의존성 순서로 생성한다 (generation)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "문서 절차(SKILL.md) 산출물 — 런타임 입력 없음, openspec-plan이 사람 지시로 .md를 생성",
+          "빈값": "생성 단계는 features.md 기능 ≥1 게이트가 전제 — 빈 입력은 게이트가 차단(절차 규약)",
+          "잘못된타입": "문서 생성 절차에 타입 입력 없음",
+          "경계값": "생성 산출물에 수치 경계 없음",
+          "에러경로": "파일/디렉토리 생성 실패는 도그푸딩(main-v1.md 생성)으로 실증, 절차 자체엔 에러분기 없음",
+          "동시성": "단독 개발자가 순차 실행하는 문서 생성 — 동시 생성 시나리오 없음",
+          "대량": "한 그룹당 한 .md, 대량 입력 개념 없음",
+          "특수문자": "group/version 파일명은 view 라우트의 화이트리스트가 차단(R5에서 covered)"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "기능명세 다음 단계로 유저플로우 생성 (features.md 기능 있을 때 user-flow/<group>-v1.md Mermaid 생성)",
+          "layer": "server",
+          "means": "SKILL.md(agentic-harness) 유저플로우 단계·게이트 grep + 도그푸딩 flowforge/docs/planning/user-flow/main-v1.md 실생성 확인",
+          "basis": "grep openspec-plan/SKILL.md '## 산출물 — 유저플로우(3단계)'·게이트·Mermaid규약; main-v1.md 파일 존재+GET 200(노드11)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "SKILL.md L124 '## 산출물 — 유저플로우 (3단계)', L131 'user-flow 스키마 — Mermaid flowchart', L151 '절차(유저플로우 생성)' 게이트(기능 ≥1). 도그푸딩 main-v1.md → GET /api/docs/flowforge/planning-user-flow 200 (nodes 11 edges 12).",
+            "caption": "문서 단계 명문화 + 도그푸딩 실생성"
+          }
+        }
+      ]
+    },
+    {
+      "title": "유저플로우는 Mermaid flowchart 문법을 따른다 (generation)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "Mermaid 문법 규약 — 빌더 파싱 견고성은 R3(파싱→SpecGraph)에서 검증",
+          "빈값": "빈 Mermaid 블록 파싱은 R3 빌더 테스트 영역",
+          "잘못된타입": "문서 형식 규약, 타입 입력 없음",
+          "경계값": "노드/엣지 수 경계는 R3 대량 처리 영역",
+          "동시성": "문서 형식엔 동시성 없음",
+          "대량": "대규모 그래프 파싱은 R3 빌더 영역"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "Mermaid flowchart 코드블록 포함 (flowchart TD/LR 선언 + 노드정의 + --> 엣지)",
+          "layer": "server",
+          "means": "도그푸딩 main-v1.md grep('```mermaid','flowchart TD','-->') + 빌더가 파싱해 GET 200 (코드블록 실제 유효)",
+          "basis": "main-v1.md L6 '```mermaid' L7 'flowchart TD' + 노드/--> 존재; buildDocsPlanningUserFlow가 코드블록 추출 성공(노드11)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "main-v1.md: ```mermaid 코드블록 안에 flowchart TD + 'Start([\"앱 진입\"]) --> Grid[\"프로젝트 카드 그리드\"]' 등 노드정의·--> 엣지. 빌더 파싱 성공 → 노드11 엣지12.",
+            "caption": "Mermaid 코드블록 문법 충족 + 파싱 가능"
+          }
+        },
+        {
+          "scenario": "노드 타입이 모양으로 구분된다 (시작/페이지/행동 → stadium/box/diamond)",
+          "layer": "server",
+          "means": "런타임 curl GET kind 집합 = {start, screen, action} 확인 (Mermaid 모양 ([..])/[..]/{..} → kind)",
+          "basis": "GET /api/docs/flowforge/planning-user-flow node kinds = ['action','screen','start'] (planningUserFlowBuilder 모양→kind 매핑)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "S5: node kinds = ['action','screen','start']. main-v1.md의 Start([..]) stadium→start, Grid[..] box→screen, HasDocs{..} diamond→action 매핑 입증.",
+            "caption": "노드 모양→kind 3종 매핑"
+          }
+        }
+      ]
+    },
+    {
+      "title": "flowforge가 Mermaid 유저플로우를 SpecGraph로 파싱해 제공한다 (view)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "노드 수 경계(0/1/N)는 빈 코드블록(빈값 covered)·미지원라인무시 테스트로 포괄, 별도 수치 경계 무의미",
+          "동시성": "읽기 전용 GET — 동시 조회는 상태 없는 순수 파싱이라 race 없음(readonly)",
+          "대량": "개인용 도그푸딩 그래프(노드 수십) — 대량 입력은 비현실적, dagre 레이아웃이 처리"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "유저플로우 그래프 조회 성공 (GET 200 + SpecGraph + layout)",
+          "layer": "server",
+          "means": "런타임 curl GET 200 + nodes/edges + layout(빈객체) + versions; docs.test 통합 케이스",
+          "basis": "GET ?flow=main-v1 → HTTP 200, nodes 11 edges 12 layout {} versions ['main-v1']; docs.test.ts PASS",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "S4: GET 200, nodes 11, edges 12, layout {}, versions ['main-v1']. jest docs.test.ts 통합 케이스 PASS.",
+            "caption": "GET 200 + SpecGraph + layout"
+          }
+        },
+        {
+          "scenario": "Mermaid 노드 모양이 노드 kind로 매핑된다 (A([..])/B[..]/C{..} → start/screen/action)",
+          "layer": "server",
+          "means": "planningUserFlowBuilder.test 픽스처(모양별 노드→kind) + 런타임 kind 집합",
+          "basis": "planningUserFlowBuilder.test.ts 노드 모양→kind 케이스 PASS; 런타임 kinds=['action','screen','start']",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "빌더 테스트: ([..])→start, [..]→screen, {..}→action 픽스처 PASS. 런타임 도그푸딩에서 3종 kind 모두 산출.",
+            "caption": "노드 모양→kind 매핑(단위+런타임)"
+          }
+        },
+        {
+          "scenario": "Mermaid 엣지가 그래프 엣지로 변환된다 (A-->B, B-->|라벨|C, |라벨| 보존)",
+          "layer": "server",
+          "means": "planningUserFlowBuilder.test(엣지·라벨 픽스처) + 런타임 라벨 보존 확인",
+          "basis": "빌더 테스트 엣지/라벨 케이스 PASS; 런타임 edges 12 중 labeled 7 (카드 클릭/PRD/기능명세/유저플로우 등 보존)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "S6: edges 12, labeled 7, 라벨 ['카드 클릭','PRD','기능명세','유저플로우']. A-->B(라벨없음)·A-->|라벨|B(라벨보존) 둘 다 변환.",
+            "caption": "엣지 변환 + |라벨| 보존"
+          }
+        },
+        {
+          "scenario": "유저플로우 파일 없으면 안전한 4xx (없는 group/version → 404, not 500)",
+          "layer": "server",
+          "means": "런타임 curl 없는 flow → 404; docs.test 파일없음 케이스",
+          "basis": "GET ?flow=does-not-exist-v9 → HTTP 404 (500 아님); buildDocsPlanningUserFlow null → 라우트 404",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "S7: no-such-flow HTTP 404. 빌더가 파일 없으면 null 반환 → 라우트가 404로 안전 응답(500 회피).",
+            "caption": "파일 없음 → 404 안전 응답"
+          }
+        }
+      ]
+    },
+    {
+      "title": "드래그 좌표를 overlay JSON에 저장한다 (view)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "좌표 x/y는 임의 number — 의미있는 수치 경계 없음(LayoutOverlay 검증이 number 여부만 봄)",
+          "동시성": "단독 개발자 드래그 저장 — 동시 쓰기 시나리오 없음(개인용)",
+          "대량": "노드 수십 규모 overlay — 대량 좌표 입력 비현실적"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "좌표 저장 후 재조회 시 반영 (PUT layout → overlay.json 기록 → 재조회 layout 포함, 드래그 실픽셀)",
+          "layer": "web",
+          "means": "Playwright 실픽셀: 카드 클릭→유저플로우 그래프 렌더→노드 드래그→onNodeDragStop→PUT 저장→overlay JSON 11노드 좌표 기록; 런타임 curl PUT 재조회",
+          "basis": "Playwright 8904: react-flow 노드 11 렌더, 드래그 후 overlay.json에 11좌표 기록(uflow-x-start {619,191}); 런타임 S8 PUT 200 → 재조회 layout 반영",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/userflow-graph-section.png",
+            "caption": "유저플로우 그래프 실픽셀(시작 stadium·화면 box·행동 diamond·엣지 라벨). 드래그→overlay JSON 11노드 좌표 기록, 재조회 반영(S8 PUT 200)"
+          }
+        },
+        {
+          "scenario": "overlay 저장은 명세 .md를 변경하지 않는다 (좌표만 쓰고 Mermaid .md 불변)",
+          "layer": "server",
+          "means": "런타임 PUT 전후 main-v1.md md5 비교 + docs.test overlay-only 케이스",
+          "basis": "PUT layout 전후 main-v1.md md5 동일(b160c155...); writeDocsUserFlowOverlay는 .overlay.json만 씀",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "S9: md5 before=after=b160c155ae8b0d035cb6fbae670864e2. PUT은 main-v1.overlay.json만 쓰고 main-v1.md(Mermaid 명세) 무변경.",
+            "caption": "overlay 쓰기가 .md 명세 불변"
+          }
+        }
+      ]
+    },
+    {
+      "title": "쓰기 라우트의 경로안전·입력검증 불변 (view)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "경로/입력 검증은 화이트리스트 통과/실패 이분 — 수치 경계 없음",
+          "동시성": "경로안전은 요청별 순수 검증(resolveDocsDir) — 상태 공유 없어 race 무관",
+          "대량": "검증은 단일 요청 단위 — 대량 개념 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "경로 조작 차단 (읽기·쓰기 모두 — project/group/version에 .. → 4xx, 디렉토리 밖 접근 안함)",
+          "layer": "server",
+          "means": "런타임 curl 경로조작 GET/PUT + group .. + docs.test 경로조작 케이스",
+          "basis": "traversal GET 404 · traversal PUT 404 (resolveDocsDir .. 차단) · bad-flow(..) PUT 400 (group 화이트리스트)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "S10: traversal-GET 404, traversal-PUT 404 (resolveDocsDir 화이트리스트). S10b: flow=../escape PUT 400 (group/version 파일명 화이트리스트). 디렉토리 밖 읽기/쓰기 차단.",
+            "caption": "경로 조작 GET/PUT 4xx 차단"
+          }
+        },
+        {
+          "scenario": "잘못된 layout body 거부 (LayoutOverlay 아닌 body → isLayoutOverlay 실패 4xx, 파일 안씀)",
+          "layer": "server",
+          "means": "런타임 curl 비정상 body(문자열값/배열) + docs.test body검증 케이스",
+          "basis": "bad-body-string PUT 400 · bad-body-array PUT 400 (isLayoutOverlay 런타임검증); docs.test PASS",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "S11: {\"a\":\"notcoords\"} → 400, [1,2,3] → 400. isLayoutOverlay가 {id:{x:number,y:number}} 아닌 body 거부, overlay 파일 미작성.",
+            "caption": "잘못된 body → isLayoutOverlay 400 거부"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 9,
+      "passed": 9,
+      "failed": 0,
+      "basis": "jest planningUserFlowBuilder+docs.test 36/36 + 런타임 curl(8905) GET/PUT 전 케이스",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 2,
+      "passed": 2,
+      "failed": 0,
+      "basis": "Playwright 실픽셀(8904, PROJECTS_ROOT/DOCS_ROOT=/home/gaegul): 카드→그래프11노드 렌더+드래그→overlay 저장, 콘솔에러0",
+      "reason": ""
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "flowforge는 server+web 모노레포, android 레이어 없음",
+      "reason": "적용 불가: Android 프로젝트 아님"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "non-macOS (Linux)",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260629-0115.html"
+}
