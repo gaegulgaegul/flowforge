@@ -56,6 +56,17 @@ const PLANNING_PRD = [
   "읽기전용.",
 ].join("\n");
 
+// 기획 기능명세서(features.md) — 3단 트리 + capability 키 + 속성.
+const PLANNING_FEATURES = [
+  "# 기능명세서",
+  "## 사진 업로드",
+  "<!-- capability: photo-upload -->",
+  "(중요도: 높음, 상태: 진행중)",
+  "### 단일 업로드",
+  "(중요도: 중간, 상태: 시작전)",
+  "#### 파일 선택",
+].join("\n");
+
 async function loadApp() {
   const mod = await import("../../index.js");
   return mod.app;
@@ -68,10 +79,11 @@ describe("docs API", () => {
     ROOT = mkdtempSync(join(tmpdir(), "docs-api-"));
     makeProject("ssok", { "user-flow.md": USER_FLOW, "PRD.md": PRD });
     makeProject("only-prd", { "PRD.md": PRD });
-    // planning-only 프로젝트: charter 문서 없이 docs/planning/prd.md만 (하위 디렉토리 필요).
+    // planning-only 프로젝트: charter 문서 없이 docs/planning/prd.md + features.md (하위 디렉토리 필요).
     const planonlyDir = join(ROOT, "planonly", "docs", "planning");
     mkdirSync(planonlyDir, { recursive: true });
     writeFileSync(join(planonlyDir, "prd.md"), PLANNING_PRD);
+    writeFileSync(join(planonlyDir, "features.md"), PLANNING_FEATURES);
     // docs 없는 프로젝트(스캔에서 제외돼야 함)
     mkdirSync(join(ROOT, "empty", "docs"), { recursive: true });
     writeFileSync(join(ROOT, "empty", "docs", "notes.md"), "x");
@@ -101,6 +113,36 @@ describe("docs API", () => {
     const overview = res.body.prd.sections.find((s: { key: string }) => s.key === "overview");
     expect(overview.body).toContain("planning-only 인식 검증용");
     expect(overview.empty).toBe(false);
+  });
+
+  it("GET /api/docs/:project/planning-features — 3단 트리 + capability + 속성으로 200", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/planonly/planning-features");
+    expect(res.status).toBe(200);
+    expect(res.body.project).toBe("planonly");
+    const reqs = res.body.tree.root.children;
+    expect(reqs).toHaveLength(1);
+    expect(reqs[0].kind).toBe("requirement");
+    expect(reqs[0].label).toBe("사진 업로드");
+    expect(reqs[0].capability).toBe("photo-upload");
+    expect(reqs[0].priority).toBe("높음");
+    expect(reqs[0].status).toBe("진행중");
+    // 3단 위계: 요구사항 → 기능 → 상세기능
+    expect(reqs[0].children[0].label).toBe("단일 업로드");
+    expect(reqs[0].children[0].children[0].label).toBe("파일 선택");
+  });
+
+  it("planning-features — features.md 없는 프로젝트는 404", async () => {
+    const app = await loadApp();
+    // ssok은 charter 문서만 있고 planning/features.md 없음
+    const res = await request(app).get("/api/docs/ssok/planning-features");
+    expect(res.status).toBe(404);
+  });
+
+  it("planning-features — 경로 조작(..) 차단 404", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/..%2f..%2fetc/planning-features");
+    expect(res.status).toBe(404);
   });
 
   it("GET /api/docs/:project/graph — SpecGraph + dangling/endpoint 엣지", async () => {
