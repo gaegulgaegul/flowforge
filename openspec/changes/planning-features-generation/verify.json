@@ -1,0 +1,308 @@
+{
+  "change": "planning-features-generation",
+  "verifiedAt": "2026-06-28T15:20:49+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 11,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "openspec-plan이 features.md를 의존성 순서로 생성한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "스킬 문서 절차 — 런타임 입력 없음",
+          "잘못된타입": "문서 절차, 타입 분기 없음",
+          "동시성": "사람이 1회 실행하는 생성 절차",
+          "대량": "문서 1개 생성",
+          "특수문자": "한글 라벨 허용(문서)"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "PRD 다음 단계로 features.md 생성",
+          "layer": "server",
+          "means": "SKILL.md grep(기능명세서 생성 단계·PRD 게이트 명문화) + 도그푸딩 flowforge docs/planning/features.md 실제 생성",
+          "basis": "openspec-plan/SKILL.md '산출물 — 기능명세서(2단계)'+'절차(기능명세서 생성)' / docs/planning/features.md 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "SKILL.md에 features 생성 단계·게이트(PRD 개요 있어야 진행) 명문화. 도그푸딩으로 flowforge features.md 생성→API 200.",
+            "caption": "스킬 절차 + 도그푸딩"
+          }
+        }
+      ]
+    },
+    {
+      "title": "features.md는 확정 스키마를 따른다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "문서 스키마",
+          "잘못된타입": "마크다운 텍스트",
+          "에러경로": "문서 작성 절차",
+          "동시성": "1회 생성",
+          "대량": "문서 1개",
+          "동시성2": ""
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "요구사항에 capability 키가 부여된다",
+          "layer": "server",
+          "means": "도그푸딩 features.md의 요구사항에 <!-- capability: x --> 존재 + 빌더가 파싱(featureTreeBuilder 테스트)",
+          "basis": "docs/planning/features.md / featureTreeBuilder.test.ts capability 파싱",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "도그푸딩 features.md 4개 요구사항 전부 capability 키(planning-authoring 등). 빌더가 requirement.capability로 파싱.",
+            "caption": "스키마 준수"
+          }
+        },
+        {
+          "scenario": "노드에 중요도·상태 속성이 있다",
+          "layer": "server",
+          "means": "도그푸딩 features.md 노드에 (중요도:, 상태:) 표기 + 빌더 파싱 테스트",
+          "basis": "docs/planning/features.md / featureTreeBuilder.test.ts 속성 파싱",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "노드마다 (중요도: 높음, 상태: 진행중) 표기, 빌더가 priority/status로 파싱(테스트 PASS).",
+            "caption": "스키마 준수"
+          }
+        }
+      ]
+    },
+    {
+      "title": "flowforge가 features.md를 FeatureTree로 파싱해 제공한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "project는 string 단일 세그먼트 정규식 검증",
+          "동시성": "순수 읽기 함수(readFileSync), 공유상태 없음",
+          "대량": "단일 features.md 파싱"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "planning features 조회 성공",
+          "layer": "server",
+          "means": "supertest: planning-features 200+tree(3단)",
+          "basis": "routes/__tests__/docs.test.ts (planonly features.md 200, 위계 검증)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - GET /api/docs/:project/planning-features — 3단 트리 + capability + 속성으로 200",
+            "caption": "supertest 실측"
+          }
+        },
+        {
+          "scenario": "요구사항 노드에 capability 키가 보존된다",
+          "layer": "server",
+          "means": "jest: capability 주석→requirement.capability='photo-upload'",
+          "basis": "featureTreeBuilder.test.ts capability 파싱",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - 요구사항 노드에 capability 키를 파싱한다(기능/상세기능은 빈 문자열)",
+            "caption": "jest 실측"
+          }
+        },
+        {
+          "scenario": "노드 속성(중요도·상태)이 파싱된다",
+          "layer": "server",
+          "means": "jest: (중요도: 높음, 상태: 진행중)→priority/status",
+          "basis": "featureTreeBuilder.test.ts 속성 파싱 + 빈 속성 빈문자열",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - 노드 속성(중요도·상태)을 파싱한다 / 속성 표기가 없는 노드는 priority/status가 빈 문자열",
+            "caption": "jest 실측"
+          }
+        },
+        {
+          "scenario": "파일 없으면 안전한 4xx",
+          "layer": "server",
+          "means": "supertest: features.md 없는 프로젝트 404 + jest: 파일없으면 null",
+          "basis": "docs.test.ts 404 / featureTreeBuilder.test.ts null",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - planning-features — features.md 없는 프로젝트는 404 / features.md가 없으면 null",
+            "caption": "supertest+jest 실측"
+          }
+        },
+        {
+          "scenario": "경로 조작 차단",
+          "layer": "server",
+          "means": "supertest: ..%2f planning-features 404(resolveDocsDir 재사용)",
+          "basis": "docs.test.ts 경로조작 404",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - planning-features — 경로 조작(..) 차단 404",
+            "caption": "supertest 실측"
+          }
+        }
+      ]
+    },
+    {
+      "title": "전용 렌더로 features 트리를 시각화한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "FeatureTree 타입 고정",
+          "대량": "기획 트리는 수십 노드 규모(도그푸딩 17노드 렌더 확인)"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "기능명세 트리가 화면에 렌더된다",
+          "layer": "web",
+          "means": "Playwright 실픽셀: flowforge 카드→기능명세 섹션 ReactFlow 17노드, 3단 위계, capability 칩, priority/status 뱃지, 콘솔에러0",
+          "basis": "DOCS_ROOT 기동 server(8902, web 정적서빙)→Playwright 클릭→[data-testid=planning-features] .react-flow__node 17개",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "features-render.png",
+            "caption": "flowforge 기능명세 트리 — 3단 위계(요구사항 파랑→기능 주황→상세기능 회색) 17노드, capability 칩, priority/status 뱃지"
+          }
+        },
+        {
+          "scenario": "change spec-tree 렌더에 영향 없음",
+          "layer": "web",
+          "means": "git diff: SpecTreeNode/specTreeAdapter/spec-tree-types/specTreeBuilder 0줄 + server 테스트 회귀0(spec-tree 테스트 그대로 PASS)",
+          "basis": "git diff --stat 비어있음 / jest 129/129(spec-tree 포함)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "change spec-tree 4파일 diff 0줄(분리 입증). server 테스트 129/129 회귀0 — spec-tree 테스트 그대로 통과.",
+            "caption": "분리 전략 입증"
+          }
+        }
+      ]
+    },
+    {
+      "title": "읽기전용·경로안전 불변",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "string 단일 세그먼트",
+          "동시성": "순수 읽기 함수",
+          "대량": "단일 파일 읽기"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "planning-features 조회는 읽기 전용이다",
+          "layer": "server",
+          "means": "static grep: featureTreeBuilder.ts에 writeFileSync/mkdirSync/rmSync/unlink/appendFile 부재 + planning-features 쓰기 라우트 없음",
+          "basis": "grep -E 'writeFileSync|mkdirSync|rmSync|unlink|appendFile' featureTreeBuilder.ts → 0건",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "featureTreeBuilder.ts 쓰기 API 0건(readFileSync만). planning-features는 GET 라우트만(쓰기 없음). readonly invariant.",
+            "caption": "static-first 검증"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 9,
+      "passed": 9,
+      "failed": 0,
+      "basis": "package.json test(jest ESM) + featureTreeBuilder.ts·routes/docs.ts·SKILL.md",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 2,
+      "passed": 2,
+      "failed": 0,
+      "basis": "web 빌드 + server 정적서빙 + Playwright(브라우저 있음)",
+      "reason": ""
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "안드로이드 레이어 없음",
+      "reason": "적용 불가: 웹/서버 프로젝트"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "현재 linux",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260628-1520.html"
+}
