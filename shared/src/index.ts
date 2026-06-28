@@ -33,6 +33,14 @@ export type {
 } from './spec-tree-types.js';
 
 export type {
+  FeatureTreeNodeKind,
+  FeaturePriority,
+  FeatureStatus,
+  FeatureTreeNode,
+  FeatureTree,
+} from './feature-tree-types.js';
+
+export type {
   DocsDecision,
   DecisionTimeline,
 } from './docs-decision-types.js';
