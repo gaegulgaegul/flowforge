@@ -1,0 +1,45 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — planning-only-project-recognition</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — planning-only-project-recognition</h1>
+<p class="muted">검증일: 2026-06-28T14:42:56+09:00 · 환경: server PASS(jest ESM 21/21) · web/android SKIPPED(레이어 없음) · ios SKIPPED(macOS 필요) · run: run-20260628-1442</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 7 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>planning/prd.md만 있어도 docs 프로젝트로 인식한다</td><td>planning-only 프로젝트를 resolveDocsDir이 인식한다</td><td>server</td><td>jest: resolveDocsDir는 planning/prd.md만 있는 프로젝트도 인식한다</td><td><code>lib/__tests__/docs.test.ts (mkdtemp 픽스처, planning/prd.md만)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">PASSED - resolveDocsDir는 planning/prd.md만 있는 프로젝트도 인식한다</pre></td></tr>
+<tr><td>planning/prd.md만 있어도 docs 프로젝트로 인식한다</td><td>planning-only 프로젝트가 listDocsProjects 목록에 포함된다</td><td>server</td><td>jest: listDocsProjects는 planning/prd.md만 있는 프로젝트를 목록에 포함한다</td><td><code>lib/__tests__/docs.test.ts (planonly+charterproj 정렬 검증)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">PASSED - listDocsProjects는 planning/prd.md만 있는 프로젝트를 목록에 포함한다</pre></td></tr>
+<tr><td>planning/prd.md만 있어도 docs 프로젝트로 인식한다</td><td>planning-only 프로젝트에서 planning-prd API가 200을 반환한다</td><td>server</td><td>supertest: planning-only 프로젝트도 planning-prd가 200+5섹션</td><td><code>routes/__tests__/docs.test.ts (이전 404→200, prd.sections 5, overview 본문 일치)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">PASSED - planning-only 프로젝트(planning/prd.md만)도 planning-prd가 200+5섹션 (RED 단계서 404였음 → GREEN 200 확인)</pre></td></tr>
+<tr><td>charter 프로젝트 인식은 보존된다</td><td>charter 문서만 있는 프로젝트는 그대로 인식된다</td><td>server</td><td>jest: resolveDocsDir 절대경로 반환 + user-flow.md/PRD.md 스캔 정렬(기존 회귀)</td><td><code>lib/__tests__/docs.test.ts 기존 테스트(myproj user-flow.md)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">PASSED - resolveDocsDir는 존재하는 프로젝트의 docs 절대경로를 돌려준다 / user-flow.md 또는 PRD.md 있는 프로젝트만 스캔하고 정렬한다</pre></td></tr>
+<tr><td>charter 프로젝트 인식은 보존된다</td><td>docs 문서가 전혀 없는 프로젝트는 인식되지 않는다</td><td>server</td><td>jest: resolveDocsDir는 user-flow/PRD/planning-prd 모두 없는 프로젝트면 null</td><td><code>lib/__tests__/docs.test.ts (empty=notes.md만 → null)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">PASSED - resolveDocsDir는 docs가 없는(또는 user-flow/PRD/planning-prd 모두 없는) 프로젝트면 null</pre></td></tr>
+<tr><td>경로안전과 읽기전용은 불변이다</td><td>경로 조작은 여전히 차단된다</td><td>server</td><td>jest: &#x27;..&#x27; 거부 + 슬래시 거부 + 화이트리스트 밖 거부 + 라우트 ..%2f 404</td><td><code>lib·routes __tests__/docs.test.ts (project.includes(&#x27;..&#x27;)||/^[A-Za-z0-9_-]+$/)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">PASSED - &#x27;..&#x27; 거부 / 슬래시 거부 / 화이트리스트 밖 문자 거부 / 경로 조작(..) 차단 → 404</pre></td></tr>
+<tr><td>경로안전과 읽기전용은 불변이다</td><td>planning/prd.md 존재 확인은 읽기 전용이다</td><td>server</td><td>static grep: docs.ts에 writeFileSync/mkdirSync/rmSync/unlink/appendFile 부재</td><td><code>grep -E &#x27;writeFileSync|mkdirSync|rmSync|unlink|appendFile&#x27; server/src/lib/docs.ts → 0건</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">grep 결과 0건 — docs 모듈은 어떤 쓰기 API도 호출하지 않음(readonly invariant)</pre></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>planning/prd.md만 있어도 docs 프로젝트로 인식한다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="project는 string 단일 세그먼트로 정규식 검증, 타입 분기 없음">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="순수 읽기 함수(existsSync), 공유 상태·쓰기 없음 → race 불가">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="단일 파일 존재 여부만 확인, 데이터량 무관">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>charter 프로젝트 인식은 보존된다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="string 단일 세그먼트만 처리">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="읽기 전용, 공유 상태 없음">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="디렉토리 1단계 스캔, 존재 여부만">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>경로안전과 읽기전용은 불변이다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="라우트가 String() 강제, 단일 세그먼트">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="순수 검증 함수">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="경로 문자열 검증, 데이터량 무관">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>7</td><td>7</td><td>0</td><td>package.json test(jest ESM) + docs.ts·routes/docs.ts 존재</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가: server lib/routes 한정</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가: 웹/서버 프로젝트</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>macOS 필요</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>

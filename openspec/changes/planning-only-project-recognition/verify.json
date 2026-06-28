@@ -1,0 +1,210 @@
+{
+  "change": "planning-only-project-recognition",
+  "verifiedAt": "2026-06-28T14:42:56+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 7,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "planning/prd.md만 있어도 docs 프로젝트로 인식한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "project는 string 단일 세그먼트로 정규식 검증, 타입 분기 없음",
+          "동시성": "순수 읽기 함수(existsSync), 공유 상태·쓰기 없음 → race 불가",
+          "대량": "단일 파일 존재 여부만 확인, 데이터량 무관"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "planning-only 프로젝트를 resolveDocsDir이 인식한다",
+          "layer": "server",
+          "means": "jest: resolveDocsDir는 planning/prd.md만 있는 프로젝트도 인식한다",
+          "basis": "lib/__tests__/docs.test.ts (mkdtemp 픽스처, planning/prd.md만)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - resolveDocsDir는 planning/prd.md만 있는 프로젝트도 인식한다",
+            "caption": "jest JSON 리포터 실측"
+          }
+        },
+        {
+          "scenario": "planning-only 프로젝트가 listDocsProjects 목록에 포함된다",
+          "layer": "server",
+          "means": "jest: listDocsProjects는 planning/prd.md만 있는 프로젝트를 목록에 포함한다",
+          "basis": "lib/__tests__/docs.test.ts (planonly+charterproj 정렬 검증)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - listDocsProjects는 planning/prd.md만 있는 프로젝트를 목록에 포함한다",
+            "caption": "jest 실측"
+          }
+        },
+        {
+          "scenario": "planning-only 프로젝트에서 planning-prd API가 200을 반환한다",
+          "layer": "server",
+          "means": "supertest: planning-only 프로젝트도 planning-prd가 200+5섹션",
+          "basis": "routes/__tests__/docs.test.ts (이전 404→200, prd.sections 5, overview 본문 일치)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - planning-only 프로젝트(planning/prd.md만)도 planning-prd가 200+5섹션 (RED 단계서 404였음 → GREEN 200 확인)",
+            "caption": "supertest 실측"
+          }
+        }
+      ]
+    },
+    {
+      "title": "charter 프로젝트 인식은 보존된다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "string 단일 세그먼트만 처리",
+          "동시성": "읽기 전용, 공유 상태 없음",
+          "대량": "디렉토리 1단계 스캔, 존재 여부만"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "charter 문서만 있는 프로젝트는 그대로 인식된다",
+          "layer": "server",
+          "means": "jest: resolveDocsDir 절대경로 반환 + user-flow.md/PRD.md 스캔 정렬(기존 회귀)",
+          "basis": "lib/__tests__/docs.test.ts 기존 테스트(myproj user-flow.md)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - resolveDocsDir는 존재하는 프로젝트의 docs 절대경로를 돌려준다 / user-flow.md 또는 PRD.md 있는 프로젝트만 스캔하고 정렬한다",
+            "caption": "회귀 0 입증"
+          }
+        },
+        {
+          "scenario": "docs 문서가 전혀 없는 프로젝트는 인식되지 않는다",
+          "layer": "server",
+          "means": "jest: resolveDocsDir는 user-flow/PRD/planning-prd 모두 없는 프로젝트면 null",
+          "basis": "lib/__tests__/docs.test.ts (empty=notes.md만 → null)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - resolveDocsDir는 docs가 없는(또는 user-flow/PRD/planning-prd 모두 없는) 프로젝트면 null",
+            "caption": "경계: 문서 0개"
+          }
+        }
+      ]
+    },
+    {
+      "title": "경로안전과 읽기전용은 불변이다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "라우트가 String() 강제, 단일 세그먼트",
+          "동시성": "순수 검증 함수",
+          "대량": "경로 문자열 검증, 데이터량 무관"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "경로 조작은 여전히 차단된다",
+          "layer": "server",
+          "means": "jest: '..' 거부 + 슬래시 거부 + 화이트리스트 밖 거부 + 라우트 ..%2f 404",
+          "basis": "lib·routes __tests__/docs.test.ts (project.includes('..')||/^[A-Za-z0-9_-]+$/)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PASSED - '..' 거부 / 슬래시 거부 / 화이트리스트 밖 문자 거부 / 경로 조작(..) 차단 → 404",
+            "caption": "no-traversal 불변 입증"
+          }
+        },
+        {
+          "scenario": "planning/prd.md 존재 확인은 읽기 전용이다",
+          "layer": "server",
+          "means": "static grep: docs.ts에 writeFileSync/mkdirSync/rmSync/unlink/appendFile 부재",
+          "basis": "grep -E 'writeFileSync|mkdirSync|rmSync|unlink|appendFile' server/src/lib/docs.ts → 0건",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "grep 결과 0건 — docs 모듈은 어떤 쓰기 API도 호출하지 않음(readonly invariant)",
+            "caption": "static-first 검증"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 7,
+      "passed": 7,
+      "failed": 0,
+      "basis": "package.json test(jest ESM) + docs.ts·routes/docs.ts 존재",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "web 코드 변경 없음",
+      "reason": "적용 불가: server lib/routes 한정"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "안드로이드 레이어 없음",
+      "reason": "적용 불가: 웹/서버 프로젝트"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "현재 linux",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260628-1442.html"
+}
