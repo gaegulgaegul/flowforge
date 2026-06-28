@@ -160,3 +160,16 @@ charter 산출물(`user-flow.md`/`PRD.md`) 없이 `docs/planning/prd.md`만 가�
 - invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 디렉토리 밖 파일 미접근(인식 범위 확장과 무관하게 불변)
 - behavior: hasDocs가 user-flow.md / PRD.md(charter) 또는 planning/prd.md(기획) 중 하나라도 있으면 docs 프로젝트로 인정한다. planning/prd.md OR 추가는 인식 범위를 넓힐 뿐 charter 프로젝트 인식을 보존한다.
 - metric: planning-only 프로젝트 인식 후 planning PRD 조회까지 추가 지연 0(인식 게이트는 existsSync 1회)
+
+## capability: planning-features-view — 기획 기능명세 뷰
+
+flowforge가 `docs/planning/features.md`(기획 단계 산출물)를 읽어 전용 FeatureTree로 3단 트리(요구사항→기능→상세기능)를 파싱하고 ReactFlow로 렌더한다. change spec.md용 SpecTree와 분리한다(타입 전략 B) — features 전용 타입·빌더·렌더 컴포넌트를 두고 change spec-tree는 무수정.
+
+### 기능: planning features 조회 (GET /api/docs/:project/planning-features)
+- assert:endpoint GET /api/docs/:project/planning-features
+- assert:symbol buildDocsPlanningFeatures
+- invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 디렉토리 밖 파일 미접근
+- invariant:safe-4xx features.md 없거나 없는 project면 500 아닌 404 반환
+- invariant:readonly 읽기전용 조회 — features.md를 쓰거나 수정하는 라우트 없음(readFileSync만)
+- behavior: features.md를 헤더 레벨(##/###/####)로 3단 위계 파싱, 요구사항에 capability 키(`<!-- capability: -->`)·노드에 중요도/상태 속성을 채운 FeatureTree로 반환
+- metric: planning features 조회 응답 시간 목표 200ms
