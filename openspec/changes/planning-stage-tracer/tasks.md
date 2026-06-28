@@ -18,7 +18,7 @@
 - [x] GREEN: `web/src/api.ts`에 `fetchDocsPlanningPrd(project)` 추가 + `App.tsx`에서 호출해 기존 `PrdPanel`에 전달 (새 컴포넌트/타입 만들지 않음).
 
 ### Sequential: 도그푸딩 입력 생성
-- [ ] openspec-plan 절차대로 flowforge 자체의 PRD를 생성해 `flowforge/docs/planning/prd.md`로 저장 (이 "기획 단계 신설"을 5섹션 PRD로). 기존 `docs/PRD.md`·`docs/spec.md`는 건드리지 않음.
+- [x] openspec-plan 절차대로 flowforge 자체의 PRD를 생성해 `flowforge/docs/planning/prd.md`로 저장 (이 "기획 단계 신설"을 5섹션 PRD로). 기존 `docs/PRD.md`·`docs/spec.md`는 건드리지 않음.
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
-- [ ] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트 → UI 전부 PASS. UI는 DOCS_ROOT=flowforge로 기동 후 `GET /api/docs/flowforge/planning-prd` 200+5섹션 확인 + Playwright 실픽셀로 PrdPanel 5섹션 렌더 + 원본 고유 문구 화면 표시 관찰(그림자 아닌 실체).
+- [x] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트 → UI 전부 PASS. UI는 DOCS_ROOT=flowforge로 기동 후 `GET /api/docs/flowforge/planning-prd` 200+5섹션 확인 + Playwright 실픽셀로 PrdPanel 5섹션 렌더 + 원본 고유 문구 화면 표시 관찰(그림자 아닌 실체).
