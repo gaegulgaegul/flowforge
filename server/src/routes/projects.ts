@@ -15,13 +15,36 @@ import { listProjectCards, projectsRoot } from "../lib/projects.js";
 import {
   parseCharterCapabilities,
   buildCapabilityIndex,
+  buildCapabilityDetail,
+  type UserFlowCaps,
 } from "../lib/capabilityIndex.js";
 import {
   parseCapabilityLabels,
   capabilityLabel,
   changeLabel,
 } from "../lib/koreanLabels.js";
+import { buildDocsPlanningFeatures } from "../parser/featureTreeBuilder.js";
+import { listDocsUserFlows, readDocsUserFlowSpec } from "../lib/docs.js";
 import { safe } from "../lib/safe-error.js";
+
+/** user-flow 명세 본문에서 `> capability: <키>` 마커가 선언한 capability 키들. */
+const RE_FLOW_CAP = /^>\s*capability:\s*([A-Za-z0-9_-]+)\s*$/;
+
+/** docsDir의 user-flow stem마다 선언 capability 키를 스캔한다(읽기전용·글자단위). */
+function scanUserFlowCaps(docsDir: string): UserFlowCaps[] {
+  const out: UserFlowCaps[] = [];
+  for (const stem of listDocsUserFlows(docsDir)) {
+    const body = readDocsUserFlowSpec(docsDir, stem);
+    if (body === null) continue;
+    const caps: string[] = [];
+    for (const raw of body.split(/\r?\n/)) {
+      const m = RE_FLOW_CAP.exec(raw);
+      if (m && m[1]) caps.push(m[1]);
+    }
+    out.push({ stem, caps });
+  }
+  return out;
+}
 
 export const projectsRouter = Router();
 
@@ -112,5 +135,35 @@ projectsRouter.get(
       displayName: changeLabel(key, readProposalTitle(changesRoot, key)),
     }));
     res.json({ project, capability: cap, changes });
+  }),
+);
+
+projectsRouter.get(
+  "/api/projects/:project/capabilities/:cap",
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const cap = String(req.params.cap ?? "");
+    const dir = resolveProjectDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "project_not_found" });
+      return;
+    }
+    const { specLabels, changesRoot, index } = indexFor(dir);
+    // docsDir는 같은 프로젝트 디렉토리 아래(PROJECTS_ROOT 일관 — DOCS_ROOT 분리 회피).
+    const docsDir = join(dir, "docs");
+    const featureTree = buildDocsPlanningFeatures(docsDir);
+    const userFlowCaps = scanUserFlowCaps(docsDir);
+    const detail = buildCapabilityDetail(cap, index, featureTree, userFlowCaps);
+    res.json({
+      project,
+      key: cap, // 영문 슬러그 불변(라우팅·연결 키)
+      koreanLabel: capabilityLabel(cap, specLabels, new Map()),
+      features: detail.features,
+      userFlows: detail.userFlows,
+      changes: detail.changes.map((key) => ({
+        key, // 영문 change 디렉토리명 불변
+        displayName: changeLabel(key, readProposalTitle(changesRoot, key)),
+      })),
+    });
   }),
 );

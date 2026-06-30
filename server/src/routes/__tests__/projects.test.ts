@@ -123,9 +123,10 @@ describe("GET /api/projects/:project/capabilities/:cap (종합 상세)", () => {
   it("features 서브트리 + 연결 유저플로우 + change 목록을 한 응답으로 묶는다", async () => {
     makeCharterSpec("proj", "## capability: payment — 결제\n## capability: shipping — 배송\n");
     makeChange("proj", "add-payment", ["payment"], "결제 추가");
+    // capability 주석은 헤더 '다음 줄'에 온다(featureTreeBuilder 스키마 — 헤더 줄엔 안 둠).
     makeFeatures(
       "proj",
-      "## 요구사항: 결제 <!-- capability: payment -->\n### 결제하기\n## 요구사항: 배송 <!-- capability: shipping -->\n### 배송조회\n",
+      "## 결제\n<!-- capability: payment -->\n### 결제하기\n## 배송\n<!-- capability: shipping -->\n### 배송조회\n",
     );
     makeUserFlow("proj", "checkout-v1", "> capability: payment\n\n```mermaid\nflowchart TD\n  A[시작]\n```\n");
     makeUserFlow("proj", "browse-v1", "> capability: shipping\n\n```mermaid\nflowchart TD\n  B[탐색]\n```\n");
@@ -147,7 +148,9 @@ describe("GET /api/projects/:project/capabilities/:cap (종합 상세)", () => {
   });
 
   it("연결 0개여도 빈 구조로 200(404 아님)", async () => {
-    makeCharterSpec("proj", "## capability: lonely\n");
+    // change 디렉토리는 존재하되(프로젝트로 인식) lonely엔 어떤 연결도 없는 상황.
+    makeCharterSpec("proj", "## capability: lonely\n## capability: other\n");
+    makeChange("proj", "ch-other", ["other"]);
     const res = await request(await loadApp()).get("/api/projects/proj/capabilities/lonely");
     expect(res.status).toBe(200);
     expect(res.body.key).toBe("lonely");

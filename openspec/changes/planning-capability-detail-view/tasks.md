@@ -9,7 +9,7 @@
 
 ### Sequential: 통합 GREEN (라우트가 함수에 의존 — 순차)
 - [x] GREEN: `server/src/lib/capabilityIndex.ts`에 `buildCapabilityDetail(cap, charterCaps, changesRoot, featureTree, userFlowMarkers)` 순수 함수 구현 — byCapability 재사용, featureTree에서 capability 일치 가지 필터, 주입된 userFlow 마커 맵에서 일치 stem 추출. 글자단위 정확 비교(거짓연결0).
-- [ ] GREEN: `server/src/routes/projects.ts`에 `GET /api/projects/:project/capabilities/:cap` 라우트 — resolveProjectDir/indexFor/safe() 재사용. docsDir에서 buildDocsPlanningFeatures + listDocsUserFlows·readDocsUserFlowSpec로 `> capability:` 마커 스캔해 buildCapabilityDetail에 주입. (유저플로우 마커 스캔 경량 헬퍼는 라우트/lib에 최소 구현)
+- [x] GREEN: `server/src/routes/projects.ts`에 `GET /api/projects/:project/capabilities/:cap` 라우트 — resolveProjectDir/indexFor/safe() 재사용. docsDir에서 buildDocsPlanningFeatures + listDocsUserFlows·readDocsUserFlowSpec로 `> capability:` 마커 스캔해 buildCapabilityDetail에 주입. (유저플로우 마커 스캔 경량 헬퍼는 라우트/lib에 최소 구현)
 
 ### Sequential: web 통합 (백엔드 완료 후 — api→App 의존, 순차)
 - [ ] web/src/api.ts에 `fetchCapabilityDetail(project, cap)` 클라이언트 함수 추가 + CapabilityDetail 타입 import.
