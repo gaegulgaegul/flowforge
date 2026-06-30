@@ -1,0 +1,46 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — planning-capability-detail-view</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — planning-capability-detail-view</h1>
+<p class="muted">검증일: 2026-06-30T08:30:00+09:00 · 환경: server(jest+express, applicable), web(React/Playwright 실픽셀, applicable), android(SKIPPED 적용불가: 안드 소스 없음), ios(SKIPPED macOS 필요) · run: run-20260630-0830</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 9 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>capability 단위 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)</td><td>종합 상세 200 반환 (key/koreanLabel/features/userFlows/changes)</td><td>server</td><td>런타임 curl(픽스처 ffverifycap/payment) status=200 + 구조 검증 + jest projects.test</td><td><code>express + jest(server/package.json test)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>—</td></tr>
+<tr><td>capability 단위 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)</td><td>features 서브트리는 capability 일치 가지만 포함</td><td>server</td><td>런타임 curl: payment features labels=[결제], catalog 제외 확인 + jest (a)케이스</td><td><code>express + jest</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>—</td></tr>
+<tr><td>capability 단위 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)</td><td>유저플로우는 `&gt; capability:` 마커로 연결</td><td>server</td><td>런타임 curl: userFlows=[checkout-v1,pay-confirm-v1], browse-v1(catalog) 제외 + jest (b)케이스</td><td><code>express + jest</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>—</td></tr>
+<tr><td>capability 단위 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)</td><td>연결 0개여도 빈 구조로 200</td><td>server</td><td>런타임 curl(lonely) status=200 + 빈 구조 + jest (d)케이스/라우트 빈구조</td><td><code>express + jest</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>—</td></tr>
+<tr><td>capability 단위 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)</td><td>경로 조작 차단 (no-traversal)</td><td>server</td><td>런타임 curl(..%2F..%2Fetc) + jest 경로조작 케이스</td><td><code>express + jest</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>—</td></tr>
+<tr><td>capability 단위 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)</td><td>존재하지 않는 project는 safe-4xx</td><td>server</td><td>런타임 curl(ghostproj) + jest 비프로젝트 케이스</td><td><code>express + jest</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>—</td></tr>
+<tr><td>capability 통합 drill-down 화면 (web)</td><td>capability 클릭 시 통합 화면 전환 (features+유저플로우+change co-locate)</td><td>web</td><td>Playwright 실픽셀: payment 클릭→cap-detail 섹션 3개+features 노드3+유저플로우 stem2+change 2</td><td><code>React dist 정적서빙 + Playwright(chromium-1208)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-cap-payment.png"><img src="verify-cap-payment.png" alt="payment 통합: featuresSection·userFlowsSection·CapabilityChangeList co-locate. featureNodeCount=3, userFlowStems=[checkout-v1,pay-confirm-v1], changeLabels=[결제 추가,결제 리팩터]. 콘솔 pageerror 0." style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>capability 통합 drill-down 화면 (web)</td><td>빈 섹션 명시 표면화</td><td>web</td><td>Playwright 실픽셀: lonely 클릭→빈 섹션 3개 명시 메시지</td><td><code>Playwright</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-cap-lonely.png"><img src="verify-cap-lonely.png" alt="lonely: &#x27;연결된 기능명세 없음&#x27;/&#x27;연결된 유저플로우 없음&#x27;/&#x27;이 capability에 연결된 change가 없습니다&#x27; 3개 모두 명시(조용히 숨기지 않음)." style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>capability 통합 drill-down 화면 (web)</td><td>change 클릭 시 기존 5종 뷰 진입 보존</td><td>web</td><td>Playwright 실픽셀: change 클릭→5종 탭(tab-prd) 노출=views 단계 진입</td><td><code>Playwright</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-change-views.png"><img src="verify-change-views.png" alt="change 클릭→fiveTabsVisible=true(PRD/기능명세서/유저플로우/IA/와이어 탭), views 단계 진입. 기존 drill-down 회귀 0." style="max-width:240px;border:1px solid #ccc"></a></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>capability 단위 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="capability 키는 문자열 식별자(min/max 수치 경계 없음). 존재/부재만 의미 있고 빈값 클래스가 그걸 커버.">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="읽기전용 단일 조회(쓰기 없음) — race condition 대상 상태변경 없음. web 클릭 race는 dashReqToken 가드로 별도 처리.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="한 capability당 features 가지·유저플로우·change는 프로젝트 규모상 수~수십 건. 대량 데이터 경로 아님(전체 스캔은 buildCapabilityIndex 기존 검증분).">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>capability 통합 drill-down 화면 (web)</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="UI는 capability 클릭 이벤트만 받음(자유 입력 없음) — 타입 오류 입력 경로 없음.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="표시 컴포넌트(수치 경계 없음). 빈 섹션(0건)이 하한 경계이고 covered.">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="한 capability 화면의 features/유저플로우/change 수는 소규모(ReactFlow는 기존 skeleton에서 검증된 규모).">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="표시 텍스트는 한글 라벨(koreanLabel) 정상 렌더 — Playwright에서 한글 라벨 깨짐 0 관찰.">N/A</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>6</td><td>6</td><td>0</td><td>런타임 curl 6 scenario + jest 단위/통합 전부 PASS</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>3</td><td>3</td><td>0</td><td>통합 화면 co-locate·빈 섹션 명시·5종 뷰 진입 실픽셀 관찰. pageerror 0. (네트워크 404 1건=/api/docs/ffverifycap/planning-prd, 기획 PRD 미작성 프로젝트의 정상 동작이며 catch로 &#x27;없음&#x27; 처리 — 종합 엔드포인트는 200, 앱 JS 에러 아님)</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>macOS 필요</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>

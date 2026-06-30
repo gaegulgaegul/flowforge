@@ -16,4 +16,4 @@
 - [x] web/src/App.tsx `openCapability`에서 fetchCapabilityDetail 호출, `capChanges` 단계 렌더를 확장 — features ReactFlow(featureTreeAdapter 재사용) + 유저플로우 목록/링크 + CapabilityChangeList를 한 화면에 co-locate. 빈 섹션은 "연결된 항목 없음" 명시. change 클릭→기존 5종 뷰 진입 보존. dashReqToken race가드 유지. nodeTypes 상수 컴포넌트 밖.
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
-- [ ] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(회귀 포함) → UI(Playwright 실픽셀: capability 클릭→통합 화면에 features+유저플로우+change 목록 co-locate 관찰, change 클릭→5종 뷰 진입, 콘솔에러0) 전부 PASS
+- [x] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(회귀 포함) → UI(Playwright 실픽셀: capability 클릭→통합 화면에 features+유저플로우+change 목록 co-locate 관찰, change 클릭→5종 뷰 진입, 콘솔에러0) 전부 PASS

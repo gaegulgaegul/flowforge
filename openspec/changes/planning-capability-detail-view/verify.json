@@ -1,0 +1,206 @@
+{
+  "change": "planning-capability-detail-view",
+  "verifiedAt": "2026-06-30T08:30:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 9,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "capability 단위 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "capability 키는 문자열 식별자(min/max 수치 경계 없음). 존재/부재만 의미 있고 빈값 클래스가 그걸 커버.",
+          "동시성": "읽기전용 단일 조회(쓰기 없음) — race condition 대상 상태변경 없음. web 클릭 race는 dashReqToken 가드로 별도 처리.",
+          "대량": "한 capability당 features 가지·유저플로우·change는 프로젝트 규모상 수~수십 건. 대량 데이터 경로 아님(전체 스캔은 buildCapabilityIndex 기존 검증분)."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "종합 상세 200 반환 (key/koreanLabel/features/userFlows/changes)",
+          "layer": "server",
+          "means": "런타임 curl(픽스처 ffverifycap/payment) status=200 + 구조 검증 + jest projects.test",
+          "basis": "express + jest(server/package.json test)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "caption": "S1: status=200, key=payment, koreanLabel=결제, features.reqs=1, userFlows=[checkout-v1,pay-confirm-v1], changes=[add-payment,refactor-payment](한글제목)"
+          }
+        },
+        {
+          "scenario": "features 서브트리는 capability 일치 가지만 포함",
+          "layer": "server",
+          "means": "런타임 curl: payment features labels=[결제], catalog 제외 확인 + jest (a)케이스",
+          "basis": "express + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "caption": "S2: payment features=[결제]만, 상품목록(catalog) 제외. jest capabilityIndex (a) PASS"
+          }
+        },
+        {
+          "scenario": "유저플로우는 `> capability:` 마커로 연결",
+          "layer": "server",
+          "means": "런타임 curl: userFlows=[checkout-v1,pay-confirm-v1], browse-v1(catalog) 제외 + jest (b)케이스",
+          "basis": "express + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "caption": "S3: payment userFlows=[checkout-v1,pay-confirm-v1], browse-v1 제외. jest (b) PASS"
+          }
+        },
+        {
+          "scenario": "연결 0개여도 빈 구조로 200",
+          "layer": "server",
+          "means": "런타임 curl(lonely) status=200 + 빈 구조 + jest (d)케이스/라우트 빈구조",
+          "basis": "express + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "caption": "S4: lonely status=200, features.root.children=[], userFlows=[], changes=[]. jest (d)+라우트 빈구조 PASS"
+          }
+        },
+        {
+          "scenario": "경로 조작 차단 (no-traversal)",
+          "layer": "server",
+          "means": "런타임 curl(..%2F..%2Fetc) + jest 경로조작 케이스",
+          "basis": "express + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "caption": "S5: /api/projects/..%2F..%2Fetc/capabilities/payment → 404. jest 경로조작 PASS"
+          }
+        },
+        {
+          "scenario": "존재하지 않는 project는 safe-4xx",
+          "layer": "server",
+          "means": "런타임 curl(ghostproj) + jest 비프로젝트 케이스",
+          "basis": "express + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "caption": "S6: ghostproj → 404(500 아님, 내부에러 미노출 safe). jest 비프로젝트 PASS"
+          }
+        }
+      ]
+    },
+    {
+      "title": "capability 통합 drill-down 화면 (web)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "UI는 capability 클릭 이벤트만 받음(자유 입력 없음) — 타입 오류 입력 경로 없음.",
+          "경계값": "표시 컴포넌트(수치 경계 없음). 빈 섹션(0건)이 하한 경계이고 covered.",
+          "대량": "한 capability 화면의 features/유저플로우/change 수는 소규모(ReactFlow는 기존 skeleton에서 검증된 규모).",
+          "특수문자": "표시 텍스트는 한글 라벨(koreanLabel) 정상 렌더 — Playwright에서 한글 라벨 깨짐 0 관찰."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "capability 클릭 시 통합 화면 전환 (features+유저플로우+change co-locate)",
+          "layer": "web",
+          "means": "Playwright 실픽셀: payment 클릭→cap-detail 섹션 3개+features 노드3+유저플로우 stem2+change 2",
+          "basis": "React dist 정적서빙 + Playwright(chromium-1208)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-cap-payment.png",
+            "caption": "payment 통합: featuresSection·userFlowsSection·CapabilityChangeList co-locate. featureNodeCount=3, userFlowStems=[checkout-v1,pay-confirm-v1], changeLabels=[결제 추가,결제 리팩터]. 콘솔 pageerror 0."
+          }
+        },
+        {
+          "scenario": "빈 섹션 명시 표면화",
+          "layer": "web",
+          "means": "Playwright 실픽셀: lonely 클릭→빈 섹션 3개 명시 메시지",
+          "basis": "Playwright",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-cap-lonely.png",
+            "caption": "lonely: '연결된 기능명세 없음'/'연결된 유저플로우 없음'/'이 capability에 연결된 change가 없습니다' 3개 모두 명시(조용히 숨기지 않음)."
+          }
+        },
+        {
+          "scenario": "change 클릭 시 기존 5종 뷰 진입 보존",
+          "layer": "web",
+          "means": "Playwright 실픽셀: change 클릭→5종 탭(tab-prd) 노출=views 단계 진입",
+          "basis": "Playwright",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-change-views.png",
+            "caption": "change 클릭→fiveTabsVisible=true(PRD/기능명세서/유저플로우/IA/와이어 탭), views 단계 진입. 기존 drill-down 회귀 0."
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 6,
+      "passed": 6,
+      "failed": 0,
+      "basis": "express 라우트 + jest 151/151(신규 9 포함, 회귀 0)",
+      "reason": "런타임 curl 6 scenario + jest 단위/통합 전부 PASS"
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 3,
+      "passed": 3,
+      "failed": 0,
+      "basis": "React dist + Playwright 실픽셀(chromium-1208)",
+      "reason": "통합 화면 co-locate·빈 섹션 명시·5종 뷰 진입 실픽셀 관찰. pageerror 0. (네트워크 404 1건=/api/docs/ffverifycap/planning-prd, 기획 PRD 미작성 프로젝트의 정상 동작이며 catch로 '없음' 처리 — 종합 엔드포인트는 200, 앱 JS 에러 아님)"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "안드로이드 소스 없음(flowforge=웹 프로젝트)",
+      "reason": "적용 불가"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "macOS 아님",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260630-0830.html"
+}
