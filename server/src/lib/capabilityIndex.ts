@@ -11,7 +11,7 @@
 import { readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { splitCapabilityLabel } from "./koreanLabels.js";
-import type { CapabilityChangeLink } from "@flowforge/shared";
+import type { CapabilityChangeLink, FeatureTree } from "@flowforge/shared";
 
 /** `## capability: <name>` 추출 (대소문자 무시). audit_match.RE_CAP 동치. */
 const RE_CAP = /^##\s+capability:\s*(.+?)\s*$/i;
@@ -104,4 +104,50 @@ export function buildCapabilityIndex(
   }
 
   return { byCapability, links, unlinked };
+}
+
+/** 한 user-flow stem이 선언한 capability 키들(`> capability: <키>` 마커 스캔 결과). */
+export interface UserFlowCaps {
+  stem: string;
+  caps: string[];
+}
+
+/** capability 단위 종합 집계 결과(데이터만 — koreanLabel/displayName 합성은 라우트). */
+export interface CapabilityDetailData {
+  /** capability 키와 일치하는 요구사항 가지만 남긴 features 트리. 원본이 null이면 null. */
+  features: FeatureTree | null;
+  /** `> capability: <키>`로 그 capability를 선언한 user-flow stem 목록. */
+  userFlows: string[];
+  /** 그 capability를 건드리는 change 키 목록(byCapability 그대로). */
+  changes: string[];
+}
+
+/**
+ * capability 키 하나에 대해 features 서브트리 + 연결 유저플로우 + change 목록을 집계한다.
+ * 순수 함수 — 파일 IO 없음(라우트가 featureTree·userFlowCaps를 읽어 주입). 연결은 전부
+ * **글자단위 정확 비교**(유사도 금지, 거짓연결 0). 연결 0개여도 throw 없이 빈 구조를 돌려준다.
+ *
+ * @param cap           대상 capability 영문 키(불변)
+ * @param index         buildCapabilityIndex 결과(byCapability 재사용 — 재구현 없음)
+ * @param featureTree   buildDocsPlanningFeatures 결과(없으면 null)
+ * @param userFlowCaps  각 user-flow stem이 선언한 capability 키들
+ */
+export function buildCapabilityDetail(
+  cap: string,
+  index: CapabilityIndex,
+  featureTree: FeatureTree | null,
+  userFlowCaps: UserFlowCaps[],
+): CapabilityDetailData {
+  // features: 가상 루트 아래 요구사항 중 capability가 정확히 일치하는 가지만(하위 보존).
+  const features: FeatureTree | null = featureTree
+    ? { root: { ...featureTree.root, children: featureTree.root.children.filter((r) => r.capability === cap) } }
+    : null;
+
+  // userFlows: 마커로 그 capability를 선언한 stem만(글자단위 일치).
+  const userFlows = userFlowCaps.filter((f) => f.caps.includes(cap)).map((f) => f.stem);
+
+  // changes: 역방향 인덱스 그대로.
+  const changes = index.byCapability.get(cap) ?? [];
+
+  return { features, userFlows, changes };
 }
