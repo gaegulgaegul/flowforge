@@ -1,7 +1,7 @@
 ## Tasks
 
 ### Sequential: 종합 뷰모델 타입 (선행 필수)
-- [ ] shared/src/dashboard-types.ts에 `CapabilityDetail` 타입 추가 — `{ key, koreanLabel, features: FeatureTree | null, userFlows: string[], changes: ChangeSummary[] }`. 미사용 `CapabilityNode`는 정리/주석. shared 배럴 export(index.ts) 반영. (기존 FeatureTree/ChangeSummary 재사용)
+- [x] shared/src/dashboard-types.ts에 `CapabilityDetail` 타입 추가 — `{ key, koreanLabel, features: FeatureTree | null, userFlows: string[], changes: ChangeSummary[] }`. 미사용 `CapabilityNode`는 정리/주석. shared 배럴 export(index.ts) 반영. (기존 FeatureTree/ChangeSummary 재사용)
 
 ### Parallel Group 1 (RED — 독립, 동시 실행 가능: 서로 다른 테스트 파일)
 - [ ] RED: `server/src/lib/__tests__/capabilityIndex.test.ts`에 `buildCapabilityDetail` 테스트 추가 [parallel] — (a)features 서브트리가 일치 capability 가지만 (b)유저플로우가 `> capability:` 마커로만 연결 (c)changes가 byCapability와 동일 (d)연결0이면 빈 구조. 임시 디렉토리 픽스처(makeChange + features.md + user-flow/*.md 작성).

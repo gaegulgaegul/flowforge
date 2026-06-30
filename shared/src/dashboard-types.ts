@@ -10,6 +10,8 @@
  * link (specs/<key>/) matching byte-for-byte.
  */
 
+import type { FeatureTree } from './feature-tree-types.js';
+
 /** Static audit status shown on a project card. Not computed live in the tracer bullet. */
 export type AuditStatus = 'unknown' | 'clean' | 'warn' | 'fail';
 
@@ -48,4 +50,36 @@ export interface CapabilityChangeLink {
    * False entries are surfaced as "미연결" — never silently dropped.
    */
   linked: boolean;
+}
+
+/** One change row in a capability detail (English key + Korean display name). */
+export interface CapabilityChangeRef {
+  /** Immutable change directory name (routing key). */
+  key: string;
+  /** Korean display title (proposal H1), falls back to key. */
+  displayName: string;
+}
+
+/**
+ * Aggregated detail for a single capability — co-locates the planning context
+ * (features subtree + linked user-flow stems) with the changes touching it.
+ *
+ * Linking rule unchanged: capability key matched byte-for-byte (no fuzzy match,
+ * zero false links). Empty sections are surfaced explicitly, never hidden.
+ */
+export interface CapabilityDetail {
+  /** Immutable English capability key (== specs/<key>/ directory name). */
+  key: string;
+  /** Korean display label (spec.md `## capability: key — 한글`, else key). */
+  koreanLabel: string;
+  /**
+   * Features subtree: a synthetic root whose children are the requirement
+   * nodes whose `capability` field equals `key` (with their descendants).
+   * null when docs/planning/features.md is absent.
+   */
+  features: FeatureTree | null;
+  /** Stems of user-flow specs that declare `> capability: <key>`. */
+  userFlows: string[];
+  /** Changes whose specs/<key>/ matches this capability (reverse index). */
+  changes: CapabilityChangeRef[];
 }

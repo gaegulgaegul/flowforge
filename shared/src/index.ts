@@ -50,4 +50,6 @@ export type {
   ProjectCard,
   CapabilityNode,
   CapabilityChangeLink,
+  CapabilityChangeRef,
+  CapabilityDetail,
 } from './dashboard-types.js';
