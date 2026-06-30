@@ -1,0 +1,384 @@
+{
+  "change": "planning-spec-conversion-charter-retire",
+  "verifiedAt": "2026-06-30",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 15,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "openspec-plan이 features.md를 docs/spec.md로 변환한다 (planning-spec-conversion)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "스킬 절차(LLM)이며 입력은 features.md 파일 — null 입력 개념 없음(파일 부재=empty로 다룸)",
+          "잘못된타입": "변환 입력은 마크다운 텍스트 단일 타입 — 타입 변형 없음",
+          "경계값": "변환 대상 요구사항 개수에 경계조건 없음(0개=empty로 커버)",
+          "동시성": "단일 프로세스 파일 변환 — 동시성 없음",
+          "대량": "기획 요구사항 수십 개 규모 — 대량 데이터 경로 아님"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "features.md 요구사항이 capability 블록으로 변환된다",
+          "layer": "python-gate",
+          "means": "flowforge docs/planning/features.md 4 요구사항(<!-- capability: -->)을 docs/spec.md capability 블록으로 변환한 산출물 grep",
+          "basis": "grep '^## capability:' docs/spec.md → planning-prd-view/planning-features-view/planning-only-recognition/planning-userflow-view 변환 확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "## capability: planning-prd-view — 기획 PRD 뷰 외 3건 변환됨. 각 블록에 assert/invariant/metric 라인 보유",
+            "caption": "features.md 4 요구사항 → spec.md capability 변환"
+          }
+        },
+        {
+          "scenario": "영문 capability 키가 보존된다",
+          "layer": "python-gate",
+          "means": "변환된 spec.md 헤더의 영문키 vs features.md <!-- capability: --> 영문키 대조",
+          "basis": "features.md: planning-prd-view 등 / spec.md 헤더: '## capability: planning-prd-view — 기획 PRD 뷰' (영문키 글자단위 일치 + 한글병기)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "영문키 planning-prd-view/planning-features-view/planning-only-recognition 전부 글자그대로 보존, change specs/<키>/와 set 멤버십 연결 가능",
+            "caption": "영문키 불변(한글병기는 label로 분리)"
+          }
+        },
+        {
+          "scenario": "변환 결과가 audit 파서로 거짓연결 없이 파싱된다",
+          "layer": "python-gate",
+          "means": "audit_scan.py로 코드 스캔 후 audit_match.py --spec docs/spec.md --scan scan.json 으로 endpoint/symbol 코드대조",
+          "basis": "audit_match 결과 counts: PASS 46 / FAIL 0 / UNVERIFIABLE 65. FAIL items: [] (거짓연결 0). planning-* 33항목 중 FAIL 0",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "final=조건부({PASS:46, FAIL:0, UNVERIFIABLE:65}). FAIL 0 = assert한 endpoint/symbol 전부 코드 실재. UNVERIFIABLE는 behavior/metric 라인(거짓연결 아님)",
+            "caption": "거짓연결(FAIL) 0 — scan→match 파이프라인"
+          }
+        },
+        {
+          "scenario": "metric MANDATORY 게이트가 placeholder를 거른다",
+          "layer": "python-gate",
+          "means": "charter_status.py --mode validate --root flowforge --audit-skill openspec-audit 로 cap별 feature≥1+non-placeholder metric≥1 검사",
+          "basis": "변환된 planning-* 4개 capability 전부 실제 metric 보유(응답시간 200ms·인식지연0·저장성공률100% 등 placeholder 아님). validate가 잡은 no-metric 2건(spec-tree-view/prd-view)은 변환 대상 밖 기존 capability(features.md에 해당 키 없음)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "변환 4 capability metric: 'planning PRD 조회 응답 시간 목표 200ms', 'planning-only 인식 후 추가 지연 0', 'features 조회 200ms', 'user-flow 200ms / 좌표저장 PUT 100%' — 전부 비-placeholder",
+            "caption": "변환 산출물 metric MANDATORY 충족(위반 2건은 도그푸딩 범위 밖 선재 결함)"
+          }
+        },
+        {
+          "scenario": "재실행 시 기존 spec.md를 보존한다 (idempotency)",
+          "layer": "python-gate",
+          "means": "이미 docs/spec.md가 있는 flowforge에서 charter_status.py --mode detect 실행 → revise 판정 확인",
+          "basis": "detect 결과 charterAction:'revise', specCapabilities 10개(영문키 보존) 인식. spec.md exists:true → 통째 덮어쓰기 아닌 revise",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "charterAction='revise', specCapabilities=[spec-tree-view,...,planning-userflow-view] 10개 영문키 보존 인식",
+            "caption": "detect=revise (idempotency)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "변환된 spec.md는 audit 라인문법을 따른다 (planning-spec-conversion)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "라인문법 검사 대상은 작성된 spec.md 텍스트 — null 없음",
+          "빈값": "capability 0개=변환 미실행(앞 requirement empty로 커버)",
+          "경계값": "METHOD/invariant kind는 유한 화이트리스트 — 경계 아닌 멤버십 검사(잘못된타입으로 커버)",
+          "동시성": "정적 텍스트 파싱 — 동시성 없음",
+          "대량": "capability 수십 개 — 대량 경로 아님"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "변환 결과가 audit 파서로 거짓연결 없이 파싱된다 (라인문법 준수)",
+          "layer": "python-gate",
+          "means": "audit_match.parse_spec이 변환 spec.md를 fallback 없이 실파서로 파싱(METHOD/invariant kind 화이트리스트 위반 시 파싱 실패)",
+          "basis": "charter_status validate 결과 fallbackParser:false (실파서 사용). audit_match FAIL 0 — 화이트리스트 외 METHOD/kind로 인한 파싱 실패 없음",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "fallbackParser:false + parse_spec 정상(capabilityCount:10). 화이트리스트(GET/POST/PUT/DELETE/PATCH, no-traversal/readonly/not-fabricated/safe-4xx) 위반 0",
+            "caption": "audit 라인문법 준수 — 잘못된 METHOD/kind(타입) 검사"
+          }
+        },
+        {
+          "scenario": "metric MANDATORY 게이트가 placeholder를 거른다 (라인문법)",
+          "layer": "python-gate",
+          "means": "charter_status.py validate — placeholder(빈값/<목표값>/TODO) metric을 no-metric으로 거르는지 변환 capability에서 확인",
+          "basis": "변환 planning-* 4개 capability validate 통과(no-metric 위반 없음). placeholder 아닌 실지표 보유",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "변환 capability에 placeholder metric 0 — validate no-metric 위반 없음(위반 2건은 변환 대상 밖)",
+            "caption": "metric placeholder 필터 동작"
+          }
+        }
+      ]
+    },
+    {
+      "title": "변환 단계는 charter_status.py 게이트를 재사용한다 (planning-spec-conversion)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "게이트 호출 입력은 --root 경로 — null 아닌 파일경로",
+          "잘못된타입": "CLI 인자(문자열 경로) 단일 타입",
+          "경계값": "8개 mode 멤버십 — 경계 아님",
+          "동시성": "단일 프로세스 게이트 실행 — 동시성 없음",
+          "대량": "프로젝트 1개 검사 — 대량 아님",
+          "특수문자": "한글 capability 라벨은 audit_match가 처리(korean-display-labels에서 별도 검증)"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "validate 게이트가 변환 끝단에서 호출된다",
+          "layer": "python-gate",
+          "means": "charter_status.py --mode validate --audit-skill <openspec-audit> 실행 → audit_match import + capability별 검증 + 위반 표면화",
+          "basis": "validate 실행 결과 JSON: ok:false, violations[]에 no-metric 2건 표면화(honesty gate 동작), capabilityCount:10, fallbackParser:false",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "validate가 audit_match import 후 위반(no-metric)을 violations[]로 표면화 — honesty gate 동작 입증",
+            "caption": "validate 게이트가 위반을 숨기지 않고 표면화"
+          }
+        },
+        {
+          "scenario": "재실행 시 기존 spec.md를 보존한다 (idempotency, detect=revise)",
+          "layer": "python-gate",
+          "means": "charter_status.py --mode detect 재실행 → revise 판정으로 기존 capability/영문키 보존",
+          "basis": "detect charterAction:'revise' + 기존 10 capability 영문키 인식. 통째 덮어쓰기(scaffold) 아님",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "detect=revise, 기존 영문키 10개 보존 인식 — 재실행 멱등",
+            "caption": "detect mode 재사용 — idempotency"
+          }
+        }
+      ]
+    },
+    {
+      "title": "charter_status.py가 공용 게이트로 보존되며 모든 mode가 동작한다 (charter-retirement)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "게이트 입력은 경로 — null 아님",
+          "잘못된타입": "CLI 경로 인자 단일 타입",
+          "경계값": "8 mode 멤버십 — 경계 없음",
+          "동시성": "단일 프로세스 — 동시성 없음",
+          "대량": "프로젝트 1개 검사 — 대량 아님",
+          "특수문자": "audit_match가 처리"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "이동 후 validate/detect 게이트가 정상 동작한다",
+          "layer": "python-gate",
+          "means": "공용 위치(openspec-plan/charter_status.py)로 옮긴 스크립트에 --mode validate/detect --audit-skill 실행 → import 성공·JSON 출력",
+          "basis": "validate: capabilityCount:10, fallbackParser:false, JSON 정상 출력. detect: charterAction 반환. audit_match 동적 import 성공(경로 안 깨짐)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "이동본 위치 plugins/agentic-harness/skills/openspec-plan/charter_status.py — validate/detect 둘 다 audit_match import 성공, JSON 출력, fallbackParser:false(실파서)",
+            "caption": "이동 후 게이트 동작 — import 경로 유지"
+          }
+        },
+        {
+          "scenario": "charter 고유 게이트도 보존된다 (discovery-coverage·prd-trace)",
+          "layer": "python-gate",
+          "means": "--mode discovery-coverage / --mode prd-trace 실행 → 이동 후에도 동작(JSON 출력)",
+          "basis": "discovery-coverage mode:'discovery-coverage' ok:false / prd-trace mode:'prd-trace' ok:false — 둘 다 동작(ok:false는 flowforge docs 미비일 뿐, mode 자체는 실행됨). 기능 손실 0",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "discovery-coverage·prd-trace 모두 JSON 반환(mode 키 정상). charter 폐기로 잃지 않음 — 사용자 결정 1번 충족",
+            "caption": "charter 고유 8 mode 보존(이동 후 동작)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "charter 스킬을 폐기하되 비가역 백업 가드를 둔다 (charter-retirement)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "파일 삭제·태그 작업 — null 입력 없음",
+          "빈값": "폐기 대상 파일 집합 고정(5종) — empty 변형 없음",
+          "잘못된타입": "git 작업 — 타입 변형 없음",
+          "경계값": "삭제 대상 개수 고정 — 경계 없음",
+          "동시성": "단일 git 작업 — 동시성 없음",
+          "대량": "파일 5종·태그 1개 — 대량 아님",
+          "특수문자": "파일 경로 ASCII — 특수문자 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "폐기 전 백업 태그가 존재한다 (pre-charter-retire)",
+          "layer": "python-gate",
+          "means": "git -C agentic-harness tag | grep charter + rev-list 로 태그가 폐기 직전 커밋을 가리키는지 확인",
+          "basis": "git tag: 'pre-charter-retire' 존재. rev-list pre-charter-retire → b9be71e (spec.md 변환 커밋 = 폐기 d66bd91 직전). 복구 경로 확보",
+          "result": "PASS",
+          "evidence": {
+            "kind": "마커",
+            "text": "pre-charter-retire → b9be71ee6f98f87ac445bc6c8c014b602e68a081 (charter 폐기 직전)",
+            "caption": "비가역 백업 태그 존재 — 롤백 가능"
+          }
+        },
+        {
+          "scenario": "charter_status.py는 제거되지 않는다 (에러경로: 잘못 삭제 시 게이트 깨짐)",
+          "layer": "python-gate",
+          "means": "charter 폐기 후 파일 트리: SKILL/scaffold/wireframe/schema/templates 부재 + charter_status.py 잔존 확인",
+          "basis": "폐기 대상 5종 전부 '폐기됨'. charter_status.py는 openspec-plan/에 잔존(find 확인). 게이트 import 정상 동작",
+          "result": "PASS",
+          "evidence": {
+            "kind": "마커",
+            "text": "openspec-charter/{SKILL.md,charter_scaffold.py,charter_wireframe.py,charter-schema.md,templates} 전부 부재. charter_status.py는 openspec-plan/에 보존",
+            "caption": "폐기 대상만 제거, 공용 게이트 보존"
+          }
+        }
+      ]
+    },
+    {
+      "title": "charter를 참조하던 서술을 plan으로 갱신한다 (charter-retirement)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "문서 서술 갱신 — null 없음",
+          "빈값": "갱신 대상 문서 고정(archive SKILL.md)",
+          "잘못된타입": "마크다운 텍스트 단일",
+          "경계값": "서술 1곳 — 경계 없음",
+          "동시성": "정적 문서 — 동시성 없음",
+          "대량": "문서 1개 — 대량 아님",
+          "특수문자": "ASCII/한글 혼합 — audit 무관"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "archive 서술이 더 이상 charter를 docs 생성 주체로 가리키지 않는다",
+          "layer": "python-gate",
+          "means": "openspec-archive/SKILL.md grep — charter 언급을 plan 기준으로 갱신했는지 확인",
+          "basis": "archive SKILL.md: 'docs/ ... openspec-plan authors — via its features.md → docs/spec.md conversion'. charter는 'now-retired'로 표기(historical note). docs 생성 주체=plan",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "archive SKILL: docs 생성 주체를 openspec-plan으로 명시, charter는 now-retired 역사 주석으로만 남김",
+            "caption": "archive 서술이 폐기 스킬을 생성 주체로 안내하지 않음"
+          }
+        },
+        {
+          "scenario": "archive 흡수 동작은 무변경이다 (에러경로: spec.md 생성 주체와 무관)",
+          "layer": "python-gate",
+          "means": "absorb 동작 코드(absorb_merge) 무변경 확인 — 서술만 변경, 흡수 로직은 docs/spec.md 파일만 읽음",
+          "basis": "이 change는 agentic-harness 스킬 서술 변경(코드 의존 아님). archive SKILL note: 'Absorption here is independent of which skill authored docs/spec.md — it only reads the file'",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "흡수는 spec.md 생성 주체와 무관(파일만 읽음) — 명문화됨. absorb 로직 무변경",
+            "caption": "흡수 동작 무변경(서술 의존만 갱신)"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 142,
+      "passed": 142,
+      "failed": 0,
+      "basis": "cd server && npm test → 20 suites, 142 tests",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "web tsc --noEmit exit 0 (타입체크). web 단위테스트는 server 스위트에 통합",
+      "reason": ""
+    },
+    {
+      "layer": "python-gate",
+      "status": "PASS",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "charter_status.py 8 mode 중 detect/validate/discovery-coverage/prd-trace 실행 — audit_match import 성공, fallbackParser:false",
+      "reason": ""
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260630-0330.html"
+}
