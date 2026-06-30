@@ -194,3 +194,16 @@ flowforge가 `docs/planning/user-flow/<group>-vN.md`의 Mermaid flowchart를 mer
 - invariant:safe-4xx isLayoutOverlay 검증 실패(좌표 아닌 body)·토큰 부정이면 4xx 반환하고 파일 미작성
 - behavior: 드래그 좌표(LayoutOverlay)를 `<group>-vN.overlay.json`에만 기록하고 명세 .md는 변경하지 않음, 재조회 시 저장 좌표가 dagre 자동배치보다 우선 적용
 - metric: 좌표 저장 PUT 성공률 목표 100%(유효 body 기준)
+
+## capability: planning-capability-detail — capability 통합 상세 뷰
+
+capability 키 하나에 대해 그 capability의 features 서브트리(`docs/planning/features.md`에서 capability 일치 요구사항 가지만), 연결된 유저플로우 stem 목록(`> capability:` 마커 선언 flow), 그 capability를 건드리는 change 목록(역방향 인덱스 byCapability 재사용)을 한 응답으로 묶어 제공한다. flowforge 웹은 capability 클릭 시 이 셋을 한 화면에 co-locate해 렌더(change 목록 단독이 아니라 features·유저플로우와 함께). 연결은 capability 키 글자단위 정확 비교만(유사도 금지, 거짓연결 0).
+
+### 기능: capability 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)
+- assert:endpoint GET /api/projects/:project/capabilities/:cap
+- assert:symbol buildCapabilityDetail
+- invariant:no-traversal resolveProjectDir이 `..` 및 비화이트리스트 project를, isValidCapKey가 비화이트리스트 capability 키를 차단해 디렉토리 밖 미접근
+- invariant:safe-4xx 없는 project는 404, 잘못된 capability 키는 400 — 500 아닌 4xx로 거부하고 내부 에러 미노출
+- invariant:readonly 읽기전용 종합 조회 — features.md·유저플로우·change를 읽기만 함(쓰기 라우트 없음)
+- behavior: features는 일치 capability 요구사항 가지만 필터, 유저플로우는 `> capability:` 마커 선언 stem만, changes는 byCapability 재사용 — 연결 0개여도 빈 구조로 200
+- metric: capability 종합 상세 조회 응답 시간 목표 200ms
