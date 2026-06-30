@@ -13,7 +13,9 @@ import { join } from "node:path";
 import {
   parseCharterCapabilities,
   buildCapabilityIndex,
+  buildCapabilityDetail,
 } from "../capabilityIndex.js";
+import type { FeatureTree } from "@flowforge/shared";
 
 /** openspec/changes/<change>/specs/<cap>/spec.md 픽스처. */
 function makeChange(changesRoot: string, change: string, caps: string[]): void {
@@ -78,5 +80,99 @@ describe("buildCapabilityIndex — specs 디렉토리명 ↔ capability 키 연�
     const idx = buildCapabilityIndex(charter, root);
     expect(idx.byCapability.get("cap-a")).toContain("multi");
     expect(idx.byCapability.get("cap-b")).toContain("multi");
+  });
+});
+
+/** FeatureTree 픽스처: 가상 루트 아래 요구사항 노드들(각자 capability 키). */
+function makeFeatureTree(reqs: { label: string; capability: string }[]): FeatureTree {
+  return {
+    root: {
+      id: "feat-root",
+      kind: "requirement",
+      label: "root",
+      capability: "",
+      priority: "",
+      status: "",
+      children: reqs.map((r, i) => ({
+        id: `feat-root__r-${i}`,
+        kind: "requirement" as const,
+        label: r.label,
+        capability: r.capability,
+        priority: "" as const,
+        status: "" as const,
+        children: [
+          {
+            id: `feat-root__r-${i}__f-0`,
+            kind: "feature" as const,
+            label: `${r.label}-기능`,
+            capability: "",
+            priority: "" as const,
+            status: "" as const,
+            children: [],
+          },
+        ],
+      })),
+    },
+  };
+}
+
+describe("buildCapabilityDetail — capability 단위 종합 집계", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "capdetail-"));
+  });
+  afterEach(() => rmSync(root, { recursive: true, force: true }));
+
+  it("(a) features는 일치 capability 요구사항 가지만 포함한다(다른 capability 제외)", () => {
+    const charter = new Set(["payment", "shipping"]);
+    const idx = buildCapabilityIndex(charter, root);
+    const ft = makeFeatureTree([
+      { label: "결제", capability: "payment" },
+      { label: "배송", capability: "shipping" },
+    ]);
+    const detail = buildCapabilityDetail("payment", idx, ft, []);
+    expect(detail.features).not.toBeNull();
+    const reqs = detail.features!.root.children;
+    expect(reqs).toHaveLength(1);
+    expect(reqs[0]?.label).toBe("결제");
+    expect(reqs[0]?.capability).toBe("payment");
+    // 하위 가지(기능)는 보존된다.
+    expect(reqs[0]?.children).toHaveLength(1);
+  });
+
+  it("(b) 유저플로우는 `> capability:` 마커가 그 키를 선언한 stem만 연결한다", () => {
+    const idx = buildCapabilityIndex(new Set(["payment"]), root);
+    const flows = [
+      { stem: "checkout-v1", caps: ["payment"] },
+      { stem: "browse-v1", caps: ["catalog"] },
+      { stem: "multi-v1", caps: ["catalog", "payment"] },
+    ];
+    const detail = buildCapabilityDetail("payment", idx, null, flows);
+    expect(detail.userFlows).toEqual(["checkout-v1", "multi-v1"]);
+  });
+
+  it("(c) changes는 역방향 인덱스 byCapability와 동일하다(재구현 없음)", () => {
+    const charter = new Set(["payment"]);
+    makeChange(root, "add-payment", ["payment"]);
+    makeChange(root, "refactor-payment", ["payment"]);
+    const idx = buildCapabilityIndex(charter, root);
+    const detail = buildCapabilityDetail("payment", idx, null, []);
+    expect(detail.changes.sort()).toEqual(idx.byCapability.get("payment")!.sort());
+    expect(detail.changes).toEqual(expect.arrayContaining(["add-payment", "refactor-payment"]));
+  });
+
+  it("(d) 연결 0개여도 빈 구조를 반환한다(throw·null 응답 아님)", () => {
+    const idx = buildCapabilityIndex(new Set(["lonely"]), root);
+    const detail = buildCapabilityDetail("lonely", idx, null, []);
+    expect(detail.features).toBeNull();
+    expect(detail.userFlows).toEqual([]);
+    expect(detail.changes).toEqual([]);
+  });
+
+  it("features가 null(파일 없음)이면 features=null로 안전 통과", () => {
+    const idx = buildCapabilityIndex(new Set(["x"]), root);
+    const detail = buildCapabilityDetail("x", idx, null, [{ stem: "f-v1", caps: ["x"] }]);
+    expect(detail.features).toBeNull();
+    expect(detail.userFlows).toEqual(["f-v1"]);
   });
 });

@@ -4,8 +4,8 @@
 - [x] shared/src/dashboard-types.ts에 `CapabilityDetail` 타입 추가 — `{ key, koreanLabel, features: FeatureTree | null, userFlows: string[], changes: ChangeSummary[] }`. 미사용 `CapabilityNode`는 정리/주석. shared 배럴 export(index.ts) 반영. (기존 FeatureTree/ChangeSummary 재사용)
 
 ### Parallel Group 1 (RED — 독립, 동시 실행 가능: 서로 다른 테스트 파일)
-- [ ] RED: `server/src/lib/__tests__/capabilityIndex.test.ts`에 `buildCapabilityDetail` 테스트 추가 [parallel] — (a)features 서브트리가 일치 capability 가지만 (b)유저플로우가 `> capability:` 마커로만 연결 (c)changes가 byCapability와 동일 (d)연결0이면 빈 구조. 임시 디렉토리 픽스처(makeChange + features.md + user-flow/*.md 작성).
-- [ ] RED: `server/src/routes/__tests__/projects.test.ts`에 `GET /api/projects/:project/capabilities/:cap` 테스트 추가 [parallel] — 200 구조(key/features/userFlows/changes)·경로조작 4xx·비프로젝트 4xx. supertest + PROJECTS_ROOT 임시 픽스처.
+- [x] RED: `server/src/lib/__tests__/capabilityIndex.test.ts`에 `buildCapabilityDetail` 테스트 추가 [parallel] — (a)features 서브트리가 일치 capability 가지만 (b)유저플로우가 `> capability:` 마커로만 연결 (c)changes가 byCapability와 동일 (d)연결0이면 빈 구조. 임시 디렉토리 픽스처(makeChange + features.md + user-flow/*.md 작성).
+- [x] RED: `server/src/routes/__tests__/projects.test.ts`에 `GET /api/projects/:project/capabilities/:cap` 테스트 추가 [parallel] — 200 구조(key/features/userFlows/changes)·경로조작 4xx·비프로젝트 4xx. supertest + PROJECTS_ROOT 임시 픽스처.
 
 ### Sequential: 통합 GREEN (라우트가 함수에 의존 — 순차)
 - [ ] GREEN: `server/src/lib/capabilityIndex.ts`에 `buildCapabilityDetail(cap, charterCaps, changesRoot, featureTree, userFlowMarkers)` 순수 함수 구현 — byCapability 재사용, featureTree에서 capability 일치 가지 필터, 주입된 userFlow 마커 맵에서 일치 stem 추출. 글자단위 정확 비교(거짓연결0).

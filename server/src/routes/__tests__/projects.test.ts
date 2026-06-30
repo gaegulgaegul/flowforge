@@ -35,6 +35,20 @@ function makeCharterSpec(project: string, body: string): void {
   writeFileSync(join(dir, "PRD.md"), "## decision: D1\n"); // hasCharter 신호
 }
 
+/** <ROOT>/<project>/docs/planning/features.md (기획 기능명세 3단 트리). */
+function makeFeatures(project: string, body: string): void {
+  const dir = join(ROOT, project, "docs", "planning");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "features.md"), body);
+}
+
+/** <ROOT>/<project>/docs/planning/user-flow/<stem>.md (Mermaid + `> capability:` 마커). */
+function makeUserFlow(project: string, stem: string, body: string): void {
+  const dir = join(ROOT, project, "docs", "planning", "user-flow");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, `${stem}.md`), body);
+}
+
 async function loadApp() {
   const mod = await import("../../index.js");
   return mod.app;
@@ -102,5 +116,57 @@ describe("GET /api/projects/:project/capabilities/:cap/changes", () => {
     const res = await request(await loadApp()).get("/api/projects/proj/capabilities/cap-zzz/changes");
     expect(res.status).toBe(200);
     expect(res.body.changes).toEqual([]);
+  });
+});
+
+describe("GET /api/projects/:project/capabilities/:cap (종합 상세)", () => {
+  it("features 서브트리 + 연결 유저플로우 + change 목록을 한 응답으로 묶는다", async () => {
+    makeCharterSpec("proj", "## capability: payment — 결제\n## capability: shipping — 배송\n");
+    makeChange("proj", "add-payment", ["payment"], "결제 추가");
+    makeFeatures(
+      "proj",
+      "## 요구사항: 결제 <!-- capability: payment -->\n### 결제하기\n## 요구사항: 배송 <!-- capability: shipping -->\n### 배송조회\n",
+    );
+    makeUserFlow("proj", "checkout-v1", "> capability: payment\n\n```mermaid\nflowchart TD\n  A[시작]\n```\n");
+    makeUserFlow("proj", "browse-v1", "> capability: shipping\n\n```mermaid\nflowchart TD\n  B[탐색]\n```\n");
+
+    const res = await request(await loadApp()).get("/api/projects/proj/capabilities/payment");
+    expect(res.status).toBe(200);
+    expect(res.body.key).toBe("payment");
+    expect(res.body.koreanLabel).toBe("결제"); // 출처1 병기
+    // features: payment 요구사항 가지만
+    const reqs = res.body.features.root.children;
+    expect(reqs).toHaveLength(1);
+    expect(reqs[0].capability).toBe("payment");
+    // userFlows: payment 마커 선언 stem만
+    expect(res.body.userFlows).toEqual(["checkout-v1"]);
+    // changes: 역방향 인덱스(한글 제목)
+    expect(res.body.changes).toHaveLength(1);
+    expect(res.body.changes[0].key).toBe("add-payment");
+    expect(res.body.changes[0].displayName).toBe("결제 추가");
+  });
+
+  it("연결 0개여도 빈 구조로 200(404 아님)", async () => {
+    makeCharterSpec("proj", "## capability: lonely\n");
+    const res = await request(await loadApp()).get("/api/projects/proj/capabilities/lonely");
+    expect(res.status).toBe(200);
+    expect(res.body.key).toBe("lonely");
+    expect(res.body.features).toBeNull();
+    expect(res.body.userFlows).toEqual([]);
+    expect(res.body.changes).toEqual([]);
+  });
+
+  it("존재하지 않는 프로젝트는 4xx(safe)", async () => {
+    makeChange("real", "ch1", ["cap-a"]);
+    const res = await request(await loadApp()).get("/api/projects/ghost/capabilities/cap-a");
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(res.status).toBeLessThan(500);
+  });
+
+  it("경로 조작(..)은 4xx로 거부한다(no-traversal)", async () => {
+    makeChange("real", "ch1", ["cap-a"]);
+    const res = await request(await loadApp()).get("/api/projects/..%2F..%2Fetc/capabilities/cap-a");
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(res.status).toBeLessThan(500);
   });
 });
