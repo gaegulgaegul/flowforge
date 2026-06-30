@@ -172,4 +172,11 @@ describe("GET /api/projects/:project/capabilities/:cap (종합 상세)", () => {
     expect(res.status).toBeGreaterThanOrEqual(400);
     expect(res.status).toBeLessThan(500);
   });
+
+  it("특수문자 capability 키는 400으로 거부한다(화이트리스트)", async () => {
+    makeChange("real", "ch1", ["cap-a"]);
+    // 슬래시는 라우트 매칭 자체가 안 되므로, 화이트리스트 밖 문자(공백 인코딩)로 검증.
+    const res = await request(await loadApp()).get("/api/projects/real/capabilities/cap%20bad");
+    expect(res.status).toBe(400);
+  });
 });

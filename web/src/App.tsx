@@ -326,7 +326,8 @@ export function App(): JSX.Element {
     fetchCapabilityDetail(dashProject.name, cap.key)
       .then((d) => {
         if (token !== dashReqToken.current) return; // race 가드
-        setCapFeatures(d.features ? d.features.root : null);
+        // 요구사항 가지가 0개면(필터 결과 빈 트리) "없음"으로 표면화 — 빈 ReactFlow 회피.
+        setCapFeatures(d.features && d.features.root.children.length > 0 ? d.features.root : null);
         setCapUserFlows(d.userFlows);
         setCapChanges(d.changes);
         setDashStage("capChanges");

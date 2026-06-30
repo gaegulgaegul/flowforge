@@ -56,6 +56,11 @@ function resolveProjectDir(project: string): string | null {
   return dir;
 }
 
+/** capability 키 화이트리스트(영문 슬러그). 빈값·특수문자 거부(방어적 일관성). */
+function isValidCapKey(cap: string): boolean {
+  return /^[A-Za-z0-9_-]+$/.test(cap);
+}
+
 /** <project>/docs/spec.md 본문(없으면 빈 문자열 — charter 없는 프로젝트). */
 function readCharterSpec(projectDir: string): string {
   const p = join(projectDir, "docs", "spec.md");
@@ -128,6 +133,10 @@ projectsRouter.get(
       res.status(404).json({ error: "project_not_found" });
       return;
     }
+    if (!isValidCapKey(cap)) {
+      res.status(400).json({ error: "invalid_capability" });
+      return;
+    }
     const { changesRoot, index } = indexFor(dir);
     const changeKeys = index.byCapability.get(cap) ?? [];
     const changes = changeKeys.map((key) => ({
@@ -146,6 +155,10 @@ projectsRouter.get(
     const dir = resolveProjectDir(project);
     if (!dir) {
       res.status(404).json({ error: "project_not_found" });
+      return;
+    }
+    if (!isValidCapKey(cap)) {
+      res.status(400).json({ error: "invalid_capability" });
       return;
     }
     const { specLabels, changesRoot, index } = indexFor(dir);
