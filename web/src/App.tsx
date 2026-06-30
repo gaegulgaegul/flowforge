@@ -26,7 +26,7 @@ import {
   fetchSpecTree,
   fetchProjects,
   fetchCapabilities,
-  fetchCapabilityChanges,
+  fetchCapabilityDetail,
   fetchDocsPlanningPrd,
   fetchDocsPlanningFeatures,
   fetchDocsPlanningUserFlow,
@@ -111,6 +111,12 @@ export function App(): JSX.Element {
   const [capabilities, setCapabilities] = useState<CapabilitySummary[]>([]);
   const [dashCapability, setDashCapability] = useState<CapabilitySummary | null>(null);
   const [capChanges, setCapChanges] = useState<ChangeSummary[]>([]);
+  // capability 단위 종합 상세(capChanges 단계에서 change 목록 옆에 co-locate).
+  // features 서브트리(이 capability 가지만) + 연결 유저플로우 stem 목록.
+  const [capFeatures, setCapFeatures] = useState<FeatureTreeNodeT | null>(null);
+  const [capFeatureNodes, setCapFeatureNodes] = useState<Node[]>([]);
+  const [capFeatureEdges, setCapFeatureEdges] = useState<Edge[]>([]);
+  const [capUserFlows, setCapUserFlows] = useState<string[]>([]);
   // 드릴다운 비동기 race 가드: 매 클릭마다 증가하는 토큰. 늦게 도착한 응답이
   // 다른 항목을 클릭한 뒤의 상태를 덮어쓰지 않도록, 응답 처리 전 토큰 일치를 확인한다.
   const dashReqToken = useRef(0);
@@ -179,6 +185,18 @@ export function App(): JSX.Element {
     setFeatureNodes(nodes);
     setFeatureEdges(edges);
   }, [planningFeatures]);
+
+  // capability 단위 features 서브트리(capFeatures) 바뀌면 레이아웃 재계산. null이면 비운다.
+  useEffect(() => {
+    if (!capFeatures) {
+      setCapFeatureNodes([]);
+      setCapFeatureEdges([]);
+      return;
+    }
+    const { nodes, edges } = toFeatureTreeFlow(capFeatures);
+    setCapFeatureNodes(nodes);
+    setCapFeatureEdges(edges);
+  }, [capFeatures]);
 
   const onFlowNodesChange = useCallback((changes: NodeChange[]) => {
     setFlowNodes((nds) => applyNodeChanges(changes, nds));
@@ -295,21 +313,28 @@ export function App(): JSX.Element {
     }
   }, []);
 
-  // capability 클릭: 그 capability의 change 목록(capChanges)으로.
+  // capability 클릭: 그 capability 단위 종합 상세(capChanges)로 — features 서브트리 +
+  // 연결 유저플로우 stem + change 목록을 한 화면에 co-locate.
   const openCapability = useCallback((cap: CapabilitySummary) => {
     if (!dashProject) return;
     const token = ++dashReqToken.current;
     setDashCapability(cap);
-    fetchCapabilityChanges(dashProject.name, cap.key)
-      .then((cs) => {
+    // 이전 capability 잔류를 비워 stale 플래시 방지.
+    setCapFeatures(null);
+    setCapUserFlows([]);
+    setCapChanges([]);
+    fetchCapabilityDetail(dashProject.name, cap.key)
+      .then((d) => {
         if (token !== dashReqToken.current) return; // race 가드
-        setCapChanges(cs);
+        setCapFeatures(d.features ? d.features.root : null);
+        setCapUserFlows(d.userFlows);
+        setCapChanges(d.changes);
         setDashStage("capChanges");
         setStatus("");
       })
       .catch((e: unknown) => {
         if (token !== dashReqToken.current) return;
-        setStatus(`change 목록 로드 실패: ${String(e)}`);
+        setStatus(`capability 상세 로드 실패: ${String(e)}`);
       });
   }, [dashProject]);
 
@@ -468,7 +493,43 @@ export function App(): JSX.Element {
             )}
           </div>
         ) : dashStage === "capChanges" ? (
-          <div className="dash-body">
+          // capability 통합 drill-down: features 서브트리 + 연결 유저플로우 + change 목록을 한 화면에.
+          <div className="dash-body" data-testid="cap-detail">
+            {/* features 서브트리(이 capability 가지만) */}
+            <section className="dash-cap-features" data-testid="cap-detail-features">
+              <h3 className="dash-h">{dashCapability?.koreanLabel} — 기능명세(이 capability)</h3>
+              {capFeatures ? (
+                <div className="dash-feature-flow">
+                  <ReactFlow
+                    key="d-cap-features"
+                    nodes={capFeatureNodes}
+                    edges={capFeatureEdges}
+                    nodeTypes={nodeTypes}
+                    nodesDraggable={false}
+                    fitView
+                  >
+                    <Background />
+                    <Controls />
+                  </ReactFlow>
+                </div>
+              ) : (
+                <p className="dash-empty">연결된 기능명세 없음</p>
+              )}
+            </section>
+            {/* 연결된 유저플로우 stem 목록(`> capability:` 마커로 선언한 flow) */}
+            <section className="dash-cap-user-flows" data-testid="cap-detail-user-flows">
+              <h3 className="dash-h">{dashCapability?.koreanLabel} — 연결 유저플로우</h3>
+              {capUserFlows.length === 0 ? (
+                <p className="dash-empty">연결된 유저플로우 없음</p>
+              ) : (
+                <ul className="dash-flow-list">
+                  {capUserFlows.map((stem) => (
+                    <li key={stem} className="dash-flow-item">{stem}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            {/* 이 capability를 건드리는 change 목록(기존 컴포넌트 재사용) */}
             <CapabilityChangeList
               capabilityLabel={dashCapability?.koreanLabel ?? ""}
               changes={capChanges}

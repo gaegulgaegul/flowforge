@@ -76,17 +76,28 @@ export async function fetchCapabilities(project: string): Promise<CapabilitySumm
   return data.capabilities;
 }
 
-/** 한 capability에 연결된 change 목록(미연결이면 빈 배열, 404 아님). */
-export async function fetchCapabilityChanges(
+/**
+ * 한 capability 단위 종합 상세 — features 서브트리 + 연결 유저플로우 stem + 건드리는 change 목록.
+ * 연결 0개여도 빈 구조로 200(404 아님). features는 features.md 없으면 null.
+ */
+export interface CapabilityDetailResponse {
+  project: string;
+  key: string;
+  koreanLabel: string;
+  features: FeatureTree | null;
+  userFlows: string[];
+  changes: ChangeSummary[];
+}
+
+export async function fetchCapabilityDetail(
   project: string,
   capability: string,
-): Promise<ChangeSummary[]> {
+): Promise<CapabilityDetailResponse> {
   const res = await fetch(
-    `/api/projects/${encodeURIComponent(project)}/capabilities/${encodeURIComponent(capability)}/changes`,
+    `/api/projects/${encodeURIComponent(project)}/capabilities/${encodeURIComponent(capability)}`,
   );
-  if (!res.ok) throw new Error(`capability-changes ${res.status}`);
-  const data = (await res.json()) as { changes: ChangeSummary[] };
-  return data.changes;
+  if (!res.ok) throw new Error(`capability-detail ${res.status}`);
+  return (await res.json()) as CapabilityDetailResponse;
 }
 
 export async function fetchGraph(id: string): Promise<GraphResponse> {
