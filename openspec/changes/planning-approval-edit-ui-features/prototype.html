@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>prototype — planning-approval-edit-ui-features (기능명세 속성 승인UI)</title>
+<style>
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; margin:0; padding:24px;
+         background:#fafbfc; color:#1f2328; line-height:1.5; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .sub { color:#6e7781; margin:0 0 16px; font-size:13px; }
+  .label { padding:12px 14px; border-radius:8px; margin:0 0 16px; font-size:13px;
+           background:#ddf4ff; border:1px solid #54aeff; }
+  .label code { background:#eaeef2; padding:1px 5px; border-radius:4px; }
+  .note { background:#fff8e1; border:1px solid #e6c200; padding:10px 14px; border-radius:8px;
+          margin:0 0 16px; font-size:12.5px; }
+  .panel { max-width:880px; border:1px solid #d0d7de; border-radius:12px; background:#fff;
+           overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .panel-head { background:#f6f8fa; border-bottom:1px solid #d0d7de; padding:12px 18px; font-weight:600; }
+  .banner { background:#fff0f6; border-bottom:1px solid #ffb3d1; padding:10px 18px;
+            font-size:13px; display:flex; align-items:center; gap:10px; }
+  .badge { background:#d1242f; color:#fff; border-radius:999px; padding:1px 9px; font-size:12px; }
+  .card { padding:14px 18px; border-bottom:1px solid #eaeef2; }
+  .card:last-of-type { border-bottom:0; }
+  .path { font-size:12.5px; color:#57606a; margin:0 0 4px; }
+  .path b { color:#0969da; }
+  .node-title { font-weight:600; font-size:14px; margin:0 0 8px; }
+  .attrs { display:flex; gap:12px; align-items:center; margin:0 0 10px; }
+  .attr-box { border:1px solid #d0d7de; border-radius:8px; padding:6px 12px; font-size:12.5px; }
+  .attr-box.cur { background:#f6f8fa; }
+  .attr-box.new { background:#e6ffec; border-color:#4ac26b; }
+  .attr-box h4 { margin:0 0 4px; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:#6e7781; }
+  .arrow { color:#57606a; font-size:16px; }
+  .badge-p { display:inline-block; padding:1px 7px; border-radius:4px; font-size:11px; margin-right:4px; }
+  .p-high { background:#ffd7d5; color:#a40e26; } .p-mid { background:#fff1c2; color:#7a5a00; } .p-low { background:#d2f0dd; color:#1a7f37; }
+  .btnrow { display:flex; gap:8px; }
+  button { border:1px solid #d0d7de; background:#fff; border-radius:6px; padding:5px 14px; font-size:13px; cursor:pointer; }
+  button.approve { background:#1f883d; border-color:#1a7f37; color:#fff; }
+  button.reject { background:#fff; border-color:#d1242f; color:#d1242f; }
+  .bulk { padding:14px 18px; background:#f6f8fa; display:flex; gap:10px; justify-content:flex-end; }
+  button.approve-all { background:#1f883d; border-color:#1a7f37; color:#fff; padding:6px 18px; }
+  button.reject-all { background:#fff; border-color:#d1242f; color:#d1242f; padding:6px 18px; }
+  .toast { display:none; margin-top:14px; padding:10px 14px; border-radius:8px; background:#e6f4ea; border:1px solid #4ac26b; font-size:13px; }
+  .flow { margin-top:22px; max-width:880px; font-size:12.5px; color:#57606a; }
+  .flow b { color:#1f2328; }
+  ol { margin:6px 0 0; padding-left:20px; }
+</style></head>
+<body>
+  <h1>기능명세 속성 승인/반려 UI (6b-features 예광탄)</h1>
+  <p class="sub">change: <code>planning-approval-edit-ui-features</code> · 화면 구성·흐름의 단일 출처(명세, 구현물 아님)</p>
+  <div class="label">웹(React) — flowforge skeleton 단계의 기능명세 트리(읽기전용 ReactFlow) 위에 속성 승인 인터랙션을 얹는다.
+     <code>FeatureApprovalPanel</code>(6a PrdApprovalPanel 구조 참고, diff는 속성 before/after). 이 HTML은 <b>명세</b>이지 구현물이 아니다 — React로 번역 구현.</div>
+  <div class="note">데이터 흐름: AI(스킬/봇)가 <code>docs/planning/features.suggestions.json</code>에 노드 속성 제안(nodePath·op:set-attrs·priority?·status?)을 쌓음 →
+     <code>GET planning-features-suggestions</code>로 읽어 표시 → 개별/일괄 승인·반려 → <code>POST .../apply</code> → 승인분만 features.md 해당 <b>속성 줄만</b> 교체(원문 라인 패치, 산문·capability·위계 보존) → 트리 재조회.</div>
+
+  <div class="panel" id="withQueue">
+    <div class="panel-head">기능명세서 — 기획 단계 산출물</div>
+    <div class="banner"><span class="badge">제안 2건</span> AI가 제안한 노드 속성 변경(중요도·상태)이 있습니다. 개별 또는 일괄로 승인·반려하세요.</div>
+
+    <div class="card">
+      <p class="path">⌂ <b>기능명세서 생성</b> › 3단 트리 도출</p>
+      <p class="node-title">#### 3단 트리 도출 (상세기능)</p>
+      <div class="attrs">
+        <div class="attr-box cur"><h4>현재</h4><span class="badge-p p-mid">중요도 중간</span> 상태 진행중</div>
+        <span class="arrow">→</span>
+        <div class="attr-box new"><h4>제안</h4><span class="badge-p p-high">중요도 높음</span> 상태 완료</div>
+      </div>
+      <div class="btnrow">
+        <button class="approve" onclick="applyOne('3단 트리 도출', true)">✓ 승인</button>
+        <button class="reject" onclick="applyOne('3단 트리 도출', false)">✕ 반려</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="path">⌂ <b>기획 기능명세 뷰</b> › 기능명세 트리 렌더</p>
+      <p class="node-title">### 기능명세 트리 렌더 (기능)</p>
+      <div class="attrs">
+        <div class="attr-box cur"><h4>현재</h4><span class="badge-p p-high">중요도 높음</span> 상태 진행중</div>
+        <span class="arrow">→</span>
+        <div class="attr-box new"><h4>제안</h4><span class="badge-p p-high">중요도 높음</span> 상태 완료</div>
+      </div>
+      <div class="btnrow">
+        <button class="approve" onclick="applyOne('기능명세 트리 렌더', true)">✓ 승인</button>
+        <button class="reject" onclick="applyOne('기능명세 트리 렌더', false)">✕ 반려</button>
+      </div>
+    </div>
+
+    <div class="bulk">
+      <button class="reject-all" onclick="bulk(false)">모두 반려</button>
+      <button class="approve-all" onclick="bulk(true)">모두 승인</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="flow">
+    <b>화면 흐름</b>
+    <ol>
+      <li>skeleton 단계 진입 → 프로젝트의 features 제안 큐를 fetch.</li>
+      <li>제안 ≥1건 → 노드별 [현재 속성 → 제안 속성] 대비 카드(nodePath 경로 표시) + 개별 [승인]/[반려] + 하단 [모두 승인]/[모두 반려].</li>
+      <li>개별 승인 → 그 노드의 <code>features.md</code> 헤더 직후 속성 줄만 교체(산문·capability·위계 보존), 큐에서 제거. 반려 → 반영 없이 큐에서 제거(원본 불변).</li>
+      <li>제출 후 features 트리·큐 재조회(dashReqToken race 가드). 큐가 비면 → 순수 읽기 트리 뷰(승인 UI 숨김).</li>
+      <li>미실재 id/nodePath는 skipped로 표면화(silent drop 금지). self-roundtrip 불변식(노드 개수·capability 불변) 위반 시 422로 원본 보호.</li>
+    </ol>
+  </div>
+
+<script>
+  function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; }
+  function applyOne(n, a){ toast((a?'승인':'반려')+': '+n+' → POST apply({'+(a?'approve':'reject')+':[id]}) → features.md 속성줄 교체 → 트리 재조회'); }
+  function bulk(a){ toast('일괄 '+(a?'승인':'반려')+' → POST apply(모든 id) → 큐 비면 순수 읽기 트리 뷰로 전환'); }
+</script>
+</body></html>
