@@ -12,6 +12,7 @@ import type {
   PrdSuggestionQueue,
   PrdApplyRequest,
   PrdApplyResult,
+  FeatureSuggestionQueue,
 } from "@flowforge/shared";
 
 export interface GraphResponse {
@@ -205,6 +206,41 @@ export async function fetchDocsPlanningFeatures(
   const res = await fetch(`/api/docs/${project}/planning-features`);
   if (!res.ok) throw new Error(`docs planning-features ${res.status}`);
   return (await res.json()) as { project: string; tree: FeatureTree };
+}
+
+/**
+ * 기능명세(features) 속성 제안 큐 읽기(docs/planning/features.suggestions.json).
+ * 큐 없으면 빈 큐(version:1, suggestions:[]). 6a fetchDocsPrdSuggestions의 features판.
+ */
+export async function fetchDocsFeatureSuggestions(
+  project: string,
+): Promise<{ project: string; queue: FeatureSuggestionQueue }> {
+  const res = await fetch(`/api/docs/${project}/planning-features-suggestions`);
+  if (!res.ok) throw new Error(`features-suggestions ${res.status}`);
+  return (await res.json()) as { project: string; queue: FeatureSuggestionQueue };
+}
+
+/**
+ * 기능명세 속성 제안 승인/반려 적용. 승인분만 features.md 해당 속성 줄 교체(산문·capability·위계 보존),
+ * 반려는 큐에서만 제거. apply body/result는 6a와 동형(PrdApplyRequest/PrdApplyResult 재사용).
+ */
+export async function applyDocsFeatureSuggestions(
+  project: string,
+  req: PrdApplyRequest,
+): Promise<PrdApplyResult> {
+  const res = await fetch(`/api/docs/${project}/planning-features-suggestions/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    // 422(features_write_failed) = features.md 형식/불변식이 예상과 달라 반영 못 함(원본·큐 보존). 원인을 명확히 전달.
+    if (res.status === 422) {
+      throw new Error("features.md 형식이 예상과 달라 반영하지 못했습니다(원본·큐는 보존됨).");
+    }
+    throw new Error(`features-apply ${res.status}`);
+  }
+  return (await res.json()) as PrdApplyResult;
 }
 
 export async function saveLayout(id: string, layout: LayoutOverlay): Promise<void> {

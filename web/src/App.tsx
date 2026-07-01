@@ -18,6 +18,7 @@ import type {
   SpecTreeNode as SpecTreeNodeT,
   FeatureTreeNode as FeatureTreeNodeT,
   PrdSuggestion,
+  FeatureSuggestion,
 } from "@flowforge/shared";
 import {
   fetchGraph,
@@ -34,6 +35,8 @@ import {
   saveDocsPlanningUserFlowLayout,
   fetchDocsPrdSuggestions,
   applyDocsPrdSuggestions,
+  fetchDocsFeatureSuggestions,
+  applyDocsFeatureSuggestions,
   type CapabilitySummary,
   type ChangeSummary,
 } from "./api.js";
@@ -51,6 +54,7 @@ import { FeatureNode } from "./FeatureNode.js";
 import { WireframePanel } from "./WireframePanel.js";
 import { PrdPanel } from "./PrdPanel.js";
 import { PrdApprovalPanel } from "./PrdApprovalPanel.js";
+import { FeatureApprovalPanel } from "./FeatureApprovalPanel.js";
 
 // 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지.
 // featureTree는 기획 기능명세서 전용(specTree와 분리, 타입 전략 B).
@@ -97,6 +101,10 @@ export function App(): JSX.Element {
   const [planningFeatures, setPlanningFeatures] = useState<FeatureTreeNodeT | null>(null);
   const [featureNodes, setFeatureNodes] = useState<Node[]>([]);
   const [featureEdges, setFeatureEdges] = useState<Edge[]>([]);
+  // 기능명세 속성 제안 큐(docs/planning/features.suggestions.json) — 승인/반려 편집 UI(6b).
+  // 6a prdSuggestions와 대칭. 큐 비면 순수 읽기 트리 뷰.
+  const [featureSuggestions, setFeatureSuggestions] = useState<readonly FeatureSuggestion[]>([]);
+  const [featureApplyBusy, setFeatureApplyBusy] = useState(false);
 
   // 기획 단계 유저플로우(docs/planning/user-flow/<flow>.md → 공용 SpecGraph) — 프로젝트 단위(skeleton에서 표시).
   // change 유저플로우(flowNodes/flowEdges)와 분리. 드래그 좌표는 overlay로 저장(saveDocsPlanningUserFlowLayout).
@@ -291,6 +299,17 @@ export function App(): JSX.Element {
         if (token !== dashReqToken.current) return;
         setPlanningFeatures(null); // 기획 기능명세서 미작성 — 정상(미표시)
       });
+    // 기능명세 속성 제안 큐(docs/planning/features.suggestions.json) 로드 — 없으면 빈 큐(순수 읽기 트리 뷰).
+    setFeatureSuggestions([]);
+    fetchDocsFeatureSuggestions(card.name)
+      .then((r) => {
+        if (token !== dashReqToken.current) return;
+        setFeatureSuggestions(r.queue.suggestions);
+      })
+      .catch(() => {
+        if (token !== dashReqToken.current) return;
+        setFeatureSuggestions([]); // 제안 큐 없음/오류 — 순수 읽기 트리 뷰
+      });
     // 기획 단계 유저플로우(docs/planning/user-flow/<flow>.md) 로드 — 없으면(404) null로 비움(에러 아님).
     setPlanningUserFlow(null);
     setPlanningFlowNodes([]);
@@ -360,6 +379,40 @@ export function App(): JSX.Element {
         });
     },
     [dashProject, prdApplyBusy],
+  );
+
+  // 기능명세 속성 제안 승인/반려 적용 — POST apply 후 features 트리·제안 큐 재조회(속성 뱃지·큐 갱신을 화면에 반사).
+  // 6a applyPrd와 대칭. race 가드: 제출 시점의 프로젝트로 재조회하고, 그 사이 다른 카드로 이동했으면 폐기.
+  const applyFeature = useCallback(
+    (approve: string[], reject: string[]) => {
+      const project = dashProject?.name;
+      if (!project || featureApplyBusy) return;
+      const token = ++dashReqToken.current;
+      setFeatureApplyBusy(true);
+      applyDocsFeatureSuggestions(project, { approve, reject })
+        .then((res) => {
+          if (res.skipped.length > 0) {
+            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${res.skipped.join(", ")}).`);
+          }
+          return Promise.all([
+            fetchDocsPlanningFeatures(project),
+            fetchDocsFeatureSuggestions(project),
+          ]);
+        })
+        .then(([featRes, sugRes]) => {
+          if (token !== dashReqToken.current) return; // 그 사이 다른 클릭 → 폐기
+          setPlanningFeatures(featRes.tree.root);
+          setFeatureSuggestions(sugRes.queue.suggestions);
+        })
+        .catch((e: unknown) => {
+          if (token !== dashReqToken.current) return;
+          setStatus(`기능명세 승인/반려 실패: ${String(e)}`);
+        })
+        .finally(() => {
+          setFeatureApplyBusy(false);
+        });
+    },
+    [dashProject, featureApplyBusy],
   );
 
   // capability 클릭: 그 capability 단위 종합 상세(capChanges)로 — features 서브트리 +
@@ -484,6 +537,16 @@ export function App(): JSX.Element {
             {planningFeatures && (
               <section className="dash-planning-features" data-testid="planning-features">
                 <h3 className="dash-h">{dashProject?.displayName} — 기획 기능명세서</h3>
+                {/* 제안 큐가 있으면 노드 속성 승인/반려 편집 UI(6b), 큐 비면 렌더 안 함(순수 읽기 트리 뷰). */}
+                <FeatureApprovalPanel
+                  root={planningFeatures}
+                  suggestions={featureSuggestions}
+                  busy={featureApplyBusy}
+                  onApprove={(id) => applyFeature([id], [])}
+                  onReject={(id) => applyFeature([], [id])}
+                  onApproveAll={() => applyFeature(featureSuggestions.map((s) => s.id), [])}
+                  onRejectAll={() => applyFeature([], featureSuggestions.map((s) => s.id))}
+                />
                 <div className="dash-feature-flow">
                   <ReactFlow
                     key="d-planning-features"

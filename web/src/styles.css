@@ -489,3 +489,25 @@ button:hover { border-color: var(--lime); }
 .prd-btn-approve, .prd-btn-approve-all { background: #1f883d; border: 1px solid #1a7f37; color: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; }
 .prd-btn-reject, .prd-btn-reject-all { background: transparent; border: 1px solid #d1242f; color: #f2807f; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; }
 .prd-btn-approve:disabled, .prd-btn-reject:disabled, .prd-btn-approve-all:disabled, .prd-btn-reject-all:disabled { opacity: .5; cursor: not-allowed; }
+
+/* 기능명세 속성 승인 UI(6b) — 6a prd-approval 구조 미러, diff만 속성 before/after 뱃지 + 화살표. 버튼은 prd-btn-* 재사용. */
+.feature-approval { margin: 0 0 18px; border: 1px solid #7a5; border-radius: 10px; overflow: hidden; }
+.feature-approval-banner {
+  padding: 10px 14px; background: #17251a; color: var(--text); font-size: 13px;
+  display: flex; align-items: center; gap: 10px;
+}
+.feature-approval-badge { background: #d1242f; color: #fff; border-radius: 999px; padding: 1px 10px; font-size: 12px; }
+.feature-approval-card { padding: 14px; border-bottom: 1px solid var(--border); }
+.feature-approval-card:last-of-type { border-bottom: none; }
+.feature-approval-path { font-size: 13.5px; font-weight: 600; color: var(--lime); margin: 0 0 8px; word-break: break-word; }
+.feature-approval-rationale { font-size: 12px; color: #9aa0aa; margin: 0 0 8px; }
+.feature-approval-diff { display: flex; gap: 12px; align-items: stretch; margin: 0 0 10px; }
+.feature-approval-col { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.feature-approval-cur { background: #1b1e24; }
+.feature-approval-new { background: #17251a; border-color: #4a7; }
+.feature-approval-col h5 { margin: 0 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #8a909a; }
+.feature-approval-new h5 { color: #7ec98f; }
+.feature-approval-attr { font-size: 12.5px; color: var(--text); }
+.feature-approval-arrow { align-self: center; color: #8a909a; font-size: 18px; }
+.feature-approval-btns { display: flex; gap: 8px; }
+.feature-approval-bulk { padding: 12px 14px; background: #1b1e24; display: flex; gap: 10px; justify-content: flex-end; }
