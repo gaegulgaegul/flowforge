@@ -27,6 +27,13 @@ export type {
 } from './prd-types.js';
 
 export type {
+  PrdSuggestion,
+  PrdSuggestionQueue,
+  PrdApplyRequest,
+  PrdApplyResult,
+} from './prd-suggestion-types.js';
+
+export type {
   SpecTreeNodeKind,
   SpecTreeNode,
   SpecTree,

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>prototype — planning-approval-edit-ui-prd (PRD 승인/반려 편집UI)</title>
+<style>
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; margin:0; padding:24px;
+         background:#fafbfc; color:#1f2328; line-height:1.5; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .sub { color:#6e7781; margin:0 0 16px; font-size:13px; }
+  .label { padding:12px 14px; border-radius:8px; margin:0 0 16px; font-size:13px;
+           background:#ddf4ff; border:1px solid #54aeff; }
+  .label code { background:#eaeef2; padding:1px 5px; border-radius:4px; }
+  .note { background:#fff8e1; border:1px solid #e6c200; padding:10px 14px; border-radius:8px;
+          margin:0 0 16px; font-size:12.5px; }
+
+  .panel { max-width:860px; border:1px solid #d0d7de; border-radius:12px; background:#fff;
+           overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .panel-head { background:#f6f8fa; border-bottom:1px solid #d0d7de; padding:12px 18px;
+                display:flex; align-items:center; justify-content:space-between; }
+  .panel-head .title { font-weight:600; }
+  .banner { background:#fff0f6; border-bottom:1px solid #ffb3d1; padding:10px 18px;
+            font-size:13px; display:flex; align-items:center; gap:10px; }
+  .badge { background:#d1242f; color:#fff; border-radius:999px; padding:1px 9px; font-size:12px; }
+
+  .section { padding:16px 18px; border-bottom:1px solid #eaeef2; }
+  .section:last-child { border-bottom:0; }
+  .sec-title { font-weight:600; font-size:14px; margin:0 0 8px; color:#0969da; }
+  .diff { display:flex; gap:12px; margin:0 0 10px; }
+  .col { flex:1; border:1px solid #d0d7de; border-radius:8px; padding:10px 12px; font-size:12.5px; }
+  .col.cur { background:#f6f8fa; }
+  .col.new { background:#e6ffec; border-color:#4ac26b; }
+  .col h4 { margin:0 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#6e7781; }
+  .col.new h4 { color:#1a7f37; }
+  .btnrow { display:flex; gap:8px; }
+  button { border:1px solid #d0d7de; background:#fff; border-radius:6px; padding:5px 14px;
+           font-size:13px; cursor:pointer; }
+  button.approve { background:#1f883d; border-color:#1a7f37; color:#fff; }
+  button.reject { background:#fff; border-color:#d1242f; color:#d1242f; }
+  .bulk { padding:14px 18px; background:#f6f8fa; display:flex; gap:10px; justify-content:flex-end; }
+  button.approve-all { background:#1f883d; border-color:#1a7f37; color:#fff; padding:6px 18px; }
+  button.reject-all { background:#fff; border-color:#d1242f; color:#d1242f; padding:6px 18px; }
+  .toast { display:none; margin-top:14px; padding:10px 14px; border-radius:8px;
+           background:#e6f4ea; border:1px solid #4ac26b; font-size:13px; }
+  .clean { display:none; padding:20px 18px; color:#57606a; font-size:13px; }
+  .flow { margin-top:22px; max-width:860px; font-size:12.5px; color:#57606a; }
+  .flow b { color:#1f2328; }
+  ol { margin:6px 0 0; padding-left:20px; }
+</style></head>
+<body>
+  <h1>PRD 승인/반려 편집 UI (6a 예광탄)</h1>
+  <p class="sub">change: <code>planning-approval-edit-ui-prd</code> · 화면 구성·흐름의 단일 출처(명세, 구현물 아님)</p>
+  <div class="label">웹(React) — flowforge skeleton 단계의 planning PRD 섹션에 승인 인터랙션을 얹는다.
+     <code>PrdPanel</code> 확장 또는 래퍼. 이 HTML은 <b>명세</b>이지 구현물이 아니다 — React로 같은 화면·흐름을 번역해 구현한다.</div>
+  <div class="note">데이터 흐름: AI(openspec-plan 스킬/봇)가 <code>docs/planning/prd.suggestions.json</code>에 제안을 쌓음 →
+     이 UI가 <code>GET planning-prd-suggestions</code>로 읽어 표시 → 사용자가 개별/일괄 승인·반려 →
+     <code>POST planning-prd-suggestions/apply</code> → 승인분만 <code>prd.md</code> 섹션 교체 반영 → PRD 재조회.</div>
+
+  <!-- 상태 A: 제안 큐가 있을 때 (승인 UI 노출) -->
+  <div class="panel" id="withQueue">
+    <div class="panel-head"><span class="title">PRD — 기획 단계 산출물</span></div>
+    <div class="banner"><span class="badge">제안 2건</span> AI가 제안한 PRD 갱신이 있습니다. 개별 또는 일괄로 승인·반려하세요.</div>
+
+    <div class="section">
+      <p class="sec-title">## 개요 (overview)</p>
+      <div class="diff">
+        <div class="col cur"><h4>현재</h4>기획 단계 산출물을 읽어 비추는 뷰어.</div>
+        <div class="col new"><h4>제안</h4>기획 단계 산출물을 읽고, 승인 루프로 <b>편집까지</b> 닫는 뷰어.</div>
+      </div>
+      <div class="btnrow">
+        <button class="approve" onclick="applyOne('개요', true)">✓ 승인</button>
+        <button class="reject" onclick="applyOne('개요', false)">✕ 반려</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="sec-title">## 성공지표 (metrics)</p>
+      <div class="diff">
+        <div class="col cur"><h4>현재</h4><i>(비어 있음)</i></div>
+        <div class="col new"><h4>제안</h4>승인 루프 세로관통 실증(제안→승인→prd.md 반영). 반려 시 원본 불변.</div>
+      </div>
+      <div class="btnrow">
+        <button class="approve" onclick="applyOne('성공지표', true)">✓ 승인</button>
+        <button class="reject" onclick="applyOne('성공지표', false)">✕ 반려</button>
+      </div>
+    </div>
+
+    <div class="bulk">
+      <button class="reject-all" onclick="bulk(false)">모두 반려</button>
+      <button class="approve-all" onclick="bulk(true)">모두 승인</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <!-- 상태 B: 제안 큐가 비면 순수 읽기 뷰 -->
+  <div class="panel clean" id="cleanState">
+    <div class="panel-head"><span class="title">PRD — 기획 단계 산출물</span></div>
+    <div class="clean" style="display:block">제안이 없습니다. PRD를 읽기 전용으로 표시합니다(승인 UI 숨김).</div>
+  </div>
+
+  <div class="flow">
+    <b>화면 흐름</b>
+    <ol>
+      <li>skeleton 단계 진입 → 프로젝트의 제안 큐를 fetch.</li>
+      <li>제안 ≥1건 → 상태 A(섹션별 현재 vs 제안 카드 + 개별 [승인]/[반려] + 하단 [모두 승인]/[모두 반려]).</li>
+      <li>개별 승인 → 그 섹션만 <code>prd.md</code>에 교체 반영, 큐에서 제거. 반려 → 반영 없이 큐에서 제거(원본 불변).</li>
+      <li>제출 후 PRD·큐 재조회(dashReqToken race 가드). 큐가 비면 → 상태 B(순수 읽기 뷰).</li>
+      <li>미실재 섹션/id는 skipped로 표면화(silent drop 금지). 파싱 실패 시 422로 원본 보호.</li>
+    </ol>
+  </div>
+
+<script>
+  // 명세용 데모 스텁 — 실제 반영은 POST apply 라우트가 한다(이 HTML은 흐름 명세일 뿐).
+  function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; }
+  function applyOne(sec, approve){ toast((approve?'승인':'반려')+': '+sec+' → POST apply({'+(approve?'approve':'reject')+':[id]}) → PRD 재조회'); }
+  function bulk(approve){ toast('일괄 '+(approve?'승인':'반려')+' → POST apply(모든 id) → 큐 비면 순수 읽기 뷰로 전환'); }
+</script>
+</body></html>
