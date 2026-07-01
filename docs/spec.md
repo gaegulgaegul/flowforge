@@ -207,3 +207,29 @@ capability 키 하나에 대해 그 capability의 features 서브트리(`docs/pl
 - invariant:readonly 읽기전용 종합 조회 — features.md·유저플로우·change를 읽기만 함(쓰기 라우트 없음)
 - behavior: features는 일치 capability 요구사항 가지만 필터, 유저플로우는 `> capability:` 마커 선언 stem만, changes는 byCapability 재사용 — 연결 0개여도 빈 구조로 200
 - metric: capability 종합 상세 조회 응답 시간 목표 200ms
+
+## capability: planning-prd-approval-apply — PRD 제안 승인/반려 적용
+
+flowforge가 PRD 제안 큐 항목을 개별/일괄로 승인·반려하고 승인분만 `docs/planning/prd.md`에 섹션 교체 반영하는 능력. flowforge가 명세 .md에 처음 쓰는 경로 — SSOT를 "승인을 통해서만 바뀐다"로 재정의(반려=원본 불변). 조립 결과를 write 전 self-roundtrip 재파싱해 5섹션 정합이 깨지면(proposedBody의 `## ` 오분리 등) 422로 막고 원본을 보호한다.
+
+### 기능: 승인/반려 적용 (POST /api/docs/:project/planning-prd-suggestions/apply)
+- assert:endpoint POST /api/docs/:project/planning-prd-suggestions/apply
+- assert:symbol applyPrdSuggestions
+- assert:symbol writeDocsPlanningPrd
+- assert:symbol isPrdApplyRequest
+- invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 docs 루트 밖 쓰기 미발생
+- invariant:safe-4xx 잘못된 body는 400, 경로 조작은 404, prd.md 파싱실패·오분리 감지는 422로 막고 파일 미작성(원본 보호)
+- behavior: approve id의 section을 proposedBody로 교체해 prd.md 원자적 재작성(H1 서문·미승인 섹션 보존) 후 큐에서 제거, reject는 반영 없이 큐에서 제거, 미실재 id는 skipped로 표면화, write 전 self-roundtrip으로 5섹션 정합 검증
+- metric: 승인 반영 후 prd.md 5섹션 무결성 유지율 목표 100%
+
+## capability: planning-prd-approval-queue — PRD 제안 큐 읽기
+
+flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 제안 큐)을 읽어 반환하는 읽기전용 능력. 큐가 없으면 빈 큐(version:1, suggestions:[])를 200으로 반환하고(404 아님), 깨진 JSON·미인식 항목은 안전 폴백(빈 큐/필터)한다. flowforge는 큐를 생성하지 않고 소비만 한다(제안 생성 주체=외부 스킬).
+
+### 기능: PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)
+- assert:endpoint GET /api/docs/:project/planning-prd-suggestions
+- assert:symbol readDocsPrdSuggestions
+- invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 docs 루트 밖 파일 미접근
+- invariant:safe-4xx 경로 조작 project는 404, 큐 파일 부재는 빈 큐 200(읽기는 절대 500으로 죽지 않음)
+- behavior: prd.suggestions.json을 JSON.parse 후 isValidPrdSuggestion(section 5키·op=replace만)으로 필터해 유효 제안만 반환, 파일 없음·깨진 JSON은 빈 큐로 폴백
+- metric: 제안 큐 조회 응답 시간 목표 200ms
