@@ -274,15 +274,20 @@ export function applyPrdSuggestions(docsDir: string, req: PrdApplyRequest): PrdA
   }
 
   let applied = 0;
+  let writeFailed = false;
   if (Object.keys(replacements).length > 0) {
     const ok = writeDocsPlanningPrd(docsDir, replacements);
     if (ok) {
       applied = Object.keys(replacements).length;
     } else {
-      // 원본 파싱/쓰기 실패 — 승인분을 큐에서 제거하지 않고 skipped로 표면화(원본 불변).
-      for (const id of approvedIds) skipped.push(id);
-      approvedIds.length = 0;
+      // 원본 파싱/쓰기 실패 = 원본 손상 신호. 미실재 id(skipped)와 구분해 writeFailed로 표면화.
+      // 큐를 통째로 보존하고(승인·반려 모두 미적용) 반환 → 라우트가 422로 변환.
+      writeFailed = true;
     }
+  }
+
+  if (writeFailed) {
+    return { applied: 0, rejected: 0, remaining: queue.suggestions.length, skipped, writeFailed: true };
   }
 
   // 반려: 반영 없이 제거. 미실재 id는 skipped.
@@ -292,7 +297,7 @@ export function applyPrdSuggestions(docsDir: string, req: PrdApplyRequest): PrdA
     else skipped.push(id);
   }
 
-  // 큐 재작성: 승인 반영분(applied>0일 때의 approvedIds) + 반려분 제거.
+  // 큐 재작성: 승인 반영분(approvedIds) + 반려분 제거.
   const removed = new Set<string>([...approvedIds, ...rejectedIds]);
   const remainingSuggestions = queue.suggestions.filter((s) => !removed.has(s.id));
   writeDocsPrdSuggestions(docsDir, { version: 1, suggestions: remainingSuggestions });

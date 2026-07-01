@@ -46,6 +46,11 @@ export interface PrdApplyResult {
   readonly rejected: number;
   /** 큐에 남은 제안 수. */
   readonly remaining: number;
-  /** 처리 못 한 id(큐에 없거나 원본에 없는 섹션을 가리킴). */
+  /** 처리 못 한 id(큐에 없는 id). */
   readonly skipped: readonly string[];
+  /**
+   * prd.md 파싱/쓰기 실패로 승인 반영을 못 한 경우 true(원본 보호, 큐 불변).
+   * 미실재 id(skipped)와 구분 — 이건 원본 손상 신호라 라우트가 422로 변환한다.
+   */
+  readonly writeFailed?: boolean;
 }
