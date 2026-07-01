@@ -12,7 +12,15 @@
  */
 import { readdirSync, statSync, lstatSync, existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import type { LayoutOverlay } from "@flowforge/shared";
+import type {
+  LayoutOverlay,
+  PrdSectionKey,
+  PrdSuggestion,
+  PrdSuggestionQueue,
+  PrdApplyRequest,
+  PrdApplyResult,
+} from "@flowforge/shared";
+import { splitSections } from "../parser/markdown.js";
 
 /** docs 스캔 루트. 기본: cwd. */
 export function docsRoot(): string {
@@ -144,4 +152,163 @@ export function writeDocsUserFlowOverlay(docsDir: string, stem: string, overlay:
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, `${stem}.overlay.json`), JSON.stringify(overlay, null, 2), "utf-8");
   return true;
+}
+
+// ── PRD 승인/반려 편집 (planning/prd.md + prd.suggestions.json) ──────────
+// 명세 prd.md에 대한 flowforge의 첫 쓰기 — 단, "승인을 통해서만" 바뀐다(승인=사용자 의도).
+// 제안 큐(AI/스킬이 씀)를 읽어 개별/일괄 승인 시 섹션 교체 반영, 반려는 원본 불변.
+
+/** PRD 5섹션 키 ↔ prd.md 한국어 헤더(buildDocsPlanningPrd와 동일 순서·제목 — 정합 필수). */
+const PRD_SECTION_ORDER: readonly (readonly [PrdSectionKey, string])[] = [
+  ["overview", "개요"],
+  ["value", "핵심가치"],
+  ["target", "타겟·시나리오"],
+  ["metrics", "성공지표"],
+  ["attributes", "속성설정"],
+];
+
+const PRD_SECTION_KEYS: ReadonlySet<PrdSectionKey> = new Set(PRD_SECTION_ORDER.map(([k]) => k));
+
+/** prd.suggestions.json 경로. */
+function prdSuggestionsPath(docsDir: string): string {
+  return join(docsDir, "planning", "prd.suggestions.json");
+}
+
+/** 한 제안이 스키마에 맞는가(section=5키·op="replace"·문자열 필드). 부정 데이터가 UI로 새지 않게. */
+function isValidPrdSuggestion(v: unknown): v is PrdSuggestion {
+  if (typeof v !== "object" || v === null) return false;
+  const s = v as Record<string, unknown>;
+  return (
+    typeof s["id"] === "string" &&
+    typeof s["section"] === "string" &&
+    PRD_SECTION_KEYS.has(s["section"] as PrdSectionKey) &&
+    s["op"] === "replace" &&
+    typeof s["proposedBody"] === "string"
+  );
+}
+
+/**
+ * PRD 제안 큐 읽기. 파일 없음·깨진 JSON·미인식 항목은 모두 안전 폴백(빈 큐/필터).
+ * 읽기는 절대 throw하지 않는다(라우트가 500으로 죽지 않게).
+ */
+export function readDocsPrdSuggestions(docsDir: string): PrdSuggestionQueue {
+  const empty: PrdSuggestionQueue = { version: 1, suggestions: [] };
+  const p = prdSuggestionsPath(docsDir);
+  if (!existsSync(p)) return empty;
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(p, "utf-8"));
+    if (typeof parsed !== "object" || parsed === null) return empty;
+    const raw = (parsed as Record<string, unknown>)["suggestions"];
+    if (!Array.isArray(raw)) return empty;
+    const suggestions = raw.filter(isValidPrdSuggestion);
+    return { version: 1, suggestions };
+  } catch {
+    return empty;
+  }
+}
+
+/** prd.suggestions.json 큐 쓰기(승인/반려 후 남은 제안 반영). planning 디렉토리 자동 생성. */
+function writeDocsPrdSuggestions(docsDir: string, queue: PrdSuggestionQueue): void {
+  const dir = join(docsDir, "planning");
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  writeFileSync(prdSuggestionsPath(docsDir), JSON.stringify(queue, null, 2), "utf-8");
+}
+
+/**
+ * 승인된 섹션 교체로 prd.md 재작성. 첫 H2(`## 개요`) 앞 서문(H1 title 포함)을 그대로 보존하고,
+ * 5섹션을 고정 순서로 조립하되 replacements에 있는 섹션만 새 본문으로 교체한다.
+ * prd.md가 없거나 5섹션 파싱이 실패하면 false(안 씀 — 원본 보호). 성공 시 원자적 전체 write 후 true.
+ */
+export function writeDocsPlanningPrd(
+  docsDir: string,
+  replacements: Partial<Record<PrdSectionKey, string>>,
+): boolean {
+  const path = join(docsDir, "planning", "prd.md");
+  if (!existsSync(path)) return false;
+  let original: string;
+  try {
+    original = readFileSync(path, "utf-8");
+  } catch {
+    return false;
+  }
+  const sectionsMap = splitSections(original);
+  // 5섹션이 하나라도 파싱 안 되면 손상 상태 — 쓰지 않는다(원본 보호).
+  for (const [, title] of PRD_SECTION_ORDER) {
+    if (!sectionsMap.has(title.toLowerCase())) return false;
+  }
+  // 첫 H2 이전(서문=H1 title 등)을 원문에서 그대로 떼어 보존.
+  const firstH2 = original.search(/^##\s+/m);
+  const preamble = firstH2 >= 0 ? original.slice(0, firstH2).replace(/\s+$/, "") : "";
+
+  const blocks = PRD_SECTION_ORDER.map(([key, title]) => {
+    const body = replacements[key] ?? sectionsMap.get(title.toLowerCase()) ?? "";
+    return `## ${title}\n\n${body}`.replace(/\s+$/, "");
+  });
+
+  const out = (preamble ? `${preamble}\n\n` : "") + blocks.join("\n\n") + "\n";
+  writeFileSync(path, out, "utf-8");
+  return true;
+}
+
+/**
+ * 승인/반려 적용. approve id는 섹션 교체 반영 후 큐에서 제거, reject id는 반영 없이 제거.
+ * 미실재 id·미실재 섹션·쓰기 실패는 skipped로 표면화(silent drop 금지). 원본 파싱 실패 시 반영 0.
+ * 같은 섹션 여러 승인은 큐 배열 순서(뒤가 최종)로 결정론적 반영.
+ */
+export function applyPrdSuggestions(docsDir: string, req: PrdApplyRequest): PrdApplyResult {
+  const queue = readDocsPrdSuggestions(docsDir);
+  const byId = new Map(queue.suggestions.map((s) => [s.id, s]));
+  const skipped: string[] = [];
+
+  // 승인: 큐 배열 순서를 따라 섹션→본문 맵 구성(뒤가 이김). 미실재 id는 skipped.
+  const approveSet = new Set(req.approve);
+  const replacements: Partial<Record<PrdSectionKey, string>> = {};
+  const approvedIds: string[] = [];
+  for (const s of queue.suggestions) {
+    if (!approveSet.has(s.id)) continue;
+    replacements[s.section] = s.proposedBody;
+    approvedIds.push(s.id);
+  }
+  for (const id of req.approve) {
+    if (!byId.has(id)) skipped.push(id);
+  }
+
+  let applied = 0;
+  if (Object.keys(replacements).length > 0) {
+    const ok = writeDocsPlanningPrd(docsDir, replacements);
+    if (ok) {
+      applied = Object.keys(replacements).length;
+    } else {
+      // 원본 파싱/쓰기 실패 — 승인분을 큐에서 제거하지 않고 skipped로 표면화(원본 불변).
+      for (const id of approvedIds) skipped.push(id);
+      approvedIds.length = 0;
+    }
+  }
+
+  // 반려: 반영 없이 제거. 미실재 id는 skipped.
+  const rejectedIds: string[] = [];
+  for (const id of req.reject) {
+    if (byId.has(id)) rejectedIds.push(id);
+    else skipped.push(id);
+  }
+
+  // 큐 재작성: 승인 반영분(applied>0일 때의 approvedIds) + 반려분 제거.
+  const removed = new Set<string>([...approvedIds, ...rejectedIds]);
+  const remainingSuggestions = queue.suggestions.filter((s) => !removed.has(s.id));
+  writeDocsPrdSuggestions(docsDir, { version: 1, suggestions: remainingSuggestions });
+
+  return {
+    applied,
+    rejected: rejectedIds.length,
+    remaining: remainingSuggestions.length,
+    skipped,
+  };
+}
+
+/** POST apply body 런타임 검증: {approve:string[], reject:string[]}. isLayoutOverlay 패턴 복제. */
+export function isPrdApplyRequest(v: unknown): v is PrdApplyRequest {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  const strArr = (x: unknown): boolean => Array.isArray(x) && x.every((e) => typeof e === "string");
+  return strArr(o["approve"]) && strArr(o["reject"]);
 }
