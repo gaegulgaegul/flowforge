@@ -105,6 +105,39 @@ describe("readDocsFeatureSuggestions", () => {
     );
     expect(readDocsFeatureSuggestions(dir).suggestions.map((s) => s.id)).toEqual(["ok"]);
   });
+
+  // LOW 수정: priority·status 둘 다 없으면 아무것도 안 바꾸는 무의미 제안 → 큐에서 제외.
+  it("priority·status 둘 다 없는 제안은 걸러내고 정상 항목만 반환한다(무의미 제안 필터)", () => {
+    const dir = makePlanning(root, "p", FEATURES_MD);
+    writeFileSync(
+      join(dir, "planning", "features.suggestions.json"),
+      JSON.stringify({
+        version: 1,
+        suggestions: [
+          { id: "noop", nodePath: ["A"], op: "set-attrs" }, // 둘 다 없음 → 제외
+          { id: "ok", nodePath: ["A"], op: "set-attrs", priority: "높음", status: "완료" }, // 정상
+        ],
+      }),
+    );
+    // 큐 length가 2 → 1로 줄고, 무의미 항목(noop)은 사라진다.
+    expect(readDocsFeatureSuggestions(dir).suggestions.map((s) => s.id)).toEqual(["ok"]);
+  });
+
+  it("priority만 있거나 status만 있는 제안은 통과한다(둘 중 하나면 유의미)", () => {
+    const dir = makePlanning(root, "p", FEATURES_MD);
+    writeFileSync(
+      join(dir, "planning", "features.suggestions.json"),
+      JSON.stringify({
+        version: 1,
+        suggestions: [
+          { id: "prio-only", nodePath: ["A"], op: "set-attrs", priority: "낮음" }, // priority만 → 통과
+          { id: "stat-only", nodePath: ["A"], op: "set-attrs", status: "진행중" }, // status만 → 통과
+          { id: "noop", nodePath: ["A"], op: "set-attrs" }, // 둘 다 없음 → 제외
+        ],
+      }),
+    );
+    expect(readDocsFeatureSuggestions(dir).suggestions.map((s) => s.id)).toEqual(["prio-only", "stat-only"]);
+  });
 });
 
 describe("applyFeatureSuggestions", () => {
@@ -183,6 +216,49 @@ describe("applyFeatureSuggestions", () => {
     expect(r.applied).toBe(0);
     expect(r.remaining).toBe(1); // 큐에 남음
     expect(readFileSync(join(dir, "planning", "features.md"), "utf-8")).toBe(before);
+  });
+
+  // MEDIUM 수정: 동일 label 형제가 2개 이상이면 어느 노드인지 모호 → 첫 매치를 조용히
+  // 바꾸지 않고 skipped로 표면화(엉뚱한 노드 오변경 방지). features.md는 어느 쪽도 안 바뀐다.
+  it("동일 label 형제가 2개면 모호 → skipped, features.md 원본 불변(applied:0)", () => {
+    const dupMd = [
+      "# 기능명세서: 데모",
+      "",
+      "## 반복 요구사항",
+      "<!-- capability: repeat-a -->",
+      "(중요도: 높음, 상태: 진행중)",
+      "",
+      "본문 산문 A.",
+      "",
+      "## 반복 요구사항",
+      "<!-- capability: repeat-b -->",
+      "(중요도: 중간, 상태: 시작전)",
+      "",
+      "본문 산문 B.",
+      "",
+    ].join("\n");
+    const dir = makePlanning(root, "p", dupMd, [sug("s1", ["반복 요구사항"], { priority: "낮음", status: "완료" })]);
+    const before = readFileSync(join(dir, "planning", "features.md"), "utf-8");
+    const r = applyFeatureSuggestions(dir, { approve: ["s1"], reject: [] });
+    expect(r.skipped).toContain("s1");
+    expect(r.applied).toBe(0);
+    expect(r.remaining).toBe(1); // 반영 못 했으니 큐에 남는다
+    // 어느 쪽 노드도 안 바뀌었다(둘 다 원본 그대로 = 파일 통째 불변).
+    expect(readFileSync(join(dir, "planning", "features.md"), "utf-8")).toBe(before);
+    expect(r.writeFailed).toBeUndefined();
+  });
+
+  // 대비: 동일 label이 1개뿐이면 모호성 판정이 과잉 차단하지 않고 정상 반영된다(applied:1).
+  it("동일 label이 1개뿐이면 모호성 판정에 걸리지 않고 정상 반영된다(applied:1)", () => {
+    const dir = makePlanning(root, "p", FEATURES_MD, [
+      sug("s1", ["기획 산출물 생성"], { priority: "낮음", status: "완료" }),
+    ]);
+    const r = applyFeatureSuggestions(dir, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(1);
+    expect(r.skipped).not.toContain("s1");
+    expect(r.remaining).toBe(0);
+    const out = readFileSync(join(dir, "planning", "features.md"), "utf-8");
+    expect(out).toContain("## 기획 산출물 생성\n<!-- capability: planning-authoring -->\n(중요도: 낮음, 상태: 완료)");
   });
 
   it("미실재 id는 skipped로 표면화한다(silent drop 금지)", () => {

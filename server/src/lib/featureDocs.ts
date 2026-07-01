@@ -45,6 +45,8 @@ function isValidFeatureSuggestion(v: unknown): v is FeatureSuggestion {
   if (!Array.isArray(path) || path.length === 0 || !path.every((e) => typeof e === "string")) return false;
   if (s["priority"] !== undefined && !PRIORITIES.has(s["priority"] as string)) return false;
   if (s["status"] !== undefined && !STATUSES.has(s["status"] as string)) return false;
+  // priority·status 둘 다 없으면 아무것도 안 바꾸는 무의미 제안 → 큐/UI에 안 띄운다(spec 정합).
+  if (s["priority"] === undefined && s["status"] === undefined) return false;
   return true;
 }
 
@@ -148,6 +150,22 @@ export function treeFingerprint(root: FeatureTreeNode): { count: number; caps: S
 }
 
 /**
+ * nodePath(label 경로)와 일치하는 노드가 트리에 몇 개인지 센다. 동일 label 형제 모호성 감지용.
+ * 위계를 따라 각 단계에서 label이 같은 자식을 모두 따라가며(중복 가능) 최종 깊이 도달 수를 합산.
+ */
+function countNodesByPath(root: FeatureTreeNode, nodePath: readonly string[]): number {
+  const descend = (node: FeatureTreeNode, depth: number): number => {
+    if (depth === nodePath.length) return 1;
+    let sum = 0;
+    for (const c of node.children) {
+      if (c.label === nodePath[depth]) sum += descend(c, depth + 1);
+    }
+    return sum;
+  };
+  return descend(root, 0);
+}
+
+/**
  * D5 self-roundtrip 방어: 속성 교체 후 새 lines를 재파싱한 트리가 원본 트리와
  * 구조 불변식을 유지하는지 검증한다 — (a) 노드 개수 동일 (b) capability 키 집합 동일.
  * 하나라도 깨지면 false(라우트가 422로 원본 보호). 속성만 바꾸는 예광탄에서 위계·label·
@@ -205,6 +223,12 @@ export function applyFeatureSuggestions(docsDir: string, req: PrdApplyRequest): 
     const beforeTree = buildFeatureTreeFromLines(lines).root;
     // 큐 배열 순서로 반영(같은 노드 여러 승인은 뒤가 최종 — 결정론). 못 찾은 노드는 skipped.
     for (const s of willApply) {
+      // 동일 label 형제가 2개 이상이면 어느 노드인지 모호 → 조용히 엉뚱한 노드를 바꾸지 않고
+      // skipped로 표면화(design Risks: "여전히 모호하면 skipped 경고"). 재파싱 없이 beforeTree로 판정.
+      if (countNodesByPath(beforeTree, s.nodePath) > 1) {
+        skipped.push(s.id);
+        continue;
+      }
       const headerIdx = findNodeHeaderLine(lines, s.nodePath);
       if (headerIdx < 0) {
         skipped.push(s.id);
