@@ -28,4 +28,4 @@
 - [x] GREEN: skeleton 단계 PRD 섹션에 승인 UI — 제안 큐 fetch(dashReqToken race 가드)·큐 ≥1건이면 섹션별 제안 카드(현재 vs 제안)+개별 [승인]/[반려]+하단 [모두 승인]/[모두 반려], 큐 비면 순수 읽기 뷰. 승인·반려 제출→applyDocsPrdSuggestions→PRD·큐 재조회. `PrdPanel` 확장 또는 승인 래퍼 컴포넌트. prototype.html 흐름을 React로 번역.
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
-- [ ] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(server 단위·통합 신규 포함) → UI(Playwright 실픽셀: 로컬 DOCS_ROOT에 도그푸딩 prd.md+prd.suggestions.json 픽스처 심고 flowforge 기동 → 제안 큐 렌더·개별 승인→prd.md 섹션 교체 반영·반려→원본 불변·큐 비면 순수 읽기 뷰 전환을 실제 클릭+재조회로 관찰) 전부 PASS. 검증 서버는 PID 지정 kill.
+- [x] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(server 단위·통합 신규 포함) → UI(Playwright 실픽셀: 로컬 DOCS_ROOT에 도그푸딩 prd.md+prd.suggestions.json 픽스처 심고 flowforge 기동 → 제안 큐 렌더·개별 승인→prd.md 섹션 교체 반영·반려→원본 불변·큐 비면 순수 읽기 뷰 전환을 실제 클릭+재조회로 관찰) 전부 PASS. 검증 서버는 PID 지정 kill.
