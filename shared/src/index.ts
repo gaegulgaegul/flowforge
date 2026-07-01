@@ -48,6 +48,11 @@ export type {
 } from './feature-tree-types.js';
 
 export type {
+  FeatureSuggestion,
+  FeatureSuggestionQueue,
+} from './feature-suggestion-types.js';
+
+export type {
   DocsDecision,
   DecisionTimeline,
 } from './docs-decision-types.js';

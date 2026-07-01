@@ -28,16 +28,17 @@ export function docsRoot(): string {
 }
 
 /**
- * docs/ 하위에 charter 산출물(user-flow.md / PRD.md) 또는 기획 산출물(planning/prd.md)이
- * 하나라도 있으면 docs 프로젝트로 본다. planning-only 프로젝트(charter 없이 기획 단계
- * 산출물만 있는 경우)도 인식하기 위해 planning/prd.md를 OR로 포함한다 — 인식 경로는
- * planning-prd 라우트/빌더가 읽는 경로와 동일하게 맞춘다.
+ * docs/ 하위에 charter 산출물(user-flow.md / PRD.md) 또는 기획 산출물(planning/prd.md·
+ * planning/features.md)이 하나라도 있으면 docs 프로젝트로 본다. planning-only 프로젝트(charter
+ * 없이 기획 단계 산출물만 있는 경우)도 인식하기 위해 planning/prd.md·planning/features.md를 OR로
+ * 포함한다 — 인식 경로는 planning-prd/planning-features 라우트·빌더가 읽는 경로와 동일하게 맞춘다.
  */
 function hasDocs(docsDir: string): boolean {
   return (
     existsSync(join(docsDir, "user-flow.md")) ||
     existsSync(join(docsDir, "PRD.md")) ||
-    existsSync(join(docsDir, "planning", "prd.md"))
+    existsSync(join(docsDir, "planning", "prd.md")) ||
+    existsSync(join(docsDir, "planning", "features.md"))
   );
 }
 
