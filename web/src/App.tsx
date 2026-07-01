@@ -17,6 +17,7 @@ import type {
   Prd,
   SpecTreeNode as SpecTreeNodeT,
   FeatureTreeNode as FeatureTreeNodeT,
+  PrdSuggestion,
 } from "@flowforge/shared";
 import {
   fetchGraph,
@@ -31,6 +32,8 @@ import {
   fetchDocsPlanningFeatures,
   fetchDocsPlanningUserFlow,
   saveDocsPlanningUserFlowLayout,
+  fetchDocsPrdSuggestions,
+  applyDocsPrdSuggestions,
   type CapabilitySummary,
   type ChangeSummary,
 } from "./api.js";
@@ -47,6 +50,7 @@ import { SpecTreeNode } from "./SpecTreeNode.js";
 import { FeatureNode } from "./FeatureNode.js";
 import { WireframePanel } from "./WireframePanel.js";
 import { PrdPanel } from "./PrdPanel.js";
+import { PrdApprovalPanel } from "./PrdApprovalPanel.js";
 
 // 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지.
 // featureTree는 기획 기능명세서 전용(specTree와 분리, 타입 전략 B).
@@ -85,6 +89,9 @@ export function App(): JSX.Element {
   const [prd, setPrd] = useState<Prd | null>(null);
   // 기획 단계 PRD(docs/planning/prd.md) — 프로젝트 단위(skeleton에서 표시). change PRD와 분리.
   const [planningPrd, setPlanningPrd] = useState<Prd | null>(null);
+  // PRD 제안 큐(docs/planning/prd.suggestions.json) — 승인/반려 편집 UI(6a). 큐 비면 순수 읽기 뷰.
+  const [prdSuggestions, setPrdSuggestions] = useState<readonly PrdSuggestion[]>([]);
+  const [prdApplyBusy, setPrdApplyBusy] = useState(false);
   // 기획 단계 기능명세서(docs/planning/features.md) — 프로젝트 단위(skeleton에서 표시).
   // 가상 루트 노드(children=요구사항들)를 보관, adapter로 RF nodes/edges로 변환해 렌더.
   const [planningFeatures, setPlanningFeatures] = useState<FeatureTreeNodeT | null>(null);
@@ -262,6 +269,17 @@ export function App(): JSX.Element {
         if (token !== dashReqToken.current) return;
         setPlanningPrd(null); // 기획 PRD 미작성 — 정상(빈 안내)
       });
+    // PRD 제안 큐(docs/planning/prd.suggestions.json) 로드 — 없으면 빈 큐(순수 읽기 뷰).
+    setPrdSuggestions([]);
+    fetchDocsPrdSuggestions(card.name)
+      .then((r) => {
+        if (token !== dashReqToken.current) return;
+        setPrdSuggestions(r.queue.suggestions);
+      })
+      .catch(() => {
+        if (token !== dashReqToken.current) return;
+        setPrdSuggestions([]); // 제안 큐 없음/오류 — 순수 읽기 뷰
+      });
     // 기획 단계 기능명세서(docs/planning/features.md) 로드 — 없으면(404) null로 비움(에러 아님).
     setPlanningFeatures(null);
     fetchDocsPlanningFeatures(card.name)
@@ -312,6 +330,37 @@ export function App(): JSX.Element {
       setStatus("이 프로젝트는 charter 뼈대가 없습니다(change는 capability 경유로만 표시).");
     }
   }, []);
+
+  // PRD 제안 승인/반려 적용 — POST apply 후 PRD·제안 큐 재조회(반영·큐 갱신을 화면에 반사).
+  // race 가드: 제출 시점의 프로젝트로 재조회하고, 그 사이 다른 카드로 이동했으면 폐기.
+  const applyPrd = useCallback(
+    (approve: string[], reject: string[]) => {
+      const project = dashProject?.name;
+      if (!project || prdApplyBusy) return;
+      const token = ++dashReqToken.current;
+      setPrdApplyBusy(true);
+      applyDocsPrdSuggestions(project, { approve, reject })
+        .then((res) => {
+          if (res.skipped.length > 0) {
+            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${res.skipped.join(", ")}).`);
+          }
+          return Promise.all([fetchDocsPlanningPrd(project), fetchDocsPrdSuggestions(project)]);
+        })
+        .then(([prdRes, sugRes]) => {
+          if (token !== dashReqToken.current) return; // 그 사이 다른 클릭 → 폐기
+          setPlanningPrd(prdRes.prd);
+          setPrdSuggestions(sugRes.queue.suggestions);
+        })
+        .catch((e: unknown) => {
+          if (token !== dashReqToken.current) return;
+          setStatus(`PRD 승인/반려 실패: ${String(e)}`);
+        })
+        .finally(() => {
+          setPrdApplyBusy(false);
+        });
+    },
+    [dashProject, prdApplyBusy],
+  );
 
   // capability 클릭: 그 capability 단위 종합 상세(capChanges)로 — features 서브트리 +
   // 연결 유저플로우 stem + change 목록을 한 화면에 co-locate.
@@ -418,6 +467,16 @@ export function App(): JSX.Element {
             {planningPrd && (
               <section className="dash-planning-prd" data-testid="planning-prd">
                 <h3 className="dash-h">{dashProject?.displayName} — 기획 PRD</h3>
+                {/* 제안 큐가 있으면 승인/반려 편집 UI(6a), 큐 비면 렌더 안 함(순수 읽기 뷰). */}
+                <PrdApprovalPanel
+                  prd={planningPrd}
+                  suggestions={prdSuggestions}
+                  busy={prdApplyBusy}
+                  onApprove={(id) => applyPrd([id], [])}
+                  onReject={(id) => applyPrd([], [id])}
+                  onApproveAll={() => applyPrd(prdSuggestions.map((s) => s.id), [])}
+                  onRejectAll={() => applyPrd([], prdSuggestions.map((s) => s.id))}
+                />
                 <PrdPanel prd={planningPrd} />
               </section>
             )}

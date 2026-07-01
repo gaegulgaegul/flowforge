@@ -9,6 +9,9 @@ import type {
   DecisionTimeline,
   ProjectCard,
   FeatureTree,
+  PrdSuggestionQueue,
+  PrdApplyRequest,
+  PrdApplyResult,
 } from "@flowforge/shared";
 
 export interface GraphResponse {
@@ -164,6 +167,29 @@ export async function fetchDocsPlanningPrd(project: string): Promise<{ project: 
   const res = await fetch(`/api/docs/${project}/planning-prd`);
   if (!res.ok) throw new Error(`docs planning-prd ${res.status}`);
   return (await res.json()) as { project: string; prd: Prd };
+}
+
+/** PRD 제안 큐 읽기(docs/planning/prd.suggestions.json). 큐 없으면 빈 큐(version:1, suggestions:[]). */
+export async function fetchDocsPrdSuggestions(
+  project: string,
+): Promise<{ project: string; queue: PrdSuggestionQueue }> {
+  const res = await fetch(`/api/docs/${project}/planning-prd-suggestions`);
+  if (!res.ok) throw new Error(`prd-suggestions ${res.status}`);
+  return (await res.json()) as { project: string; queue: PrdSuggestionQueue };
+}
+
+/** PRD 제안 승인/반려 적용. 승인분만 prd.md 반영, 반려는 큐에서만 제거. */
+export async function applyDocsPrdSuggestions(
+  project: string,
+  req: PrdApplyRequest,
+): Promise<PrdApplyResult> {
+  const res = await fetch(`/api/docs/${project}/planning-prd-suggestions/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) throw new Error(`prd-apply ${res.status}`);
+  return (await res.json()) as PrdApplyResult;
 }
 
 /** 기획 단계 산출물 docs/planning/features.md → 기능명세 3단 트리(FeatureTree, 전용 렌더). */
