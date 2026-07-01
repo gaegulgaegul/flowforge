@@ -151,6 +151,26 @@ describe("writeDocsPlanningPrd", () => {
     expect(writeDocsPlanningPrd(dir, { overview: "x" })).toBe(false);
     expect(existsSync(join(dir, "planning", "prd.md"))).toBe(false);
   });
+
+  it("proposedBody에 줄 시작 '## '가 있으면 false(오분리 방지·원본 보호)", () => {
+    // 새 본문에 `## 가짜헤더`가 섞이면 재파싱 시 6번째 섹션으로 오분리 → 후속 승인서 본문 소실.
+    // self-roundtrip 검증이 이를 잡아 쓰지 않고 원본을 보호해야 한다.
+    const dir = makePlanning(root, "p", PRD_MD);
+    const before = readFileSync(join(dir, "planning", "prd.md"), "utf-8");
+    const evil = "개요.\n\n예시:\n## 가짜헤더\n오분리 유발 줄";
+    expect(writeDocsPlanningPrd(dir, { overview: evil })).toBe(false);
+    // 원본 불변(안 씀)
+    expect(readFileSync(join(dir, "planning", "prd.md"), "utf-8")).toBe(before);
+  });
+
+  it("정상 본문(## 없음)은 교체 후에도 정확히 5섹션으로 재파싱된다", () => {
+    const dir = makePlanning(root, "p", PRD_MD);
+    expect(writeDocsPlanningPrd(dir, { overview: "새 개요\n\n- 항목1\n- 항목2" })).toBe(true);
+    // 리스트·여러 줄이 있어도 섹션은 5개 그대로
+    const out = readFileSync(join(dir, "planning", "prd.md"), "utf-8");
+    const headers = (out.match(/^## /gm) ?? []).length;
+    expect(headers).toBe(5);
+  });
 });
 
 describe("applyPrdSuggestions", () => {

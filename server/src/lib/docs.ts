@@ -218,6 +218,11 @@ function writeDocsPrdSuggestions(docsDir: string, queue: PrdSuggestionQueue): vo
  * 승인된 섹션 교체로 prd.md 재작성. 첫 H2(`## 개요`) 앞 서문(H1 title 포함)을 그대로 보존하고,
  * 5섹션을 고정 순서로 조립하되 replacements에 있는 섹션만 새 본문으로 교체한다.
  * prd.md가 없거나 5섹션 파싱이 실패하면 false(안 씀 — 원본 보호). 성공 시 원자적 전체 write 후 true.
+ *
+ * 🔒 데이터 손상 방어: 조립 결과(out)를 write **전에** 재파싱해 정확히 원래 5섹션 키로만
+ * 갈리는지 self-check한다. 어떤 섹션의 새 본문(replacements의 proposedBody)에 줄 시작 `## `가
+ * 섞여 있으면 다음 파싱에서 가짜 섹션으로 오분리돼 후속 승인 시 본문이 소실될 수 있다 →
+ * 그런 out은 쓰지 않고 false(원본 보호). 승인 반영이 prd.md 구조를 절대 깨지 않게 하는 불변식.
  */
 export function writeDocsPlanningPrd(
   docsDir: string,
@@ -246,6 +251,15 @@ export function writeDocsPlanningPrd(
   });
 
   const out = (preamble ? `${preamble}\n\n` : "") + blocks.join("\n\n") + "\n";
+
+  // 🔒 self-roundtrip: out을 재파싱해 정확히 원래 5섹션 키만 나오는지 검증.
+  // 새 본문에 `## `가 섞여 섹션이 늘거나 키가 바뀌면 쓰지 않는다(원본 보호).
+  const roundtrip = splitSections(out);
+  if (roundtrip.size !== PRD_SECTION_ORDER.length) return false;
+  for (const [, title] of PRD_SECTION_ORDER) {
+    if (!roundtrip.has(title.toLowerCase())) return false;
+  }
+
   writeFileSync(path, out, "utf-8");
   return true;
 }

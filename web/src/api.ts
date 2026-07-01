@@ -188,7 +188,13 @@ export async function applyDocsPrdSuggestions(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
   });
-  if (!res.ok) throw new Error(`prd-apply ${res.status}`);
+  if (!res.ok) {
+    // 422(prd_write_failed) = prd.md 형식이 예상과 달라 반영 못 함(원본·큐 보존). 원인을 명확히 전달.
+    if (res.status === 422) {
+      throw new Error("prd.md 형식이 예상과 달라 반영하지 못했습니다(원본·큐는 보존됨).");
+    }
+    throw new Error(`prd-apply ${res.status}`);
+  }
   return (await res.json()) as PrdApplyResult;
 }
 

@@ -138,6 +138,20 @@ describe("PRD 승인/반려 API", () => {
     expect(res.status).toBe(404);
   });
 
+  it("POST apply — proposedBody에 '## ' 오분리 유발 시 422(원본 보호)", async () => {
+    const planDir = makePlanning("p", [
+      { id: "s1", section: "overview", op: "replace", proposedBody: "개요.\n\n## 가짜헤더\n오분리 줄" },
+    ]);
+    const before = readFileSync(join(planDir, "prd.md"), "utf-8");
+    const app = await loadApp();
+    const res = await request(app)
+      .post("/api/docs/p/planning-prd-suggestions/apply")
+      .send({ approve: ["s1"], reject: [] });
+    expect(res.status).toBe(422);
+    // 원본·큐 보존
+    expect(readFileSync(join(planDir, "prd.md"), "utf-8")).toBe(before);
+  });
+
   it("POST apply — prd.md 5섹션 파싱 실패 시 422(원본 보호)", async () => {
     // prd.md를 손상(5섹션 없음)시키고 승인 요청 → writeDocsPlanningPrd false → 422.
     const planDir = join(ROOT, "broken", "docs", "planning");
