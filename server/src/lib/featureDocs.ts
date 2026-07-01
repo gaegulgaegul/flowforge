@@ -17,9 +17,11 @@ import type {
   FeatureStatus,
   FeatureSuggestion,
   FeatureSuggestionQueue,
+  FeatureTreeNode,
   PrdApplyRequest,
   PrdApplyResult,
 } from "@flowforge/shared";
+import { buildFeatureTreeFromLines } from "../parser/featureTreeBuilder.js";
 
 // featureTreeBuilder.ts와 동일 문법(정합 필수): ## 요구사항 / ### 기능 / #### 상세기능 헤더,
 // 그리고 헤더 직후 줄의 `(중요도: …, 상태: …)` 속성 줄(줄 전체 앵커).
@@ -132,6 +134,35 @@ function setNodeAttrs(lines: string[], headerIdx: number, next: FeatureSuggestio
   }
 }
 
+/** 트리를 순회해 구조 지문(노드 개수 + capability 키 집합)을 뽑는다. self-roundtrip 비교용. */
+export function treeFingerprint(root: FeatureTreeNode): { count: number; caps: Set<string> } {
+  const caps = new Set<string>();
+  let count = 0;
+  const walk = (n: FeatureTreeNode): void => {
+    count++;
+    if (n.capability) caps.add(n.capability);
+    for (const c of n.children) walk(c);
+  };
+  for (const c of root.children) walk(c); // 가상 루트(feat-root)는 제외, 요구사항부터
+  return { count, caps };
+}
+
+/**
+ * D5 self-roundtrip 방어: 속성 교체 후 새 lines를 재파싱한 트리가 원본 트리와
+ * 구조 불변식을 유지하는지 검증한다 — (a) 노드 개수 동일 (b) capability 키 집합 동일.
+ * 하나라도 깨지면 false(라우트가 422로 원본 보호). 속성만 바꾸는 예광탄에서 위계·label·
+ * capability가 흔들리면 = 라인 패치가 엉뚱한 줄을 건드렸다는 신호이므로 쓰지 않는다.
+ */
+export function structureInvariantHolds(before: FeatureTreeNode, afterLines: readonly string[]): boolean {
+  const after = buildFeatureTreeFromLines(afterLines).root;
+  const b = treeFingerprint(before);
+  const a = treeFingerprint(after);
+  if (b.count !== a.count) return false;
+  if (b.caps.size !== a.caps.size) return false;
+  for (const k of b.caps) if (!a.caps.has(k)) return false;
+  return true;
+}
+
 /** 속성 줄 → {priority,status}. featureTreeBuilder RE_ATTRS와 동일 어휘. */
 function parseAttrLine(line: string): { priority: FeaturePriority | ""; status: FeatureStatus | "" } {
   const m = line.match(/^\s*\(\s*중요도:\s*(낮음|중간|높음)?\s*,\s*상태:\s*(시작전|진행중|완료|중단)?\s*\)\s*$/);
@@ -170,6 +201,8 @@ export function applyFeatureSuggestions(docsDir: string, req: PrdApplyRequest): 
     } catch {
       return { applied: 0, rejected: 0, remaining: queue.suggestions.length, skipped, writeFailed: true };
     }
+    // 패치 전 원본 구조 지문(self-roundtrip 비교 기준). 라인 배열 그대로 파싱.
+    const beforeTree = buildFeatureTreeFromLines(lines).root;
     // 큐 배열 순서로 반영(같은 노드 여러 승인은 뒤가 최종 — 결정론). 못 찾은 노드는 skipped.
     for (const s of willApply) {
       const headerIdx = findNodeHeaderLine(lines, s.nodePath);
@@ -182,6 +215,11 @@ export function applyFeatureSuggestions(docsDir: string, req: PrdApplyRequest): 
       approvedIds.push(s.id);
     }
     if (applied > 0) {
+      // D5 self-roundtrip: 노드 개수·capability 키 집합이 변했으면 = 라인 패치가 위계를
+      // 흔들었다는 신호 → 쓰지 않고 원본 보존(라우트 422). 큐도 그대로 둔다.
+      if (!structureInvariantHolds(beforeTree, lines)) {
+        return { applied: 0, rejected: 0, remaining: queue.suggestions.length, skipped, writeFailed: true };
+      }
       try {
         writeFileSync(path, lines.join("\n"), "utf-8");
       } catch {

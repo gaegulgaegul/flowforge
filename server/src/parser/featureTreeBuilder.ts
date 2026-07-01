@@ -48,6 +48,15 @@ export function buildDocsPlanningFeatures(docsDir: string): FeatureTree | null {
   if (!existsSync(path)) return null;
 
   const lines = readFileSync(path, "utf-8").split(/\r?\n/);
+  return buildFeatureTreeFromLines(lines);
+}
+
+/**
+ * features.md 라인 배열 → FeatureTree. 파일 IO 없이 in-memory 라인만 파싱한다.
+ * 6b self-roundtrip 검증이 "아직 안 쓴 새 라인"을 디스크 왕복 없이 재파싱하려고 분리했다.
+ * buildDocsPlanningFeatures는 파일을 읽어 이 함수에 위임하는 얇은 래퍼.
+ */
+export function buildFeatureTreeFromLines(lines: readonly string[]): FeatureTree {
   const root = makeNode("requirement", "root", "feat-root"); // 가상 루트(children=요구사항들)
   // 레벨별 "현재 부모" 스택. stack[2]=현재 요구사항, stack[3]=현재 기능. 루트는 레벨1로 둔다.
   const stack: Record<number, MutableNode> = { 1: root };

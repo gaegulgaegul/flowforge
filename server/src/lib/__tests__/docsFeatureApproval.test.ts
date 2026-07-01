@@ -8,7 +8,13 @@
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readDocsFeatureSuggestions, applyFeatureSuggestions } from "../featureDocs.js";
+import {
+  readDocsFeatureSuggestions,
+  applyFeatureSuggestions,
+  structureInvariantHolds,
+  treeFingerprint,
+} from "../featureDocs.js";
+import { buildFeatureTreeFromLines } from "../../parser/featureTreeBuilder.js";
 import type { FeatureSuggestion } from "@flowforge/shared";
 
 /** 3단 트리 features.md 픽스처(요구사항/기능/상세기능 + 속성 줄). featureTreeBuilder 문법과 동일. */
@@ -193,5 +199,71 @@ describe("applyFeatureSuggestions", () => {
     expect(r.writeFailed).toBe(true);
     expect(r.applied).toBe(0);
     expect(r.remaining).toBe(1);
+  });
+
+  // D5 self-roundtrip 불변식(spec scenario "self-roundtrip 불변식 위반 시 원본 보호"):
+  // 정상 승인은 write 전후 노드 개수·capability 키 집합이 불변이라야 실제로 write가 일어난다.
+  it("정상 승인은 self-roundtrip 불변식(노드 개수·capability 불변)을 통과해 write된다", () => {
+    const dir = makePlanning(root, "p", FEATURES_MD, [
+      sug("s1", ["기획 산출물 생성"], { priority: "낮음", status: "완료" }),
+    ]);
+    // 반영 전 트리 지문(가상 루트 제외) — 반영 후와 동일해야 한다.
+    const before = treeFingerprint(buildFeatureTreeFromLines(FEATURES_MD.split(/\r?\n/)).root);
+    const r = applyFeatureSuggestions(dir, { approve: ["s1"], reject: [] });
+    // 불변식 통과 → 정상 write(422/writeFailed 없음).
+    expect(r.applied).toBe(1);
+    expect(r.writeFailed).toBeUndefined();
+    const out = readFileSync(join(dir, "planning", "features.md"), "utf-8");
+    const after = treeFingerprint(buildFeatureTreeFromLines(out.split(/\r?\n/)).root);
+    // self-roundtrip: 반영 후 재파싱해도 노드 개수·capability 키 집합 그대로.
+    expect(after.count).toBe(before.count);
+    expect([...after.caps].sort()).toEqual([...before.caps].sort());
+    // 속성만 실제로 바뀌었는지도 확인(happy-path가 no-op이 아님을 못박음).
+    expect(out).toContain("(중요도: 낮음, 상태: 완료)");
+  });
+});
+
+/**
+ * D5 self-roundtrip 방어 단위 테스트 — structureInvariantHolds(before, afterLines).
+ * spec scenario "self-roundtrip 불변식 위반 시 원본 보호": 반영 결과를 재파싱했을 때 노드 개수
+ * 또는 capability 키 집합이 원본과 달라지면 false여야 applyFeatureSuggestions가 write를 막는다.
+ * before 트리는 buildFeatureTreeFromLines로 만들고, afterLines를 손상시켜 false 경로를 밟는다.
+ */
+describe("structureInvariantHolds (D5 self-roundtrip 방어)", () => {
+  const beforeTree = buildFeatureTreeFromLines(FEATURES_MD.split(/\r?\n/)).root;
+
+  it("속성 줄만 바뀐 lines는 불변식을 유지한다(true)", () => {
+    // 속성 값만 교체(중요도/상태) — 헤더·capability·위계 불변 → 노드 개수·capability 동일.
+    const afterLines = FEATURES_MD.replace("(중요도: 높음, 상태: 진행중)", "(중요도: 낮음, 상태: 완료)").split(
+      /\r?\n/,
+    );
+    expect(structureInvariantHolds(beforeTree, afterLines)).toBe(true);
+  });
+
+  it("노드(헤더 줄)가 사라지면 노드 개수 감소로 위반(false)", () => {
+    // "### PRD 생성" 헤더 줄을 통째 제거 → 트리 노드 개수 감소.
+    const afterLines = FEATURES_MD.split(/\r?\n/).filter((l) => l !== "### PRD 생성");
+    expect(structureInvariantHolds(beforeTree, afterLines)).toBe(false);
+  });
+
+  it("헤더 줄이 늘면 노드 개수 증가로 위반(false)", () => {
+    // 엉뚱한 새 요구사항 헤더가 삽입됨(라인 패치가 위계를 흔든 상황 모사).
+    const afterLines = [...FEATURES_MD.split(/\r?\n/), "## 유령 요구사항", "(중요도: 중간, 상태: 시작전)"];
+    expect(structureInvariantHolds(beforeTree, afterLines)).toBe(false);
+  });
+
+  it("capability 주석이 사라지면 키 집합 변화로 위반(false)", () => {
+    // 노드 개수는 그대로지만 capability 주석 한 줄이 사라져 키 집합 크기가 줄어든다.
+    const afterLines = FEATURES_MD.split(/\r?\n/).filter((l) => l !== "<!-- capability: planning-authoring -->");
+    expect(structureInvariantHolds(beforeTree, afterLines)).toBe(false);
+  });
+
+  it("capability 키가 다른 값으로 바뀌면 키 집합 변화로 위반(false)", () => {
+    // 개수·집합 크기는 같아도 키 문자열이 달라지면 매핑이 깨진 것 → false.
+    const afterLines = FEATURES_MD.replace(
+      "<!-- capability: planning-authoring -->",
+      "<!-- capability: hijacked -->",
+    ).split(/\r?\n/);
+    expect(structureInvariantHolds(beforeTree, afterLines)).toBe(false);
   });
 });
