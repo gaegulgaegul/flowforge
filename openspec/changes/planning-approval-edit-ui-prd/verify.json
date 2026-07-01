@@ -1,9 +1,9 @@
 {
   "change": "planning-approval-edit-ui-prd",
-  "verifiedAt": "2026-07-01T13:10:00+09:00",
+  "verifiedAt": "2026-07-01T13:20:00+09:00",
   "finalJudgment": "PASS",
   "counts": {
-    "pass": 13,
+    "pass": 14,
     "fail": 0,
     "검증안함": 0,
     "skipped": 0
@@ -201,6 +201,17 @@
             "kind": "text",
             "text": "POST /api/docs/..%2f..%2fetc/.../apply → 404"
           }
+        },
+        {
+          "scenario": "proposedBody의 '## ' 오분리 데이터손상 차단 (review HIGH 회귀)",
+          "layer": "server",
+          "means": "jest+런타임: proposedBody에 줄 시작 '## ' 포함 승인 → self-roundtrip이 오분리 감지 → 422(writeFailed), prd.md 5섹션 무결·원본 보호",
+          "basis": "docsPrdApproval.test.ts(lib 2+라우트 1) + 런타임 curl 8899(정상 200/악성 422/무결성 grep)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "정상 승인→200 applied:1 / 악성('## 가짜헤더') 승인→422 writeFailed, prd.md ## 5개 유지·가짜헤더 0·정상분 반영"
+          }
         }
       ]
     }
@@ -209,10 +220,10 @@
     {
       "layer": "server",
       "status": "PASS",
-      "ran": 24,
-      "passed": 24,
+      "ran": 27,
+      "passed": 27,
       "failed": 0,
-      "basis": "server workspace jest: docsPrdApproval lib 15 + routes 9 재실행(회귀 176/176 PASS, pipefail EXIT 0)"
+      "basis": "server jest: docsPrdApproval lib 17 + routes 10 재실행(HIGH 방어 회귀 3 포함, 전체 회귀 179/179 PASS, pipefail EXIT 0)"
     },
     {
       "layer": "web",
@@ -242,5 +253,5 @@
     }
   ],
   "reportHtml": "verify.html",
-  "historyHtml": "verify-20260701-1310.html"
+  "historyHtml": "verify-20260701-1320.html"
 }
