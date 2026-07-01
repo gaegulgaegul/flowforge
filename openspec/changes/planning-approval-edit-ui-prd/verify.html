@@ -1,0 +1,50 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — planning-approval-edit-ui-prd</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — planning-approval-edit-ui-prd</h1>
+<p class="muted">검증일: 2026-07-01T13:10:00+09:00 · 환경: server(jest) PASS · web(vite+Playwright 실픽셀) PASS · android SKIPPED(디렉토리 없음) · ios SKIPPED(macOS 필요) · run: run-20260701-1310</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 13 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>PRD 제안 큐 읽기 (planning-prd-approval-queue)</td><td>제안 큐가 있는 프로젝트 조회</td><td>web</td><td>Playwright 실픽셀: ffverify 카드→skeleton→&#x27;제안 2건&#x27; 배너+제안 카드 2개 렌더 관찰</td><td><code>verify-prd-approval.mjs step1 + verify-01-queue.png</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-01-queue.png"><img src="verify-01-queue.png" alt="제안 2건 배너 + 섹션별 현재 vs 제안 카드" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>PRD 제안 큐 읽기 (planning-prd-approval-queue)</td><td>제안 큐가 없는 프로젝트 조회 (빈 큐 폴백)</td><td>server</td><td>jest: 파일없음→{version:1,suggestions:[]} + 라우트 GET 200 빈큐</td><td><code>docsPrdApproval.test.ts (lib+routes)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">readDocsPrdSuggestions 파일없음→빈큐 / GET 200 {version:1,suggestions:[]}</pre></td></tr>
+<tr><td>PRD 제안 큐 읽기 (planning-prd-approval-queue)</td><td>깨진 제안 큐 JSON (안전 폴백)</td><td>server</td><td>jest: 깨진 JSON→빈큐(throw 금지)</td><td><code>docsPrdApproval.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">&#x27;{ not json&#x27; → {version:1,suggestions:[]} (throw 없음)</pre></td></tr>
+<tr><td>PRD 제안 큐 읽기 (planning-prd-approval-queue)</td><td>경로 조작 차단</td><td>server</td><td>라우트 GET ..%2f..%2fetc → 404(resolveDocsDir 화이트리스트)</td><td><code>docsPrdApproval.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">GET /api/docs/..%2f..%2fetc/planning-prd-suggestions → 404</pre></td></tr>
+<tr><td>PRD 제안 큐 읽기 (planning-prd-approval-queue)</td><td>스키마 검증 — 미인식 section/op는 걸러짐</td><td>server</td><td>jest: bad-section·bad-op 필터→유효 항목만 반환</td><td><code>docsPrdApproval.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">isValidPrdSuggestion: section 5키·op=replace 아닌 항목 제외 → [&#x27;ok&#x27;]</pre></td></tr>
+<tr><td>PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)</td><td>단일 제안 승인 → 섹션 교체 반영</td><td>web</td><td>Playwright 실픽셀: 개별 승인 클릭→prd.md &#x27;개요&#x27; 교체 반영+H1 서문 보존+큐 1건 감소 관찰</td><td><code>verify-prd-approval.mjs step2 + verify-02-approve.png</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-02-approve.png"><img src="verify-02-approve.png" alt="승인 후 개요 교체 반영·큐 1건" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)</td><td>일괄 승인 (여러 섹션 동시 교체)</td><td>server</td><td>jest: approve 2건(overview+metrics)→applied:2, 두 섹션 교체</td><td><code>docsPrdApproval.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">approve:[&#x27;s1&#x27;,&#x27;s2&#x27;]→applied:2, prd.md에 두 새 본문 모두 반영</pre></td></tr>
+<tr><td>PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)</td><td>반려 — 원본 불변, 큐에서만 제거</td><td>web</td><td>Playwright 실픽셀: 반려 클릭→원본 불변+큐 비면 순수 읽기 뷰 전환 관찰</td><td><code>verify-prd-approval.mjs step3 + verify-03-reject-clean.png</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-03-reject-clean.png"><img src="verify-03-reject-clean.png" alt="반려 후 원본 성공지표 유지·승인 UI 사라짐(순수 읽기)" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)</td><td>같은 섹션에 대한 두 승인 — 순서 결정론</td><td>server</td><td>jest: 같은 section 2제안(먼저/나중)→큐 순서 뒤가 이김</td><td><code>docsPrdApproval.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">approve:[&#x27;s1&#x27;,&#x27;s2&#x27;] 같은 overview → &#x27;나중&#x27; 반영, &#x27;먼저&#x27; 아님</pre></td></tr>
+<tr><td>PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)</td><td>미실재 id / 미실재 섹션 — 표면화 (silent drop 금지)</td><td>server</td><td>jest+라우트: nope→skipped 포함, applied:0, remaining 불변</td><td><code>docsPrdApproval.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">approve:[&#x27;nope&#x27;]→skipped:[&#x27;nope&#x27;], applied:0, remaining:1</pre></td></tr>
+<tr><td>PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)</td><td>PRD 파싱 실패 시 원본 보호</td><td>server</td><td>라우트: 5섹션 아닌 prd.md 승인→422(writeFailed), 원본 안 씀</td><td><code>docsPrdApproval.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">손상 prd.md + approve → POST 422(prd_write_failed), 원본 불변</pre></td></tr>
+<tr><td>PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)</td><td>잘못된 요청 body 차단</td><td>server</td><td>라우트: {approve:&#x27;s1&#x27;}(배열 아님)→400(isPrdApplyRequest)</td><td><code>docsPrdApproval.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">POST {approve:&#x27;s1&#x27;} → 400 invalid_request</pre></td></tr>
+<tr><td>PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)</td><td>경로 조작 차단</td><td>server</td><td>라우트 POST ..%2f..%2fetc → 404</td><td><code>docsPrdApproval.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">POST /api/docs/..%2f..%2fetc/.../apply → 404</pre></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>PRD 제안 큐 읽기 (planning-prd-approval-queue)</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="큐 읽기는 수치 경계 없음(제안 배열·문자열 필드만)">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="읽기 전용·개인용 단일 사용자(동시성 무의미)">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="제안 큐는 프로젝트당 소량, 대량 시나리오 없음">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="개인용 단일 사용자·apply는 매 요청 큐 재읽기(stale write 방지)">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="제안 소량, 대량 승인 시나리오 없음">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>24</td><td>24</td><td>0</td><td>server workspace jest: docsPrdApproval lib 15 + routes 9 재실행(회귀 176/176 PASS, pipefail EXIT 0)</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>3</td><td>3</td><td>0</td><td>web workspace(vite/react 빌드·타입 PASS) + Playwright 실픽셀 격리 DOCS_ROOT:8899(승인루프 세로관통 관찰)</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>웹 전용 프로젝트</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>macOS 필요</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>

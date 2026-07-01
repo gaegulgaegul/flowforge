@@ -1,0 +1,246 @@
+{
+  "change": "planning-approval-edit-ui-prd",
+  "verifiedAt": "2026-07-01T13:10:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 13,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "PRD 제안 큐 읽기 (planning-prd-approval-queue)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "큐 읽기는 수치 경계 없음(제안 배열·문자열 필드만)",
+          "동시성": "읽기 전용·개인용 단일 사용자(동시성 무의미)",
+          "대량": "제안 큐는 프로젝트당 소량, 대량 시나리오 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "제안 큐가 있는 프로젝트 조회",
+          "layer": "web",
+          "means": "Playwright 실픽셀: ffverify 카드→skeleton→'제안 2건' 배너+제안 카드 2개 렌더 관찰",
+          "basis": "verify-prd-approval.mjs step1 + verify-01-queue.png",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-01-queue.png",
+            "caption": "제안 2건 배너 + 섹션별 현재 vs 제안 카드"
+          }
+        },
+        {
+          "scenario": "제안 큐가 없는 프로젝트 조회 (빈 큐 폴백)",
+          "layer": "server",
+          "means": "jest: 파일없음→{version:1,suggestions:[]} + 라우트 GET 200 빈큐",
+          "basis": "docsPrdApproval.test.ts (lib+routes)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "readDocsPrdSuggestions 파일없음→빈큐 / GET 200 {version:1,suggestions:[]}"
+          }
+        },
+        {
+          "scenario": "깨진 제안 큐 JSON (안전 폴백)",
+          "layer": "server",
+          "means": "jest: 깨진 JSON→빈큐(throw 금지)",
+          "basis": "docsPrdApproval.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "'{ not json' → {version:1,suggestions:[]} (throw 없음)"
+          }
+        },
+        {
+          "scenario": "경로 조작 차단",
+          "layer": "server",
+          "means": "라우트 GET ..%2f..%2fetc → 404(resolveDocsDir 화이트리스트)",
+          "basis": "docsPrdApproval.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "GET /api/docs/..%2f..%2fetc/planning-prd-suggestions → 404"
+          }
+        },
+        {
+          "scenario": "스키마 검증 — 미인식 section/op는 걸러짐",
+          "layer": "server",
+          "means": "jest: bad-section·bad-op 필터→유효 항목만 반환",
+          "basis": "docsPrdApproval.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "isValidPrdSuggestion: section 5키·op=replace 아닌 항목 제외 → ['ok']"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PRD 제안 개별/일괄 승인·반려 적용 (planning-prd-approval-apply)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "동시성": "개인용 단일 사용자·apply는 매 요청 큐 재읽기(stale write 방지)",
+          "대량": "제안 소량, 대량 승인 시나리오 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "단일 제안 승인 → 섹션 교체 반영",
+          "layer": "web",
+          "means": "Playwright 실픽셀: 개별 승인 클릭→prd.md '개요' 교체 반영+H1 서문 보존+큐 1건 감소 관찰",
+          "basis": "verify-prd-approval.mjs step2 + verify-02-approve.png",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-02-approve.png",
+            "caption": "승인 후 개요 교체 반영·큐 1건"
+          }
+        },
+        {
+          "scenario": "일괄 승인 (여러 섹션 동시 교체)",
+          "layer": "server",
+          "means": "jest: approve 2건(overview+metrics)→applied:2, 두 섹션 교체",
+          "basis": "docsPrdApproval.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "approve:['s1','s2']→applied:2, prd.md에 두 새 본문 모두 반영"
+          }
+        },
+        {
+          "scenario": "반려 — 원본 불변, 큐에서만 제거",
+          "layer": "web",
+          "means": "Playwright 실픽셀: 반려 클릭→원본 불변+큐 비면 순수 읽기 뷰 전환 관찰",
+          "basis": "verify-prd-approval.mjs step3 + verify-03-reject-clean.png",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-03-reject-clean.png",
+            "caption": "반려 후 원본 성공지표 유지·승인 UI 사라짐(순수 읽기)"
+          }
+        },
+        {
+          "scenario": "같은 섹션에 대한 두 승인 — 순서 결정론",
+          "layer": "server",
+          "means": "jest: 같은 section 2제안(먼저/나중)→큐 순서 뒤가 이김",
+          "basis": "docsPrdApproval.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "approve:['s1','s2'] 같은 overview → '나중' 반영, '먼저' 아님"
+          }
+        },
+        {
+          "scenario": "미실재 id / 미실재 섹션 — 표면화 (silent drop 금지)",
+          "layer": "server",
+          "means": "jest+라우트: nope→skipped 포함, applied:0, remaining 불변",
+          "basis": "docsPrdApproval.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "approve:['nope']→skipped:['nope'], applied:0, remaining:1"
+          }
+        },
+        {
+          "scenario": "PRD 파싱 실패 시 원본 보호",
+          "layer": "server",
+          "means": "라우트: 5섹션 아닌 prd.md 승인→422(writeFailed), 원본 안 씀",
+          "basis": "docsPrdApproval.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "손상 prd.md + approve → POST 422(prd_write_failed), 원본 불변"
+          }
+        },
+        {
+          "scenario": "잘못된 요청 body 차단",
+          "layer": "server",
+          "means": "라우트: {approve:'s1'}(배열 아님)→400(isPrdApplyRequest)",
+          "basis": "docsPrdApproval.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "POST {approve:'s1'} → 400 invalid_request"
+          }
+        },
+        {
+          "scenario": "경로 조작 차단",
+          "layer": "server",
+          "means": "라우트 POST ..%2f..%2fetc → 404",
+          "basis": "docsPrdApproval.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "POST /api/docs/..%2f..%2fetc/.../apply → 404"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 24,
+      "passed": 24,
+      "failed": 0,
+      "basis": "server workspace jest: docsPrdApproval lib 15 + routes 9 재실행(회귀 176/176 PASS, pipefail EXIT 0)"
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 3,
+      "passed": 3,
+      "failed": 0,
+      "basis": "web workspace(vite/react 빌드·타입 PASS) + Playwright 실픽셀 격리 DOCS_ROOT:8899(승인루프 세로관통 관찰)"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: android/ 디렉토리 없음(웹 프로젝트)",
+      "reason": "웹 전용 프로젝트"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "macOS 필요(현재 Linux)",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260701-1310.html"
+}
