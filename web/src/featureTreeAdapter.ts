@@ -14,6 +14,8 @@ export interface FeatureNodeData extends Record<string, unknown> {
   capability: string;
   priority: FeaturePriority | "";
   status: FeatureStatus | "";
+  /** 경량 아이템 메모(lightweight-item-memo). 부착된 노드만 채워짐(없으면 undefined). */
+  memo?: string;
 }
 
 const NODE_W = 240;
@@ -77,6 +79,8 @@ export function toFeatureTreeFlow(root: FeatureTreeNode): {
         capability: n.capability,
         priority: n.priority,
         status: n.status,
+        // memo는 있을 때만 전달(비메모 노드는 undefined → 렌더 무영향).
+        ...(n.memo !== undefined ? { memo: n.memo } : {}),
       },
       type: "featureTree",
     };

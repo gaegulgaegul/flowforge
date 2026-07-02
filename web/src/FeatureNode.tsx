@@ -30,7 +30,7 @@ const STATUS_COLOR: Record<FeatureStatus, string> = {
 };
 
 export function FeatureNode({ data }: NodeProps): JSX.Element {
-  const { label, kind, capability, priority, status } = data as FeatureNodeData;
+  const { label, kind, capability, priority, status, memo } = data as FeatureNodeData;
   const s = KIND_STYLE[kind] ?? KIND_STYLE.detail;
   return (
     <div
@@ -55,6 +55,9 @@ export function FeatureNode({ data }: NodeProps): JSX.Element {
       <span className="feature-tree-node-label">{label}</span>
       {kind === "requirement" && capability && (
         <span className="feature-tree-cap" title={`capability: ${capability}`}>{capability}</span>
+      )}
+      {memo && (
+        <span className="feature-tree-memo" title={`메모: ${memo}`}>📝 {memo}</span>
       )}
       <Handle type="source" position={Position.Right} className="feature-handle" />
     </div>

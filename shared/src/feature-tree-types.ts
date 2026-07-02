@@ -35,6 +35,13 @@ export interface FeatureTreeNode {
   readonly priority: FeaturePriority | '';
   /** 노드 진행 상태. 표기 없으면 빈 문자열. */
   readonly status: FeatureStatus | '';
+  /**
+   * 경량 아이템 메모(capability: lightweight-item-memo). 저작자 본인용 한 줄 메모
+   * (설계 이유·TODO·자기 자문). features.md에서 노드 헤더 아래
+   * `<!-- memo: 한 줄 -->` 주석으로 부착하며, 없으면 필드 자체가 없다(비파괴 옵셔널).
+   * 협업 코멘트(스레드·멘션·답글) 아님 — 경량 개인 메모.
+   */
+  readonly memo?: string;
   readonly children: readonly FeatureTreeNode[];
 }
 

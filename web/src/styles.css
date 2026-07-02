@@ -308,6 +308,15 @@ button:hover { border-color: var(--lime); }
   padding: 1px 5px;
   border-radius: 4px;
 }
+/* 경량 아이템 메모(lightweight-item-memo): 저작자 본인용 한 줄 메모를 작은 서브텍스트로.
+   부착된 노드에만 렌더되므로 비메모 노드 레이아웃엔 무영향. */
+.feature-tree-memo {
+  font-size: 10px;
+  font-style: italic;
+  color: #b9a06d;
+  line-height: 1.4;
+  white-space: normal;
+}
 /* skeleton 단계의 기능명세서 플로우는 부모가 flex-fill이 아니므로 고정 높이를 준다. */
 .dash-feature-flow { height: 480px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; }
 /* skeleton(기획) 3뷰 탭 영역: border 제거(요청). height/margin은 유지. capChanges의 dash-feature-flow와 분리. */

@@ -18,6 +18,10 @@ import { slug } from "./specParser.js";
 
 const RE_HEADER = /^(#{2,4})\s+(.+?)\s*$/; // ## / ### / #### 헤더
 const RE_CAPABILITY = /<!--\s*capability:\s*([A-Za-z0-9_-]+)\s*-->/;
+// 경량 아이템 메모(capability: lightweight-item-memo). 노드 헤더 아래 `<!-- memo: 한 줄 -->`.
+// capability 주석과 네임스페이스가 겹치지 않도록 `memo:` 접두어를 명시적으로 요구하고,
+// 캡처는 `-->` 직전까지의 임의 한 줄 텍스트(trim은 아래에서). 모든 kind에 붙일 수 있다.
+const RE_MEMO = /<!--\s*memo:\s*(.*?)\s*-->/;
 // 속성은 줄 전체가 `(중요도:…, 상태:…)`인 속성 줄에서만 인식한다(^…$ 앵커). 본문 산문 중간에
 // 같은 패턴이 들어가도 오매칭하지 않도록 줄 시작·끝에 고정(review CONCERN 2026-06-28).
 const RE_ATTRS = /^\s*\(\s*중요도:\s*(낮음|중간|높음)?\s*,\s*상태:\s*(시작전|진행중|완료|중단)?\s*\)\s*$/;
@@ -32,6 +36,8 @@ interface MutableNode {
   capability: string;
   priority: FeaturePriority | "";
   status: FeatureStatus | "";
+  /** 경량 아이템 메모(없으면 undefined → freeze 시 필드 자체 생략, 비파괴). */
+  memo?: string;
   children: MutableNode[];
 }
 
@@ -97,6 +103,11 @@ export function buildFeatureTreeFromLines(lines: readonly string[]): FeatureTree
       if (attr[1]) current.priority = attr[1] as FeaturePriority;
       if (attr[2]) current.status = attr[2] as FeatureStatus;
     }
+    // 경량 아이템 메모: 헤더 직후 컨텍스트의 직전 헤더 노드에 귀속한다(모든 kind).
+    // capability 주석보다 뒤에서 매칭하므로 `<!-- capability: -->`를 삼키지 않는다(접두어 분리).
+    // 빈 메모(`<!-- memo:  -->`)는 무시해 빈 필드 노이즈를 막는다.
+    const memo = line.match(RE_MEMO);
+    if (memo && memo[1]) current.memo = memo[1];
   }
 
   return { root: freeze(root) };
@@ -111,6 +122,8 @@ function freeze(n: MutableNode): FeatureTreeNode {
     capability: n.capability,
     priority: n.priority,
     status: n.status,
+    // memo는 있을 때만 실어 비메모 노드의 형태를 바꾸지 않는다(옵셔널·비파괴).
+    ...(n.memo !== undefined ? { memo: n.memo } : {}),
     children: n.children.map(freeze),
   };
 }

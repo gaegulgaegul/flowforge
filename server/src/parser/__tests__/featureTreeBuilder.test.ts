@@ -165,4 +165,76 @@ describe("featureTreeBuilder", () => {
       cleanup();
     }
   });
+
+  describe("경량 아이템 메모(lightweight-item-memo)", () => {
+    it("`<!-- memo: ... -->` 주석을 해당 노드 memo 필드로 파싱한다(모든 kind)", () => {
+      const md = [
+        "# 기능명세서",
+        "## 사진 업로드",
+        "<!-- capability: photo-upload -->",
+        "(중요도: 높음, 상태: 진행중)",
+        "<!-- memo: 요구사항 레벨 메모 -->",
+        "### 단일 업로드",
+        "<!-- memo: 기능 레벨 TODO -->",
+        "#### 파일 선택",
+        "<!-- memo: 상세기능 자문 메모 -->",
+      ].join("\n");
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const tree = buildDocsPlanningFeatures(docsDir)!;
+        const req = tree.root.children[0]!;
+        expect(req.memo).toBe("요구사항 레벨 메모");
+        expect(req.children[0]!.memo).toBe("기능 레벨 TODO");
+        expect(req.children[0]!.children[0]!.memo).toBe("상세기능 자문 메모");
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("메모가 없는 노드는 memo 필드가 부재한다(비파괴 옵셔널)", () => {
+      const { docsDir, cleanup } = makeFeatures(FEATURES);
+      try {
+        const tree = buildDocsPlanningFeatures(docsDir)!;
+        const req = tree.root.children[0]!;
+        // 기존 픽스처에는 memo가 전혀 없으므로 필드 자체가 없어야 한다.
+        expect("memo" in req).toBe(false);
+        expect(req.memo).toBeUndefined();
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("memo 주석은 capability/속성 파싱과 공존하며 서로를 삼키지 않는다", () => {
+      const md = [
+        "# 기능명세서",
+        "## 결제",
+        "<!-- capability: payment -->",
+        "(중요도: 높음, 상태: 진행중)",
+        "<!-- memo: 결제 실패 재시도 정책 미정 -->",
+      ].join("\n");
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const req = buildDocsPlanningFeatures(docsDir)!.root.children[0]!;
+        expect(req.capability).toBe("payment"); // capability 온전
+        expect(req.priority).toBe("높음"); // 속성 온전
+        expect(req.status).toBe("진행중");
+        expect(req.memo).toBe("결제 실패 재시도 정책 미정"); // memo 추가
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("빈 메모(`<!-- memo:  -->`)는 무시한다(빈 필드 노이즈 방지)", () => {
+      const md = ["# 기능명세서", "## 검색", "<!-- capability: search -->", "<!-- memo:  -->"].join(
+        "\n",
+      );
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const req = buildDocsPlanningFeatures(docsDir)!.root.children[0]!;
+        expect("memo" in req).toBe(false);
+      } finally {
+        cleanup();
+      }
+    });
+  });
 });
