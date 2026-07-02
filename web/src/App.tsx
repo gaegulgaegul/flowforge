@@ -31,6 +31,7 @@ import {
   fetchCapabilityDetail,
   fetchDocsPlanningPrd,
   fetchDocsPlanningFeatures,
+  fetchDocsPlanningIa,
   fetchDocsPlanningUserFlow,
   saveDocsPlanningUserFlowLayout,
   fetchDocsPrdSuggestions,
@@ -74,7 +75,7 @@ export function App(): JSX.Element {
   const [selected, setSelected] = useState<string>("");
   const [tab, setTab] = useState<Tab>("prd");
   // skeleton(기획 뼈대) 단계 전용 탭. views 단계의 tab(5종)과 완전히 분리 — 충돌 방지.
-  const [planTab, setPlanTab] = useState<"prd" | "features" | "flow">("prd");
+  const [planTab, setPlanTab] = useState<"prd" | "features" | "ia" | "flow">("prd");
   const [iaVerbose, setIaVerbose] = useState(false);
   const [status, setStatus] = useState("");
 
@@ -107,6 +108,12 @@ export function App(): JSX.Element {
   // 6a prdSuggestions와 대칭. 큐 비면 순수 읽기 트리 뷰.
   const [featureSuggestions, setFeatureSuggestions] = useState<readonly FeatureSuggestion[]>([]);
   const [featureApplyBusy, setFeatureApplyBusy] = useState(false);
+
+  // 기획 단계 IA(docs/planning/features.md 화면목록 → 화면 1급 노드 IATree) — 프로젝트 단위(skeleton에서 표시).
+  // change IA(iaRoot/iaNodes/iaEdges)와 분리. 화면=부모, N:M 연결 상세기능=자식. toIAFlow·IANode 재사용.
+  const [planningIaRoot, setPlanningIaRoot] = useState<IANodeT | null>(null);
+  const [planningIaNodes, setPlanningIaNodes] = useState<Node[]>([]);
+  const [planningIaEdges, setPlanningIaEdges] = useState<Edge[]>([]);
 
   // 기획 단계 유저플로우(docs/planning/user-flow/<flow>.md → 공용 SpecGraph) — 프로젝트 단위(skeleton에서 표시).
   // change 유저플로우(flowNodes/flowEdges)와 분리. 드래그 좌표는 overlay로 저장(saveDocsPlanningUserFlowLayout).
@@ -202,6 +209,19 @@ export function App(): JSX.Element {
     setFeatureNodes(nodes);
     setFeatureEdges(edges);
   }, [planningFeatures]);
+
+  // 기획 IA(planningIaRoot) 바뀌면 레이아웃 재계산. null이면 비운다. change IA와 동일한 toIAFlow 재사용
+  // (화면 1급 노드 IA는 간단히뷰 고정 — verbose 토글은 change IA 전용).
+  useEffect(() => {
+    if (!planningIaRoot) {
+      setPlanningIaNodes([]);
+      setPlanningIaEdges([]);
+      return;
+    }
+    const { nodes, edges } = toIAFlow(planningIaRoot, false);
+    setPlanningIaNodes(nodes);
+    setPlanningIaEdges(edges);
+  }, [planningIaRoot]);
 
   // capability 단위 features 서브트리(capFeatures) 바뀌면 레이아웃 재계산. null이면 비운다.
   useEffect(() => {
@@ -300,6 +320,18 @@ export function App(): JSX.Element {
       .catch(() => {
         if (token !== dashReqToken.current) return;
         setPlanningFeatures(null); // 기획 기능명세서 미작성 — 정상(미표시)
+      });
+    // 기획 단계 IA(docs/planning/features.md 화면목록) 로드 — 없으면(404) null로 비움(에러 아님).
+    setPlanningIaRoot(null);
+    fetchDocsPlanningIa(card.name)
+      .then((r) => {
+        if (token !== dashReqToken.current) return;
+        // 화면이 하나도 없으면 children 빈 루트 — 탭에 안 띄우려고 화면 0개면 null 취급.
+        setPlanningIaRoot(r.tree.children.length > 0 ? r.tree : null);
+      })
+      .catch(() => {
+        if (token !== dashReqToken.current) return;
+        setPlanningIaRoot(null); // 화면목록 미작성 — 정상(미표시)
       });
     // 기능명세 속성 제안 큐(docs/planning/features.suggestions.json) 로드 — 없으면 빈 큐(순수 읽기 트리 뷰).
     setFeatureSuggestions([]);
@@ -462,15 +494,16 @@ export function App(): JSX.Element {
       style={{ borderColor: tab === key ? "#b6e65a" : undefined }}>{label}</button>
   );
 
-  // skeleton 3뷰 탭: 있는 뷰만 노출, 활성 탭이 없는 뷰를 가리키면 첫 유효 탭으로 폴백.
-  const planTabsAvail: Array<"prd" | "features" | "flow"> = [];
+  // skeleton 뷰 탭: 있는 뷰만 노출, 활성 탭이 없는 뷰를 가리키면 첫 유효 탭으로 폴백.
+  const planTabsAvail: Array<"prd" | "features" | "ia" | "flow"> = [];
   if (planningPrd) planTabsAvail.push("prd");
   if (planningFeatures) planTabsAvail.push("features");
+  if (planningIaRoot) planTabsAvail.push("ia");
   if (planningUserFlow) planTabsAvail.push("flow");
-  const activePlanTab: "prd" | "features" | "flow" = planTabsAvail.includes(planTab)
+  const activePlanTab: "prd" | "features" | "ia" | "flow" = planTabsAvail.includes(planTab)
     ? planTab
     : (planTabsAvail[0] ?? "prd");
-  const planTabBtn = (key: "prd" | "features" | "flow", label: string): JSX.Element => (
+  const planTabBtn = (key: "prd" | "features" | "ia" | "flow", label: string): JSX.Element => (
     <button
       key={key}
       onClick={() => setPlanTab(key)}
@@ -542,6 +575,7 @@ export function App(): JSX.Element {
               <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 12 }} data-testid="plan-tabs">
                 {planningPrd && planTabBtn("prd", "PRD")}
                 {planningFeatures && planTabBtn("features", "기능명세서")}
+                {planningIaRoot && planTabBtn("ia", "정보구조(IA)")}
                 {planningUserFlow && planTabBtn("flow", "유저플로우")}
               </div>
             )}
@@ -581,6 +615,25 @@ export function App(): JSX.Element {
                     key="d-planning-features"
                     nodes={featureNodes}
                     edges={featureEdges}
+                    nodeTypes={nodeTypes}
+                    nodesDraggable={false}
+                    fitView
+                  >
+                    <Background />
+                    <Controls />
+                  </ReactFlow>
+                </div>
+              </section>
+            )}
+            {/* 기획 단계 IA(docs/planning/features.md 화면목록) — 있으면 화면 1급 노드 IA를 toIAFlow로 렌더 */}
+            {planningIaRoot && activePlanTab === "ia" && (
+              <section className="dash-planning-ia" data-testid="planning-ia">
+                <h3 className="dash-h">{dashProject?.displayName} — 정보구조(IA): 화면 1급 노드</h3>
+                <div className="dash-plan-flow">
+                  <ReactFlow
+                    key="d-planning-ia"
+                    nodes={planningIaNodes}
+                    edges={planningIaEdges}
                     nodeTypes={nodeTypes}
                     nodesDraggable={false}
                     fitView

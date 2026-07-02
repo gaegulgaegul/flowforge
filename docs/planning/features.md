@@ -40,6 +40,7 @@ flowforge가 docs/planning/prd.md를 읽어 PrdPanel로 5섹션을 렌더한다.
 (중요도: 높음, 상태: 완료)
 
 #### planning-prd 라우트 조회
+<!-- screens: skeleton -->
 (중요도: 높음, 상태: 완료)
 
 ## 기획 기능명세 뷰
@@ -52,9 +53,11 @@ flowforge가 docs/planning/features.md를 읽어 전용 FeatureTree로 3단 트�
 (중요도: 높음, 상태: 진행중)
 
 #### planning-features 라우트 조회
+<!-- screens: features, skeleton -->
 (중요도: 높음, 상태: 완료)
 
 #### priority·status·capability 시각화
+<!-- screens: features -->
 (중요도: 중간, 상태: 진행중)
 
 ## planning-only 프로젝트 인식
@@ -196,3 +199,24 @@ happy path는 실선, 자동 생성된 에지케이스 경로는 점선으로 �
 (중요도: 낮음, 상태: 시작전)
 
 화면·기능 등 아이템에 한 줄 메모(설계 이유·TODO·자문)를 부착하고 뷰에 표시한다. 스레드·멘션·답글 없는 경량 형태(협업 코멘트 아님).
+
+## 화면목록
+
+> 화면(페이지)을 기획 명세의 1급 엔티티로 정의한다(요구사항·기능·상세기능과 나란한 아이템).
+> 각 화면은 명시 영문 id를 가지며(한글 slug가 x로 죽는 것 회피), 상세기능이 N:M으로 이 화면들에 연결된다.
+> 기획 IA 뷰가 이 공유 화면 노드를 부모로, 연결된 상세기능을 자식으로 렌더한다.
+
+### 프로젝트 카드 그리드
+<!-- screen: grid -->
+
+홈 랜딩에서 change 있는 모든 프로젝트를 카드 그리드로 보여주는 화면.
+
+### 기획 뷰(뼈대)
+<!-- screen: skeleton -->
+
+프로젝트 진입 후 기획 산출물(PRD·기능명세·유저플로우·IA)을 탭으로 전환하며 보는 뼈대 화면.
+
+### 기능명세 화면
+<!-- screen: features -->
+
+features.md의 3단 트리(요구사항→기능→상세기능)를 노드 그래프로 렌더하는 화면.

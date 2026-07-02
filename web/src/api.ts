@@ -209,6 +209,19 @@ export async function fetchDocsPlanningFeatures(
 }
 
 /**
+ * 기획 단계 화면 1급 노드(docs/planning/features.md 화면목록) → 기획 IA 트리(IATree 재사용).
+ * 화면=부모 노드, N:M으로 연결된 상세기능=자식. 기존 iaAdapter.toIAFlow·IANode로 그대로 렌더.
+ */
+export async function fetchDocsPlanningIa(
+  project: string,
+): Promise<{ project: string; tree: IANode }> {
+  const res = await fetch(`/api/docs/${project}/planning-ia`);
+  if (!res.ok) throw new Error(`docs planning-ia ${res.status}`);
+  const data = (await res.json()) as { project: string; tree: { root: IANode } };
+  return { project: data.project, tree: data.tree.root };
+}
+
+/**
  * 기능명세(features) 속성 제안 큐 읽기(docs/planning/features.suggestions.json).
  * 큐 없으면 빈 큐(version:1, suggestions:[]). 6a fetchDocsPrdSuggestions의 features판.
  */

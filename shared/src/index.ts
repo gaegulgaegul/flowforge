@@ -65,3 +65,9 @@ export type {
   CapabilityChangeRef,
   CapabilityDetail,
 } from './dashboard-types.js';
+
+export type {
+  ScreenNode,
+  ScreenLink,
+  ScreenRegistry,
+} from './screen-types.js';

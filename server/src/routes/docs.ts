@@ -21,6 +21,7 @@ import { Router } from "express";
 import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from "../parser/docsAdapter.js";
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
 import { buildDocsPlanningFeatures } from "../parser/featureTreeBuilder.js";
+import { buildPlanningIaTree } from "../parser/planningIaBuilder.js";
 import { buildDocsPlanningUserFlow } from "../parser/planningUserFlowBuilder.js";
 import {
   listDocsProjects,
@@ -114,6 +115,26 @@ docsRouter.get(
     const tree = buildDocsPlanningFeatures(dir);
     if (!tree) {
       res.status(404).json({ error: "planning_features_not_found" });
+      return;
+    }
+    res.json({ project, tree });
+  }),
+);
+
+docsRouter.get(
+  "/api/docs/:project(*)/planning-ia",
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    // 화면 1급 노드(features.md 화면목록) → IA 트리(화면=부모, 연결 상세기능=자식).
+    // features.md 자체가 없으면 null → 404(planning-features와 동형).
+    const tree = buildPlanningIaTree(dir);
+    if (!tree) {
+      res.status(404).json({ error: "planning_ia_not_found" });
       return;
     }
     res.json({ project, tree });
