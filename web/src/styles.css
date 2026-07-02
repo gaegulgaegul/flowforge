@@ -310,6 +310,8 @@ button:hover { border-color: var(--lime); }
 }
 /* skeleton 단계의 기능명세서 플로우는 부모가 flex-fill이 아니므로 고정 높이를 준다. */
 .dash-feature-flow { height: 480px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; }
+/* skeleton(기획) 3뷰 탭 영역: border 제거(요청). height/margin은 유지. capChanges의 dash-feature-flow와 분리. */
+.dash-plan-flow { height: 480px; border-radius: 8px; margin-bottom: 16px; }
 .dash-planning-features { margin-bottom: 8px; }
 
 /* === SEED(미검증) 배지 — 노드/와이어/타임라인 공통 === */

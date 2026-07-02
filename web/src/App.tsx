@@ -73,6 +73,8 @@ export function App(): JSX.Element {
   // views 단계에서 선택된 change 키. 클릭으로 세팅되며 5종 산출물 로딩 effect의 트리거.
   const [selected, setSelected] = useState<string>("");
   const [tab, setTab] = useState<Tab>("prd");
+  // skeleton(기획 뼈대) 단계 전용 탭. views 단계의 tab(5종)과 완전히 분리 — 충돌 방지.
+  const [planTab, setPlanTab] = useState<"prd" | "features" | "flow">("prd");
   const [iaVerbose, setIaVerbose] = useState(false);
   const [status, setStatus] = useState("");
 
@@ -460,6 +462,26 @@ export function App(): JSX.Element {
       style={{ borderColor: tab === key ? "#b6e65a" : undefined }}>{label}</button>
   );
 
+  // skeleton 3뷰 탭: 있는 뷰만 노출, 활성 탭이 없는 뷰를 가리키면 첫 유효 탭으로 폴백.
+  const planTabsAvail: Array<"prd" | "features" | "flow"> = [];
+  if (planningPrd) planTabsAvail.push("prd");
+  if (planningFeatures) planTabsAvail.push("features");
+  if (planningUserFlow) planTabsAvail.push("flow");
+  const activePlanTab: "prd" | "features" | "flow" = planTabsAvail.includes(planTab)
+    ? planTab
+    : (planTabsAvail[0] ?? "prd");
+  const planTabBtn = (key: "prd" | "features" | "flow", label: string): JSX.Element => (
+    <button
+      key={key}
+      onClick={() => setPlanTab(key)}
+      aria-pressed={activePlanTab === key}
+      data-testid={`plan-tab-${key}`}
+      style={{ borderColor: activePlanTab === key ? "#b6e65a" : undefined }}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <header style={{ padding: "10px 16px", borderBottom: "1px solid #2a2e38", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -516,8 +538,15 @@ export function App(): JSX.Element {
           </div>
         ) : dashStage === "skeleton" ? (
           <div className="dash-body">
+            {planTabsAvail.length > 0 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 12 }} data-testid="plan-tabs">
+                {planningPrd && planTabBtn("prd", "PRD")}
+                {planningFeatures && planTabBtn("features", "기능명세서")}
+                {planningUserFlow && planTabBtn("flow", "유저플로우")}
+              </div>
+            )}
             {/* 기획 단계 PRD(docs/planning/prd.md) — 있으면 프로젝트 기획을 PrdPanel로 렌더 */}
-            {planningPrd && (
+            {planningPrd && activePlanTab === "prd" && (
               <section className="dash-planning-prd" data-testid="planning-prd">
                 <h3 className="dash-h">{dashProject?.displayName} — 기획 PRD</h3>
                 {/* 제안 큐가 있으면 승인/반려 편집 UI(6a), 큐 비면 렌더 안 함(순수 읽기 뷰). */}
@@ -534,7 +563,7 @@ export function App(): JSX.Element {
               </section>
             )}
             {/* 기획 단계 기능명세서(docs/planning/features.md) — 있으면 3단 트리(FeatureTree)로 렌더 */}
-            {planningFeatures && (
+            {planningFeatures && activePlanTab === "features" && (
               <section className="dash-planning-features" data-testid="planning-features">
                 <h3 className="dash-h">{dashProject?.displayName} — 기획 기능명세서</h3>
                 {/* 제안 큐가 있으면 노드 속성 승인/반려 편집 UI(6b), 큐 비면 렌더 안 함(순수 읽기 트리 뷰). */}
@@ -547,7 +576,7 @@ export function App(): JSX.Element {
                   onApproveAll={() => applyFeature(featureSuggestions.map((s) => s.id), [])}
                   onRejectAll={() => applyFeature([], featureSuggestions.map((s) => s.id))}
                 />
-                <div className="dash-feature-flow">
+                <div className="dash-plan-flow">
                   <ReactFlow
                     key="d-planning-features"
                     nodes={featureNodes}
@@ -563,7 +592,7 @@ export function App(): JSX.Element {
               </section>
             )}
             {/* 기획 단계 유저플로우(docs/planning/user-flow/<flow>.md) — 있으면 공용 SpecGraph 그래프로 렌더(드래그→좌표 저장) */}
-            {planningUserFlow && (
+            {planningUserFlow && activePlanTab === "flow" && (
               <section className="dash-planning-user-flow" data-testid="planning-user-flow">
                 <h3 className="dash-h">
                   {dashProject?.displayName} — 기획 유저플로우
@@ -583,7 +612,7 @@ export function App(): JSX.Element {
                     </select>
                   )}
                 </h3>
-                <div className="dash-feature-flow">
+                <div className="dash-plan-flow">
                   <ReactFlow
                     key="d-planning-user-flow"
                     nodes={planningFlowNodes}
