@@ -45,8 +45,11 @@ const NODE_PATTERNS: ReadonlyArray<{ kind: NodeKind; re: RegExp }> = [
   { kind: "screen", re: /([A-Za-z0-9_]+)\[\s*"?([^"\]]+?)"?\s*\]/ }, // ["텍스트"]
 ];
 
-// 엣지: A -->|라벨| B  또는  A --> B
-const RE_EDGE = /([A-Za-z0-9_]+)\s*-->\s*(?:\|([^|]*)\|\s*)?([A-Za-z0-9_]+)/g;
+// 엣지: 실선 `A -->|라벨| B` / `A --> B`, 점선 `A -.->|라벨| B` / `A -.-> B`.
+// 화살표 리터럴을 캡처([2])해 실선(`-->`)/점선(`-.->`)을 구분한다.
+// 점선을 먼저(`-\.->`) 두어 `-->`가 `-.->`의 일부를 먼저 삼키지 않게 한다.
+//   [1]=from, [2]=화살표 리터럴(-.-> | -->), [3]=라벨(옵션), [4]=to
+const RE_EDGE = /([A-Za-z0-9_]+)\s*(-\.->|-->)\s*(?:\|([^|]*)\|\s*)?([A-Za-z0-9_]+)/g;
 
 interface RawNode {
   mermaidId: string;
@@ -94,7 +97,8 @@ export function buildDocsPlanningUserFlow(docsDir: string, stem: string): SpecGr
     RE_EDGE.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = RE_EDGE.exec(t)) !== null) {
-      const [, from, label, to] = m;
+      const [, from, arrow, label, to] = m;
+      const dotted = arrow === "-.->"; // 점선 = 에지케이스 분기
       for (const id of [from!, to!]) {
         if (!nodes.has(id)) nodes.set(id, { mermaidId: id, kind: "screen", label: id });
       }
@@ -105,6 +109,7 @@ export function buildDocsPlanningUserFlow(docsDir: string, stem: string): SpecGr
         label: (label ?? "").trim(),
         scenario: stem,
         dangling: false,
+        kind: dotted ? "edgecase" : "happy",
       });
     }
   }

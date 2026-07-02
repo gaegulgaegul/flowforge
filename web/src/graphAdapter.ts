@@ -71,13 +71,18 @@ export function toFlowNodes(graph: SpecGraph, layout: LayoutOverlay): Node<SpecN
 export function toFlowEdges(graph: SpecGraph): Edge[] {
   return graph.edges
     .filter((e): e is typeof e & { target: string } => e.target !== null)
-    .map((e) => ({
-      id: e.id,
-      source: e.source,
-      target: e.target,
-      label: e.label,
-      animated: false,
-    }));
+    .map((e) => {
+      // 에지케이스(점선) 분기 = 애니메이션 점선 + 주황 강조. 실선(happy·부재)은 현행 유지.
+      const isEdgecase = e.kind === "edgecase";
+      return {
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        label: e.label,
+        animated: isEdgecase,
+        ...(isEdgecase ? { style: { strokeDasharray: "6 4", stroke: "#f0a05a" } } : {}),
+      };
+    });
 }
 
 /** dangling 엣지(target null) 개수 — 경고 배지용 */

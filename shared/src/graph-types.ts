@@ -36,6 +36,14 @@ export interface GraphEdge {
   readonly scenario: string;
   /** NAV 동사 매칭됐으나 대상 미발견이면 true → 캔버스에서 ⚠ 강조. */
   readonly dangling: boolean;
+  /**
+   * 엣지 성격 구분. planning 유저플로우에서 실선(`-->`)=happy path,
+   * 점선(`-.->`)=에지케이스 분기(spec 근거 자동 생성)를 나눈다.
+   * docs 입력에서만 세팅될 수 있는 옵셔널 필드 — change/golden 경로(기존 빌더)는 채우지
+   * 않으므로 undefined(비파괴). 부재 = 'happy' 간주. 유니온으로 둔 이유 = 2단계 AI 분기에
+   * 'ai-suggested' 확장 여지.
+   */
+  readonly kind?: 'happy' | 'edgecase';
 }
 
 /** server가 spec.md를 파싱해 내보내는 그래프(레이아웃 머지 전). */

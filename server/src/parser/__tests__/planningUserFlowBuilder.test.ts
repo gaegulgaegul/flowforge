@@ -75,6 +75,45 @@ describe("planningUserFlowBuilder", () => {
     }
   });
 
+  it("점선 엣지(-.->)를 kind:'edgecase'로, 실선(-->)을 kind:'happy'로 파싱한다", () => {
+    // main-v2 형태: 실선 happy path + 점선 에지케이스 분기(spec safe-4xx 등).
+    const md = [
+      "```mermaid",
+      "flowchart TD",
+      '  Skeleton["기획 뷰"] --> HasDocs{"산출물 있나"}',
+      '  HasDocs -->|유저플로우| Flow["유저플로우 그래프"]',
+      '  Skeleton -.->|로드 실패| LoadErr["로드 에러 안내"]',
+      '  Flow -.->|저장 실패| SaveErr["저장 실패 재시도"]',
+      "```",
+    ].join("\n");
+    const { docsDir, cleanup } = makeFlow("main-v2", md);
+    try {
+      const graph = buildDocsPlanningUserFlow(docsDir, "main-v2")!;
+      // 점선 엣지 2개(LoadErr, SaveErr)가 파싱돼 노드가 고아가 아니게 됨.
+      const byTargetLabel = (label: string) =>
+        graph.edges.find((e) => {
+          const target = graph.nodes.find((n) => n.id === e.target);
+          return target?.label === label;
+        });
+      const loadErr = byTargetLabel("로드 에러 안내");
+      const saveErr = byTargetLabel("저장 실패 재시도");
+      expect(loadErr).toBeDefined();
+      expect(loadErr!.kind).toBe("edgecase");
+      expect(saveErr).toBeDefined();
+      expect(saveErr!.kind).toBe("edgecase");
+      // 실선 엣지는 edgecase가 아니어야(회귀 없음).
+      const flowEdge = byTargetLabel("유저플로우 그래프");
+      expect(flowEdge).toBeDefined();
+      expect(flowEdge!.kind).not.toBe("edgecase");
+      expect(flowEdge!.kind).toBe("happy");
+      // 에러 노드가 실제로 엣지 target으로 연결됨(고아 아님).
+      const ids = new Set(graph.nodes.map((n) => n.id));
+      expect(graph.edges.every((e) => e.target !== null && ids.has(e.target))).toBe(true);
+    } finally {
+      cleanup();
+    }
+  });
+
   it("미지원 라인(subgraph/%%주석/스타일)은 throw 없이 무시한다", () => {
     const md = [
       "```mermaid",
