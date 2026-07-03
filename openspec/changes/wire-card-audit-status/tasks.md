@@ -13,11 +13,11 @@
 
 ### Sequential: 라우트 통합 테스트 (Group 1 GREEN 의존)
 
-- [ ] 3.1 RED: `server/src/routes/__tests__/projects.test.ts`의 `GET /api/projects` describe(line~62 픽스처 근처)에 단언 추가 — `makeChange`로 만든 픽스처 프로젝트에 `docs/audit.json`(`"finalJudgment": "조건부"`)을 심어, `GET /api/projects` 응답의 해당 카드 `auditStatus === "warn"`을 단언. audit.json 없는 픽스처 카드는 `auditStatus === "unknown"`도 함께 단언(폴백 회귀 방지). 픽스처 헬퍼에 `makeAudit(project, finalJudgment)` 추가.
+- [x] 3.1 RED: `server/src/routes/__tests__/projects.test.ts`의 `GET /api/projects` describe(line~62 픽스처 근처)에 단언 추가 — `makeChange`로 만든 픽스처 프로젝트에 `docs/audit.json`(`"finalJudgment": "조건부"`)을 심어, `GET /api/projects` 응답의 해당 카드 `auditStatus === "warn"`을 단언. audit.json 없는 픽스처 카드는 `auditStatus === "unknown"`도 함께 단언(폴백 회귀 방지). 픽스처 헬퍼에 `makeAudit(project, finalJudgment)` 추가.
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
-- [ ] 4.1 VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(위 단위·통합 픽스처 포함) → UI(프론트 코드 변경 없음 — `ProjectGrid.tsx`/`AUDIT_LABEL` 무손상이라 신규 UI 시나리오 0; 단 실데이터로 `PROJECTS_ROOT=/home/gaegul` 서버 기동 시 `flowforge` 카드가 "경고", `wowa-app` 카드가 "실패", audit.json 없는 프로젝트가 "audit 미확인"으로 렌더되는지 브라우저/응답으로 grounding) 전부 PASS
+- [x] 4.1 VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(위 단위·통합 픽스처 포함) → UI(프론트 코드 변경 없음 — `ProjectGrid.tsx`/`AUDIT_LABEL` 무손상이라 신규 UI 시나리오 0; 단 실데이터로 `PROJECTS_ROOT=/home/gaegul` 서버 기동 시 `flowforge` 카드가 "경고", `wowa-app` 카드가 "실패", audit.json 없는 프로젝트가 "audit 미확인"으로 렌더되는지 브라우저/응답으로 grounding) 전부 PASS
 
 <!--
 선택(이 change 범위에 포함하지 않음 — spec delta가 이미 audit 채움 시나리오를 명시):

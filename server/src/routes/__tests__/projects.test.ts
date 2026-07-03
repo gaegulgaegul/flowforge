@@ -49,6 +49,13 @@ function makeUserFlow(project: string, stem: string, body: string): void {
   writeFileSync(join(dir, `${stem}.md`), body);
 }
 
+/** <ROOT>/<project>/docs/audit.json (openspec-audit 저장본 — finalJudgment만 소비됨). */
+function makeAudit(project: string, finalJudgment: string): void {
+  const dir = join(ROOT, project, "docs");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "audit.json"), JSON.stringify({ finalJudgment }));
+}
+
 async function loadApp() {
   const mod = await import("../../index.js");
   return mod.app;
@@ -75,6 +82,18 @@ describe("GET /api/projects", () => {
     const beta = res.body.projects.find((p: { name: string }) => p.name === "beta");
     expect(beta.hasCharter).toBe(true);
     expect(beta.changeCount).toBe(1);
+  });
+
+  it("docs/audit.json finalJudgment를 auditStatus로 매핑하고, 없으면 unknown 폴백한다", async () => {
+    makeChange("alpha", "ch1", ["cap-a"]); // audit.json 없음 → unknown
+    makeChange("beta", "ch1", ["cap-b"]);
+    makeAudit("beta", "조건부"); // → warn
+    const res = await request(await loadApp()).get("/api/projects");
+    expect(res.status).toBe(200);
+    const byName = (n: string) =>
+      res.body.projects.find((p: { name: string }) => p.name === n);
+    expect(byName("beta").auditStatus).toBe("warn");
+    expect(byName("alpha").auditStatus).toBe("unknown");
   });
 });
 
