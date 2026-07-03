@@ -44,8 +44,8 @@ import {
 import type { ProjectCard } from "@flowforge/shared";
 import { ProjectGrid } from "./ProjectGrid.js";
 import { CapabilityChangeList } from "./CapabilityChangeList.js";
-import { toFlowNodes, toFlowEdges, danglingCount } from "./graphAdapter.js";
-import { toIAFlow } from "./iaAdapter.js";
+import { toFlowNodes, toFlowEdges, danglingCount, type SpecNodeData } from "./graphAdapter.js";
+import { toIAFlow, type IANodeData } from "./iaAdapter.js";
 import { toSpecTreeFlow } from "./specTreeAdapter.js";
 import { toFeatureTreeFlow, type FeatureNodeData } from "./featureTreeAdapter.js";
 import { SpecNode } from "./SpecNode.js";
@@ -57,6 +57,8 @@ import { PrdPanel } from "./PrdPanel.js";
 import { PrdApprovalPanel } from "./PrdApprovalPanel.js";
 import { FeatureApprovalPanel } from "./FeatureApprovalPanel.js";
 import { FeatureDetailPanel } from "./FeatureDetailPanel.js";
+import { FlowDetailPanel } from "./FlowDetailPanel.js";
+import { IADetailPanel } from "./IADetailPanel.js";
 
 // 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지.
 // featureTree는 기획 기능명세서 전용(specTree와 분리, 타입 전략 B).
@@ -112,6 +114,12 @@ export function App(): JSX.Element {
   // 기능명세 노드 클릭 → 상세 패널(데스크탑 우측 슬라이드 / 모바일 하단 시트). null이면 닫힘.
   // 노드 data(FeatureNodeData)를 그대로 보관 — 어댑터가 상세 필드(원본위치·자식)를 실어준다.
   const [selectedFeature, setSelectedFeature] = useState<FeatureNodeData | null>(null);
+  // 유저플로우 노드 클릭 → 상세 패널(FlowDetailPanel). null이면 닫힘.
+  // 노드 data(SpecNodeData)를 보관 — 어댑터가 상세 필드(incoming/outgoing 흐름)를 실어준다.
+  const [selectedFlow, setSelectedFlow] = useState<SpecNodeData | null>(null);
+  // IA 노드 클릭 → 상세 패널(IADetailPanel). null이면 닫힘.
+  // 노드 data(IANodeData)를 보관 — 어댑터가 상세 필드(childRefs=N:M 연결·parentLabel)를 실어준다.
+  const [selectedIa, setSelectedIa] = useState<IANodeData | null>(null);
 
   // 기획 단계 IA(docs/planning/features.md 화면목록 → 화면 1급 노드 IATree) — 프로젝트 단위(skeleton에서 표시).
   // change IA(iaRoot/iaNodes/iaEdges)와 분리. 화면=부모, N:M 연결 상세기능=자식. toIAFlow·IANode 재사용.
@@ -248,6 +256,9 @@ export function App(): JSX.Element {
   const onFeatureNodeClick = useCallback((_e: ReactMouseEvent, node: Node) => {
     if (node.type !== "featureTree") return;
     setSelectedFeature(node.data as FeatureNodeData);
+    // 한 번에 한 패널만 열리도록 다른 뷰 선택은 닫는다(패널은 같은 고정 위치 공유).
+    setSelectedFlow(null);
+    setSelectedIa(null);
   }, []);
 
   // 상세 패널 안 자식 노드 클릭 → 그 id의 노드 data로 전환. 현재 렌더 중인 features 노드 집합에서 찾는다.
@@ -258,6 +269,44 @@ export function App(): JSX.Element {
       if (found) setSelectedFeature(found.data as FeatureNodeData);
     },
     [featureNodes, capFeatureNodes],
+  );
+
+  // 유저플로우 노드 클릭 → 상세 패널 열기. spec 타입 노드만 대상(다른 뷰 노드는 무시).
+  // 기획 유저플로우(planningFlowNodes)와 change 유저플로우(flowNodes)가 같은 핸들러를 공유한다.
+  const onFlowNodeClick = useCallback((_e: ReactMouseEvent, node: Node) => {
+    if (node.type !== "spec") return;
+    setSelectedFlow(node.data as SpecNodeData);
+    setSelectedFeature(null);
+    setSelectedIa(null);
+  }, []);
+
+  // 상세 패널 안 연결 노드 클릭 → 그 id의 노드 data로 전환. 현재 렌더 중인 유저플로우 노드 집합에서 찾는다.
+  const selectFlowById = useCallback(
+    (id: string) => {
+      const pool = [...planningFlowNodes, ...flowNodes];
+      const found = pool.find((n) => n.id === id);
+      if (found) setSelectedFlow(found.data as SpecNodeData);
+    },
+    [planningFlowNodes, flowNodes],
+  );
+
+  // IA 노드 클릭 → 상세 패널 열기. ia 타입 노드만 대상(다른 뷰 노드는 무시).
+  // 기획 IA(planningIaNodes)와 change IA(iaNodes)가 같은 핸들러를 공유한다.
+  const onIaNodeClick = useCallback((_e: ReactMouseEvent, node: Node) => {
+    if (node.type !== "ia") return;
+    setSelectedIa(node.data as IANodeData);
+    setSelectedFeature(null);
+    setSelectedFlow(null);
+  }, []);
+
+  // 상세 패널 안 자식/부모 노드 클릭 → 그 id의 노드 data로 전환. 현재 렌더 중인 IA 노드 집합에서 찾는다.
+  const selectIaById = useCallback(
+    (id: string) => {
+      const pool = [...planningIaNodes, ...iaNodes];
+      const found = pool.find((n) => n.id === id);
+      if (found) setSelectedIa(found.data as IANodeData);
+    },
+    [planningIaNodes, iaNodes],
   );
 
   // 기획 유저플로우 드래그: 위치 변경을 state에 반영(저장은 onNodeDragStop에서 한 번).
@@ -658,6 +707,7 @@ export function App(): JSX.Element {
                     edges={planningIaEdges}
                     nodeTypes={nodeTypes}
                     nodesDraggable={false}
+                    onNodeClick={onIaNodeClick}
                     fitView
                   >
                     <Background />
@@ -695,6 +745,7 @@ export function App(): JSX.Element {
                     nodeTypes={nodeTypes}
                     onNodesChange={onPlanningFlowNodesChange}
                     onNodeDragStop={onPlanningFlowNodeDragStop}
+                    onNodeClick={onFlowNodeClick}
                     fitView
                   >
                     <Background />
@@ -775,13 +826,13 @@ export function App(): JSX.Element {
               </ReactFlow>
             )}
             {tab === "flow" && (
-              <ReactFlow key="d-flow" nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} onNodesChange={onFlowNodesChange} fitView>
+              <ReactFlow key="d-flow" nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} onNodesChange={onFlowNodesChange} onNodeClick={onFlowNodeClick} fitView>
                 <Background />
                 <Controls />
               </ReactFlow>
             )}
             {tab === "ia" && (
-              <ReactFlow key="d-ia" nodes={iaNodes} edges={iaEdges} nodeTypes={nodeTypes} nodesDraggable={false} fitView>
+              <ReactFlow key="d-ia" nodes={iaNodes} edges={iaEdges} nodeTypes={nodeTypes} nodesDraggable={false} onNodeClick={onIaNodeClick} fitView>
                 <Background />
                 <Controls />
               </ReactFlow>
@@ -795,6 +846,18 @@ export function App(): JSX.Element {
         node={selectedFeature}
         onClose={() => setSelectedFeature(null)}
         onSelectById={selectFeatureById}
+      />
+      {/* 유저플로우 노드 상세 패널 — 같은 UX/CSS 재사용. incoming/outgoing 흐름 표시. */}
+      <FlowDetailPanel
+        node={selectedFlow}
+        onClose={() => setSelectedFlow(null)}
+        onSelectById={selectFlowById}
+      />
+      {/* IA 노드 상세 패널 — 같은 UX/CSS 재사용. 계층(부모/자식)·N:M 연결 상세기능 표시. */}
+      <IADetailPanel
+        node={selectedIa}
+        onClose={() => setSelectedIa(null)}
+        onSelectById={selectIaById}
       />
     </div>
   );

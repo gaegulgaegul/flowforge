@@ -3,12 +3,31 @@ import dagre from "@dagrejs/dagre";
 import type { Node, Edge } from "@xyflow/react";
 import type { SpecGraph, LayoutOverlay, NodeKind } from "@flowforge/shared";
 
+/** 상세 패널용 연결 흐름 요약 — 이 노드에 들어오거나(incoming) 나가는(outgoing) 엣지 한 건.
+ * 그래프(SpecGraph)에서 파생, 노드 data에 실어 패널이 조인 없이 쓴다(빌더/골든 무저촉). */
+export interface FlowEdgeRef {
+  /** 상대 노드 id(전환 대상 이동에 사용). dangling(target null)이면 undefined. */
+  otherId?: string;
+  /** 상대 노드 라벨(dangling이면 원래 target 텍스트, 없으면 "(미연결)"). */
+  otherLabel: string;
+  /** 엣지 라벨(전이 조건 문구). 비어있을 수 있음. */
+  edgeLabel: string;
+  /** 에지케이스(점선) 분기 여부. 부재/happy는 false. */
+  edgecase: boolean;
+  /** NAV 동사는 있으나 대상 미발견(⚠). */
+  dangling: boolean;
+}
+
 /** 커스텀 노드가 받는 데이터. App에서 nodeTypes로 SpecNode에 매핑. */
 export interface SpecNodeData extends Record<string, unknown> {
   label: string;
   kind: NodeKind;
   /** charter 상주 docs의 SEED(미검증) 마킹. change 경로는 undefined → 배지 미표시. */
   seed?: boolean;
+  /** 상세 패널용 파생 필드 — 이 노드로 들어오는 흐름(다른 노드 → 이 노드). */
+  incoming?: readonly FlowEdgeRef[];
+  /** 상세 패널용 파생 필드 — 이 노드에서 나가는 흐름(이 노드 → 다른 노드). */
+  outgoing?: readonly FlowEdgeRef[];
 }
 
 const NODE_W = 200;
@@ -55,10 +74,56 @@ export function autoLayout(graph: SpecGraph): LayoutOverlay {
  */
 export function toFlowNodes(graph: SpecGraph, layout: LayoutOverlay): Node<SpecNodeData>[] {
   const auto = autoLayout(graph);
+  // 라벨 조인용 인덱스(상세 패널의 상대 노드 라벨 표시). id → label.
+  const labelById = new Map<string, string>();
+  for (const n of graph.nodes) labelById.set(n.id, n.label);
+
+  // 노드별 들어오고 나가는 흐름 파생(서버/골든 무저촉 — web에서 그래프 구조로만 계산).
+  const incomingByNode = new Map<string, FlowEdgeRef[]>();
+  const outgoingByNode = new Map<string, FlowEdgeRef[]>();
+  for (const n of graph.nodes) {
+    incomingByNode.set(n.id, []);
+    outgoingByNode.set(n.id, []);
+  }
+  for (const e of graph.edges) {
+    const edgecase = e.kind === "edgecase";
+    // 나가는 흐름(source 기준). dangling이면 상대 라벨을 원래 target 텍스트/에지 라벨로 표시.
+    const out = outgoingByNode.get(e.source);
+    if (out) {
+      const targetLabel = e.target !== null ? (labelById.get(e.target) ?? e.target) : (e.label || "(미연결)");
+      out.push({
+        ...(e.target !== null ? { otherId: e.target } : {}),
+        otherLabel: targetLabel,
+        edgeLabel: e.label,
+        edgecase,
+        dangling: e.dangling,
+      });
+    }
+    // 들어오는 흐름(target 기준). dangling(target null)은 목적지가 없으니 스킵.
+    if (e.target !== null) {
+      const inc = incomingByNode.get(e.target);
+      if (inc) {
+        inc.push({
+          otherId: e.source,
+          otherLabel: labelById.get(e.source) ?? e.source,
+          edgeLabel: e.label,
+          edgecase,
+          dangling: e.dangling,
+        });
+      }
+    }
+  }
+
   return graph.nodes.map((n) => {
     const position = layout[n.id] ?? auto[n.id]!;
     // exactOptionalPropertyTypes: seed가 undefined면 키 자체를 빼야 SpecNodeData(optional)와 호환된다.
-    const data: SpecNodeData = { label: n.label, kind: n.kind, ...(n.seed !== undefined ? { seed: n.seed } : {}) };
+    const data: SpecNodeData = {
+      label: n.label,
+      kind: n.kind,
+      ...(n.seed !== undefined ? { seed: n.seed } : {}),
+      incoming: incomingByNode.get(n.id) ?? [],
+      outgoing: outgoingByNode.get(n.id) ?? [],
+    };
     return {
       id: n.id,
       position,
