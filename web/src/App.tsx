@@ -610,10 +610,11 @@ export function App(): JSX.Element {
               </button>
             </>
           )}
-          {dashCapability && (
+          {/* 2026-07-03 하단 뼈대(capability) 진입 비활성화에 따라 capability 브레드크럼도 함께 비활성화(도달 불가). 복구 시 false 제거(+ dashCapability의 ! 제거) */}
+          {false && dashCapability && (
             <>
               <span className="dash-sep" aria-hidden="true">›</span>
-              <button type="button" className="dash-crumb" onClick={() => goToStage("capChanges")}>{dashCapability.koreanLabel}</button>
+              <button type="button" className="dash-crumb" onClick={() => goToStage("capChanges")}>{dashCapability!.koreanLabel}</button>
             </>
           )}
           {dashStage === "views" && selected && (
@@ -754,20 +755,26 @@ export function App(): JSX.Element {
                 </div>
               </section>
             )}
-            <h3 className="dash-h">{dashProject?.displayName} — 뼈대(capability)</h3>
-            {capabilities.length === 0 ? (
-              <p className="dash-empty">표시할 capability가 없습니다(뼈대 없음).</p>
-            ) : (
-              <ul className="dash-cap-list">
-                {capabilities.map((cap) => (
-                  <li key={cap.key}>
-                    <button type="button" className="dash-cap" onClick={() => openCapability(cap)}>
-                      <span className="dash-cap-label">{cap.koreanLabel}</span>
-                      <span className="dash-cap-count">change {cap.changeKeys.length}개</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            {/* 2026-07-03 사용자 결정: 뼈대(=기획문서)는 그래프로 이미 표시되므로 하단 capability→change 경로 비활성화.
+                복구 시 아래 {false && ...} 래퍼를 제거(주석 해제)하면 된다. 삭제 아님 — 코드 보존. */}
+            {false && (
+              <>
+                <h3 className="dash-h">{dashProject?.displayName} — 뼈대(capability)</h3>
+                {capabilities.length === 0 ? (
+                  <p className="dash-empty">표시할 capability가 없습니다(뼈대 없음).</p>
+                ) : (
+                  <ul className="dash-cap-list">
+                    {capabilities.map((cap) => (
+                      <li key={cap.key}>
+                        <button type="button" className="dash-cap" onClick={() => openCapability(cap)}>
+                          <span className="dash-cap-label">{cap.koreanLabel}</span>
+                          <span className="dash-cap-count">change {cap.changeKeys.length}개</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
             )}
           </div>
         ) : dashStage === "capChanges" ? (
