@@ -1,0 +1,42 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — wire-card-audit-status</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — wire-card-audit-status</h1>
+<p class="muted">검증일: 2026-07-03T17:03:36+09:00 · 환경: server(적용: jest 24스위트 221/221 exit0 · tsc 0 · build 0 · lint 0 · dist 실기동 HTTP 실측 12픽스처) / web(적용: 실데이터 PROJECTS_ROOT=/home/gaegul 기동 UI 배지 grounding) / android·ios(적용 불가). 참고: tasks 3.1(라우트 통합 테스트 단언)은 미구현 — 시나리오 자체는 verify가 HTTP E2E로 독립 실측하여 커버. · run: run-20260703-0803</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 6 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>카드의 audit 상태는 audit.json의 finalJudgment에서 채워진다</td><td>finalJudgment &quot;조건부&quot; → warn 배지</td><td>server</td><td>dist 실기동 E2E(HTTP) + jest 단위(a) + 실데이터 grounding</td><td><code>server/package.json(express·jest), 변경 파일 server/src/lib/projects.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/verify-ui-realdata.png"><img src="evidence/verify-ui-realdata.png" alt="픽스처 p-warn(조건부) → GET /api/projects auditStatus=warn 실측. 실데이터(PROJECTS_ROOT=/home/gaegul): flowforge(audit.json 조건부) 카드가 UI에서 &#x27;경고&#x27; 배지로 렌더(스크린샷). jest projects.test.ts (a) PASS. 특수문자(유니코드 한글 키) 매칭 동시 입증." style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>카드의 audit 상태는 audit.json의 finalJudgment에서 채워진다</td><td>finalJudgment &quot;FAIL&quot; → fail 배지</td><td>server</td><td>dist 실기동 E2E(HTTP) + jest 단위(b) + 실데이터 grounding</td><td><code>server/package.json(express·jest)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">픽스처 p-fail({&quot;finalJudgment&quot;:&quot;FAIL&quot;}) → GET /api/projects auditStatus=fail 실측. 실데이터: wowa-app(audit.json FAIL) API 응답 fail + UI &#x27;실패&#x27; 배지 렌더(시나리오1 스크린샷에 동시 포착). jest (b) PASS.</pre></td></tr>
+<tr><td>카드의 audit 상태는 audit.json의 finalJudgment에서 채워진다</td><td>finalJudgment &quot;PASS&quot; → clean 배지</td><td>server</td><td>dist 실기동 E2E(HTTP) + jest 단위(c)</td><td><code>server/package.json(express·jest)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">픽스처 p-pass({&quot;finalJudgment&quot;:&quot;PASS&quot;}) → GET /api/projects auditStatus=clean 실측. jest (c) PASS. 참고: 소문자 &#x27;pass&#x27;(p-lower)는 unknown — 정확 일치만 clean.</pre></td></tr>
+<tr><td>카드의 audit 상태는 audit.json의 finalJudgment에서 채워진다</td><td>audit.json 없는 프로젝트는 unknown 폴백</td><td>server</td><td>dist 실기동 E2E(HTTP) + jest 단위(d) + 실데이터 grounding</td><td><code>server/package.json(express·jest)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">픽스처 p-none(docs/audit.json 없음) → auditStatus=unknown, 서버 에러 없음(200 + 12카드 전체 반환, 서버 로그 무예외). 실데이터: agentic-harness·stock-league·wowa-wt-* 4개(audit.json 없음) 전부 unknown + UI &#x27;audit 미확인&#x27;. jest (d) PASS.</pre></td></tr>
+<tr><td>카드의 audit 상태는 audit.json의 finalJudgment에서 채워진다</td><td>깨진 JSON 또는 미인식 finalJudgment는 unknown 폴백</td><td>server</td><td>dist 실기동 E2E(HTTP) + jest 단위(e)(f)</td><td><code>server/package.json(express·jest)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">픽스처 실측 5종 전부 unknown + 에러 없음: p-broken(&#x27;{not json!!&#x27; 파싱불가), p-unver(UNVERIFIABLE), p-nofield(필드 없음), p-nonstring(finalJudgment:123 비문자열), p-empty(빈 문자열). 대량(5MB audit.json, p-big)도 정상 파싱→warn. jest (e)(f) PASS.</pre></td></tr>
+<tr><td>카드의 audit 상태는 audit.json의 finalJudgment에서 채워진다</td><td>audit.json의 호스트 절대경로는 신뢰하지 않는다</td><td>server</td><td>정적 grep(코드 경로 검사) + dist 실기동 E2E(HTTP)</td><td><code>server/src/lib/projects.ts L67-80 readAuditStatus</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">정적: grep -rn scanRoot server/src/(테스트 제외) → 주석 1건뿐, 코드에서 scanRoot 미참조. 읽기 경로는 join(projectDir,&#x27;docs&#x27;,&#x27;audit.json&#x27;)로 projDir에서 구성(L68), finalJudgment만 소비(L74). E2E: 픽스처 p-scanroot(scanRoot:&#x27;/etc/passwd-bogus-root&#x27; + finalJudgment:PASS) → auditStatus=clean — 경로 무시·finalJudgment만 반영 실측.</pre></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>카드의 audit 상태는 audit.json의 finalJudgment에서 채워진다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="finalJudgment는 열거형 문자열 3종 매핑 — 수치 min/max 경계 없음. 근사 경계인 대소문자 변형은 실측함: 픽스처 p-lower(&#x27;pass&#x27;)→unknown 폴백 확인(정확 일치만 인정)">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="요청마다 동기 readFileSync로 새로 읽는 무상태 읽기전용 합성 — 공유 가변 상태·캐시 없음. 읽기 중 파일 교체는 JSON.parse 실패→unknown 폴백 경로(에러경로 covered)로 흡수">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>6</td><td>6</td><td>0</td><td>server/package.json(express+jest) 존재, 변경 파일 server/src/lib/projects.ts. jest 221/221(exit 0)·tsc exit 0·build exit 0·lint exit 0 + tsc 빌드 dist 실기동(PORT=8899, 픽스처 12종) HTTP 실측</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>1</td><td>1</td><td>0</td><td>web/(vite+react) 존재. 프론트 코드 변경 없음(ProjectGrid.tsx AUDIT_LABEL 무손상 grep 확인) — 실데이터(PROJECTS_ROOT=/home/gaegul, PORT=8900) 기동 후 headless 브라우저 스크린샷으로 배지 렌더 grounding: flowforge=&#x27;경고&#x27;, wowa-app=&#x27;실패&#x27;, 나머지 4개=&#x27;audit 미확인&#x27;</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가(안드로이드 레이어 없음)</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가(iOS 레이어 없음, macOS 아님)</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>

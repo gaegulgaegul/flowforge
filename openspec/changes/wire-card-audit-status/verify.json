@@ -1,0 +1,144 @@
+{
+  "change": "wire-card-audit-status",
+  "verifiedAt": "2026-07-03T17:03:36+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 6,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "카드의 audit 상태는 audit.json의 finalJudgment에서 채워진다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "finalJudgment는 열거형 문자열 3종 매핑 — 수치 min/max 경계 없음. 근사 경계인 대소문자 변형은 실측함: 픽스처 p-lower('pass')→unknown 폴백 확인(정확 일치만 인정)",
+          "동시성": "요청마다 동기 readFileSync로 새로 읽는 무상태 읽기전용 합성 — 공유 가변 상태·캐시 없음. 읽기 중 파일 교체는 JSON.parse 실패→unknown 폴백 경로(에러경로 covered)로 흡수"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "finalJudgment \"조건부\" → warn 배지",
+          "layer": "server",
+          "means": "dist 실기동 E2E(HTTP) + jest 단위(a) + 실데이터 grounding",
+          "basis": "server/package.json(express·jest), 변경 파일 server/src/lib/projects.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/verify-ui-realdata.png",
+            "caption": "픽스처 p-warn(조건부) → GET /api/projects auditStatus=warn 실측. 실데이터(PROJECTS_ROOT=/home/gaegul): flowforge(audit.json 조건부) 카드가 UI에서 '경고' 배지로 렌더(스크린샷). jest projects.test.ts (a) PASS. 특수문자(유니코드 한글 키) 매칭 동시 입증."
+          }
+        },
+        {
+          "scenario": "finalJudgment \"FAIL\" → fail 배지",
+          "layer": "server",
+          "means": "dist 실기동 E2E(HTTP) + jest 단위(b) + 실데이터 grounding",
+          "basis": "server/package.json(express·jest)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "픽스처 p-fail({\"finalJudgment\":\"FAIL\"}) → GET /api/projects auditStatus=fail 실측. 실데이터: wowa-app(audit.json FAIL) API 응답 fail + UI '실패' 배지 렌더(시나리오1 스크린샷에 동시 포착). jest (b) PASS."
+          }
+        },
+        {
+          "scenario": "finalJudgment \"PASS\" → clean 배지",
+          "layer": "server",
+          "means": "dist 실기동 E2E(HTTP) + jest 단위(c)",
+          "basis": "server/package.json(express·jest)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "픽스처 p-pass({\"finalJudgment\":\"PASS\"}) → GET /api/projects auditStatus=clean 실측. jest (c) PASS. 참고: 소문자 'pass'(p-lower)는 unknown — 정확 일치만 clean."
+          }
+        },
+        {
+          "scenario": "audit.json 없는 프로젝트는 unknown 폴백",
+          "layer": "server",
+          "means": "dist 실기동 E2E(HTTP) + jest 단위(d) + 실데이터 grounding",
+          "basis": "server/package.json(express·jest)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "픽스처 p-none(docs/audit.json 없음) → auditStatus=unknown, 서버 에러 없음(200 + 12카드 전체 반환, 서버 로그 무예외). 실데이터: agentic-harness·stock-league·wowa-wt-* 4개(audit.json 없음) 전부 unknown + UI 'audit 미확인'. jest (d) PASS."
+          }
+        },
+        {
+          "scenario": "깨진 JSON 또는 미인식 finalJudgment는 unknown 폴백",
+          "layer": "server",
+          "means": "dist 실기동 E2E(HTTP) + jest 단위(e)(f)",
+          "basis": "server/package.json(express·jest)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "픽스처 실측 5종 전부 unknown + 에러 없음: p-broken('{not json!!' 파싱불가), p-unver(UNVERIFIABLE), p-nofield(필드 없음), p-nonstring(finalJudgment:123 비문자열), p-empty(빈 문자열). 대량(5MB audit.json, p-big)도 정상 파싱→warn. jest (e)(f) PASS."
+          }
+        },
+        {
+          "scenario": "audit.json의 호스트 절대경로는 신뢰하지 않는다",
+          "layer": "server",
+          "means": "정적 grep(코드 경로 검사) + dist 실기동 E2E(HTTP)",
+          "basis": "server/src/lib/projects.ts L67-80 readAuditStatus",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "정적: grep -rn scanRoot server/src/(테스트 제외) → 주석 1건뿐, 코드에서 scanRoot 미참조. 읽기 경로는 join(projectDir,'docs','audit.json')로 projDir에서 구성(L68), finalJudgment만 소비(L74). E2E: 픽스처 p-scanroot(scanRoot:'/etc/passwd-bogus-root' + finalJudgment:PASS) → auditStatus=clean — 경로 무시·finalJudgment만 반영 실측."
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 6,
+      "passed": 6,
+      "failed": 0,
+      "basis": "server/package.json(express+jest) 존재, 변경 파일 server/src/lib/projects.ts. jest 221/221(exit 0)·tsc exit 0·build exit 0·lint exit 0 + tsc 빌드 dist 실기동(PORT=8899, 픽스처 12종) HTTP 실측"
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 1,
+      "passed": 1,
+      "failed": 0,
+      "basis": "web/(vite+react) 존재. 프론트 코드 변경 없음(ProjectGrid.tsx AUDIT_LABEL 무손상 grep 확인) — 실데이터(PROJECTS_ROOT=/home/gaegul, PORT=8900) 기동 후 headless 브라우저 스크린샷으로 배지 렌더 grounding: flowforge='경고', wowa-app='실패', 나머지 4개='audit 미확인'"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: 레포에 build.gradle/settings.gradle 등 안드로이드 프로젝트 파일 없음(워크스페이스=shared/server/web)",
+      "reason": "적용 불가(안드로이드 레이어 없음)"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: iOS 프로젝트 없음 + 호스트 Linux(macOS 필요)",
+      "reason": "적용 불가(iOS 레이어 없음, macOS 아님)"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260703-0803.html"
+}
