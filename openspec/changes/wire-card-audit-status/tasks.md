@@ -2,14 +2,14 @@
 
 ### Sequential: audit 리더 + 매핑 (단위 RED → GREEN, 같은 파일)
 
-- [ ] 1.1 RED: `server/src/lib/__tests__/projects.test.ts`에 매핑·폴백 단위 테스트 추가 — 임시 픽스처 `<root>/<project>/docs/audit.json`을 만들어: (a) `"조건부"`→`warn` (b) `"FAIL"`→`fail` (c) `"PASS"`→`clean` (d) audit.json 없음→`unknown` (e) 깨진 JSON→`unknown` (f) `"UNVERIFIABLE"`/필드없음→`unknown`. 기존 `makeChange`/`makeCharter` 헬퍼 옆에 `makeAudit(root, project, finalJudgment)` 추가. (기존 `(c) auditStatus 허용값` 테스트는 비파괴 — `unknown` 폴백 케이스로 그대로 통과)
-- [ ] 1.2 GREEN: `server/src/lib/projects.ts`에 매핑 순수 함수 추가 — `mapFinalJudgment(j: unknown): AuditStatus`: `"PASS"→clean` / `"FAIL"→fail` / `"조건부"→warn` / 그 외(`"UNVERIFIABLE"`·미인식·비문자열) → `unknown`. `countChanges`(line~30)·`hasCharter`(line~24) 형제 헬퍼로 배치.
-- [ ] 1.3 GREEN: `server/src/lib/projects.ts`에 audit 리더 함수 추가 — `readAuditStatus(projectDir: string): AuditStatus`: `join(projectDir, "docs", "audit.json")`을 `existsSync` 가드 후 `readFileSync(…, "utf-8")` + `JSON.parse`, `parsed.finalJudgment`만 꺼내 `mapFinalJudgment`에 전달. 파일없음·읽기실패·`JSON.parse` 예외는 `try/catch`로 모두 `unknown` 반환(throw 금지). audit.json 안의 `scanRoot` 등 다른 필드는 읽지 않는다(경로 신뢰 경계).
+- [x] 1.1 RED: `server/src/lib/__tests__/projects.test.ts`에 매핑·폴백 단위 테스트 추가 — 임시 픽스처 `<root>/<project>/docs/audit.json`을 만들어: (a) `"조건부"`→`warn` (b) `"FAIL"`→`fail` (c) `"PASS"`→`clean` (d) audit.json 없음→`unknown` (e) 깨진 JSON→`unknown` (f) `"UNVERIFIABLE"`/필드없음→`unknown`. 기존 `makeChange`/`makeCharter` 헬퍼 옆에 `makeAudit(root, project, finalJudgment)` 추가. (기존 `(c) auditStatus 허용값` 테스트는 비파괴 — `unknown` 폴백 케이스로 그대로 통과)
+- [x] 1.2 GREEN: `server/src/lib/projects.ts`에 매핑 순수 함수 추가 — `mapFinalJudgment(j: unknown): AuditStatus`: `"PASS"→clean` / `"FAIL"→fail` / `"조건부"→warn` / 그 외(`"UNVERIFIABLE"`·미인식·비문자열) → `unknown`. `countChanges`(line~30)·`hasCharter`(line~24) 형제 헬퍼로 배치.
+- [x] 1.3 GREEN: `server/src/lib/projects.ts`에 audit 리더 함수 추가 — `readAuditStatus(projectDir: string): AuditStatus`: `join(projectDir, "docs", "audit.json")`을 `existsSync` 가드 후 `readFileSync(…, "utf-8")` + `JSON.parse`, `parsed.finalJudgment`만 꺼내 `mapFinalJudgment`에 전달. 파일없음·읽기실패·`JSON.parse` 예외는 `try/catch`로 모두 `unknown` 반환(throw 금지). audit.json 안의 `scanRoot` 등 다른 필드는 읽지 않는다(경로 신뢰 경계).
 
 ### Sequential: 하드코딩 제거 (리더 배선)
 
-- [ ] 2.1 GREEN: `server/src/lib/projects.ts:89` 하드코딩 교체 — `const auditStatus: AuditStatus = "unknown";`를 `const auditStatus: AuditStatus = readAuditStatus(projDir);`로 교체(`projDir`는 line~72에서 이미 계산됨, 재구성 금지). `out.push({ … auditStatus })` 그대로.
-- [ ] 2.2 GREEN: `server/src/lib/projects.ts` 주석 갱신 — 헤더 docblock line 9(`auditStatus = 정적(예광탄은 'unknown'; …)`)와 line 89 인라인 주석(`// 예광탄: 정적. 실시간 산출은 후속.`)을 실제 동작(`audit.json finalJudgment 매핑, 저장본 반영, 없으면 unknown 폴백`)에 맞게 수정.
+- [x] 2.1 GREEN: `server/src/lib/projects.ts:89` 하드코딩 교체 — `const auditStatus: AuditStatus = "unknown";`를 `const auditStatus: AuditStatus = readAuditStatus(projDir);`로 교체(`projDir`는 line~72에서 이미 계산됨, 재구성 금지). `out.push({ … auditStatus })` 그대로.
+- [x] 2.2 GREEN: `server/src/lib/projects.ts` 주석 갱신 — 헤더 docblock line 9(`auditStatus = 정적(예광탄은 'unknown'; …)`)와 line 89 인라인 주석(`// 예광탄: 정적. 실시간 산출은 후속.`)을 실제 동작(`audit.json finalJudgment 매핑, 저장본 반영, 없으면 unknown 폴백`)에 맞게 수정.
 
 ### Sequential: 라우트 통합 테스트 (Group 1 GREEN 의존)
 

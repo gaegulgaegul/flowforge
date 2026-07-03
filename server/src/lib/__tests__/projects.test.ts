@@ -29,6 +29,14 @@ function makeCharter(root: string, project: string): void {
   writeFileSync(join(dir, "PRD.md"), "## decision: D1\n");
 }
 
+/** <root>/<project>/docs/audit.json 픽스처. raw를 주면 finalJudgment 대신 본문 그대로 쓴다. */
+function makeAudit(root: string, project: string, finalJudgment?: string, raw?: string): void {
+  const dir = join(root, project, "docs");
+  mkdirSync(dir, { recursive: true });
+  const body = raw ?? JSON.stringify(finalJudgment === undefined ? {} : { finalJudgment });
+  writeFileSync(join(dir, "audit.json"), body);
+}
+
 describe("listProjectCards — 홈서버 프로젝트 카드 스캔", () => {
   const ORIG = process.env.PROJECTS_ROOT;
   let root: string;
@@ -70,6 +78,49 @@ describe("listProjectCards — 홈서버 프로젝트 카드 스캔", () => {
     expect(["unknown", "clean", "warn", "fail"]).toContain(card.auditStatus);
     // displayName 폴백 = 영문 name(한글맵 없으면).
     expect(card.displayName).toBe("proj");
+  });
+
+  describe("auditStatus — docs/audit.json finalJudgment 매핑·폴백", () => {
+    const cardOf = (project: string) =>
+      listProjectCards().find((c) => c.name === project)!;
+
+    it('(a) "조건부" → warn', () => {
+      makeChange(root, "proj", "ch1");
+      makeAudit(root, "proj", "조건부");
+      expect(cardOf("proj").auditStatus).toBe("warn");
+    });
+
+    it('(b) "FAIL" → fail', () => {
+      makeChange(root, "proj", "ch1");
+      makeAudit(root, "proj", "FAIL");
+      expect(cardOf("proj").auditStatus).toBe("fail");
+    });
+
+    it('(c) "PASS" → clean', () => {
+      makeChange(root, "proj", "ch1");
+      makeAudit(root, "proj", "PASS");
+      expect(cardOf("proj").auditStatus).toBe("clean");
+    });
+
+    it("(d) audit.json 없음 → unknown 폴백", () => {
+      makeChange(root, "proj", "ch1");
+      expect(cardOf("proj").auditStatus).toBe("unknown");
+    });
+
+    it("(e) 깨진 JSON → unknown 폴백(throw 금지)", () => {
+      makeChange(root, "proj", "ch1");
+      makeAudit(root, "proj", undefined, "{not json!");
+      expect(cardOf("proj").auditStatus).toBe("unknown");
+    });
+
+    it('(f) "UNVERIFIABLE"·finalJudgment 필드 없음 → unknown', () => {
+      makeChange(root, "unver", "ch1");
+      makeAudit(root, "unver", "UNVERIFIABLE");
+      makeChange(root, "nofield", "ch1");
+      makeAudit(root, "nofield", undefined); // {} — 필드 없음
+      expect(cardOf("unver").auditStatus).toBe("unknown");
+      expect(cardOf("nofield").auditStatus).toBe("unknown");
+    });
   });
 
   it("change 없는 디렉토리는 프로젝트로 보지 않는다", () => {

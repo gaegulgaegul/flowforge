@@ -6,12 +6,12 @@
  * charter 유무 무관, change 있는 모든 프로젝트 노출).
  *   - hasCharter = <project>/docs/ 에 user-flow.md 또는 PRD.md 존재
  *   - changeCount = openspec/changes 하위 change 디렉토리 수(archive 제외)
- *   - auditStatus = 정적(예광탄은 'unknown'; 실시간 산출은 후속)
+ *   - auditStatus = <project>/docs/audit.json 의 finalJudgment 매핑(저장본 반영; 없으면 'unknown' 폴백)
  *   - displayName = 한글맵 폴백(없으면 영문 name) — 연결 키(name)는 영문 불변
  *
  * docs.ts(심링크 방어·정렬)와 changes.ts(specs 스캔)의 패턴을 차용하되 쓰지 않는다.
  */
-import { readdirSync, statSync, lstatSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync, statSync, lstatSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import type { ProjectCard, AuditStatus } from "@flowforge/shared";
 
@@ -51,6 +51,34 @@ function countChanges(projectDir: string): number {
   return n;
 }
 
+/** audit finalJudgment → AuditStatus. 미인식·비문자열(UNVERIFIABLE 포함)은 unknown. */
+function mapFinalJudgment(j: unknown): AuditStatus {
+  if (j === "PASS") return "clean";
+  if (j === "FAIL") return "fail";
+  if (j === "조건부") return "warn";
+  return "unknown";
+}
+
+/**
+ * <project>/docs/audit.json 의 finalJudgment만 읽어 매핑한다.
+ * 파일없음·읽기실패·JSON 파싱 실패는 전부 unknown 폴백(throw 금지).
+ * scanRoot 등 다른 필드는 읽지 않는다(경로 신뢰 경계).
+ */
+function readAuditStatus(projectDir: string): AuditStatus {
+  const auditPath = join(projectDir, "docs", "audit.json");
+  if (!existsSync(auditPath)) return "unknown";
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(auditPath, "utf-8"));
+    const judgment =
+      typeof parsed === "object" && parsed !== null
+        ? (parsed as Record<string, unknown>).finalJudgment
+        : undefined;
+    return mapFinalJudgment(judgment);
+  } catch {
+    return "unknown";
+  }
+}
+
 /**
  * 카드 그리드용 프로젝트 목록. change를 1개 이상 가진 프로젝트만, 이름순 정렬.
  * 심볼릭 링크 디렉토리는 따라가지 않는다(루트 밖 탈출 방지).
@@ -86,7 +114,7 @@ export function listProjectCards(labelMap?: Map<string, string>): ProjectCard[] 
     const changeCount = countChanges(projDir);
     if (changeCount === 0) continue; // change 없으면 카드 아님(decision show-all 기준).
 
-    const auditStatus: AuditStatus = "unknown"; // 예광탄: 정적. 실시간 산출은 후속.
+    const auditStatus: AuditStatus = readAuditStatus(projDir); // 저장된 audit.json 반영(실시간 산출 아님).
     out.push({
       name,
       displayName: labelMap?.get(name) ?? name,
