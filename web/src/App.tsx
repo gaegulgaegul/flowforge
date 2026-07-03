@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import {
   ReactFlow,
   Background,
@@ -47,7 +47,7 @@ import { CapabilityChangeList } from "./CapabilityChangeList.js";
 import { toFlowNodes, toFlowEdges, danglingCount } from "./graphAdapter.js";
 import { toIAFlow } from "./iaAdapter.js";
 import { toSpecTreeFlow } from "./specTreeAdapter.js";
-import { toFeatureTreeFlow } from "./featureTreeAdapter.js";
+import { toFeatureTreeFlow, type FeatureNodeData } from "./featureTreeAdapter.js";
 import { SpecNode } from "./SpecNode.js";
 import { IANode } from "./IANode.js";
 import { SpecTreeNode } from "./SpecTreeNode.js";
@@ -56,6 +56,7 @@ import { WireframePanel } from "./WireframePanel.js";
 import { PrdPanel } from "./PrdPanel.js";
 import { PrdApprovalPanel } from "./PrdApprovalPanel.js";
 import { FeatureApprovalPanel } from "./FeatureApprovalPanel.js";
+import { FeatureDetailPanel } from "./FeatureDetailPanel.js";
 
 // 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지.
 // featureTree는 기획 기능명세서 전용(specTree와 분리, 타입 전략 B).
@@ -108,6 +109,9 @@ export function App(): JSX.Element {
   // 6a prdSuggestions와 대칭. 큐 비면 순수 읽기 트리 뷰.
   const [featureSuggestions, setFeatureSuggestions] = useState<readonly FeatureSuggestion[]>([]);
   const [featureApplyBusy, setFeatureApplyBusy] = useState(false);
+  // 기능명세 노드 클릭 → 상세 패널(데스크탑 우측 슬라이드 / 모바일 하단 시트). null이면 닫힘.
+  // 노드 data(FeatureNodeData)를 그대로 보관 — 어댑터가 상세 필드(원본위치·자식)를 실어준다.
+  const [selectedFeature, setSelectedFeature] = useState<FeatureNodeData | null>(null);
 
   // 기획 단계 IA(docs/planning/features.md 화면목록 → 화면 1급 노드 IATree) — 프로젝트 단위(skeleton에서 표시).
   // change IA(iaRoot/iaNodes/iaEdges)와 분리. 화면=부모, N:M 연결 상세기능=자식. toIAFlow·IANode 재사용.
@@ -238,6 +242,23 @@ export function App(): JSX.Element {
   const onFlowNodesChange = useCallback((changes: NodeChange[]) => {
     setFlowNodes((nds) => applyNodeChanges(changes, nds));
   }, []);
+
+  // 기능명세 노드 클릭 → 상세 패널 열기. featureTree 타입 노드만 대상(다른 뷰 노드는 무시).
+  // 두 features ReactFlow(skeleton·capChanges)가 같은 핸들러를 공유한다.
+  const onFeatureNodeClick = useCallback((_e: ReactMouseEvent, node: Node) => {
+    if (node.type !== "featureTree") return;
+    setSelectedFeature(node.data as FeatureNodeData);
+  }, []);
+
+  // 상세 패널 안 자식 노드 클릭 → 그 id의 노드 data로 전환. 현재 렌더 중인 features 노드 집합에서 찾는다.
+  const selectFeatureById = useCallback(
+    (id: string) => {
+      const pool = [...featureNodes, ...capFeatureNodes];
+      const found = pool.find((n) => n.id === id);
+      if (found) setSelectedFeature(found.data as FeatureNodeData);
+    },
+    [featureNodes, capFeatureNodes],
+  );
 
   // 기획 유저플로우 드래그: 위치 변경을 state에 반영(저장은 onNodeDragStop에서 한 번).
   const onPlanningFlowNodesChange = useCallback((changes: NodeChange[]) => {
@@ -617,6 +638,7 @@ export function App(): JSX.Element {
                     edges={featureEdges}
                     nodeTypes={nodeTypes}
                     nodesDraggable={false}
+                    onNodeClick={onFeatureNodeClick}
                     fitView
                   >
                     <Background />
@@ -711,6 +733,7 @@ export function App(): JSX.Element {
                     edges={capFeatureEdges}
                     nodeTypes={nodeTypes}
                     nodesDraggable={false}
+                    onNodeClick={onFeatureNodeClick}
                     fitView
                   >
                     <Background />
@@ -767,6 +790,12 @@ export function App(): JSX.Element {
           </>
         )}
       </div>
+      {/* 기능명세 노드 상세 패널(데스크탑 우측 슬라이드 / 모바일 하단 시트). 항상 마운트하고 open으로 슬라이드. */}
+      <FeatureDetailPanel
+        node={selectedFeature}
+        onClose={() => setSelectedFeature(null)}
+        onSelectById={selectFeatureById}
+      />
     </div>
   );
 }
