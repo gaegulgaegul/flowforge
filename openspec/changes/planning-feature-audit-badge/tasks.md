@@ -17,9 +17,9 @@
 
 ### Sequential: 상세 패널 (배지 데이터 병합 완료 후)
 
-- [ ] 4.1 `web/src/FeatureDetailPanel.tsx`에 audit 섹션 — 판정·PASS/FAIL/검증불가 건수, fail일 때만 failClaims(claim+reason) 텍스트 나열(D-4, dangerouslySetInnerHTML 금지). 감사 데이터 없는 요구사항은 "미감사" 한 줄. 비요구사항 노드는 섹션 자체 생략.
+- [x] 4.1 `web/src/FeatureDetailPanel.tsx`에 audit 섹션 — 판정·PASS/FAIL/검증불가 건수, fail일 때만 failClaims(claim+reason) 텍스트 나열(D-4, dangerouslySetInnerHTML 금지). 감사 데이터 없는 요구사항은 "미감사" 한 줄. 비요구사항 노드는 섹션 자체 생략.
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
-- [ ] 5.1 VERIFY 전제: openspec-audit을 flowforge에 재실행해 `docs/audit.json`을 최신 저장본으로 갱신(현 저장본은 구버전 2 capability뿐 — 코드 작업 아님, grounding 전제).
-- [ ] 5.2 VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(신규 단위·통합 포함, 기존 골든 회귀 0) → UI: 라이브(또는 실데이터 로컬)에서 기획 기능명세 뷰 실픽셀 — 요구사항 노드 배지 3종(정합/불합 또는 미감사) 렌더, 요구사항 노드 클릭→상세 패널 audit 섹션, 기능·상세기능 노드 배지 없음, 콘솔 에러 0 전부 PASS
+- [x] 5.1 VERIFY 전제: openspec-audit을 flowforge에 재실행해 `docs/audit.json`을 최신 저장본으로 갱신(현 저장본은 구버전 2 capability뿐 — 코드 작업 아님, grounding 전제).
+- [x] 5.2 VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(신규 단위·통합 포함, 기존 골든 회귀 0) → UI: 라이브(또는 실데이터 로컬)에서 기획 기능명세 뷰 실픽셀 — 요구사항 노드 배지 3종(정합/불합 또는 미감사) 렌더, 요구사항 노드 클릭→상세 패널 audit 섹션, 기능·상세기능 노드 배지 없음, 콘솔 에러 0 전부 PASS

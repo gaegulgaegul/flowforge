@@ -741,3 +741,41 @@ button:hover { border-color: var(--lime); }
     flex-shrink: 0;
   }
 }
+
+/* 상세 패널 audit 섹션 (planning-feature-audit-badge task 4.1) */
+.feature-detail-audit-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.feature-detail-audit-counts {
+  font-size: 12px;
+  color: #9aa0ad;
+}
+.feature-detail-audit-fails {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.feature-detail-audit-fail {
+  border: 1px solid rgba(240, 106, 106, 0.35);
+  border-left: 3px solid #f06a6a;
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.feature-detail-audit-claim {
+  font-size: 12px;
+  color: #e6e8ec;
+  font-family: ui-monospace, monospace;
+  word-break: break-all;
+}
+.feature-detail-audit-reason {
+  font-size: 11px;
+  color: #9aa0ad;
+}

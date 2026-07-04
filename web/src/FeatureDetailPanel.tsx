@@ -37,6 +37,13 @@ const KIND_DOT: Record<FeatureTreeNodeKind, string> = {
   detail: "#e6e8ec",
 };
 
+/** audit 판정 → 라벨·색(FeatureNode의 AUDIT_BADGE와 어휘 정렬, D-5). */
+const AUDIT_META: Record<"clean" | "fail" | "unknown", { label: string; color: string }> = {
+  clean: { label: "정합", color: "#5ad17a" },
+  fail: { label: "불합", color: "#f2675a" },
+  unknown: { label: "미감사", color: "#9aa0ad" },
+};
+
 export interface FeatureDetailPanelProps {
   /** 열려있는 노드 data. null이면 닫힘(패널은 항상 마운트하되 open 클래스로 슬라이드). */
   node: FeatureNodeData | null;
@@ -127,6 +134,42 @@ export function FeatureDetailPanel({ node, onClose, onSelectById }: FeatureDetai
                 <section className="feature-detail-field">
                   <div className="feature-detail-label">capability</div>
                   <code className="feature-detail-cap">{node.capability}</code>
+                </section>
+              )}
+
+              {/* audit 판정(요구사항만, D-4·D-6) — 판정·건수, 불합일 때만 FAIL claim 목록.
+                  claim/reason은 텍스트 렌더만(HTML 주입 금지). 감사 데이터 자체가 없으면 미감사 한 줄. */}
+              {node.kind === "requirement" && node.audit && (
+                <section className="feature-detail-field" data-testid="feature-detail-audit">
+                  <div className="feature-detail-label">audit 판정</div>
+                  <div className="feature-detail-audit-head">
+                    <span
+                      className="feature-detail-badge"
+                      style={{
+                        borderColor: AUDIT_META[node.audit.status].color,
+                        color: AUDIT_META[node.audit.status].color,
+                      }}
+                    >
+                      {AUDIT_META[node.audit.status].label}
+                    </span>
+                    {node.audit.pass + node.audit.fail + node.audit.unverifiable > 0 ? (
+                      <span className="feature-detail-audit-counts">
+                        정합 {node.audit.pass} · 불합 {node.audit.fail} · 검증불가 {node.audit.unverifiable}
+                      </span>
+                    ) : (
+                      <span className="feature-detail-audit-counts">감사 데이터 없음</span>
+                    )}
+                  </div>
+                  {node.audit.status === "fail" && node.audit.failClaims.length > 0 && (
+                    <ul className="feature-detail-audit-fails">
+                      {node.audit.failClaims.map((f, i) => (
+                        <li key={`${f.claim}#${i}`} className="feature-detail-audit-fail">
+                          <span className="feature-detail-audit-claim">{f.claim}</span>
+                          {f.reason && <span className="feature-detail-audit-reason">{f.reason}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </section>
               )}
 
