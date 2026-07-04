@@ -52,7 +52,7 @@ function countChanges(projectDir: string): number {
 }
 
 /** audit finalJudgment → AuditStatus. 미인식·비문자열(UNVERIFIABLE 포함)은 unknown. */
-function mapFinalJudgment(j: unknown): AuditStatus {
+export function mapFinalJudgment(j: unknown): AuditStatus {
   if (j === "PASS") return "clean";
   if (j === "FAIL") return "fail";
   if (j === "조건부") return "warn";
@@ -64,7 +64,7 @@ function mapFinalJudgment(j: unknown): AuditStatus {
  * 파일없음·읽기실패·JSON 파싱 실패는 전부 unknown 폴백(throw 금지).
  * scanRoot 등 다른 필드는 읽지 않는다(경로 신뢰 경계).
  */
-function readAuditStatus(projectDir: string): AuditStatus {
+export function readAuditStatus(projectDir: string): AuditStatus {
   const auditPath = join(projectDir, "docs", "audit.json");
   if (!existsSync(auditPath)) return "unknown";
   try {
