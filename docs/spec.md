@@ -93,11 +93,19 @@ change의 `proposal.md`+`design.md`를 manyfast 고정 5섹션으로 파생해 �
 - invariant: 읽기전용 — `/api/projects`에 PUT/POST/DELETE 라우트를 두지 않는다.
 - metric: server 통합/유닛 테스트 PASS(projects.test.ts 라우트 + lib/__tests__/projects.test.ts 유닛) + 실런타임 카드그리드 렌더(web 실픽셀 PASS).
 
+### 기능: 카드 audit 상태 = audit.json finalJudgment 매핑
+- assert:symbol readAuditStatus
+- assert:symbol mapFinalJudgment
+- 각 프로젝트의 `<projDir>/docs/audit.json`에서 `finalJudgment`를 읽어 카드 auditStatus로 매핑한다: PASS→clean, FAIL→fail, 조건부→warn, UNVERIFIABLE·미인식·없음→unknown.
+- invariant: audit.json 없음·깨진 JSON·필드 없음은 전부 `unknown` 폴백이며 카드 스캔을 중단시키지 않는다(throw 금지).
+- invariant: audit.json 내부의 호스트 절대경로(scanRoot 등)는 신뢰하지 않는다 — 읽기 경로는 이미 계산된 projDir로만 구성하고 finalJudgment 필드만 소비한다.
+- invariant: audit.json 산출은 openspec-audit 소유 — flowforge는 읽기전용 소비만 한다(산출·스키마 변경 없음).
+- metric: 매핑·폴백 유닛 6케이스 + 라우트 통합 테스트 PASS(lib/__tests__/projects.test.ts, routes/__tests__/projects.test.ts) + 실데이터 grounding(flowforge→warn·wowa-app→fail·audit.json 없는 프로젝트→unknown).
+
 ### 기능: 프로젝트 카드 그리드 웹 렌더
 - assert:symbol ProjectGrid
 - 홈 랜딩에서 프로젝트들을 카드 그리드로 읽기전용 렌더한다(카드 클릭으로 드릴다운 진입).
 - 카드 표면은 displayName(한글)을 쓰고, 카드 클릭은 charter 있으면 뼈대(capability)로·없으면 빈 안내로 분기한다.
-
 ## capability: docs-ingest
 
 charter가 만든 상주 `docs/`(user-flow.md·PRD.md·wireframe.html)를 flowforge의 두 번째 입력 모드로 읽는 읽기전용 백엔드. 화면·goto를 휴리스틱으로 추론하는 대신 charter가 명시한 정답지(ground truth)를 직역해 그래프·와이어프레임·decision 타임라인으로 변환한다. 기존 change 경로(specParser/golden)는 무손상(additive).
