@@ -5,7 +5,13 @@
  * 가상 루트(id='feat-root')는 그리지 않고 그 children(요구사항들)부터 평탄화한다. */
 import dagre from "@dagrejs/dagre";
 import type { Node, Edge } from "@xyflow/react";
-import type { FeatureTreeNode, FeatureTreeNodeKind, FeaturePriority, FeatureStatus } from "@flowforge/shared";
+import type {
+  FeatureTreeNode,
+  FeatureTreeNodeKind,
+  FeaturePriority,
+  FeatureStatus,
+  CapabilityAuditSummary,
+} from "@flowforge/shared";
 
 /** 상세 패널용 자식 노드 요약(라벨+종류). 트리에서 파생, 노드 data에 실어 패널이 조인 없이 쓴다. */
 export interface FeatureChildRef {
@@ -30,7 +36,21 @@ export interface FeatureNodeData extends Record<string, unknown> {
   path: readonly string[];
   /** 자식 노드 요약 목록(상세 패널의 "자식 노드" 섹션용). 트리에서 파생. */
   childRefs: readonly FeatureChildRef[];
+  /**
+   * capability별 audit 배지(planning-feature-audit-badge, D-6) — 요구사항 노드만 채워짐.
+   * audit 맵 미제공/빈 맵(fetch 실패·미감사 프로젝트)이면 undefined(배지 없음). web에서 파생.
+   */
+  audit?: CapabilityAuditSummary;
 }
+
+/** audit 맵에 키가 없는 요구사항 = 미감사(D-6). 배지 "미감사"로 렌더된다. */
+const UNAUDITED: CapabilityAuditSummary = {
+  status: "unknown",
+  pass: 0,
+  fail: 0,
+  unverifiable: 0,
+  failClaims: [],
+};
 
 const NODE_W = 240;
 const NODE_H_SIMPLE = 48;
@@ -66,10 +86,16 @@ function flatten(start: FeatureTreeNode): {
 
 /** dagre 좌→우(LR) 트리 레이아웃 → RF nodes/edges.
  * root는 가상 루트(id='feat-root')이므로 제외하고 그 children(요구사항들)부터 그린다. */
-export function toFeatureTreeFlow(root: FeatureTreeNode): {
+export function toFeatureTreeFlow(
+  root: FeatureTreeNode,
+  auditByCapability?: Record<string, CapabilityAuditSummary>,
+): {
   nodes: Node<FeatureNodeData>[];
   edges: Edge[];
 } {
+  // audit 병합 규칙(D-6): 맵 미제공 or 빈 맵 → 전 노드 배지 없음(fetch 실패/미감사 프로젝트).
+  // 비어있지 않으면 요구사항 노드만 capability 문자열 완전일치로 조회, 키 없으면 UNAUDITED(미감사).
+  const hasAudit = auditByCapability !== undefined && Object.keys(auditByCapability).length > 0;
   // 가상 루트는 렌더하지 않는다 — 각 요구사항을 독립 서브트리로 평탄화해 합친다.
   const featnodes: FeatureTreeNode[] = [];
   const featedges: Array<{ from: string; to: string }> = [];
@@ -102,6 +128,10 @@ export function toFeatureTreeFlow(root: FeatureTreeNode): {
         status: n.status,
         // memo는 있을 때만 전달(비메모 노드는 undefined → 렌더 무영향).
         ...(n.memo !== undefined ? { memo: n.memo } : {}),
+        // audit 배지 — 요구사항 노드만, 빈 맵/미제공이면 전부 undefined(D-6). 기능/상세기능은 항상 없음.
+        ...(hasAudit && n.kind === "requirement" && n.capability !== ""
+          ? { audit: auditByCapability?.[n.capability] ?? UNAUDITED }
+          : {}),
         // 상세 패널용 파생 필드(빌더/타입/골든 무저촉 — web에서 트리 구조로만 계산).
         path: featpaths.get(n.id) ?? [n.label],
         childRefs: n.children.map((c) => ({ id: c.id, label: c.label, kind: c.kind })),

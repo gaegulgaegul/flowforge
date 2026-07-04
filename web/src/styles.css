@@ -298,6 +298,18 @@ button:hover { border-color: var(--lime); }
   border-radius: 999px;
   line-height: 1.5;
 }
+/* 기획 요구사항 노드 audit 뱃지(D-6): clean=lime, fail=red, unknown=저채도(의도적 무채색 — 경고 아님) */
+.feature-tree-audit {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 0 5px;
+  border: 1px solid;
+  border-radius: 999px;
+  line-height: 1.5;
+}
+.feature-tree-audit--clean { color: var(--lime); border-color: var(--lime); }
+.feature-tree-audit--fail { color: #f06a6a; border-color: #f06a6a; }
+.feature-tree-audit--unknown { color: #7d828c; border-color: #4a4f59; }
 .feature-tree-node-label { font-weight: 500; white-space: normal; }
 .feature-tree-cap {
   align-self: flex-start;

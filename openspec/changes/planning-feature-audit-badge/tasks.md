@@ -12,8 +12,8 @@
 
 ### Parallel Group 1 (서버 완료 후 — 서로 다른 파일, 동시 실행 가능)
 
-- [ ] 3.1 web fetch+병합: `web/src/api.ts`에 `fetchAuditCapabilities(project)` 추가, `featureTreeAdapter.ts`에 audit 맵을 요구사항 노드 data에 capability 키 동치로 병합하는 파생 추가(맵 없음/빈 맵이면 배지 데이터 undefined — 기존 path·childRefs 파생과 나란히). App.tsx 기능명세 뷰 로드부에서 planning-features와 병렬 fetch, fetch 실패는 배지 없음 강등(그래프 렌더 유지). [parallel]
-- [ ] 3.2 노드 배지 렌더: `web/src/FeatureNode.tsx`에 요구사항 노드 한정 audit 배지(clean→`정합` 초록 / fail→`불합 N` 빨강 / unknown→`미감사` 회색 저채도) + `styles.css` 배지 스타일. 기능·상세기능 노드는 배지 렌더 안 함(D-6). [parallel]
+- [x] 3.1 web fetch+병합: `web/src/api.ts`에 `fetchAuditCapabilities(project)` 추가, `featureTreeAdapter.ts`에 audit 맵을 요구사항 노드 data에 capability 키 동치로 병합하는 파생 추가(맵 없음/빈 맵이면 배지 데이터 undefined — 기존 path·childRefs 파생과 나란히). App.tsx 기능명세 뷰 로드부에서 planning-features와 병렬 fetch, fetch 실패는 배지 없음 강등(그래프 렌더 유지). [parallel]
+- [x] 3.2 노드 배지 렌더: `web/src/FeatureNode.tsx`에 요구사항 노드 한정 audit 배지(clean→`정합` 초록 / fail→`불합 N` 빨강 / unknown→`미감사` 회색 저채도) + `styles.css` 배지 스타일. 기능·상세기능 노드는 배지 렌더 안 함(D-6). [parallel]
 
 ### Sequential: 상세 패널 (배지 데이터 병합 완료 후)
 

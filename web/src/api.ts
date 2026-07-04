@@ -13,6 +13,7 @@ import type {
   PrdApplyRequest,
   PrdApplyResult,
   FeatureSuggestionQueue,
+  CapabilityAuditSummary,
 } from "@flowforge/shared";
 
 export interface GraphResponse {
@@ -206,6 +207,15 @@ export async function fetchDocsPlanningFeatures(
   const res = await fetch(`/api/docs/${project}/planning-features`);
   if (!res.ok) throw new Error(`docs planning-features ${res.status}`);
   return (await res.json()) as { project: string; tree: FeatureTree };
+}
+
+/** capability별 audit 요약(docs/audit.json) — 요구사항 노드 배지용. audit.json 없으면 빈 객체(배지 없음). */
+export async function fetchAuditCapabilities(
+  project: string,
+): Promise<{ project: string; capabilities: Record<string, CapabilityAuditSummary> }> {
+  const res = await fetch(`/api/docs/${project}/audit-capabilities`);
+  if (!res.ok) throw new Error(`docs audit-capabilities ${res.status}`);
+  return (await res.json()) as { project: string; capabilities: Record<string, CapabilityAuditSummary> };
 }
 
 /**

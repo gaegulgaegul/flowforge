@@ -19,6 +19,7 @@ import type {
   FeatureTreeNode as FeatureTreeNodeT,
   PrdSuggestion,
   FeatureSuggestion,
+  CapabilityAuditSummary,
 } from "@flowforge/shared";
 import {
   fetchGraph,
@@ -38,6 +39,7 @@ import {
   applyDocsPrdSuggestions,
   fetchDocsFeatureSuggestions,
   applyDocsFeatureSuggestions,
+  fetchAuditCapabilities,
   type CapabilitySummary,
   type ChangeSummary,
 } from "./api.js";
@@ -107,6 +109,8 @@ export function App(): JSX.Element {
   const [planningFeatures, setPlanningFeatures] = useState<FeatureTreeNodeT | null>(null);
   const [featureNodes, setFeatureNodes] = useState<Node[]>([]);
   const [featureEdges, setFeatureEdges] = useState<Edge[]>([]);
+  // capability별 audit 요약(docs/audit.json) — 요구사항 노드 배지용. null=미로드/실패(배지 없음, D-6).
+  const [featureAudit, setFeatureAudit] = useState<Record<string, CapabilityAuditSummary> | null>(null);
   // 기능명세 속성 제안 큐(docs/planning/features.suggestions.json) — 승인/반려 편집 UI(6b).
   // 6a prdSuggestions와 대칭. 큐 비면 순수 읽기 트리 뷰.
   const [featureSuggestions, setFeatureSuggestions] = useState<readonly FeatureSuggestion[]>([]);
@@ -211,16 +215,17 @@ export function App(): JSX.Element {
   }, [specRoot]);
 
   // 기획 기능명세서(planningFeatures) 바뀌면 레이아웃 재계산. null이면 비운다.
+  // featureAudit(null=미로드/실패)은 undefined로 넘겨 배지 없음(D-6) — 그래프 렌더는 무영향.
   useEffect(() => {
     if (!planningFeatures) {
       setFeatureNodes([]);
       setFeatureEdges([]);
       return;
     }
-    const { nodes, edges } = toFeatureTreeFlow(planningFeatures);
+    const { nodes, edges } = toFeatureTreeFlow(planningFeatures, featureAudit ?? undefined);
     setFeatureNodes(nodes);
     setFeatureEdges(edges);
-  }, [planningFeatures]);
+  }, [planningFeatures, featureAudit]);
 
   // 기획 IA(planningIaRoot) 바뀌면 레이아웃 재계산. null이면 비운다. change IA와 동일한 toIAFlow 재사용
   // (화면 1급 노드 IA는 간단히뷰 고정 — verbose 토글은 change IA 전용).
@@ -390,6 +395,17 @@ export function App(): JSX.Element {
       .catch(() => {
         if (token !== dashReqToken.current) return;
         setPlanningFeatures(null); // 기획 기능명세서 미작성 — 정상(미표시)
+      });
+    // capability별 audit 요약(docs/audit.json) 로드 — 실패해도 배지만 없이 그래프는 정상(D-6).
+    setFeatureAudit(null);
+    fetchAuditCapabilities(card.name)
+      .then((r) => {
+        if (token !== dashReqToken.current) return;
+        setFeatureAudit(r.capabilities);
+      })
+      .catch(() => {
+        if (token !== dashReqToken.current) return;
+        setFeatureAudit(null); // audit 조회 실패 — 배지 없음(그래프 렌더는 무영향)
       });
     // 기획 단계 IA(docs/planning/features.md 화면목록) 로드 — 없으면(404) null로 비움(에러 아님).
     setPlanningIaRoot(null);

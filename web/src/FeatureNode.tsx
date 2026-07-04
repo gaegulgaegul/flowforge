@@ -4,7 +4,12 @@
  * 기획 features 전용으로 독립한다. 요구사항 노드만 capability 키 칩을 노출하고,
  * 모든 노드는 중요도(priority)/상태(status)를 뱃지로 시각화한다. */
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import type { FeatureTreeNodeKind, FeaturePriority, FeatureStatus } from "@flowforge/shared";
+import type {
+  FeatureTreeNodeKind,
+  FeaturePriority,
+  FeatureStatus,
+  CapabilityAuditSummary,
+} from "@flowforge/shared";
 import type { FeatureNodeData } from "./featureTreeAdapter.js";
 
 /** 타입별 시각 토큰(3단 위계: 요구사항 > 기능 > 상세기능). */
@@ -29,8 +34,15 @@ const STATUS_COLOR: Record<FeatureStatus, string> = {
   중단: "#f2675a",
 };
 
+/** audit 상태 → 뱃지 라벨·클래스(D-6). 요구사항 노드에 audit가 있을 때만 렌더. */
+const AUDIT_BADGE: Record<CapabilityAuditSummary["status"], { label: string; cls: string }> = {
+  clean: { label: "정합", cls: "feature-tree-audit--clean" },
+  fail: { label: "불합", cls: "feature-tree-audit--fail" },
+  unknown: { label: "미감사", cls: "feature-tree-audit--unknown" },
+};
+
 export function FeatureNode({ data }: NodeProps): JSX.Element {
-  const { label, kind, capability, priority, status, memo } = data as FeatureNodeData;
+  const { label, kind, capability, priority, status, memo, audit } = data as FeatureNodeData;
   const s = KIND_STYLE[kind] ?? KIND_STYLE.detail;
   return (
     <div
@@ -49,6 +61,14 @@ export function FeatureNode({ data }: NodeProps): JSX.Element {
         {status && (
           <span className="feature-tree-badge" style={{ borderColor: STATUS_COLOR[status], color: STATUS_COLOR[status] }}>
             {status}
+          </span>
+        )}
+        {kind === "requirement" && audit && (
+          <span
+            className={`feature-tree-audit ${AUDIT_BADGE[audit.status].cls}`}
+            title={`감사: 정합 ${audit.pass} / 불합 ${audit.fail} / 검증불가 ${audit.unverifiable}`}
+          >
+            {audit.status === "fail" ? `불합 ${audit.fail}` : AUDIT_BADGE[audit.status].label}
           </span>
         )}
       </div>
