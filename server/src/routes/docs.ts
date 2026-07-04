@@ -7,6 +7,7 @@
  * GET /api/docs/:project/prd           PRD.md → decision 타임라인
  * GET /api/docs/:project/planning-prd       planning/prd.md → manyfast 5섹션 PRD (기획 단계 산출물)
  * GET /api/docs/:project/planning-features        planning/features.md → 기능명세 3단 트리(FeatureTree)
+ * GET /api/docs/:project/audit-capabilities       docs/audit.json items[] → capability 단위 집계 맵(없으면 빈 맵 200)
  * GET /api/docs/:project/planning-user-flow        planning/user-flow/<flow>.md(Mermaid) → SpecGraph + layout + versions
  * PUT /api/docs/:project/planning-user-flow/layout 드래그 좌표 저장(docs 첫 쓰기 — overlay JSON만)
  * GET /api/docs/:project/planning-prd-suggestions       PRD 제안 큐 읽기(없으면 빈 큐 200)
@@ -17,6 +18,7 @@
  * :project는 슬래시를 포함할 수 있어 와일드카드(*)로 받는다. docs는 SSOT(읽기전용)지만,
  * 예외로 유저플로우 좌표 overlay와 PRD 승인 반영(승인=사용자 의도)만 쓴다.
  */
+import { dirname } from "node:path";
 import { Router } from "express";
 import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from "../parser/docsAdapter.js";
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
@@ -34,6 +36,7 @@ import {
   isPrdApplyRequest,
 } from "../lib/docs.js";
 import { readDocsFeatureSuggestions, applyFeatureSuggestions } from "../lib/featureDocs.js";
+import { readAuditCapabilities } from "../lib/auditSummary.js";
 import { isLayoutOverlay } from "../lib/changes.js";
 import { safe } from "../lib/safe-error.js";
 
@@ -118,6 +121,20 @@ docsRouter.get(
       return;
     }
     res.json({ project, tree });
+  }),
+);
+
+docsRouter.get(
+  "/api/docs/:project(*)/audit-capabilities",
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    // resolveDocsDir는 docs 디렉토리를 반환 — 리더는 projectDir 기준(<projectDir>/docs/audit.json)
+    res.json({ project, capabilities: readAuditCapabilities(dirname(dir)) });
   }),
 );
 

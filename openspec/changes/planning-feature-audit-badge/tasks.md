@@ -7,8 +7,8 @@
 
 ### Sequential: 라우트 (lib GREEN 의존)
 
-- [ ] 2.1 RED: `server/src/routes/__tests__/docs.planning.test.ts`(기존 planning 라우트 테스트 파일)에 `GET /api/docs/:project/audit-capabilities` 통합 테스트 추가 — audit.json 픽스처 프로젝트에서 집계 맵 반환 단언(fail·clean·unknown 3키), audit.json 없는 프로젝트는 빈 맵 200, 존재하지 않는 프로젝트/경로조작(`..`)은 404.
-- [ ] 2.2 GREEN: `server/src/routes/docs.ts`에 라우트 추가 — 기존 planning-* 라우트의 프로젝트 해석·404 패턴 재사용(기존 resolveDocsDir/프로젝트 검증 재사용, 새 검증 로직 만들지 않음). 응답 `{ capabilities: Record<string, CapabilityAuditSummary> }`.
+- [x] 2.1 RED: `server/src/routes/__tests__/docs.planning.test.ts`(기존 planning 라우트 테스트 파일)에 `GET /api/docs/:project/audit-capabilities` 통합 테스트 추가 — audit.json 픽스처 프로젝트에서 집계 맵 반환 단언(fail·clean·unknown 3키), audit.json 없는 프로젝트는 빈 맵 200, 존재하지 않는 프로젝트/경로조작(`..`)은 404.
+- [x] 2.2 GREEN: `server/src/routes/docs.ts`에 라우트 추가 — 기존 planning-* 라우트의 프로젝트 해석·404 패턴 재사용(기존 resolveDocsDir/프로젝트 검증 재사용, 새 검증 로직 만들지 않음). 응답 `{ capabilities: Record<string, CapabilityAuditSummary> }`.
 
 ### Parallel Group 1 (서버 완료 후 — 서로 다른 파일, 동시 실행 가능)
 
