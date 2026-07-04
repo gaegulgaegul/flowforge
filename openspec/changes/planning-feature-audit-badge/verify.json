@@ -1,16 +1,16 @@
 {
   "change": "planning-feature-audit-badge",
-  "verifiedAt": "2026-07-04T02:40:07+09:00",
-  "finalJudgment": "FAIL",
+  "verifiedAt": "2026-07-04T12:04:22+09:00",
+  "finalJudgment": "PASS",
   "counts": {
-    "pass": 9,
+    "pass": 12,
     "fail": 0,
-    "검증안함": 3,
+    "검증안함": 0,
     "skipped": 0
   },
   "archiveGate": {
-    "open": false,
-    "reason": "예외 미검증(검증 불충분): 상세 패널에 audit 상세를 노출한다"
+    "open": true,
+    "reason": ""
   },
   "requirements": [
     {
@@ -35,61 +35,61 @@
         {
           "scenario": "FAIL 1건 이상 capability는 fail로 집계된다",
           "layer": "server",
-          "means": "auditSummary.test.ts::(a) + docs.planning.test.ts::'fail·clean·unknown 3키 집계 맵 200' + 라이브 API 실측",
-          "basis": "root=server/; scripts.test → jest(NODE_OPTIONS=--experimental-vm-modules); test files 26 suites(예: server/src/lib/__tests__/auditSummary.test.ts); devDeps jest@^29.7",
+          "means": "auditSummary.test.ts::(a) + docs.planning.test.ts::'fail·clean·unknown 3키 집계 맵 200' + 라이브 API 실측(빌드 서버 @8891)",
+          "basis": "root=server/; scripts.test → NODE_OPTIONS=--experimental-vm-modules jest; 26 suites; devDeps jest@^29.7",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "jest 실측 + 라이브 응답(cap-fail)",
-            "text": "jest --ci --json 실측: 26 suites / 238 tests / 238 passed / 0 failed, EXIT=0 (파이프 없이 획득)\n\n라이브 실측 GET /api/docs/badge-demo/audit-capabilities (200):\n\"cap-fail\":{\"status\":\"fail\",\"pass\":1,\"fail\":2,\"unverifiable\":0,\"failClaims\":[{\"claim\":\"GET /api/missing 라우트\",\"reason\":\"코드에 라우트 없음\"},{\"claim\":\"POST /api/other 라우트\",\"reason\":\"메서드 불일치\"}]}"
+            "caption": "jest 재실측 + 라이브 응답(cap-fail)",
+            "text": "jest --ci --json 재실측(파이프 없음): 26 suites / 238 tests / 238 passed / 0 failed, EXIT=0\n\n라이브 GET /api/docs/badge-demo/audit-capabilities → 200:\n\"cap-fail\":{\"status\":\"fail\",\"pass\":1,\"fail\":2,\"unverifiable\":0,\"failClaims\":[{\"claim\":\"GET /api/missing 라우트\",\"reason\":\"코드에 라우트 없음\"},{\"claim\":\"<img src=x onerror=window.__xss=1> 인젝션클레임\",...}]}"
           }
         },
         {
           "scenario": "FAIL 0건·PASS 있는 capability는 clean으로 집계된다",
           "layer": "server",
-          "means": "auditSummary.test.ts::(b) 'PASS+UNVERIFIABLE만이면 clean' + 통합 cap-clean 단언 + 라이브 API",
-          "basis": "root=server/; scripts.test → jest(NODE_OPTIONS=--experimental-vm-modules); test files 26 suites(예: server/src/lib/__tests__/auditSummary.test.ts); devDeps jest@^29.7",
+          "means": "auditSummary.test.ts::(b) + 통합 cap-clean 단언 + 라이브 API 실측",
+          "basis": "root=server/; scripts.test → NODE_OPTIONS=--experimental-vm-modules jest; 26 suites",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "clean 집계 + unverifiable 건수 노출",
-            "text": "jest --ci --json 실측: 26 suites / 238 tests / 238 passed / 0 failed, EXIT=0 (파이프 없이 획득)\n\n라이브 실측: \"cap-clean\":{\"status\":\"clean\",\"pass\":1,\"fail\":0,\"unverifiable\":1,\"failClaims\":[]} — UNVERIFIABLE은 status를 깎지 않고 건수로만."
+            "caption": "clean 집계 + unverifiable 건수만 노출",
+            "text": "jest 238/238 PASS, EXIT=0\n\n라이브: \"cap-clean\":{\"status\":\"clean\",\"pass\":1,\"fail\":0,\"unverifiable\":1,\"failClaims\":[]} — UNVERIFIABLE은 status를 깎지 않고 건수로만."
           }
         },
         {
           "scenario": "검증가능 항목이 없는 capability는 unknown이다",
           "layer": "server",
-          "means": "auditSummary.test.ts::(c) '전부 UNVERIFIABLE이면 unknown' + 통합 cap-unknown 단언 + 라이브 API",
-          "basis": "root=server/; scripts.test → jest(NODE_OPTIONS=--experimental-vm-modules); test files 26 suites(예: server/src/lib/__tests__/auditSummary.test.ts); devDeps jest@^29.7",
+          "means": "auditSummary.test.ts::(c) + 통합 cap-unknown 단언 + 라이브 API 실측",
+          "basis": "root=server/; scripts.test → NODE_OPTIONS=--experimental-vm-modules jest; 26 suites",
           "result": "PASS",
           "evidence": {
             "kind": "text",
             "caption": "unknown 집계",
-            "text": "jest --ci --json 실측: 26 suites / 238 tests / 238 passed / 0 failed, EXIT=0 (파이프 없이 획득)\n\n라이브 실측: \"cap-unknown\":{\"status\":\"unknown\",\"pass\":0,\"fail\":0,\"unverifiable\":1}"
+            "text": "jest 238/238 PASS, EXIT=0\n\n라이브: \"cap-unknown\":{\"status\":\"unknown\",\"pass\":0,\"fail\":0,\"unverifiable\":1}"
           }
         },
         {
           "scenario": "audit.json 없음·깨짐은 빈 맵 폴백한다",
           "layer": "server",
           "means": "auditSummary.test.ts::(d)×3(파일없음/깨진 JSON/items 비배열) + docs.planning.test.ts::'audit.json 없는 프로젝트는 빈 맵 200'",
-          "basis": "root=server/; scripts.test → jest(NODE_OPTIONS=--experimental-vm-modules); test files 26 suites(예: server/src/lib/__tests__/auditSummary.test.ts); devDeps jest@^29.7",
+          "basis": "root=server/; scripts.test → NODE_OPTIONS=--experimental-vm-modules jest; 26 suites",
           "result": "PASS",
           "evidence": {
             "kind": "text",
             "caption": "폴백 3경로 + 빈 맵 200",
-            "text": "jest --ci --json 실측: 26 suites / 238 tests / 238 passed / 0 failed, EXIT=0 (파이프 없이 획득)\n\n(d) 파일 없음 → {} / 깨진 JSON('{not json!') → {} / items 비배열 → {} — throw 없음. 통합: proj2(audit.json 없음) → 200 {capabilities:{}}"
+            "text": "jest 재실측 개별 단언 전부 passed:\n- (d) 파일 없음이면 빈 맵 (throw 없음)\n- (d) 깨진 JSON이면 빈 맵 (throw 없음)\n- (d) items가 배열이 아니면 빈 맵 (throw 없음)\n- 통합: audit.json 없는 프로젝트는 빈 맵 200"
           }
         },
         {
           "scenario": "audit.json 내부 경로는 신뢰하지 않는다",
           "layer": "server",
-          "means": "docs.planning.test.ts 픽스처 scanRoot:'/etc' 무시 단언 + '경로 조작(..) 차단 → 404' + auditSummary.test.ts::(e) 필드 한정 소비 + 라이브 픽스처 scanRoot:'/etc/should-be-ignored' 무시",
-          "basis": "root=server/; scripts.test → jest(NODE_OPTIONS=--experimental-vm-modules); test files 26 suites(예: server/src/lib/__tests__/auditSummary.test.ts); devDeps jest@^29.7",
+          "means": "docs.planning.test.ts::경로조작(..) 404 + auditSummary.test.ts::(e) 필드 한정 소비 + 라이브 픽스처 scanRoot:'/etc/should-be-ignored' 무시 실측",
+          "basis": "root=server/; scripts.test → NODE_OPTIONS=--experimental-vm-modules jest; 26 suites",
           "result": "PASS",
           "evidence": {
             "kind": "text",
             "caption": "신뢰 경계(D-3)",
-            "text": "jest --ci --json 실측: 26 suites / 238 tests / 238 passed / 0 failed, EXIT=0 (파이프 없이 획득)\n\n통합 픽스처 audit.json에 scanRoot:\"/etc\" 포함 → 집계는 검증된 projDir 기준으로만 수행(응답 정상). GET /api/docs/..%2f..%2fetc/audit-capabilities → 404. (e) capability·verdict·claim·reason 외 필드/비객체 item 안전 스킵."
+            "text": "라이브 픽스처 audit.json에 scanRoot:\"/etc/should-be-ignored\" 포함 → 응답은 projDir 기준 정상 집계(경로 미사용). jest: '경로 조작(..) 차단 → 404 (safe-4xx)' passed, '(e) capability·verdict 없는 item, 비객체 item도 안전하게 건너뛴다' passed, '(e) 알 수 없는 verdict 값은 어떤 건수에도 세지 않는다' passed"
           }
         }
       ]
@@ -109,56 +109,56 @@
           "특수문자": "covered"
         },
         "naReasons": {
-          "잘못된타입": "응답은 동일 출처 자사 서버의 TS strict 계약(CapabilityAuditSummary) — 오염된 items 방어는 서버 집계 폴백(요구사항1 (e))에서 수행되어 클라이언트 도달 전 정규화됨(D-3 신뢰 경계)"
+          "잘못된타입": "응답은 동일 출처 자사 서버의 TS strict 계약(CapabilityAuditSummary) — 오염 items 방어는 서버 집계 폴백(요구사항1 (d)(e))에서 정규화되어 클라이언트 도달 전 차단(D-3 신뢰 경계)"
         }
       },
       "scenarios": [
         {
           "scenario": "감사 데이터 있는 요구사항 노드에 판정 배지가 뜬다",
           "layer": "web",
-          "means": "gstack 실픽셀+DOM: badge-demo 픽스처 — cap-fail '불합 2'(빨강), cap-clean '정합'(초록); DOM cls feature-tree-audit--fail/--clean",
-          "basis": "web/vite.config.ts + web/dist/index.html(빌드 산출물) + package.json react 의존; gstack READY",
+          "means": "gstack 실픽셀+DOM 재실행: badge-demo — cap-fail '불합 2'(--fail), cap-clean '정합'(--clean); DOM 단언 4배지 전부 요구사항 host",
+          "basis": "web/vite.config.ts + 금회 재빌드 dist(npm run build EXIT=0) 정적 서빙 @8891; gstack READY",
           "result": "PASS",
           "evidence": {
             "kind": "screenshot",
             "path": "evidence/web-badges-features-view.png",
-            "caption": "불합 2(빨강)·정합(초록)·미감사(회색) 배지 — 요구사항 노드 한정 렌더"
+            "caption": "불합 2(빨강)·정합(초록)·미감사(회색) — 요구사항 노드 한정 렌더(금회 재캡처)"
           }
         },
         {
           "scenario": "감사 데이터 없는 요구사항 노드는 미감사 배지가 뜬다",
           "layer": "web",
-          "means": "gstack DOM: cap-missing(맵에 키 없음) → '미감사' 배지(feature-tree-audit--unknown); big-demo에서 맵 밖 60개 전부 미감사",
-          "basis": "web/vite.config.ts + web/dist/index.html(빌드 산출물) + package.json react 의존; gstack READY",
+          "means": "gstack DOM 재실행: cap-missing(맵에 키 없음) → '미감사'(--unknown); big-demo에서 items 없는 40개 전부 미감사",
+          "basis": "web/vite.config.ts + 금회 재빌드 dist @8891; gstack READY",
           "result": "PASS",
           "evidence": {
             "kind": "screenshot",
             "path": "evidence/web-badges-features-view.png",
-            "caption": "맵밖 요구사항(cap-missing) — 미감사 배지 표시(숨기지 않음)"
+            "caption": "cap-missing 요구사항 — 미감사 배지 표시(숨기지 않음). big-demo 미감사 40/121 병행 확인"
           }
         },
         {
           "scenario": "기능·상세기능 노드에는 audit 배지가 없다",
           "layer": "web",
-          "means": "gstack DOM 집계: badge-demo nodes=6 / .feature-tree-audit=4 — 배지 4개 전부 요구사항 노드 host, 기능·상세기능 노드 0개",
-          "basis": "web/vite.config.ts + web/dist/index.html(빌드 산출물) + package.json react 의존; gstack READY",
+          "means": "gstack DOM 집계 재실행: badge-demo nodes=6 / .feature-tree-audit=4 — 기능·상세기능 노드 hasBadge:false 개별 단언",
+          "basis": "web/vite.config.ts + 금회 재빌드 dist @8891; gstack READY",
           "result": "PASS",
           "evidence": {
-            "kind": "screenshot",
-            "path": "evidence/web-badges-features-view.png",
-            "caption": "기능 알파·상세기능 알파일 노드 — audit 배지 없음(DOM 단언 병행)"
+            "kind": "text",
+            "caption": "노드별 배지 유무 DOM 단언",
+            "text": "[{\"kind\":\"요구사항\",\"hasBadge\":true},{\"kind\":\"기능기능\",\"hasBadge\":false},{\"kind\":\"상세기능\",\"hasBadge\":false},{\"kind\":\"요구사항\",\"hasBadge\":true},{\"kind\":\"요구사항\",\"hasBadge\":true},{\"kind\":\"요구사항\",\"hasBadge\":true}] — 실픽셀은 web-badges-features-view.png 동일 프레임"
           }
         },
         {
           "scenario": "audit 데이터 로드 실패에도 그래프는 정상 렌더된다",
           "layer": "web",
-          "means": "런타임 재현: window.fetch 패치로 audit-capabilities만 reject(TypeError) 후 SPA 재진입 — nodes=6/badges=0 정상 렌더, 치명 콘솔 에러 0",
-          "basis": "web/vite.config.ts + web/dist/index.html(빌드 산출물) + package.json react 의존; gstack READY",
+          "means": "런타임 재현 재실행: window.fetch 패치로 audit-capabilities만 reject(TypeError) 후 SPA 재진입 — nodes=6/badges=0, 상세 패널도 정상(audit 섹션만 생략)",
+          "basis": "web/vite.config.ts + 금회 재빌드 dist @8891; gstack READY",
           "result": "PASS",
           "evidence": {
             "kind": "screenshot",
             "path": "evidence/web-fetch-fail-degrade.png",
-            "caption": "audit fetch 실패 시뮬레이션 — 배지만 강등, 그래프·상세패널 정상(App.tsx catch→null)"
+            "caption": "fetch 실패 시뮬레이션 — 그래프 6노드 정상·배지 0·치명 콘솔 에러 0(404는 픽스처에 없는 prd/user-flow의 예상된 null 폴백)"
           }
         }
       ]
@@ -166,54 +166,57 @@
     {
       "title": "상세 패널에 audit 상세를 노출한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
-          "null": "missing",
-          "빈값": "missing",
-          "잘못된타입": "missing",
-          "경계값": "missing",
-          "에러경로": "missing",
-          "동시성": "missing",
-          "대량": "missing",
-          "특수문자": "missing"
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "covered"
         },
-        "naReasons": {}
+        "naReasons": {
+          "잘못된타입": "패널 입력은 어댑터가 병합한 TS strict 계약(node.data.audit) — 오염 데이터는 서버 정규화+어댑터 병합에서 차단(요구사항1·2와 동일 신뢰 경계)",
+          "동시성": "패널은 선택 노드 data의 순수 렌더(자체 fetch·비동기 상태 없음) — 로드 동시성 표면은 App.tsx fetch 병합이며 요구사항 2의 동시성 클래스에서 검증"
+        }
       },
       "scenarios": [
         {
           "scenario": "요구사항 노드 클릭 시 audit 섹션이 뜬다",
           "layer": "web",
-          "means": "(매핑 없음 — 기능 미구현: grep -c 'audit' web/src/FeatureDetailPanel.tsx = 0건, task 4.1 미체크)",
-          "basis": "web/vite.config.ts + web/dist/index.html(빌드 산출물) + package.json react 의존; gstack READY",
-          "result": "검증 안 함",
+          "means": "gstack 실픽셀+DOM: cap-fail 노드 클릭 → data-testid=feature-detail-audit 섹션 — 판정 '불합' + '정합 1 · 불합 2 · 검증불가 0' 건수 렌더 (직전 verify에서 기능 미구현이던 것, 금회 4dd09f7 구현분 실증)",
+          "basis": "web/vite.config.ts + 금회 재빌드 dist @8891; gstack READY; grep 재실측: FeatureDetailPanel.tsx 내 audit 소비 코드 존재(L142-171)",
+          "result": "PASS",
           "evidence": {
             "kind": "screenshot",
             "path": "evidence/web-detail-panel-fail-node.png",
-            "caption": "fail 상태 요구사항 클릭 실증 — 상세 패널에 audit 섹션 부재(판정·건수 없음). 기능 미구현이며 환경 SKIP 아님(step 4a)"
+            "caption": "AUDIT 판정 섹션 — 불합 배지 + 정합 1 · 불합 2 · 검증불가 0 + FAIL claim 2건"
           }
         },
         {
           "scenario": "fail 상태면 FAIL claim 목록이 나열된다",
           "layer": "web",
-          "means": "(매핑 없음 — 기능 미구현: FeatureDetailPanel.tsx에 failClaims 소비 코드 없음)",
-          "basis": "web/vite.config.ts + web/dist/index.html(빌드 산출물) + package.json react 의존; gstack READY",
-          "result": "검증 안 함",
+          "means": "gstack DOM: .feature-detail-audit-fail 2건(claim+reason) — XSS 페이로드 claim(<img onerror>)이 텍스트로만 렌더: window.__xss 미발동, 주입 img/b 요소 0 (스펙 'no HTML injection' 직접 실증)",
+          "basis": "web/vite.config.ts + 금회 재빌드 dist @8891; gstack READY",
+          "result": "PASS",
           "evidence": {
             "kind": "screenshot",
             "path": "evidence/web-detail-panel-fail-node.png",
-            "caption": "cap-fail(failClaims 2건 보유) 노드 클릭 — claim 목록 미렌더(코드 부재)"
+            "caption": "FAIL claim 목록 — 'GET /api/missing 라우트/코드에 라우트 없음' + XSS 페이로드가 리터럴 텍스트로 표시(인젝션 무발동)"
           }
         },
         {
           "scenario": "clean·unknown이면 claim 목록은 생략된다",
           "layer": "web",
-          "means": "(매핑 없음 — 기능 미구현: audit 섹션 자체가 없어 생략 규칙도 검증 불가)",
-          "basis": "web/vite.config.ts + web/dist/index.html(빌드 산출물) + package.json react 의존; gstack READY",
-          "result": "검증 안 함",
+          "means": "gstack DOM 4연속 프로브: clean→'정합, 정합 1·불합 0·검증불가 1' claimList:false / unknown→'미감사, 검증불가 1' claimList:false / cap-missing→'미감사, 감사 데이터 없음' / 기능 노드→섹션 자체 없음",
+          "basis": "web/vite.config.ts + 금회 재빌드 dist @8891; gstack READY",
+          "result": "PASS",
           "evidence": {
-            "kind": "마커",
-            "caption": "선행 기능(audit 섹션) 미구현으로 파생 규칙 검증 불가",
-            "text": "grep 실측: web/src/FeatureDetailPanel.tsx 내 'audit' 0건"
+            "kind": "screenshot",
+            "path": "evidence/web-detail-panel-clean-node.png",
+            "caption": "clean 노드 — 판정·건수만, claim 목록 미렌더(DOM claimList:false 병행 단언)"
           }
         }
       ]
@@ -226,17 +229,17 @@
       "ran": 5,
       "passed": 5,
       "failed": 0,
-      "basis": "root=server/; scripts.test → jest(NODE_OPTIONS=--experimental-vm-modules); test files 26 suites(예: server/src/lib/__tests__/auditSummary.test.ts); devDeps jest@^29.7",
+      "basis": "root=server/; NODE_OPTIONS=--experimental-vm-modules jest; 26 suites / 238 tests",
       "reason": ""
     },
     {
       "layer": "web",
       "status": "PASS",
-      "ran": 4,
-      "passed": 4,
+      "ran": 7,
+      "passed": 7,
       "failed": 0,
-      "basis": "web/vite.config.ts + web/dist/index.html(빌드 산출물) + package.json react 의존; gstack READY",
-      "reason": "요구사항3 시나리오 3건은 기능 미구현(검증 안 함)으로 실행 대상 아님 — 레이어 판정과 별도 집계"
+      "basis": "web/vite.config.ts; 금회 npm run build EXIT=0 → dist 정적 서빙 @8891(DOCS_ROOT=/tmp/ff-verify-badge); gstack READY",
+      "reason": "직전 verify의 검증 안 함 3건(요구사항3) → 금회 전부 실행 PASS"
     },
     {
       "layer": "android",
@@ -258,5 +261,5 @@
     }
   ],
   "reportHtml": "verify.html",
-  "historyHtml": "verify-20260704-0240.html"
+  "historyHtml": "verify-20260704-1204.html"
 }
