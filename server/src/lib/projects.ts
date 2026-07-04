@@ -1,19 +1,22 @@
 /**
  * projects — 홈서버 프로젝트를 스캔해 카드 그리드용 메타를 집계한다 (읽기전용 합성).
  *
- * 스캔 모델(예광탄): PROJECTS_ROOT(기본 cwd 상위) 1단계 하위 <project>/ 가
- * openspec/changes/ 에 change를 1개 이상 가지면 프로젝트로 본다(decision show-all:
- * charter 유무 무관, change 있는 모든 프로젝트 노출).
+ * 스캔 모델: PROJECTS_ROOT(기본 cwd 상위) 1단계 하위 <project>/ 가
+ * (a) openspec/changes/ 에 활성 change를 1개 이상 가지거나 (b) docs 인식(hasDocs:
+ * charter 또는 기획 산출물) 되면 프로젝트로 본다(decision show-all: charter 유무 무관 +
+ * 활성 change가 전부 archive돼도 docs 프로젝트는 카드 유지 — 기획 뷰 도달성 보장).
  *   - hasCharter = <project>/docs/ 에 user-flow.md 또는 PRD.md 존재
  *   - changeCount = openspec/changes 하위 change 디렉토리 수(archive 제외)
  *   - auditStatus = <project>/docs/audit.json 의 finalJudgment 매핑(저장본 반영; 없으면 'unknown' 폴백)
  *   - displayName = 한글맵 폴백(없으면 영문 name) — 연결 키(name)는 영문 불변
  *
- * docs.ts(심링크 방어·정렬)와 changes.ts(specs 스캔)의 패턴을 차용하되 쓰지 않는다.
+ * docs.ts의 심링크 방어·정렬 패턴을 차용하고, docs 인식은 docs.ts hasDocs 단일 게이트를
+ * 재사용한다(planning-only-recognition: 인식 판정은 hasDocs 한 곳으로 수렴).
  */
 import { readdirSync, readFileSync, statSync, lstatSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import type { ProjectCard, AuditStatus } from "@flowforge/shared";
+import { hasDocs } from "./docs.js";
 
 /** 프로젝트 스캔 루트. 기본: cwd의 부모(홈서버 프로젝트들이 나란히 있는 디렉토리). */
 export function projectsRoot(): string {
@@ -112,7 +115,9 @@ export function listProjectCards(labelMap?: Map<string, string>): ProjectCard[] 
     if (!st.isDirectory()) continue;
 
     const changeCount = countChanges(projDir);
-    if (changeCount === 0) continue; // change 없으면 카드 아님(decision show-all 기준).
+    // change도 docs도 없으면 카드 아님. docs 인식 프로젝트는 활성 change가 전부
+    // archive돼도 카드 유지(기획 뷰 유일 진입로 — 도달성 회귀 방지, 2026-07-04).
+    if (changeCount === 0 && !hasDocs(join(projDir, "docs"))) continue;
 
     const auditStatus: AuditStatus = readAuditStatus(projDir); // 저장된 audit.json 반영(실시간 산출 아님).
     out.push({

@@ -33,7 +33,7 @@ export function docsRoot(): string {
  * 없이 기획 단계 산출물만 있는 경우)도 인식하기 위해 planning/prd.md·planning/features.md를 OR로
  * 포함한다 — 인식 경로는 planning-prd/planning-features 라우트·빌더가 읽는 경로와 동일하게 맞춘다.
  */
-function hasDocs(docsDir: string): boolean {
+export function hasDocs(docsDir: string): boolean {
   return (
     existsSync(join(docsDir, "user-flow.md")) ||
     existsSync(join(docsDir, "PRD.md")) ||

@@ -58,6 +58,23 @@ describe("listProjectCards — 홈서버 프로젝트 카드 스캔", () => {
     expect(cards.map((c) => c.name)).toEqual(["alpha", "beta"]);
   });
 
+  it("(a-2) 활성 change 0이어도 docs 인식 프로젝트는 카드로 포함한다(도달성)", () => {
+    // charter 문서만 있는 프로젝트 (change 전부 archive된 정상 상태)
+    makeCharter(root, "charter-only");
+    // 기획 산출물만 있는 planning-only 프로젝트
+    const pdir = join(root, "planning-only", "docs", "planning");
+    mkdirSync(pdir, { recursive: true });
+    writeFileSync(join(pdir, "features.md"), "# 기능명세\n");
+    // docs도 change도 없는 디렉토리는 여전히 제외
+    mkdirSync(join(root, "not-a-project"), { recursive: true });
+    const cards = listProjectCards();
+    const names = cards.map((c) => c.name);
+    expect(names).toContain("charter-only");
+    expect(names).toContain("planning-only");
+    expect(names).not.toContain("not-a-project");
+    expect(cards.find((c) => c.name === "charter-only")?.changeCount).toBe(0);
+  });
+
   it("(b) charter(docs/) 없는 프로젝트도 포함한다(hasCharter=false)", () => {
     makeChange(root, "nocharter", "ch1"); // docs/ 없음
     makeChange(root, "withcharter", "ch1");
@@ -123,11 +140,11 @@ describe("listProjectCards — 홈서버 프로젝트 카드 스캔", () => {
     });
   });
 
-  it("change 없는 디렉토리는 프로젝트로 보지 않는다", () => {
+  it("change도 docs도 없는 디렉토리는 프로젝트로 보지 않는다", () => {
     mkdirSync(join(root, "empty"), { recursive: true });
-    makeCharter(root, "onlydocs"); // docs만 있고 change 없음
+    makeCharter(root, "onlydocs"); // docs만 있고 change 없음 → 도달성 규칙으로 포함
     makeChange(root, "real", "ch1");
     const names = listProjectCards().map((c) => c.name);
-    expect(names).toEqual(["real"]);
+    expect(names).toEqual(["onlydocs", "real"]);
   });
 });
