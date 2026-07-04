@@ -2,8 +2,8 @@
 
 ### Sequential: 서버 집계 lib (RED → GREEN, 같은 파일 축)
 
-- [ ] 1.1 RED: `server/src/lib/__tests__/auditSummary.test.ts` 신설 — 임시 픽스처 `<root>/<project>/docs/audit.json`(items[] 포함)로: (a) FAIL≥1 capability→`fail`+fail 건수 (b) PASS+UNVERIFIABLE만→`clean`+unverifiable 건수 (c) 전부 UNVERIFIABLE→`unknown` (d) 파일없음·깨진 JSON·items 비배열→빈 맵(throw 없음) (e) capability·verdict 외 필드 없는 item도 안전. 픽스처 헬퍼는 projects.test의 makeAudit 패턴 차용(raw 본문 지원).
-- [ ] 1.2 GREEN: `shared/src/`에 `CapabilityAuditSummary` 타입(`{ status: 'clean'|'fail'|'unknown'; pass: number; fail: number; unverifiable: number; failClaims: { claim: string; reason: string }[] }`) 추가하고, `server/src/lib/auditSummary.ts` 신설 — `aggregateAuditItems(items: unknown): Record<string, CapabilityAuditSummary>`(순수 집계, D-1 규칙) + `readAuditCapabilities(projectDir: string)`(파일 리더, D-3 신뢰 경계·빈 맵 폴백). failClaims는 FAIL 항목의 claim·reason만 수집.
+- [x] 1.1 RED: `server/src/lib/__tests__/auditSummary.test.ts` 신설 — 임시 픽스처 `<root>/<project>/docs/audit.json`(items[] 포함)로: (a) FAIL≥1 capability→`fail`+fail 건수 (b) PASS+UNVERIFIABLE만→`clean`+unverifiable 건수 (c) 전부 UNVERIFIABLE→`unknown` (d) 파일없음·깨진 JSON·items 비배열→빈 맵(throw 없음) (e) capability·verdict 외 필드 없는 item도 안전. 픽스처 헬퍼는 projects.test의 makeAudit 패턴 차용(raw 본문 지원).
+- [x] 1.2 GREEN: `shared/src/`에 `CapabilityAuditSummary` 타입(`{ status: 'clean'|'fail'|'unknown'; pass: number; fail: number; unverifiable: number; failClaims: { claim: string; reason: string }[] }`) 추가하고, `server/src/lib/auditSummary.ts` 신설 — `aggregateAuditItems(items: unknown): Record<string, CapabilityAuditSummary>`(순수 집계, D-1 규칙) + `readAuditCapabilities(projectDir: string)`(파일 리더, D-3 신뢰 경계·빈 맵 폴백). failClaims는 FAIL 항목의 claim·reason만 수집.
 
 ### Sequential: 라우트 (lib GREEN 의존)
 

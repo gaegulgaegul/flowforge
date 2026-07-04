@@ -71,3 +71,9 @@ export type {
   ScreenLink,
   ScreenRegistry,
 } from './screen-types.js';
+
+export type {
+  CapabilityAuditStatus,
+  CapabilityAuditFailClaim,
+  CapabilityAuditSummary,
+} from './audit-capability-types.js';
