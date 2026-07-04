@@ -1,13 +1,13 @@
 {
-  "spec": "/home/gaegul/flowforge/docs/spec.md",
+  "spec": "docs/spec.md",
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
-    "PASS": 2,
+    "PASS": 63,
     "FAIL": 0,
-    "UNVERIFIABLE": 16
+    "UNVERIFIABLE": 76
   },
-  "reason": "미검증(UNVERIFIABLE) 16건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 76건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -18,7 +18,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:107"
+      "evidence": "server/src/routes/graph.ts:109"
     },
     {
       "capability": "spec-tree-view",
@@ -117,7 +117,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:94"
+      "evidence": "server/src/routes/graph.ts:96"
     },
     {
       "capability": "prd-view",
@@ -206,48 +206,1442 @@
       "reason": "검증수단없음 (자유서술 — 태그 없음)",
       "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
       "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability 목록 파생 (`GET /api/projects/:project/capabilities`)",
+      "line": 44,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/projects/:project/capabilities",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/projects.ts:107"
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability 목록 파생 (`GET /api/projects/:project/capabilities`)",
+      "line": 45,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol buildCapabilityIndex",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/capabilityIndex.ts:65"
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability 목록 파생 (`GET /api/projects/:project/capabilities`)",
+      "line": 46,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol parseCharterCapabilities",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/capabilityIndex.ts:23"
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability 목록 파생 (`GET /api/projects/:project/capabilities`)",
+      "line": 47,
+      "kind": "freetext",
+      "claim": "프로젝트의 `docs/spec.md` `## capability: <키>`를 capability 목록으로 파생하고, 각 capability에 연결된 change 키 목록을 함께 반환한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability 목록 파생 (`GET /api/projects/:project/capabilities`)",
+      "line": 48,
+      "kind": "freetext",
+      "claim": "invariant: capability↔change 연결은 change `specs/<dir>` 디렉토리명과 docs `## capability: <키>`의 글자단위 정확 비교(set 멤버십)만 사용한다. 유사도·부분일치 매칭을 쓰지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability 목록 파생 (`GET /api/projects/:project/capabilities`)",
+      "line": 49,
+      "kind": "freetext",
+      "claim": "invariant: 어떤 capability 키와도 일치하지 않는 change는 silent drop 없이 \"미연결(unlinked)\"로 명시 분류한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability 목록 파생 (`GET /api/projects/:project/capabilities`)",
+      "line": 50,
+      "kind": "freetext",
+      "claim": "invariant: 존재하지 않는 프로젝트는 404, 존재하나 연결 change 없는 capability는 빈 배열(에러 아님)로 응답한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability 목록 파생 (`GET /api/projects/:project/capabilities`)",
+      "line": 51,
+      "kind": "metric",
+      "claim": "metric: capabilityIndex.test.ts 글자단위 일치(a)·유사이름 비연결(b)·미연결 누락방지 케이스 PASS + projects.test.ts 라우트 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability별 change 목록 파생 (`GET /api/projects/:project/capabilities/:cap/changes`)",
+      "line": 54,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/projects/:project/capabilities/:cap/changes",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/projects.ts:126"
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability별 change 목록 파생 (`GET /api/projects/:project/capabilities/:cap/changes`)",
+      "line": 55,
+      "kind": "freetext",
+      "claim": "capability를 클릭하면 그 capability에 속한 change 목록을 반환한다. 연결 change가 0개면 빈 목록(빈 상태 표시용)을 반환한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "capability별 change 목록 파생 (`GET /api/projects/:project/capabilities/:cap/changes`)",
+      "line": 56,
+      "kind": "freetext",
+      "claim": "invariant: 읽기전용 — `/api/projects/:project/capabilities*`에 쓰기 메서드를 두지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "계층 드릴다운 + 브레드크럼 웹 렌더",
+      "line": 59,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol CapabilityChangeList",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/CapabilityChangeList.tsx:18"
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "계층 드릴다운 + 브레드크럼 웹 렌더",
+      "line": 60,
+      "kind": "freetext",
+      "claim": "프로젝트 카드 → 뼈대(capability) → change 목록 → 5종 뷰의 4단 드릴다운을 제공하고, 브레드크럼으로 상위 단계 복귀를 지원한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "계층 드릴다운 + 브레드크럼 웹 렌더",
+      "line": 61,
+      "kind": "freetext",
+      "claim": "change 클릭 시 기존 5종 뷰(prd|spec|flow|ia|wire) 경로(`/api/changes/:id/{graph,ia,wireframe,prd,spec-tree}`)를 재사용한다(신규 빌더를 호출하지 않는다).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "capability-change-navigation",
+      "feature": "계층 드릴다운 + 브레드크럼 웹 렌더",
+      "line": 62,
+      "kind": "metric",
+      "claim": "metric: web 실픽셀 드릴다운+브레드크럼 시나리오 PASS(카드→skeleton→capChanges→views, 콘솔에러 0).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "capability 한글 표시명 해석",
+      "line": 69,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol capabilityLabel",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/koreanLabels.ts:53"
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "capability 한글 표시명 해석",
+      "line": 70,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol parseCapabilityLabels",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/koreanLabels.ts:36"
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "capability 한글 표시명 해석",
+      "line": 71,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol splitCapabilityLabel",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/koreanLabels.ts:26"
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "capability 한글 표시명 해석",
+      "line": 72,
+      "kind": "freetext",
+      "claim": "capability 한글명을 출처 우선순위로 해석한다: 출처1 `docs/spec.md`의 `## capability: 키 — 한글` 병기 → 출처2 flowforge 키→한글 맵 폴백 → 출처3 영문 슬러그 그대로.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "capability 한글 표시명 해석",
+      "line": 73,
+      "kind": "freetext",
+      "claim": "invariant: 한글 해석의 어느 폴백 단계에서도 연결 키(영문)를 변형하지 않는다(key 불변). 표시명은 displayName/koreanLabel 필드, 키는 name/key 필드로 분리한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "capability 한글 표시명 해석",
+      "line": 74,
+      "kind": "freetext",
+      "claim": "invariant: 슬러그 내부 하이픈(`project-card-grid`)은 병기 구분자로 오분리되지 않는다 — 공백으로 둘러싼 ` — `/` - `만 키↔라벨 구분자로 인식한다(RE_CAP_LABEL).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "capability 한글 표시명 해석",
+      "line": 75,
+      "kind": "metric",
+      "claim": "metric: koreanLabels.test.ts 병기/하위호환/슬러그내하이픈 오분리방지/최종폴백(영문키 불변) 케이스 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "change 한글 표시명 해석",
+      "line": 78,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol changeLabel",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/koreanLabels.ts:66"
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "change 한글 표시명 해석",
+      "line": 79,
+      "kind": "freetext",
+      "claim": "change 한글명은 출처 우선순위로 해석한다: 출처1 `proposal.md`의 사람이 쓴 한글 H1 제목 → 폴백 영문 change 키 그대로(빈 표시 금지).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "korean-display-labels",
+      "feature": "change 한글 표시명 해석",
+      "line": 80,
+      "kind": "freetext",
+      "claim": "invariant: change 키(영문)는 표시명 해석과 무관하게 라우팅·연결의 불변 키로 유지한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 파생 (`GET /api/projects`)",
+      "line": 87,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/projects",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/projects.ts:100"
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 파생 (`GET /api/projects`)",
+      "line": 88,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol listProjectCards",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/projects.ts:90"
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 파생 (`GET /api/projects`)",
+      "line": 89,
+      "kind": "freetext",
+      "claim": "change를 가진 모든 프로젝트를 카드로 반환한다. charter `docs/` 유무와 무관하게 노출한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 파생 (`GET /api/projects`)",
+      "line": 90,
+      "kind": "freetext",
+      "claim": "각 카드는 한글 표시명·charter 유무·change 개수·audit 상태 배지를 담는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 파생 (`GET /api/projects`)",
+      "line": 91,
+      "kind": "freetext",
+      "claim": "invariant: 프로젝트명(name)은 라우팅·디렉토리 매칭에 쓰이는 영문 불변 키이며, 한글 표시명(displayName)과 분리 유지한다(표시명이 키를 바꾸지 않는다).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 파생 (`GET /api/projects`)",
+      "line": 92,
+      "kind": "freetext",
+      "claim": "invariant: 프로젝트명에 `..` 또는 영문·숫자·언더스코어·하이픈 외 문자가 있으면 거부한다(경로조작 차단, resolveProjectDir).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 파생 (`GET /api/projects`)",
+      "line": 93,
+      "kind": "freetext",
+      "claim": "invariant: 읽기전용 — `/api/projects`에 PUT/POST/DELETE 라우트를 두지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 파생 (`GET /api/projects`)",
+      "line": 94,
+      "kind": "metric",
+      "claim": "metric: server 통합/유닛 테스트 PASS(projects.test.ts 라우트 + lib/__tests__/projects.test.ts 유닛) + 실런타임 카드그리드 렌더(web 실픽셀 PASS).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "카드 audit 상태 = audit.json finalJudgment 매핑",
+      "line": 97,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol readAuditStatus",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/projects.ts:70"
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "카드 audit 상태 = audit.json finalJudgment 매핑",
+      "line": 98,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol mapFinalJudgment",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/projects.ts:58"
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "카드 audit 상태 = audit.json finalJudgment 매핑",
+      "line": 99,
+      "kind": "freetext",
+      "claim": "각 프로젝트의 `<projDir>/docs/audit.json`에서 `finalJudgment`를 읽어 카드 auditStatus로 매핑한다: PASS→clean, FAIL→fail, 조건부→warn, UNVERIFIABLE·미인식·없음→unknown.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "카드 audit 상태 = audit.json finalJudgment 매핑",
+      "line": 100,
+      "kind": "freetext",
+      "claim": "invariant: audit.json 없음·깨진 JSON·필드 없음은 전부 `unknown` 폴백이며 카드 스캔을 중단시키지 않는다(throw 금지).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "카드 audit 상태 = audit.json finalJudgment 매핑",
+      "line": 101,
+      "kind": "freetext",
+      "claim": "invariant: audit.json 내부의 호스트 절대경로(scanRoot 등)는 신뢰하지 않는다 — 읽기 경로는 이미 계산된 projDir로만 구성하고 finalJudgment 필드만 소비한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "카드 audit 상태 = audit.json finalJudgment 매핑",
+      "line": 102,
+      "kind": "freetext",
+      "claim": "invariant: audit.json 산출은 openspec-audit 소유 — flowforge는 읽기전용 소비만 한다(산출·스키마 변경 없음).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "카드 audit 상태 = audit.json finalJudgment 매핑",
+      "line": 103,
+      "kind": "metric",
+      "claim": "metric: 매핑·폴백 유닛 6케이스 + 라우트 통합 테스트 PASS(lib/__tests__/projects.test.ts, routes/__tests__/projects.test.ts) + 실데이터 grounding(flowforge→warn·wowa-app→fail·audit.json 없는 프로젝트→unknown).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 웹 렌더",
+      "line": 106,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol ProjectGrid",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/ProjectGrid.tsx:24"
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 웹 렌더",
+      "line": 107,
+      "kind": "freetext",
+      "claim": "홈 랜딩에서 프로젝트들을 카드 그리드로 읽기전용 렌더한다(카드 클릭으로 드릴다운 진입).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "project-card-grid",
+      "feature": "프로젝트 카드 그리드 웹 렌더",
+      "line": 108,
+      "kind": "freetext",
+      "claim": "카드 표면은 displayName(한글)을 쓰고, 카드 클릭은 charter 있으면 뼈대(capability)로·없으면 빈 안내로 분기한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "DOCS_ROOT 다중 docs 스캔 (`GET /api/docs/projects`)",
+      "line": 114,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/projects",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:45"
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "DOCS_ROOT 다중 docs 스캔 (`GET /api/docs/projects`)",
+      "line": 115,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol listDocsProjects",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/docs.ts:49"
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "DOCS_ROOT 다중 docs 스캔 (`GET /api/docs/projects`)",
+      "line": 116,
+      "kind": "freetext",
+      "claim": "`DOCS_ROOT`(기본 cwd) 아래 1단계에서 `docs/user-flow.md` 또는 `docs/PRD.md`를 가진 프로젝트만 `{projects:string[]}`로 반환한다. docs 없으면 빈 배열 200(에러 아님).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "DOCS_ROOT 다중 docs 스캔 (`GET /api/docs/projects`)",
+      "line": 117,
+      "kind": "freetext",
+      "claim": "invariant: 스캔 깊이는 `<DOCS_ROOT>/<project>/docs/` 1단계로 한정하고 심링크는 추적하지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "DOCS_ROOT 다중 docs 스캔 (`GET /api/docs/projects`)",
+      "line": 118,
+      "kind": "metric",
+      "claim": "metric: docs.test.ts 스캔(픽스처 2프로젝트+docs없는 1개) PASS + 라이브 `GET /api/docs/projects` 200 실증(projects: flowforge/ssoksok/wowa-app).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 그래프 직역 (`GET /api/docs/:project/graph`)",
+      "line": 121,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/graph",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:52"
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 그래프 직역 (`GET /api/docs/:project/graph`)",
+      "line": 122,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol parseCharterUserFlow",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/parser/charterUserFlowParser.ts:100"
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 그래프 직역 (`GET /api/docs/:project/graph`)",
+      "line": 123,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol buildDocsGraph",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/parser/docsAdapter.ts:84"
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 그래프 직역 (`GET /api/docs/:project/graph`)",
+      "line": 124,
+      "kind": "freetext",
+      "claim": "charter `user-flow.md` 라인문법(`## flow:`/`### 화면:`/`- step:`/`- goto:`)을 읽기전용 파서로 해석해 `@flowforge/shared` SpecGraph로 직역한다. 화면→`GraphNode{kind:\"screen\"}`, 명시 goto→`GraphEdge`, 미정의 대상 화면→`dangling:true`, `- goto:(METHOD /path)`→API 호출 엣지.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 그래프 직역 (`GET /api/docs/:project/graph`)",
+      "line": 125,
+      "kind": "freetext",
+      "claim": "invariant: 휴리스틱 `isScreenSpec`/`flowTarget`을 쓰지 않는다(명시 데이터만). 기존 `specParser.ts`(OpenSpec WHEN/THEN)를 개조하지 않고 charter 산출물 파일을 쓰지 않는다(읽기전용).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 그래프 직역 (`GET /api/docs/:project/graph`)",
+      "line": 126,
+      "kind": "freetext",
+      "claim": "invariant: docs project 식별자에 `..` 포함 또는 화이트리스트(`^[A-Za-z0-9_\\-/]+$`) 위반 입력은 404로 거부해 DOCS_ROOT 밖 파일 접근을 차단한다(no-traversal).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 그래프 직역 (`GET /api/docs/:project/graph`)",
+      "line": 127,
+      "kind": "metric",
+      "claim": "metric: docsAdapter/charterUserFlowParser 단위 테스트(화면→노드·goto→엣지·미정의→dangling·엔드포인트 goto 분류) + traversal 거부 테스트 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 와이어프레임 재렌더 (`GET /api/docs/:project/wireframe`)",
+      "line": 130,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/wireframe",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:65"
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 와이어프레임 재렌더 (`GET /api/docs/:project/wireframe`)",
+      "line": 131,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol buildDocsWireframe",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/parser/docsAdapter.ts:151"
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 와이어프레임 재렌더 (`GET /api/docs/:project/wireframe`)",
+      "line": 132,
+      "kind": "freetext",
+      "claim": "user-flow.md를 `@flowforge/shared` Wireframe로 변환한다(화면→WireScreen, step→WireBox). boxKind는 charter `charter_wireframe.py`와 동일 키워드 규칙. `docs/wireframe.html` 존재 시 \"원본 보기\" 링크용 메타(originalHtml)를 포함한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter user-flow.md → 와이어프레임 재렌더 (`GET /api/docs/:project/wireframe`)",
+      "line": 133,
+      "kind": "metric",
+      "claim": "metric: wireframe boxKind 키워드 매핑 + 원본 HTML 메타 테스트 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter PRD.md → decision 타임라인 (`GET /api/docs/:project/prd`)",
+      "line": 136,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/prd",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:78"
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter PRD.md → decision 타임라인 (`GET /api/docs/:project/prd`)",
+      "line": 137,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol buildDocsDecisionTimeline",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/parser/docsAdapter.ts:169"
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter PRD.md → decision 타임라인 (`GET /api/docs/:project/prd`)",
+      "line": 138,
+      "kind": "freetext",
+      "claim": "`docs/PRD.md`의 `## decision:` 이력을 시간순 타임라인으로 파싱한다(date/capability/why/what/success/status 보존). superseded 상태는 표시용으로 보존한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter PRD.md → decision 타임라인 (`GET /api/docs/:project/prd`)",
+      "line": 139,
+      "kind": "freetext",
+      "claim": "invariant: change 모드의 5섹션 매핑(buildPrd)을 docs 모드에 적용하지 않는다(별도 decision 타임라인).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "charter PRD.md → decision 타임라인 (`GET /api/docs/:project/prd`)",
+      "line": 140,
+      "kind": "metric",
+      "claim": "metric: decision 배열 파싱 + superseded 상태 테스트 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "SEED 마킹 보존 + change 경로 하위호환",
+      "line": 143,
+      "kind": "freetext",
+      "claim": "charter docs의 SEED(사람검토 전=미검증) 마킹을 어댑터 출력에 `seed:true`로 보존하고, SEED 없는 데이터는 seed를 세팅하지 않는다(미검증 오표시 방지).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "SEED 마킹 보존 + change 경로 하위호환",
+      "line": 144,
+      "kind": "freetext",
+      "claim": "invariant: docs 기능 추가는 additive — 기존 change 경로(`/api/projects`·`/api/changes/:id/*`)·빌더·specParser·golden test의 응답을 변경하지 않는다(SHALL NOT change). golden test 전부 통과로 보증.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "docs-ingest",
+      "feature": "SEED 마킹 보존 + change 경로 하위호환",
+      "line": 145,
+      "kind": "metric",
+      "claim": "metric: SEED 플래그 세팅/미세팅 테스트 + golden test PASS(기존 change 라우트 불변), server 전체 81/81 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-prd-view",
+      "feature": "planning PRD 조회 (GET /api/docs/:project/planning-prd)",
+      "line": 152,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/planning-prd",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:91"
+    },
+    {
+      "capability": "planning-prd-view",
+      "feature": "planning PRD 조회 (GET /api/docs/:project/planning-prd)",
+      "line": 153,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol buildDocsPlanningPrd",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/parser/prdBuilder.ts:30"
+    },
+    {
+      "capability": "planning-prd-view",
+      "feature": "planning PRD 조회 (GET /api/docs/:project/planning-prd)",
+      "line": 154,
+      "kind": "invariant",
+      "claim": "invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 디렉토리 밖 파일 미접근",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+    },
+    {
+      "capability": "planning-prd-view",
+      "feature": "planning PRD 조회 (GET /api/docs/:project/planning-prd)",
+      "line": 155,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx planning/prd.md 없거나 없는 project면 500 아닌 404 반환",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-prd-view",
+      "feature": "planning PRD 조회 (GET /api/docs/:project/planning-prd)",
+      "line": 156,
+      "kind": "invariant",
+      "claim": "invariant:readonly 읽기전용 조회 — planning PRD를 쓰거나 수정하는 라우트 없음",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=readonly)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:173"
+    },
+    {
+      "capability": "planning-prd-view",
+      "feature": "planning PRD 조회 (GET /api/docs/:project/planning-prd)",
+      "line": 157,
+      "kind": "behavior",
+      "claim": "behavior: planning/prd.md를 manyfast 5섹션(개요·핵심가치·타겟·시나리오·성공지표·속성설정) Prd로 파싱해 반환",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (4토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/routes/__tests__/planningPrd.test.ts:61",
+      "llmHint": "planning/prd.md를 manyfast 5섹션(개요·핵심가치·타겟·시나리오·성공지표·속성설정) Prd로 파싱해 반환"
+    },
+    {
+      "capability": "planning-prd-view",
+      "feature": "planning PRD 조회 (GET /api/docs/:project/planning-prd)",
+      "line": 158,
+      "kind": "metric",
+      "claim": "metric: planning PRD 조회 응답 시간 목표 200ms",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-only-recognition",
+      "feature": "planning-only 프로젝트 인식",
+      "line": 165,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol resolveDocsDir",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/docs.ts:80"
+    },
+    {
+      "capability": "planning-only-recognition",
+      "feature": "planning-only 프로젝트 인식",
+      "line": 166,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol listDocsProjects",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/docs.ts:49"
+    },
+    {
+      "capability": "planning-only-recognition",
+      "feature": "planning-only 프로젝트 인식",
+      "line": 167,
+      "kind": "invariant",
+      "claim": "invariant:readonly 인식은 파일 존재 확인(existsSync)뿐 — docs 모듈은 어떤 파일도 쓰거나 수정하지 않음(쓰기 라우트/함수 부재)",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=readonly)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:173"
+    },
+    {
+      "capability": "planning-only-recognition",
+      "feature": "planning-only 프로젝트 인식",
+      "line": 168,
+      "kind": "invariant",
+      "claim": "invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 디렉토리 밖 파일 미접근(인식 범위 확장과 무관하게 불변)",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+    },
+    {
+      "capability": "planning-only-recognition",
+      "feature": "planning-only 프로젝트 인식",
+      "line": 169,
+      "kind": "behavior",
+      "claim": "behavior: hasDocs가 user-flow.md / PRD.md(charter) 또는 planning/prd.md(기획) 중 하나라도 있으면 docs 프로젝트로 인정한다. planning/prd.md OR 추가는 인식 범위를 넓힐 뿐 charter 프로젝트 인식을 보존한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (4토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:112",
+      "llmHint": "hasDocs가 user-flow.md / PRD.md(charter) 또는 planning/prd.md(기획) 중 하나라도 있으면 docs 프로젝트로 인정한다. planning/prd.md OR 추가는 인식 범위를 넓힐 뿐 charter 프로젝트 인식을 보존한다."
+    },
+    {
+      "capability": "planning-only-recognition",
+      "feature": "planning-only 프로젝트 인식",
+      "line": 170,
+      "kind": "metric",
+      "claim": "metric: planning-only 프로젝트 인식 후 planning PRD 조회까지 추가 지연 0(인식 게이트는 existsSync 1회)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-view",
+      "feature": "planning features 조회 (GET /api/docs/:project/planning-features)",
+      "line": 177,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/planning-features",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:109"
+    },
+    {
+      "capability": "planning-features-view",
+      "feature": "planning features 조회 (GET /api/docs/:project/planning-features)",
+      "line": 178,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol buildDocsPlanningFeatures",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/parser/featureTreeBuilder.ts:52"
+    },
+    {
+      "capability": "planning-features-view",
+      "feature": "planning features 조회 (GET /api/docs/:project/planning-features)",
+      "line": 179,
+      "kind": "invariant",
+      "claim": "invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 디렉토리 밖 파일 미접근",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+    },
+    {
+      "capability": "planning-features-view",
+      "feature": "planning features 조회 (GET /api/docs/:project/planning-features)",
+      "line": 180,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx features.md 없거나 없는 project면 500 아닌 404 반환",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-features-view",
+      "feature": "planning features 조회 (GET /api/docs/:project/planning-features)",
+      "line": 181,
+      "kind": "invariant",
+      "claim": "invariant:readonly 읽기전용 조회 — features.md를 쓰거나 수정하는 라우트 없음(readFileSync만)",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=readonly)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:173"
+    },
+    {
+      "capability": "planning-features-view",
+      "feature": "planning features 조회 (GET /api/docs/:project/planning-features)",
+      "line": 182,
+      "kind": "behavior",
+      "claim": "behavior: features.md를 헤더 레벨(##/###/####)로 3단 위계 파싱, 요구사항에 capability 키(`<!-- capability: -->`)·노드에 중요도/상태 속성을 채운 FeatureTree로 반환",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (2토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:131",
+      "llmHint": "features.md를 헤더 레벨(##/###/####)로 3단 위계 파싱, 요구사항에 capability 키(`<!-- capability: -->`)·노드에 중요도/상태 속성을 채운 FeatureTree로 반환"
+    },
+    {
+      "capability": "planning-features-view",
+      "feature": "planning features 조회 (GET /api/docs/:project/planning-features)",
+      "line": 183,
+      "kind": "metric",
+      "claim": "metric: planning features 조회 응답 시간 목표 200ms",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "유저플로우 그래프 조회 (GET /api/docs/:project/planning-user-flow)",
+      "line": 190,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/planning-user-flow",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:161"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "유저플로우 그래프 조회 (GET /api/docs/:project/planning-user-flow)",
+      "line": 191,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol buildDocsPlanningUserFlow",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/parser/planningUserFlowBuilder.ts:64"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "유저플로우 그래프 조회 (GET /api/docs/:project/planning-user-flow)",
+      "line": 192,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol listDocsUserFlows",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/docs.ts:115"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "유저플로우 그래프 조회 (GET /api/docs/:project/planning-user-flow)",
+      "line": 193,
+      "kind": "invariant",
+      "claim": "invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를, group/version은 파일명 화이트리스트가 차단해 디렉토리 밖 파일 미접근",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "유저플로우 그래프 조회 (GET /api/docs/:project/planning-user-flow)",
+      "line": 194,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx user-flow 파일/버전이 없으면 500 아닌 404 반환",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "유저플로우 그래프 조회 (GET /api/docs/:project/planning-user-flow)",
+      "line": 195,
+      "kind": "behavior",
+      "claim": "behavior: Mermaid flowchart 노드 모양(([..]) stadium→start, [\"...\"] box→screen, {\"...\"} diamond→action 등)·엣지(`-->`, `-->|라벨|`)를 정규식으로 파싱해 SpecGraph로 변환, 저장된 layout과 버전 목록을 함께 반환",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (7토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/parser/__tests__/planningUserFlowBuilder.test.ts:46",
+      "llmHint": "Mermaid flowchart 노드 모양(([..]) stadium→start, [\"...\"] box→screen, {\"...\"} diamond→action 등)·엣지(`-->`, `-->|라벨|`)를 정규식으로 파싱해 SpecGraph로 변환, 저장된 layout과 버전 목록을 함께 반환"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "유저플로우 그래프 조회 (GET /api/docs/:project/planning-user-flow)",
+      "line": 196,
+      "kind": "metric",
+      "claim": "metric: planning user-flow 그래프 조회 응답 시간 목표 200ms",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "드래그 좌표 저장 (PUT /api/docs/:project/planning-user-flow/layout)",
+      "line": 199,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint PUT /api/docs/:project/planning-user-flow/layout",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:183"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "드래그 좌표 저장 (PUT /api/docs/:project/planning-user-flow/layout)",
+      "line": 200,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol writeDocsUserFlowOverlay",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/docs.ts:150"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "드래그 좌표 저장 (PUT /api/docs/:project/planning-user-flow/layout)",
+      "line": 201,
+      "kind": "invariant",
+      "claim": "invariant:no-traversal project=resolveDocsDir, group/version=파일명 화이트리스트로 디렉토리 밖 쓰기 차단",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "드래그 좌표 저장 (PUT /api/docs/:project/planning-user-flow/layout)",
+      "line": 202,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx isLayoutOverlay 검증 실패(좌표 아닌 body)·토큰 부정이면 4xx 반환하고 파일 미작성",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "드래그 좌표 저장 (PUT /api/docs/:project/planning-user-flow/layout)",
+      "line": 203,
+      "kind": "behavior",
+      "claim": "behavior: 드래그 좌표(LayoutOverlay)를 `<group>-vN.overlay.json`에만 기록하고 명세 .md는 변경하지 않음, 재조회 시 저장 좌표가 dagre 자동배치보다 우선 적용",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:173",
+      "llmHint": "드래그 좌표(LayoutOverlay)를 `<group>-vN.overlay.json`에만 기록하고 명세 .md는 변경하지 않음, 재조회 시 저장 좌표가 dagre 자동배치보다 우선 적용"
+    },
+    {
+      "capability": "planning-userflow-view",
+      "feature": "드래그 좌표 저장 (PUT /api/docs/:project/planning-user-flow/layout)",
+      "line": 204,
+      "kind": "metric",
+      "claim": "metric: 좌표 저장 PUT 성공률 목표 100%(유효 body 기준)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-capability-detail",
+      "feature": "capability 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)",
+      "line": 211,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/projects/:project/capabilities/:cap",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/projects.ts:150"
+    },
+    {
+      "capability": "planning-capability-detail",
+      "feature": "capability 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)",
+      "line": 212,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol buildCapabilityDetail",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/capabilityIndex.ts:135"
+    },
+    {
+      "capability": "planning-capability-detail",
+      "feature": "capability 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)",
+      "line": 213,
+      "kind": "invariant",
+      "claim": "invariant:no-traversal resolveProjectDir이 `..` 및 비화이트리스트 project를, isValidCapKey가 비화이트리스트 capability 키를 차단해 디렉토리 밖 미접근",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+    },
+    {
+      "capability": "planning-capability-detail",
+      "feature": "capability 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)",
+      "line": 214,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx 없는 project는 404, 잘못된 capability 키는 400 — 500 아닌 4xx로 거부하고 내부 에러 미노출",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-capability-detail",
+      "feature": "capability 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)",
+      "line": 215,
+      "kind": "invariant",
+      "claim": "invariant:readonly 읽기전용 종합 조회 — features.md·유저플로우·change를 읽기만 함(쓰기 라우트 없음)",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=readonly)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:173"
+    },
+    {
+      "capability": "planning-capability-detail",
+      "feature": "capability 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)",
+      "line": 216,
+      "kind": "behavior",
+      "claim": "behavior: features는 일치 capability 요구사항 가지만 필터, 유저플로우는 `> capability:` 마커 선언 stem만, changes는 byCapability 재사용 — 연결 0개여도 빈 구조로 200",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (5토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/lib/__tests__/capabilityIndex.test.ts:126",
+      "llmHint": "features는 일치 capability 요구사항 가지만 필터, 유저플로우는 `> capability:` 마커 선언 stem만, changes는 byCapability 재사용 — 연결 0개여도 빈 구조로 200"
+    },
+    {
+      "capability": "planning-capability-detail",
+      "feature": "capability 종합 상세 조회 (GET /api/projects/:project/capabilities/:cap)",
+      "line": 217,
+      "kind": "metric",
+      "claim": "metric: capability 종합 상세 조회 응답 시간 목표 200ms",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-prd-suggestions/apply)",
+      "line": 224,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint POST /api/docs/:project/planning-prd-suggestions/apply",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:221"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-prd-suggestions/apply)",
+      "line": 225,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol applyPrdSuggestions",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/docs.ts:273"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-prd-suggestions/apply)",
+      "line": 226,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol writeDocsPlanningPrd",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/docs.ts:228"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-prd-suggestions/apply)",
+      "line": 227,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol isPrdApplyRequest",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/docs.ts:329"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-prd-suggestions/apply)",
+      "line": 228,
+      "kind": "invariant",
+      "claim": "invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 docs 루트 밖 쓰기 미발생",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-prd-suggestions/apply)",
+      "line": 229,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx 잘못된 body는 400, 경로 조작은 404, prd.md 파싱실패·오분리 감지는 422로 막고 파일 미작성(원본 보호)",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-prd-suggestions/apply)",
+      "line": 230,
+      "kind": "behavior",
+      "claim": "behavior: approve id의 section을 proposedBody로 교체해 prd.md 원자적 재작성(H1 서문·미승인 섹션 보존) 후 큐에서 제거, reject는 반영 없이 큐에서 제거, 미실재 id는 skipped로 표면화, write 전 self-roundtrip으로 5섹션 정합 검증",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (4토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/routes/__tests__/docsPrdApproval.test.ts:114",
+      "llmHint": "approve id의 section을 proposedBody로 교체해 prd.md 원자적 재작성(H1 서문·미승인 섹션 보존) 후 큐에서 제거, reject는 반영 없이 큐에서 제거, 미실재 id는 skipped로 표면화, write 전 self-roundtrip으로 5섹션 정합 검증"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-prd-suggestions/apply)",
+      "line": 231,
+      "kind": "metric",
+      "claim": "metric: 승인 반영 후 prd.md 5섹션 무결성 유지율 목표 100%",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-prd-approval-queue",
+      "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
+      "line": 238,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/planning-prd-suggestions",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:207"
+    },
+    {
+      "capability": "planning-prd-approval-queue",
+      "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
+      "line": 239,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol readDocsPrdSuggestions",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/docs.ts:195"
+    },
+    {
+      "capability": "planning-prd-approval-queue",
+      "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
+      "line": 240,
+      "kind": "invariant",
+      "claim": "invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 docs 루트 밖 파일 미접근",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+    },
+    {
+      "capability": "planning-prd-approval-queue",
+      "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
+      "line": 241,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx 경로 조작 project는 404, 큐 파일 부재는 빈 큐 200(읽기는 절대 500으로 죽지 않음)",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-prd-approval-queue",
+      "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
+      "line": 242,
+      "kind": "behavior",
+      "claim": "behavior: prd.suggestions.json을 JSON.parse 후 isValidPrdSuggestion(section 5키·op=replace만)으로 필터해 유효 제안만 반환, 파일 없음·깨진 JSON은 빈 큐로 폴백",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/lib/__tests__/projects.test.ts:122",
+      "llmHint": "prd.suggestions.json을 JSON.parse 후 isValidPrdSuggestion(section 5키·op=replace만)으로 필터해 유효 제안만 반환, 파일 없음·깨진 JSON은 빈 큐로 폴백"
+    },
+    {
+      "capability": "planning-prd-approval-queue",
+      "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
+      "line": 243,
+      "kind": "metric",
+      "claim": "metric: 제안 큐 조회 응답 시간 목표 200ms",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
     }
   ],
   "ghosts": [
     {
       "type": "endpoint",
+      "what": "GET /api/changes",
+      "source": "server/src/routes/graph.ts:48"
+    },
+    {
+      "type": "endpoint",
       "what": "GET /api/changes/:id(*)/graph",
-      "source": "server/src/routes/graph.ts:53"
+      "source": "server/src/routes/graph.ts:55"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/ia",
-      "source": "server/src/routes/graph.ts:68"
+      "source": "server/src/routes/graph.ts:70"
     },
     {
       "type": "endpoint",
       "what": "PUT /api/changes/:id(*)/layout",
-      "source": "server/src/routes/graph.ts:120"
+      "source": "server/src/routes/graph.ts:122"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/wireframe",
-      "source": "server/src/routes/graph.ts:81"
+      "source": "server/src/routes/graph.ts:83"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/docs/:project(*)/audit-capabilities",
+      "source": "server/src/routes/docs.ts:127"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/docs/:project(*)/planning-features-suggestions",
+      "source": "server/src/routes/docs.ts:245"
+    },
+    {
+      "type": "endpoint",
+      "what": "POST /api/docs/:project(*)/planning-features-suggestions/apply",
+      "source": "server/src/routes/docs.ts:259"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/docs/:project(*)/planning-ia",
+      "source": "server/src/routes/docs.ts:141"
     },
     {
       "type": "endpoint",
       "what": "GET /api/health",
-      "source": "server/src/index.ts:13"
-    },
-    {
-      "type": "endpoint",
-      "what": "GET /api/projects",
-      "source": "server/src/routes/graph.ts:46"
+      "source": "server/src/index.ts:15"
     },
     {
       "type": "symbol",
       "what": "App",
-      "source": "web/src/App.tsx:36"
+      "source": "web/src/App.tsx:78"
+    },
+    {
+      "type": "symbol",
+      "what": "DecisionTimeline",
+      "source": "web/src/DecisionTimeline.tsx:47"
+    },
+    {
+      "type": "symbol",
+      "what": "FeatureApprovalPanel",
+      "source": "web/src/FeatureApprovalPanel.tsx:81"
+    },
+    {
+      "type": "symbol",
+      "what": "FeatureDetailPanel",
+      "source": "web/src/FeatureDetailPanel.tsx:55"
+    },
+    {
+      "type": "symbol",
+      "what": "FeatureNode",
+      "source": "web/src/FeatureNode.tsx:44"
+    },
+    {
+      "type": "symbol",
+      "what": "FlowDetailPanel",
+      "source": "web/src/FlowDetailPanel.tsx:67"
+    },
+    {
+      "type": "symbol",
+      "what": "IADetailPanel",
+      "source": "web/src/IADetailPanel.tsx:36"
     },
     {
       "type": "symbol",
       "what": "IANode",
       "source": "web/src/IANode.tsx:13"
+    },
+    {
+      "type": "symbol",
+      "what": "PrdApprovalPanel",
+      "source": "web/src/PrdApprovalPanel.tsx:23"
     },
     {
       "type": "symbol",
@@ -267,12 +1661,37 @@
     {
       "type": "symbol",
       "what": "WireframePanel",
-      "source": "web/src/WireframePanel.tsx:12"
+      "source": "web/src/WireframePanel.tsx:21"
+    },
+    {
+      "type": "symbol",
+      "what": "aggregateAuditItems",
+      "source": "server/src/lib/auditSummary.ts:16"
+    },
+    {
+      "type": "symbol",
+      "what": "applyDocsFeatureSuggestions",
+      "source": "web/src/api.ts:250"
+    },
+    {
+      "type": "symbol",
+      "what": "applyDocsPrdSuggestions",
+      "source": "web/src/api.ts:184"
+    },
+    {
+      "type": "symbol",
+      "what": "applyFeatureSuggestions",
+      "source": "server/src/lib/featureDocs.ts:198"
     },
     {
       "type": "symbol",
       "what": "autoLayout",
-      "source": "web/src/graphAdapter.ts:25"
+      "source": "web/src/graphAdapter.ts:46"
+    },
+    {
+      "type": "symbol",
+      "what": "buildFeatureTreeFromLines",
+      "source": "server/src/parser/featureTreeBuilder.ts:65"
     },
     {
       "type": "symbol",
@@ -286,8 +1705,28 @@
     },
     {
       "type": "symbol",
+      "what": "buildPlanningIaTree",
+      "source": "server/src/parser/planningIaBuilder.ts:25"
+    },
+    {
+      "type": "symbol",
+      "what": "buildPlanningIaTreeFromRegistry",
+      "source": "server/src/parser/planningIaBuilder.ts:32"
+    },
+    {
+      "type": "symbol",
       "what": "buildPrd",
-      "source": "server/src/parser/prdBuilder.ts:24"
+      "source": "server/src/parser/prdBuilder.ts:51"
+    },
+    {
+      "type": "symbol",
+      "what": "buildScreenRegistry",
+      "source": "server/src/parser/screenRegistry.ts:29"
+    },
+    {
+      "type": "symbol",
+      "what": "buildScreenRegistryFromLines",
+      "source": "server/src/parser/screenRegistry.ts:39"
     },
     {
       "type": "symbol",
@@ -307,42 +1746,127 @@
     {
       "type": "symbol",
       "what": "danglingCount",
-      "source": "web/src/graphAdapter.ts:80"
+      "source": "web/src/graphAdapter.ts:154"
+    },
+    {
+      "type": "symbol",
+      "what": "docsRoot",
+      "source": "server/src/lib/docs.ts:26"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchAuditCapabilities",
+      "source": "web/src/api.ts:213"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchCapabilities",
+      "source": "web/src/api.ts:77"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchCapabilityDetail",
+      "source": "web/src/api.ts:97"
     },
     {
       "type": "symbol",
       "what": "fetchChanges",
-      "source": "web/src/api.ts:30"
+      "source": "web/src/api.ts:45"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsFeatureSuggestions",
+      "source": "web/src/api.ts:238"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsGraph",
+      "source": "web/src/api.ts:149"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsPlanningFeatures",
+      "source": "web/src/api.ts:204"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsPlanningIa",
+      "source": "web/src/api.ts:225"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsPlanningPrd",
+      "source": "web/src/api.ts:168"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsPlanningUserFlow",
+      "source": "web/src/api.ts:287"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsPrd",
+      "source": "web/src/api.ts:161"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsPrdSuggestions",
+      "source": "web/src/api.ts:175"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsProjects",
+      "source": "web/src/api.ts:142"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsWireframe",
+      "source": "web/src/api.ts:155"
     },
     {
       "type": "symbol",
       "what": "fetchGraph",
-      "source": "web/src/api.ts:37"
+      "source": "web/src/api.ts:108"
     },
     {
       "type": "symbol",
       "what": "fetchIA",
-      "source": "web/src/api.ts:43"
+      "source": "web/src/api.ts:114"
     },
     {
       "type": "symbol",
       "what": "fetchPrd",
-      "source": "web/src/api.ts:55"
+      "source": "web/src/api.ts:126"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchProjects",
+      "source": "web/src/api.ts:69"
     },
     {
       "type": "symbol",
       "what": "fetchSpecTree",
-      "source": "web/src/api.ts:61"
+      "source": "web/src/api.ts:132"
     },
     {
       "type": "symbol",
       "what": "fetchWireframe",
-      "source": "web/src/api.ts:49"
+      "source": "web/src/api.ts:120"
     },
     {
       "type": "symbol",
       "what": "flowTarget",
       "source": "server/src/parser/flowBinder.ts:120"
+    },
+    {
+      "type": "symbol",
+      "what": "hasDocs",
+      "source": "server/src/lib/docs.ts:36"
+    },
+    {
+      "type": "symbol",
+      "what": "isLayoutOverlay",
+      "source": "server/src/lib/changes.ts:94"
     },
     {
       "type": "symbol",
@@ -356,8 +1880,43 @@
     },
     {
       "type": "symbol",
+      "what": "parseCharterPrd",
+      "source": "server/src/parser/charterPrdParser.ts:47"
+    },
+    {
+      "type": "symbol",
       "what": "parseSpecText",
       "source": "server/src/parser/specParser.ts:37"
+    },
+    {
+      "type": "symbol",
+      "what": "projectsRoot",
+      "source": "server/src/lib/projects.ts:22"
+    },
+    {
+      "type": "symbol",
+      "what": "readAuditCapabilities",
+      "source": "server/src/lib/auditSummary.ts:49"
+    },
+    {
+      "type": "symbol",
+      "what": "readDocsFeatureSuggestions",
+      "source": "server/src/lib/featureDocs.ts:57"
+    },
+    {
+      "type": "symbol",
+      "what": "readDocsFile",
+      "source": "server/src/lib/docs.ts:91"
+    },
+    {
+      "type": "symbol",
+      "what": "readDocsUserFlowOverlay",
+      "source": "server/src/lib/docs.ts:135"
+    },
+    {
+      "type": "symbol",
+      "what": "readDocsUserFlowSpec",
+      "source": "server/src/lib/docs.ts:129"
     },
     {
       "type": "symbol",
@@ -376,8 +1935,13 @@
     },
     {
       "type": "symbol",
+      "what": "saveDocsPlanningUserFlowLayout",
+      "source": "web/src/api.ts:298"
+    },
+    {
+      "type": "symbol",
       "what": "saveLayout",
-      "source": "web/src/api.ts:67"
+      "source": "web/src/api.ts:269"
     },
     {
       "type": "symbol",
@@ -401,23 +1965,38 @@
     },
     {
       "type": "symbol",
+      "what": "structureInvariantHolds",
+      "source": "server/src/lib/featureDocs.ts:174"
+    },
+    {
+      "type": "symbol",
+      "what": "toFeatureTreeFlow",
+      "source": "web/src/featureTreeAdapter.ts:89"
+    },
+    {
+      "type": "symbol",
       "what": "toFlowEdges",
-      "source": "web/src/graphAdapter.ts:67"
+      "source": "web/src/graphAdapter.ts:136"
     },
     {
       "type": "symbol",
       "what": "toFlowNodes",
-      "source": "web/src/graphAdapter.ts:54"
+      "source": "web/src/graphAdapter.ts:75"
     },
     {
       "type": "symbol",
       "what": "toIAFlow",
-      "source": "web/src/iaAdapter.ts:35"
+      "source": "web/src/iaAdapter.ts:55"
     },
     {
       "type": "symbol",
       "what": "toSpecTreeFlow",
       "source": "web/src/specTreeAdapter.ts:42"
+    },
+    {
+      "type": "symbol",
+      "what": "treeFingerprint",
+      "source": "server/src/lib/featureDocs.ts:140"
     },
     {
       "type": "symbol",
@@ -429,15 +2008,10 @@
     {
       "what": "GET (regex route)",
       "reason": "정규식 라우트 — 정적 path 대조 불가",
-      "source": "server/src/index.ts:24"
-    },
-    {
-      "what": "GET (no static path)",
-      "reason": "첫 인자가 문자열 리터럴이 아님 — path 추출 불가",
-      "source": "server/src/parser/markdown.ts:53"
+      "source": "server/src/index.ts:28"
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-20260623-1435.html",
-  "runId": "run-20260623-1435"
+  "historyHtml": "audit-audit-badge-refresh-20260704.html",
+  "runId": "audit-badge-refresh-20260704"
 }
