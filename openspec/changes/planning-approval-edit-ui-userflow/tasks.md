@@ -8,8 +8,8 @@
 
 ### Sequential: 라우트 (lib GREEN 의존)
 
-- [ ] 2.1 RED: 라우트 통합 테스트 — `GET .../planning-user-flow-suggestions?flow=<stem>` 목록·부재 빈 큐 200, `POST .../apply?flow=<stem>` 승인 반영(재조회 그래프에 에지)·반려 문서 불변·skipped 표면화·방어 위반 422·존재하지 않는 프로젝트/경로조작/무효 stem 404.
-- [ ] 2.2 GREEN: `server/src/routes/docs.ts`에 라우트 2개 — 기존 planning-* 프로젝트 해석·404 패턴과 6b-features apply 라우트(422) 패턴 재사용. 계약 = `PrdApplyRequest`/`PrdApplyResult` 재사용(신규 타입 금지).
+- [x] 2.1 RED: 라우트 통합 테스트 — `GET .../planning-user-flow-suggestions?flow=<stem>` 목록·부재 빈 큐 200, `POST .../apply?flow=<stem>` 승인 반영(재조회 그래프에 에지)·반려 문서 불변·skipped 표면화·방어 위반 422·존재하지 않는 프로젝트/경로조작/무효 stem 404.
+- [x] 2.2 GREEN: `server/src/routes/docs.ts`에 라우트 2개 — 기존 planning-* 프로젝트 해석·404 패턴과 6b-features apply 라우트(422) 패턴 재사용. 계약 = `PrdApplyRequest`/`PrdApplyResult` 재사용(신규 타입 금지).
 
 ### Parallel Group 1 (서버 완료 후 — 서로 다른 파일, 동시 실행 가능)
 
