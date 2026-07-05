@@ -3,8 +3,8 @@
 ### Sequential: shared 타입 + 큐 lib (RED → GREEN, 의존 축)
 
 - [x] 1.1 GREEN: `shared/src/user-flow-suggestion-types.ts` 신설 — `UserFlowSuggestion { id; op: 'add-edge'; from: string; to?: string; newNode?: { id: string; label: string }; edgeKind: 'happy' | 'edgecase'; label?: string; rationale?: string }`(to/newNode는 정확히 하나), `UserFlowSuggestionQueue { version: 1; suggestions: readonly UserFlowSuggestion[] }`. index 배럴 export.
-- [ ] 1.2 RED: `server/src/lib/__tests__/userFlowDocs.test.ts` 신설 — (a) 큐 읽기: 부재→빈 큐·깨진 JSON→빈 큐·무효 제안(필드 결손, to·newNode 둘 다/둘 다 없음) 필터 (b) 검증: from 부재·newNode id 기존 충돌(대소문자 무시)·라벨 `"`·`|`·개행 → skipped (c) 중복 에지(from·to·kind 동일 기존재) → skipped 멱등 (d) append가 첫 mermaid 블록 닫는 펜스 직전에 들어감 (e) 반려는 문서 바이트 불변 (f) self-roundtrip: 기존 노드·에지 보존+신규 에지 일치, **무력화 프로브**(방어 return true 강제 시 red).
-- [ ] 1.3 GREEN: `server/src/lib/userFlowDocs.ts` 신설 — `readUserFlowSuggestions(docsDir, stem)`(필터 포함), `applyUserFlowSuggestions(docsDir, stem, body: PrdApplyRequest): PrdApplyResult`(검증→append→self-roundtrip→쓰기, 위반 시 writeFailed·원본 보존). 재파싱은 `planningUserFlowBuilder`의 기존 라인 파싱 경로 소비만(파서 무수정). stem은 기존 `isSafeFlowToken` 게이트 재사용.
+- [x] 1.2 RED: `server/src/lib/__tests__/userFlowDocs.test.ts` 신설 — (a) 큐 읽기: 부재→빈 큐·깨진 JSON→빈 큐·무효 제안(필드 결손, to·newNode 둘 다/둘 다 없음) 필터 (b) 검증: from 부재·newNode id 기존 충돌(대소문자 무시)·라벨 `"`·`|`·개행 → skipped (c) 중복 에지(from·to·kind 동일 기존재) → skipped 멱등 (d) append가 첫 mermaid 블록 닫는 펜스 직전에 들어감 (e) 반려는 문서 바이트 불변 (f) self-roundtrip: 기존 노드·에지 보존+신규 에지 일치, **무력화 프로브**(방어 return true 강제 시 red).
+- [x] 1.3 GREEN: `server/src/lib/userFlowDocs.ts` 신설 — `readUserFlowSuggestions(docsDir, stem)`(필터 포함), `applyUserFlowSuggestions(docsDir, stem, body: PrdApplyRequest): PrdApplyResult`(검증→append→self-roundtrip→쓰기, 위반 시 writeFailed·원본 보존). 재파싱은 `planningUserFlowBuilder`의 기존 라인 파싱 경로 소비만(파서 무수정). stem은 기존 `isSafeFlowToken` 게이트 재사용.
 
 ### Sequential: 라우트 (lib GREEN 의존)
 
