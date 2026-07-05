@@ -355,12 +355,16 @@ export function App(): JSX.Element {
 
   // 버전(flow) 전환: 선택한 flow로 재조회해 nodes/edges/저장좌표를 다시 세팅.
   // 에지 제안 큐는 per-stem — 전환한 stem의 큐로 함께 갱신(실패는 빈 큐 강등).
+  // 토큰 가드: 빠른 연속 전환 시 stale 응답이 최종 선택을 덮어쓰거나(그래프=v2·패널=v1
+  // 크로스-stem 불일치), in-flight apply 응답이 전환 후 화면을 덮는 레이스 차단(P3).
   const switchPlanningFlow = useCallback(
     (flow: string) => {
       if (!dashProject) return;
       const project = dashProject.name;
+      const token = ++dashReqToken.current;
       fetchDocsPlanningUserFlow(project, flow)
         .then((r) => {
+          if (token !== dashReqToken.current) return;
           setPlanningUserFlow(r.graph);
           setPlanningFlowNodes(toFlowNodes(r.graph, r.layout));
           setPlanningFlowEdges(toFlowEdges(r.graph));
@@ -368,11 +372,20 @@ export function App(): JSX.Element {
           setPlanningFlowVersions(r.versions);
           setStatus("");
         })
-        .catch((e: unknown) => setStatus(`기획 유저플로우 로드 실패: ${String(e)}`));
+        .catch((e: unknown) => {
+          if (token !== dashReqToken.current) return;
+          setStatus(`기획 유저플로우 로드 실패: ${String(e)}`);
+        });
       setUflowSuggestions([]);
       fetchUserFlowSuggestions(project, flow)
-        .then((q) => setUflowSuggestions(q.queue.suggestions))
-        .catch(() => setUflowSuggestions([])); // 제안 큐 없음/오류 — 순수 읽기 그래프 뷰
+        .then((q) => {
+          if (token !== dashReqToken.current) return;
+          setUflowSuggestions(q.queue.suggestions);
+        })
+        .catch(() => {
+          if (token !== dashReqToken.current) return;
+          setUflowSuggestions([]); // 제안 큐 없음/오류 — 순수 읽기 그래프 뷰
+        });
     },
     [dashProject],
   );
