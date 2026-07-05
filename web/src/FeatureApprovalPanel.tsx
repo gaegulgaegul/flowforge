@@ -105,6 +105,28 @@ export function FeatureApprovalPanel({
         AI가 제안한 노드 속성 변경(중요도·상태)이 있습니다. 개별 또는 일괄로 승인·반려하세요.
       </div>
 
+      <div className="feature-approval-bulk">
+        <button
+          type="button"
+          className="prd-btn-reject-all"
+          data-testid="feature-reject-all"
+          disabled={busy}
+          onClick={onRejectAll}
+        >
+          모두 반려
+        </button>
+        <button
+          type="button"
+          className="prd-btn-approve-all"
+          data-testid="feature-approve-all"
+          disabled={busy}
+          onClick={onApproveAll}
+        >
+          모두 승인
+        </button>
+      </div>
+
+      <div className="feature-approval-list" data-testid="feature-approval-list">
       {suggestions.map((sug) => {
         const cur = currentAttrsOf(root, sug.nodePath);
         const next = proposedAttrsOf(sug, cur);
@@ -154,26 +176,6 @@ export function FeatureApprovalPanel({
           </section>
         );
       })}
-
-      <div className="feature-approval-bulk">
-        <button
-          type="button"
-          className="prd-btn-reject-all"
-          data-testid="feature-reject-all"
-          disabled={busy}
-          onClick={onRejectAll}
-        >
-          모두 반려
-        </button>
-        <button
-          type="button"
-          className="prd-btn-approve-all"
-          data-testid="feature-approve-all"
-          disabled={busy}
-          onClick={onApproveAll}
-        >
-          모두 승인
-        </button>
       </div>
     </div>
   );

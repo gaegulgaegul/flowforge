@@ -263,10 +263,18 @@ export function applyFeatureSuggestions(docsDir: string, req: PrdApplyRequest): 
     else skipped.push(id);
   }
 
-  // 큐 재작성: 승인 반영분(approvedIds) + 반려분 제거(못 찾은 승인은 큐에 남긴다).
+  // 큐 재작성: 승인 반영분(approvedIds) + 반려분만 제거(못 찾은 승인은 큐에 남긴다).
+  // D-2: 쓰기 직전 재독본 차집합 — apply 중 추가된 신규 제안 보존(userFlowDocs와 동일 계약).
   const removed = new Set<string>([...approvedIds, ...rejectedIds]);
-  const remainingSuggestions = queue.suggestions.filter((s) => !removed.has(s.id));
-  writeDocsFeatureSuggestions(docsDir, { version: 1, suggestions: remainingSuggestions });
+  const remaining = pruneFeatureQueue(docsDir, removed);
 
-  return { applied, rejected: rejectedIds.length, remaining: remainingSuggestions.length, skipped };
+  return { applied, rejected: rejectedIds.length, remaining, skipped };
+}
+
+/** 큐 파일 재독 후 처리 id만 제거·재작성(D-2). 남은 제안 수 반환. 계약은 헬퍼 단위 테스트로 박제. */
+export function pruneFeatureQueue(docsDir: string, processedIds: ReadonlySet<string>): number {
+  const fresh = readDocsFeatureSuggestions(docsDir);
+  const remainingSuggestions = fresh.suggestions.filter((s) => !processedIds.has(s.id));
+  writeDocsFeatureSuggestions(docsDir, { version: 1, suggestions: remainingSuggestions });
+  return remainingSuggestions.length;
 }

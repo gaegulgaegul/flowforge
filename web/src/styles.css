@@ -792,3 +792,12 @@ button:hover { border-color: var(--lime); }
   font-size: 11px;
   color: #9aa0ad;
 }
+
+/* D-5 대량 큐 캡(approval-family-hardening): 카드 목록 스크롤 + 일괄 바 상단 고정 */
+.feature-approval-list {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.feature-approval-bulk {
+  border-bottom: 1px solid #2a2f38;
+}

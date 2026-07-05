@@ -13,6 +13,7 @@ import {
   readUserFlowSuggestions,
   applyUserFlowSuggestions,
   userFlowInvariantHolds,
+  pruneUserFlowQueue,
 } from "../userFlowDocs.js";
 import { buildUserFlowFromLines } from "../../parser/planningUserFlowBuilder.js";
 
@@ -413,5 +414,35 @@ describe("userFlowInvariantHolds (D-5 self-roundtrip 방어)", () => {
 
   it("기대 에지가 있는데 아무것도 추가 안 된 afterLines는 false(무력화 프로브)", () => {
     expect(userFlowInvariantHolds(before, beforeLines, [NEW_EDGE])).toBe(false);
+  });
+});
+
+/**
+ * D-2 큐 clobber 완화 — pruneUserFlowQueue(재독 후 차집합).
+ * apply가 동기 함수라 외부에서 mid-apply 경합을 주입할 수 없어, "쓰기 직전 재독본
+ * 기준 차집합" 계약을 이 헬퍼 단위로 박제한다(apply 꼬리가 이 헬퍼를 호출).
+ */
+describe("pruneUserFlowQueue (D-2 재독 차집합)", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "uflow-prune-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다", () => {
+    // 스냅샷 시점엔 s1만 있었다고 가정 — 쓰기 직전 파일엔 s1+신규 s2가 있다.
+    const dir = makeFlow(root, FLOW_MD, [sug("s1"), sug("s2", { label: "인플라이트 신규" })]);
+    const remaining = pruneUserFlowQueue(dir, STEM, new Set(["s1"]));
+    expect(remaining).toBe(1);
+    const q = readUserFlowSuggestions(dir, STEM);
+    expect(q.suggestions.map((s) => s.id)).toEqual(["s2"]);
+  });
+
+  it("큐 파일이 없으면 빈 큐를 쓰고 0을 반환한다(throw 금지)", () => {
+    const dir = makeFlow(root, FLOW_MD);
+    expect(pruneUserFlowQueue(dir, STEM, new Set(["s1"]))).toBe(0);
+    expect(readUserFlowSuggestions(dir, STEM)).toEqual({ version: 1, suggestions: [] });
   });
 });

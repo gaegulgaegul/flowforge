@@ -12,13 +12,13 @@
 
 ### Sequential: 큐 clobber 완화 (3 lib)
 
-- [ ] 3.1 RED: 3개 lib 테스트 각각에 — apply 시작 스냅샷 이후 큐 파일에 신규 제안을 끼워 넣고 apply 완료 시 신규분 생존(처리 id만 제거) 단언.
-- [ ] 3.2 GREEN: 큐 재작성 직전 재독 후 차집합(D-2) — 검증은 스냅샷 기준 유지.
+- [x] 3.1 RED: 3개 lib 테스트 각각에 — apply 시작 스냅샷 이후 큐 파일에 신규 제안을 끼워 넣고 apply 완료 시 신규분 생존(처리 id만 제거) 단언.
+- [x] 3.2 GREEN: 큐 재작성 직전 재독 후 차집합(D-2) — 검증은 스냅샷 기준 유지.
 
 ### Parallel Group 1 (서버 완료 후 — 서로 다른 파일, 동시 실행 가능)
 
-- [ ] 4.1 배치 상한: `routes/docs.ts` apply 3곳에 공유 상수(200) 게이트, 초과 400 `batch_too_large` — 라우트 통합 테스트(201건→400·문서/큐 불변, 200건→정상) 포함. [parallel]
-- [ ] 4.2 패널 UI 캡: `styles.css` 카드 목록 max-height 60vh+overflow-y, Feature·UserFlow 패널의 일괄 바를 배너 옆 상단으로 이동. [parallel]
+- [x] 4.1 배치 상한: `routes/docs.ts` apply 3곳에 공유 상수(200) 게이트, 초과 400 `batch_too_large` — 라우트 통합 테스트(201건→400·문서/큐 불변, 200건→정상) 포함. [parallel]
+- [x] 4.2 패널 UI 캡: `styles.css` 카드 목록 max-height 60vh+overflow-y, Feature·UserFlow 패널의 일괄 바를 배너 옆 상단으로 이동. [parallel]
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 

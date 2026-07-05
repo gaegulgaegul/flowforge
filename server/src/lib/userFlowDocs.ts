@@ -280,10 +280,24 @@ export function applyUserFlowSuggestions(docsDir: string, stem: string, req: Prd
     else skipped.push(`${id}: not-in-queue`);
   }
 
-  // 큐 재작성: 승인 반영분 + 반려분 제거(검증 위반 skipped는 큐에 남긴다).
+  // 큐 재작성: 승인 반영분 + 반려분만 제거(검증 위반 skipped는 큐에 남긴다).
+  // D-2: 시작 스냅샷이 아니라 쓰기 직전 재독본에서 차집합 — apply 진행 중
+  // AI가 추가한 신규 제안이 통삭제되는 silent drop 창을 닫는다.
   const removed = new Set<string>([...approvedIds, ...rejectedIds]);
-  const remainingSuggestions = queue.suggestions.filter((s) => !removed.has(s.id));
-  writeUserFlowSuggestions(docsDir, stem, { version: 1, suggestions: remainingSuggestions });
+  const remaining = pruneUserFlowQueue(docsDir, stem, removed);
 
-  return { applied: approvedIds.length, rejected: rejectedIds.length, remaining: remainingSuggestions.length, skipped };
+  return { applied: approvedIds.length, rejected: rejectedIds.length, remaining, skipped };
+}
+
+/**
+ * 큐 파일을 신선하게 재독해 처리된 id만 제거하고 나머지(재독본에만 있는 신규
+ * 제안 포함)를 보존해 재작성한다(D-2). 남은 제안 수를 반환.
+ * apply가 동기 함수라 외부에서 경합을 주입할 수 없어, "재독 후 차집합" 계약은
+ * 이 헬퍼 단위 테스트로 박제한다(파일 락은 Non-Goal — 로컬 단일 사용자 전제).
+ */
+export function pruneUserFlowQueue(docsDir: string, stem: string, processedIds: ReadonlySet<string>): number {
+  const fresh = readUserFlowSuggestions(docsDir, stem);
+  const remainingSuggestions = fresh.suggestions.filter((s) => !processedIds.has(s.id));
+  writeUserFlowSuggestions(docsDir, stem, { version: 1, suggestions: remainingSuggestions });
+  return remainingSuggestions.length;
 }

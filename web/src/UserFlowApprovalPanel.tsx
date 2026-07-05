@@ -61,6 +61,28 @@ export function UserFlowApprovalPanel({
         AI가 제안한 유저플로우 에지 추가가 있습니다. 개별 또는 일괄로 승인·반려하세요.
       </div>
 
+      <div className="feature-approval-bulk">
+        <button
+          type="button"
+          className="prd-btn-reject-all"
+          data-testid="uflow-reject-all"
+          disabled={busy}
+          onClick={onRejectAll}
+        >
+          모두 반려
+        </button>
+        <button
+          type="button"
+          className="prd-btn-approve-all"
+          data-testid="uflow-approve-all"
+          disabled={busy}
+          onClick={onApproveAll}
+        >
+          모두 승인
+        </button>
+      </div>
+
+      <div className="feature-approval-list" data-testid="uflow-approval-list">
       {suggestions.map((sug) => (
         <section
           key={sug.id}
@@ -106,27 +128,8 @@ export function UserFlowApprovalPanel({
           </div>
         </section>
       ))}
-
-      <div className="feature-approval-bulk">
-        <button
-          type="button"
-          className="prd-btn-reject-all"
-          data-testid="uflow-reject-all"
-          disabled={busy}
-          onClick={onRejectAll}
-        >
-          모두 반려
-        </button>
-        <button
-          type="button"
-          className="prd-btn-approve-all"
-          data-testid="uflow-approve-all"
-          disabled={busy}
-          onClick={onApproveAll}
-        >
-          모두 승인
-        </button>
       </div>
+
     </div>
   );
 }

@@ -314,17 +314,25 @@ export function applyPrdSuggestions(docsDir: string, req: PrdApplyRequest): PrdA
     else skipped.push(id);
   }
 
-  // 큐 재작성: 승인 반영분(approvedIds) + 반려분 제거.
+  // 큐 재작성: 승인 반영분(approvedIds) + 반려분만 제거.
+  // D-2: 쓰기 직전 재독본 차집합 — apply 중 추가된 신규 제안 보존(userFlowDocs와 동일 계약).
   const removed = new Set<string>([...approvedIds, ...rejectedIds]);
-  const remainingSuggestions = queue.suggestions.filter((s) => !removed.has(s.id));
-  writeDocsPrdSuggestions(docsDir, { version: 1, suggestions: remainingSuggestions });
+  const remaining = prunePrdQueue(docsDir, removed);
 
   return {
     applied,
     rejected: rejectedIds.length,
-    remaining: remainingSuggestions.length,
+    remaining,
     skipped,
   };
+}
+
+/** 큐 파일 재독 후 처리 id만 제거·재작성(D-2). 남은 제안 수 반환. 계약은 헬퍼 단위 테스트로 박제. */
+export function prunePrdQueue(docsDir: string, processedIds: ReadonlySet<string>): number {
+  const fresh = readDocsPrdSuggestions(docsDir);
+  const remainingSuggestions = fresh.suggestions.filter((s) => !processedIds.has(s.id));
+  writeDocsPrdSuggestions(docsDir, { version: 1, suggestions: remainingSuggestions });
+  return remainingSuggestions.length;
 }
 
 /** POST apply body 런타임 검증: {approve:string[], reject:string[]}. isLayoutOverlay 패턴 복제. */

@@ -13,6 +13,7 @@ import {
   writeDocsPlanningPrd,
   applyPrdSuggestions,
   isPrdApplyRequest,
+  prunePrdQueue,
 } from "../docs.js";
 import type { PrdSuggestion } from "@flowforge/shared";
 
@@ -259,5 +260,28 @@ describe("isPrdApplyRequest", () => {
     expect(isPrdApplyRequest({ approve: "a", reject: [] })).toBe(false);
     expect(isPrdApplyRequest({ approve: [1], reject: [] })).toBe(false);
     expect(isPrdApplyRequest({ approve: [] })).toBe(false);
+  });
+});
+
+/** D-2 큐 clobber 완화 — 재독 차집합 계약(헬퍼 단위 박제, userFlowDocs와 동일 사유). */
+describe("prunePrdQueue (D-2 재독 차집합)", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "prd-prune-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다", () => {
+    const dir = makePlanning(root, "p", PRD_MD, [sug("s1", "overview", "새 개요"), sug("s2", "value", "새 가치")]);
+    const remaining = prunePrdQueue(dir, new Set(["s1"]));
+    expect(remaining).toBe(1);
+    expect(readDocsPrdSuggestions(dir).suggestions.map((x) => x.id)).toEqual(["s2"]);
+  });
+
+  it("큐 파일이 없으면 빈 큐를 쓰고 0을 반환한다", () => {
+    const dir = makePlanning(root, "p", PRD_MD);
+    expect(prunePrdQueue(dir, new Set(["s1"]))).toBe(0);
   });
 });

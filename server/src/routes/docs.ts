@@ -22,6 +22,7 @@
  */
 import { dirname } from "node:path";
 import { Router } from "express";
+import type { Response } from "express";
 import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from "../parser/docsAdapter.js";
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
 import { buildDocsPlanningFeatures } from "../parser/featureTreeBuilder.js";
@@ -242,6 +243,19 @@ docsRouter.get(
   }),
 );
 
+/** D-3 apply 배치 상한 — approve+reject 합계가 이 값을 넘으면 400(문서·큐 무접촉).
+ * 사이드카 큐 경유 무상한 배치가 동기 재파싱으로 이벤트 루프를 막는 가용성 리스크 차단. */
+const APPLY_BATCH_CAP = 200;
+
+/** 배치 상한 초과면 400 응답을 쓰고 true 반환(호출부는 즉시 return). 3개 apply 라우트 공유. */
+function rejectOversizedBatch(body: { approve: readonly string[]; reject: readonly string[] }, res: Response): boolean {
+  if (body.approve.length + body.reject.length > APPLY_BATCH_CAP) {
+    res.status(400).json({ error: "batch_too_large", cap: APPLY_BATCH_CAP });
+    return true;
+  }
+  return false;
+}
+
 docsRouter.post(
   "/api/docs/:project(*)/planning-prd-suggestions/apply",
   safe(async (req, res) => {
@@ -256,6 +270,7 @@ docsRouter.post(
       res.status(400).json({ error: "invalid_request" });
       return;
     }
+    if (rejectOversizedBatch(body, res)) return;
     const result = applyPrdSuggestions(dir, body);
     // prd.md 파싱/쓰기 실패(원본 손상) → 422(원본 보호). 미실재 id(skipped)와 구분된 신호.
     if (result.writeFailed) {
@@ -295,6 +310,7 @@ docsRouter.post(
       res.status(400).json({ error: "invalid_request" });
       return;
     }
+    if (rejectOversizedBatch(body, res)) return;
     const result = applyFeatureSuggestions(dir, body);
     // features.md 읽기/쓰기 실패(원본 손상) → 422(원본 보호). 미실재 id(skipped)와 구분된 신호.
     if (result.writeFailed) {
@@ -346,6 +362,7 @@ docsRouter.post(
       res.status(400).json({ error: "invalid_request" });
       return;
     }
+    if (rejectOversizedBatch(body, res)) return;
     const result = applyUserFlowSuggestions(dir, flow, body);
     // <stem>.md 부재·roundtrip 위반·쓰기 실패(원본 보호) → 422. 미실재 id(skipped)와 구분된 신호.
     if (result.writeFailed) {

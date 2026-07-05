@@ -144,3 +144,52 @@ describe("features 승인/반려 API", () => {
     expect(res.status).toBe(422);
   });
 });
+
+/** D-3 apply 배치 상한(200) — 3개 apply 라우트가 같은 rejectOversizedBatch 헬퍼를 공유한다. */
+describe("POST apply 배치 상한 (D-3)", () => {
+  const ORIG = process.env.DOCS_ROOT;
+  beforeEach(() => {
+    ROOT = mkdtempSync(join(tmpdir(), "batch-cap-api-"));
+    process.env.DOCS_ROOT = ROOT;
+  });
+  afterEach(() => {
+    rmSync(ROOT, { recursive: true, force: true });
+    if (ORIG === undefined) delete process.env.DOCS_ROOT;
+    else process.env.DOCS_ROOT = ORIG;
+  });
+
+  it("approve+reject 합계 201건 → 400 batch_too_large, 문서·큐 불변", async () => {
+    const planDir = makePlanning("p", [{ id: "s1", nodePath: ["기획 산출물 생성"], op: "set-attrs", priority: "낮음" }]);
+    const before = readFileSync(join(planDir, "features.md"), "utf-8");
+    const queueBefore = readFileSync(join(planDir, "features.suggestions.json"), "utf-8");
+    const app = await loadApp();
+    const approve = Array.from({ length: 101 }, (_, i) => `a${i}`);
+    const reject = Array.from({ length: 100 }, (_, i) => `r${i}`);
+    const res = await request(app).post("/api/docs/p/planning-features-suggestions/apply").send({ approve, reject });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("batch_too_large");
+    expect(readFileSync(join(planDir, "features.md"), "utf-8")).toBe(before);
+    expect(readFileSync(join(planDir, "features.suggestions.json"), "utf-8")).toBe(queueBefore);
+  });
+
+  it("정확히 200건은 상한에 걸리지 않는다(미실재 id는 skipped로 200 응답)", async () => {
+    makePlanning("p", [{ id: "s1", nodePath: ["기획 산출물 생성"], op: "set-attrs", priority: "낮음" }]);
+    const app = await loadApp();
+    const approve = Array.from({ length: 200 }, (_, i) => `ghost${i}`);
+    const res = await request(app).post("/api/docs/p/planning-features-suggestions/apply").send({ approve, reject: [] });
+    expect(res.status).toBe(200);
+    expect(res.body.skipped).toHaveLength(200);
+  });
+
+  it("prd·userflow apply 라우트도 같은 상한을 공유한다(201건 → 400)", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    const big = { approve: Array.from({ length: 201 }, (_, i) => `x${i}`), reject: [] };
+    const prd = await request(app).post("/api/docs/p/planning-prd-suggestions/apply").send(big);
+    expect(prd.status).toBe(400);
+    expect(prd.body.error).toBe("batch_too_large");
+    const uf = await request(app).post("/api/docs/p/planning-user-flow-suggestions/apply?flow=main-v1").send(big);
+    expect(uf.status).toBe(400);
+    expect(uf.body.error).toBe("batch_too_large");
+  });
+});

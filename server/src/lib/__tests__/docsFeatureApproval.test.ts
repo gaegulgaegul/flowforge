@@ -13,6 +13,7 @@ import {
   applyFeatureSuggestions,
   structureInvariantHolds,
   treeFingerprint,
+  pruneFeatureQueue,
 } from "../featureDocs.js";
 import { buildFeatureTreeFromLines } from "../../parser/featureTreeBuilder.js";
 import type { FeatureSuggestion } from "@flowforge/shared";
@@ -357,5 +358,31 @@ describe("structureInvariantHolds (D5 self-roundtrip 방어)", () => {
       "<!-- capability: hijacked -->",
     ).split(/\r?\n/);
     expect(structureInvariantHolds(beforeTree, afterLines)).toBe(false);
+  });
+});
+
+/** D-2 큐 clobber 완화 — 재독 차집합 계약(헬퍼 단위 박제, userFlowDocs와 동일 사유). */
+describe("pruneFeatureQueue (D-2 재독 차집합)", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "feat-prune-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다", () => {
+    const dir = makePlanning(root, "p", "## 데모 요구사항 <!-- capability: demo -->\n", [
+      sug("s1", ["데모 요구사항"], { priority: "높음" }),
+      sug("s2", ["데모 요구사항"], { status: "완료" }),
+    ]);
+    const remaining = pruneFeatureQueue(dir, new Set(["s1"]));
+    expect(remaining).toBe(1);
+    expect(readDocsFeatureSuggestions(dir).suggestions.map((x) => x.id)).toEqual(["s2"]);
+  });
+
+  it("큐 파일이 없으면 빈 큐를 쓰고 0을 반환한다", () => {
+    const dir = makePlanning(root, "p", "## 데모 <!-- capability: demo -->\n");
+    expect(pruneFeatureQueue(dir, new Set(["s1"]))).toBe(0);
   });
 });
