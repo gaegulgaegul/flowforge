@@ -241,3 +241,23 @@ flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 �
 - invariant:safe-4xx 경로 조작 project는 404, 큐 파일 부재는 빈 큐 200(읽기는 절대 500으로 죽지 않음)
 - behavior: prd.suggestions.json을 JSON.parse 후 isValidPrdSuggestion(section 5키·op=replace만)으로 필터해 유효 제안만 반환, 파일 없음·깨진 JSON은 빈 큐로 폴백
 - metric: 제안 큐 조회 응답 시간 목표 200ms
+
+## capability: planning-feature-audit-badge
+
+기획 기능명세 뷰 요구사항 노드에 capability 단위 audit 판정 배지(정합/불합/미감사)를 표시하고, 노드 클릭 상세 패널에 audit 상세(판정·건수·FAIL claim)를 노출하는 능력. 데이터 원천은 저장된 docs/audit.json items[](읽기전용 소비), 매칭은 capability 영문 키 문자열 동치만(거짓 연결 0).
+
+### 기능: audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)
+- assert:endpoint GET /api/docs/:project/audit-capabilities
+- assert:symbol aggregateAuditItems
+- assert:symbol readAuditCapabilities
+- audit.json items[]를 capability 키별로 집계한다: FAIL≥1→fail / FAIL 0·PASS≥1→clean / 그 외(항목 없음·전부 UNVERIFIABLE)→unknown. UNVERIFIABLE은 판정을 깎지 않고 건수로만 노출한다.
+- invariant: audit.json 없음·깨진 JSON·items 비배열은 빈 맵 폴백(HTTP 200)이며 throw하지 않는다.
+- invariant: audit.json 내부 경로(scanRoot 등)는 신뢰하지 않는다 — 읽기 경로는 검증된 projDir 기준으로만 구성하고 items[]의 capability·verdict·kind·claim·reason만 소비한다.
+- invariant: 읽기전용 — audit.json 산출은 openspec-audit 소유, flowforge는 소비만 한다.
+- metric: auditSummary 단위(집계·폴백) + 라우트 통합 테스트 PASS(auditSummary.test.ts, docs.planning.test.ts) + 라이브 실픽셀(요구사항 노드 배지·패널 audit 섹션·콘솔 0).
+
+### 기능: 요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)
+- assert:symbol fetchAuditCapabilities
+- 요구사항 노드만 capability 키 동치로 배지(clean→정합/fail→불합 N/unknown→미감사)를 렌더하고, 기능·상세기능 노드는 배지를 렌더하지 않는다. audit fetch 실패는 배지 없음 강등(그래프 렌더 유지).
+- 상세 패널 audit 섹션은 판정·PASS/FAIL/검증불가 건수를 표시하고, fail일 때만 FAIL claim(·reason)을 텍스트로 나열한다(HTML 주입 금지).
+- metric: 라이브 실픽셀 grounding — 배지 분포(정합/미감사)·패널 3케이스(정합 건수/미감사/비요구사항 생략)·콘솔 에러 0.

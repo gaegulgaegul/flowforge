@@ -3,11 +3,11 @@
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
-    "PASS": 63,
+    "PASS": 67,
     "FAIL": 0,
-    "UNVERIFIABLE": 76
+    "UNVERIFIABLE": 84
   },
-  "reason": "미검증(UNVERIFIABLE) 76건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 84건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -1545,6 +1545,138 @@
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
       "evidence": null
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
+      "line": 250,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/audit-capabilities",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:127"
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
+      "line": 251,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol aggregateAuditItems",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/auditSummary.ts:16"
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
+      "line": 252,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol readAuditCapabilities",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/auditSummary.ts:49"
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
+      "line": 253,
+      "kind": "freetext",
+      "claim": "audit.json items[]를 capability 키별로 집계한다: FAIL≥1→fail / FAIL 0·PASS≥1→clean / 그 외(항목 없음·전부 UNVERIFIABLE)→unknown. UNVERIFIABLE은 판정을 깎지 않고 건수로만 노출한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
+      "line": 254,
+      "kind": "freetext",
+      "claim": "invariant: audit.json 없음·깨진 JSON·items 비배열은 빈 맵 폴백(HTTP 200)이며 throw하지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
+      "line": 255,
+      "kind": "freetext",
+      "claim": "invariant: audit.json 내부 경로(scanRoot 등)는 신뢰하지 않는다 — 읽기 경로는 검증된 projDir 기준으로만 구성하고 items[]의 capability·verdict·kind·claim·reason만 소비한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
+      "line": 256,
+      "kind": "freetext",
+      "claim": "invariant: 읽기전용 — audit.json 산출은 openspec-audit 소유, flowforge는 소비만 한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
+      "line": 257,
+      "kind": "metric",
+      "claim": "metric: auditSummary 단위(집계·폴백) + 라우트 통합 테스트 PASS(auditSummary.test.ts, docs.planning.test.ts) + 라이브 실픽셀(요구사항 노드 배지·패널 audit 섹션·콘솔 0).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
+      "line": 260,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol fetchAuditCapabilities",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/api.ts:213"
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
+      "line": 261,
+      "kind": "freetext",
+      "claim": "요구사항 노드만 capability 키 동치로 배지(clean→정합/fail→불합 N/unknown→미감사)를 렌더하고, 기능·상세기능 노드는 배지를 렌더하지 않는다. audit fetch 실패는 배지 없음 강등(그래프 렌더 유지).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
+      "line": 262,
+      "kind": "freetext",
+      "claim": "상세 패널 audit 섹션은 판정·PASS/FAIL/검증불가 건수를 표시하고, fail일 때만 FAIL claim(·reason)을 텍스트로 나열한다(HTML 주입 금지).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-feature-audit-badge",
+      "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
+      "line": 263,
+      "kind": "metric",
+      "claim": "metric: 라이브 실픽셀 grounding — 배지 분포(정합/미감사)·패널 3케이스(정합 건수/미감사/비요구사항 생략)·콘솔 에러 0.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
     }
   ],
   "ghosts": [
@@ -1572,11 +1704,6 @@
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/wireframe",
       "source": "server/src/routes/graph.ts:83"
-    },
-    {
-      "type": "endpoint",
-      "what": "GET /api/docs/:project(*)/audit-capabilities",
-      "source": "server/src/routes/docs.ts:127"
     },
     {
       "type": "endpoint",
@@ -1665,11 +1792,6 @@
     },
     {
       "type": "symbol",
-      "what": "aggregateAuditItems",
-      "source": "server/src/lib/auditSummary.ts:16"
-    },
-    {
-      "type": "symbol",
       "what": "applyDocsFeatureSuggestions",
       "source": "web/src/api.ts:250"
     },
@@ -1752,11 +1874,6 @@
       "type": "symbol",
       "what": "docsRoot",
       "source": "server/src/lib/docs.ts:26"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchAuditCapabilities",
-      "source": "web/src/api.ts:213"
     },
     {
       "type": "symbol",
@@ -1895,11 +2012,6 @@
     },
     {
       "type": "symbol",
-      "what": "readAuditCapabilities",
-      "source": "server/src/lib/auditSummary.ts:49"
-    },
-    {
-      "type": "symbol",
       "what": "readDocsFeatureSuggestions",
       "source": "server/src/lib/featureDocs.ts:57"
     },
@@ -2012,6 +2124,6 @@
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-audit-badge-refresh-20260704.html",
-  "runId": "audit-badge-refresh-20260704"
+  "historyHtml": "audit-audit-badge-absorb-20260705.html",
+  "runId": "audit-badge-absorb-20260705"
 }
