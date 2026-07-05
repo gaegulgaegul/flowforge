@@ -245,6 +245,35 @@ describe("applyUserFlowSuggestions", () => {
     expect(readMd(dir)).toBe(md);
   });
 
+  // D-4 단일 감지 회귀: append 대상과 파싱 대상이 항상 같은 블록이어야 한다.
+  // 과거 firstMermaidCloseIdx는 startsWith("```mermaid")라 ```mermaid-example을 열림 펜스로
+  // 오인 → append가 예제 블록에 들어가 파싱 대상(진짜 블록)과 갈라졌다.
+  it("```mermaid-example 블록이 진짜 블록 앞에 있어도 승인이 진짜 mermaid 블록에 append된다", () => {
+    const md = [
+      "예시 문법:",
+      "",
+      "```mermaid-example",
+      "flowchart TD",
+      "  X --> Y",
+      "```",
+      "",
+      FLOW_MD,
+    ].join("\n");
+    const dir = makeFlow(root, md, [sug("s1")]);
+    const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(1);
+    expect(r.skipped).toEqual([]);
+    expect(r.writeFailed).toBeUndefined();
+    // 진짜 ```mermaid 블록의 닫는 펜스 직전에만 삽입(예제 블록·나머지 불변) — 전체 파일 정확 비교.
+    const beforeLines = md.split("\n");
+    const openIdx = beforeLines.indexOf("```mermaid"); // "```mermaid-example"과는 정확 일치 안 함
+    const closeIdx = beforeLines.indexOf("```", openIdx + 1);
+    const expected = [...beforeLines.slice(0, closeIdx), "  D -->|재시작| A", ...beforeLines.slice(closeIdx)].join(
+      "\n",
+    );
+    expect(readMd(dir)).toBe(expected);
+  });
+
   it("반려하면 문서는 바이트 단위로 불변, 큐에서만 제거한다", () => {
     const dir = makeFlow(root, FLOW_MD, [sug("s1")]);
     const before = readMd(dir);
@@ -318,15 +347,22 @@ describe("applyUserFlowSuggestions", () => {
     expect(out).not.toContain("예/아니오");
   });
 
-  it("백틱 펜스가 든 newNode 라벨도 그 제안만 skipped(블록 절단 독살 금지)", () => {
+  // D-4 단일 감지 이후: 닫는 펜스는 "라인 시작 ```"만 인정(CommonMark과 동일)이라 라인 중간
+  // 백틱은 블록을 절단하지 못한다. append 라인은 항상 `  <from> `으로 시작하므로 펜스가 될 수
+  // 없음 → 과거 정규식(문자열 중간 ``` 매칭)의 오탐 skip이 사라지고 정상 반영된다.
+  it("백틱이 든 newNode 라벨은 라인 중간이라 펜스를 절단하지 않는다(정상 반영·블록 무결)", () => {
     const dir = makeFlow(root, FLOW_MD, [
       sug("tick", { to: undefined, newNode: { id: "Tk", label: "코드 ``` 블록" }, edgeKind: "edgecase" }),
       sug("ok", { label: "재시작" }),
     ]);
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["tick", "ok"], reject: [] });
     expect(r.writeFailed).toBeUndefined();
-    expect(r.applied).toBe(1);
-    expect(r.skipped).toEqual(expect.arrayContaining([expect.stringMatching(/^tick: /)]));
+    expect(r.applied).toBe(2);
+    expect(r.skipped).toEqual([]);
+    // 재파싱해도 블록이 절단되지 않고 기존 4개 + 신규 2개 에지 전부 보인다.
+    const parsed = buildUserFlowFromLines(readMd(dir).split(/\r?\n/));
+    expect(parsed.rawEdges).toHaveLength(6);
+    expect(parsed.rawNodes.get("Tk")).toBe("코드 ``` 블록");
   });
 });
 

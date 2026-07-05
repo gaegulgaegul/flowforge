@@ -2,8 +2,8 @@
 
 ### Sequential: 블록 판별 단일화 (파서 export → userFlowDocs 소비)
 
-- [ ] 1.1 RED: `planningUserFlowBuilder` 단위 테스트에 `findFirstMermaidBlock` — (a) 정상 블록 open/close 인덱스 (b) ```` ```mermaid-example ```` 선행 시 진짜 블록을 가리킴 (c) 블록 없음 null. `userFlowDocs` 테스트에 example 블록 선행 문서에서 유효 제안 정상 apply(오도 skipped 아님) 회귀.
-- [ ] 1.2 GREEN: `parser/planningUserFlowBuilder.ts`에 기존 블록 추출 로직을 `findFirstMermaidBlock(lines)`로 export(파싱 동작 무변경 — 노출만, 기존 단위 테스트 회귀 0). `lib/userFlowDocs.ts`의 `firstMermaidCloseIdx` 제거하고 이를 소비.
+- [x] 1.1 RED: `planningUserFlowBuilder` 단위 테스트에 `findFirstMermaidBlock` — (a) 정상 블록 open/close 인덱스 (b) ```` ```mermaid-example ```` 선행 시 진짜 블록을 가리킴 (c) 블록 없음 null. `userFlowDocs` 테스트에 example 블록 선행 문서에서 유효 제안 정상 apply(오도 skipped 아님) 회귀.
+- [x] 1.2 GREEN: `parser/planningUserFlowBuilder.ts`에 기존 블록 추출 로직을 `findFirstMermaidBlock(lines)`로 export(파싱 동작 무변경 — 노출만, 기존 단위 테스트 회귀 0). `lib/userFlowDocs.ts`의 `firstMermaidCloseIdx` 제거하고 이를 소비.
 
 ### Sequential: 개행 보존 (공통 문자열 유틸 + 3 lib)
 

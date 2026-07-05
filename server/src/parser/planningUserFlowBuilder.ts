@@ -18,10 +18,25 @@ import type { GraphNode, GraphEdge, SpecGraph, NodeKind } from "@flowforge/share
 import { slug } from "./specParser.js";
 import { readDocsUserFlowSpec } from "../lib/docs.js";
 
-/** ```mermaid … ``` 코드블록 본문만 추출(없으면 ""). */
-function extractMermaid(md: string): string {
-  const m = md.match(/```mermaid\s*\n([\s\S]*?)```/);
-  return m ? (m[1] ?? "") : "";
+/**
+ * 첫 ```mermaid 블록의 펜스 라인 인덱스(D-4 단일 감지). 여는 펜스 = trim 결과가 정확히
+ * "```mermaid"인 라인(```mermaid-example 등 배제), 닫는 펜스 = 그 뒤 trim이 "```"로 시작하는
+ * 첫 라인. 블록이 없거나 안 닫혔으면 null. 파서 추출과 userFlowDocs append 위치가 이 하나를
+ * 공유해 "파싱 대상 ≠ append 대상" 분열을 구조적으로 차단한다.
+ */
+export function findFirstMermaidBlock(
+  lines: readonly string[],
+): { openIdx: number; closeIdx: number } | null {
+  let openIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const t = (lines[i] ?? "").trim();
+    if (openIdx < 0) {
+      if (t === "```mermaid") openIdx = i;
+    } else if (t.startsWith("```")) {
+      return { openIdx, closeIdx: i };
+    }
+  }
+  return null;
 }
 
 /**
@@ -147,8 +162,8 @@ function collectEdges(
  * buildDocsPlanningUserFlow는 파일을 읽어 이 함수에 위임하는 얇은 래퍼.
  */
 export function buildUserFlowFromLines(lines: readonly string[], scenario = ""): UserFlowParse {
-  const body = extractMermaid(lines.join("\n"));
-  const bodyLines = body.split(/\r?\n/);
+  const block = findFirstMermaidBlock(lines);
+  const bodyLines = block ? lines.slice(block.openIdx + 1, block.closeIdx) : [];
   const nodes = collectRawNodes(bodyLines);
   const { edges, rawEdges } = collectEdges(bodyLines, nodes, scenario);
 

@@ -5,7 +5,7 @@
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildDocsPlanningUserFlow } from "../planningUserFlowBuilder.js";
+import { buildDocsPlanningUserFlow, findFirstMermaidBlock } from "../planningUserFlowBuilder.js";
 
 /** <root>/docs/planning/user-flow/<stem>.md 픽스처. docsDir(<root>/docs) 반환. */
 function makeFlow(stem: string, content: string): { docsDir: string; cleanup: () => void } {
@@ -164,5 +164,32 @@ describe("planningUserFlowBuilder", () => {
     } finally {
       cleanup();
     }
+  });
+});
+
+describe("findFirstMermaidBlock", () => {
+  it("정상 문서에서 여는/닫는 펜스 라인 인덱스를 반환한다", () => {
+    // FLOW: 0=제목, 1=빈줄, 2=```mermaid, 3~7=본문, 8=```
+    expect(findFirstMermaidBlock(FLOW.split("\n"))).toEqual({ openIdx: 2, closeIdx: 8 });
+  });
+
+  it("```mermaid-example 블록이 앞에 있어도 진짜 ```mermaid 블록의 인덱스를 반환한다", () => {
+    const lines = [
+      "# 문서", // 0
+      "```mermaid-example", // 1 — 열림 펜스로 오인하면 안 됨
+      "flowchart TD", // 2
+      "  X --> Y", // 3
+      "```", // 4
+      "", // 5
+      "```mermaid", // 6
+      "flowchart TD", // 7
+      '  A["화면"] --> B["다음"]', // 8
+      "```", // 9
+    ];
+    expect(findFirstMermaidBlock(lines)).toEqual({ openIdx: 6, closeIdx: 9 });
+  });
+
+  it("mermaid 블록이 없으면 null", () => {
+    expect(findFirstMermaidBlock(["# 문서", "", "산문만 있음."])).toBeNull();
   });
 });
