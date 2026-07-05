@@ -11,6 +11,7 @@ import type {
   FeaturePriority,
   FeatureStatus,
   CapabilityAuditSummary,
+  ScreenRegistry,
 } from "@flowforge/shared";
 
 /** 상세 패널용 자식 노드 요약(라벨+종류). 트리에서 파생, 노드 data에 실어 패널이 조인 없이 쓴다. */
@@ -41,6 +42,11 @@ export interface FeatureNodeData extends Record<string, unknown> {
    * audit 맵 미제공/빈 맵(fetch 실패·미감사 프로젝트)이면 undefined(배지 없음). web에서 파생.
    */
   audit?: CapabilityAuditSummary;
+  /**
+   * 상세기능이 연결된 화면(N:M, planning-panel-screen-links) — 상세기능 노드만 채워짐.
+   * web에서 파생(레지스트리 링크의 detailLabel 문자열 일치, D-2). 링크 없으면 undefined(D-4).
+   */
+  screens?: readonly { id: string; label: string }[];
 }
 
 /** audit 맵에 키가 없는 요구사항 = 미감사(D-6). 배지 "미감사"로 렌더된다. */
@@ -89,6 +95,7 @@ function flatten(start: FeatureTreeNode): {
 export function toFeatureTreeFlow(
   root: FeatureTreeNode,
   auditByCapability?: Record<string, CapabilityAuditSummary>,
+  screenRegistry?: ScreenRegistry,
 ): {
   nodes: Node<FeatureNodeData>[];
   edges: Edge[];
@@ -96,6 +103,19 @@ export function toFeatureTreeFlow(
   // audit 병합 규칙(D-6): 맵 미제공 or 빈 맵 → 전 노드 배지 없음(fetch 실패/미감사 프로젝트).
   // 비어있지 않으면 요구사항 노드만 capability 문자열 완전일치로 조회, 키 없으면 UNAUDITED(미감사).
   const hasAudit = auditByCapability !== undefined && Object.keys(auditByCapability).length > 0;
+  // 연결화면 병합 규칙: 상세기능 라벨 문자열 완전일치로 링크 조회(D-2 — 다른 요구사항 아래
+  // 같은 라벨은 의도적으로 같은 화면을 공유). 화면 id→label은 한 번만 Map으로 인덱싱하고,
+  // 화면목록에 없는 dangling id는 label=id로 노출(D-3 — 숨기지 않음).
+  const screenLabelById = new Map<string, string>(
+    (screenRegistry?.screens ?? []).map((s) => [s.id, s.label]),
+  );
+  const screenLinks = screenRegistry?.links ?? [];
+  /** 상세기능 노드의 연결화면 목록. 링크 없음(레지스트리 미제공 포함)이면 undefined(빈 배열 아님, D-4). */
+  const screensForDetail = (label: string): { id: string; label: string }[] | undefined => {
+    const link = screenLinks.find((l) => l.detailLabel === label);
+    if (!link || link.screenIds.length === 0) return undefined;
+    return link.screenIds.map((id) => ({ id, label: screenLabelById.get(id) ?? id }));
+  };
   // 가상 루트는 렌더하지 않는다 — 각 요구사항을 독립 서브트리로 평탄화해 합친다.
   const featnodes: FeatureTreeNode[] = [];
   const featedges: Array<{ from: string; to: string }> = [];
@@ -117,6 +137,7 @@ export function toFeatureTreeFlow(
   const nodes: Node<FeatureNodeData>[] = featnodes.map((n) => {
     const pos = g.node(n.id);
     const h = nodeHeight(n.kind);
+    const screens = n.kind === "detail" ? screensForDetail(n.label) : undefined;
     return {
       id: n.id,
       position: { x: Math.round(pos.x - NODE_W / 2), y: Math.round(pos.y - h / 2) },
@@ -132,6 +153,8 @@ export function toFeatureTreeFlow(
         ...(hasAudit && n.kind === "requirement" && n.capability !== ""
           ? { audit: auditByCapability?.[n.capability] ?? UNAUDITED }
           : {}),
+        // 연결화면 — 상세기능 노드만, 링크 없으면 키 자체를 생략(D-4 — 패널이 섹션을 통째로 생략).
+        ...(screens !== undefined ? { screens } : {}),
         // 상세 패널용 파생 필드(빌더/타입/골든 무저촉 — web에서 트리 구조로만 계산).
         path: featpaths.get(n.id) ?? [n.label],
         childRefs: n.children.map((c) => ({ id: c.id, label: c.label, kind: c.kind })),

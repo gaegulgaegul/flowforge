@@ -14,6 +14,7 @@ import type {
   PrdApplyResult,
   FeatureSuggestionQueue,
   CapabilityAuditSummary,
+  ScreenRegistry,
 } from "@flowforge/shared";
 
 export interface GraphResponse {
@@ -216,6 +217,14 @@ export async function fetchAuditCapabilities(
   const res = await fetch(`/api/docs/${project}/audit-capabilities`);
   if (!res.ok) throw new Error(`docs audit-capabilities ${res.status}`);
   return (await res.json()) as { project: string; capabilities: Record<string, CapabilityAuditSummary> };
+}
+
+/** 화면 레지스트리(features.md 화면목록 + 상세기능 N:M 링크) — 상세 패널 연결화면 섹션용.
+ * 화면목록 미작성이면 빈 screens/links(에러 아님). */
+export async function fetchPlanningScreens(project: string): Promise<ScreenRegistry> {
+  const res = await fetch(`/api/docs/${project}/planning-screens`);
+  if (!res.ok) throw new Error(`docs planning-screens ${res.status}`);
+  return (await res.json()) as ScreenRegistry;
 }
 
 /**

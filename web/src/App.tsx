@@ -20,6 +20,7 @@ import type {
   PrdSuggestion,
   FeatureSuggestion,
   CapabilityAuditSummary,
+  ScreenRegistry,
 } from "@flowforge/shared";
 import {
   fetchGraph,
@@ -40,6 +41,7 @@ import {
   fetchDocsFeatureSuggestions,
   applyDocsFeatureSuggestions,
   fetchAuditCapabilities,
+  fetchPlanningScreens,
   type CapabilitySummary,
   type ChangeSummary,
 } from "./api.js";
@@ -111,6 +113,8 @@ export function App(): JSX.Element {
   const [featureEdges, setFeatureEdges] = useState<Edge[]>([]);
   // capability별 audit 요약(docs/audit.json) — 요구사항 노드 배지용. null=미로드/실패(배지 없음, D-6).
   const [featureAudit, setFeatureAudit] = useState<Record<string, CapabilityAuditSummary> | null>(null);
+  // 화면 레지스트리(features.md 화면목록 + N:M 링크) — 상세 패널 연결화면 섹션용. null=미로드/실패(섹션 없음, D-4).
+  const [planningScreens, setPlanningScreens] = useState<ScreenRegistry | null>(null);
   // 기능명세 속성 제안 큐(docs/planning/features.suggestions.json) — 승인/반려 편집 UI(6b).
   // 6a prdSuggestions와 대칭. 큐 비면 순수 읽기 트리 뷰.
   const [featureSuggestions, setFeatureSuggestions] = useState<readonly FeatureSuggestion[]>([]);
@@ -216,16 +220,21 @@ export function App(): JSX.Element {
 
   // 기획 기능명세서(planningFeatures) 바뀌면 레이아웃 재계산. null이면 비운다.
   // featureAudit(null=미로드/실패)은 undefined로 넘겨 배지 없음(D-6) — 그래프 렌더는 무영향.
+  // planningScreens(null=미로드/실패)도 undefined로 넘겨 연결화면 없음(D-4) — 그래프 렌더는 무영향.
   useEffect(() => {
     if (!planningFeatures) {
       setFeatureNodes([]);
       setFeatureEdges([]);
       return;
     }
-    const { nodes, edges } = toFeatureTreeFlow(planningFeatures, featureAudit ?? undefined);
+    const { nodes, edges } = toFeatureTreeFlow(
+      planningFeatures,
+      featureAudit ?? undefined,
+      planningScreens ?? undefined,
+    );
     setFeatureNodes(nodes);
     setFeatureEdges(edges);
-  }, [planningFeatures, featureAudit]);
+  }, [planningFeatures, featureAudit, planningScreens]);
 
   // 기획 IA(planningIaRoot) 바뀌면 레이아웃 재계산. null이면 비운다. change IA와 동일한 toIAFlow 재사용
   // (화면 1급 노드 IA는 간단히뷰 고정 — verbose 토글은 change IA 전용).
@@ -407,6 +416,17 @@ export function App(): JSX.Element {
         if (token !== dashReqToken.current) return;
         setFeatureAudit(null); // audit 조회 실패 — 배지 없음(그래프 렌더는 무영향)
       });
+    // 화면 레지스트리(features.md 화면목록 + N:M 링크) 로드 — 실패 시 연결화면 섹션만 생략(D-4).
+    setPlanningScreens(null);
+    fetchPlanningScreens(card.name)
+      .then((r) => {
+        if (token !== dashReqToken.current) return;
+        setPlanningScreens(r);
+      })
+      .catch(() => {
+        if (token !== dashReqToken.current) return;
+        setPlanningScreens(null); // 조회 실패 — 연결화면 섹션만 생략(그래프·패널 무영향, D-4)
+      });
     // 기획 단계 IA(docs/planning/features.md 화면목록) 로드 — 없으면(404) null로 비움(에러 아님).
     setPlanningIaRoot(null);
     fetchDocsPlanningIa(card.name)
@@ -517,12 +537,15 @@ export function App(): JSX.Element {
           return Promise.all([
             fetchDocsPlanningFeatures(project),
             fetchDocsFeatureSuggestions(project),
+            // 화면 링크도 features.md에서 파생 — 함께 재조회해 stale 방지. 실패는 개별 흡수(D-4: 섹션만 생략).
+            fetchPlanningScreens(project).catch(() => null),
           ]);
         })
-        .then(([featRes, sugRes]) => {
+        .then(([featRes, sugRes, screensRes]) => {
           if (token !== dashReqToken.current) return; // 그 사이 다른 클릭 → 폐기
           setPlanningFeatures(featRes.tree.root);
           setFeatureSuggestions(sugRes.queue.suggestions);
+          setPlanningScreens(screensRes);
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;

@@ -7,8 +7,8 @@
 
 ### Parallel Group 1 (라우트 완료 후 — 서로 다른 파일, 동시 실행 가능)
 
-- [ ] 2.1 web fetch+파생: `web/src/api.ts`에 `fetchPlanningScreens(project)` 추가, `featureTreeAdapter.ts`에 상세기능 노드 라벨 ↔ `links[].detailLabel` 동치로 `screens: {id,label}[]` 파생(D-2·D-3: label은 registry.screens에서 해석, dangling id는 `label=id` 강등, 링크 없으면 undefined). `FeatureNodeData`에 `screens?` 정식 필드 승격. App.tsx 기능명세 로드부 병렬 fetch 추가, 실패는 필드 없음 강등(D-4). [parallel]
-- [ ] 2.2 패널 캐스트 제거: `web/src/FeatureDetailPanel.tsx`의 `(node as { screens?... })` 임시 캐스트를 `node.screens` 정식 필드 참조로 교체 — 렌더 JSX 무변경(이미 완성된 섹션). [parallel]
+- [x] 2.1 web fetch+파생: `web/src/api.ts`에 `fetchPlanningScreens(project)` 추가, `featureTreeAdapter.ts`에 상세기능 노드 라벨 ↔ `links[].detailLabel` 동치로 `screens: {id,label}[]` 파생(D-2·D-3: label은 registry.screens에서 해석, dangling id는 `label=id` 강등, 링크 없으면 undefined). `FeatureNodeData`에 `screens?` 정식 필드 승격. App.tsx 기능명세 로드부 병렬 fetch 추가, 실패는 필드 없음 강등(D-4). [parallel]
+- [x] 2.2 패널 캐스트 제거: `web/src/FeatureDetailPanel.tsx`의 `(node as { screens?... })` 임시 캐스트를 `node.screens` 정식 필드 참조로 교체 — 렌더 JSX 무변경(이미 완성된 섹션). [parallel]
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 

@@ -66,8 +66,8 @@ export function FeatureDetailPanel({ node, onClose, onSelectById }: FeatureDetai
   const open = node !== null;
   const meta = node ? (KIND_META[node.kind] ?? KIND_META.detail) : KIND_META.detail;
 
-  // 연결화면(N:M)·WHEN/THEN은 features 노드 data엔 아직 없다 — 있을 때만 렌더(지어내지 않음).
-  const screens = (node as { screens?: readonly { id: string; label: string }[] } | null)?.screens;
+  // 연결화면(N:M)은 어댑터가 파생한 정식 필드 — 링크 없는 노드는 undefined(섹션 생략). WHEN/THEN은 아직 없다 — 있을 때만 렌더(지어내지 않음).
+  const screens = node?.screens;
   const when = (node as { when?: string } | null)?.when;
   const then = (node as { then?: string } | null)?.then;
 
