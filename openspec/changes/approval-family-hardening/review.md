@@ -1,5 +1,76 @@
 # 배포 전 최종 검토 — approval-family-hardening
 
+검토일: 2026-07-05 (3차 — 2차 치명 2건 픽스 후 재검토) / 검토 범위: 픽스 커밋 ccacbe6(웹 200건 청크 전송·batch_too_large 안내·N건 표기)·cd29898(서버 엣지 테스트 7건)의 diff + 전체 change diff(1ba0d2d..HEAD, server/web 16파일 — `web/src/api.ts`·`App.tsx`·패널 3종·`server/src/lib/*` 3형제·`routes/docs.ts`·`eol.ts`·`planningUserFlowBuilder.ts`) 적대 재검토. 전체 앱 리뷰 아님.
+
+> **verify 입력**: verify.json(2026-07-05 23:29) = **FAIL** — 시나리오 10/10 PASS·layers server 306/306 PASS이나 **엣지 게이트 4건 "검증 불충분" 잔존으로 archiveGate closed**: [prd] EOL 보존(경계값=혼합 EOL missing), [prd] 큐 재작성(잘못된타입·특수문자 missing), [features]·[userflow] 큐 재작성(특수문자 missing). 같은 날 3차 verify가 2회 상충(23:26 PASS/개방 → 23:29 FAIL/차단)했는데, **독립 grep 실측 결과 23:29가 리포 실상과 일치** — 23:26의 PASS는 "실행 후 삭제된 임시(ad-hoc) 테스트 + 전이 논증"에 의존한 판정이었고, 상주 테스트 기준으로는 prd 혼합 EOL·prd non-string id·특수문자 prune 테스트가 리포 어디에도 없다. 이 리뷰는 verify를 재실행하지 않고 판단 입력으로 사용한다.
+>
+> **criteria brief**: changeTypes=[backend, frontend] (신호: cd29898 server jest, ccacbe6 web .ts/.tsx diff). 기준 10개 전부 in-scope. ruleSets: resolvedFrom `~/.claude/rules/`, selected 10-coding-style·20-testing·30-security·60-design·70-adversarial-review, absent 없음. designYardsticks: D-3(라우트 레벨 200 — 클라이언트 분할은 review 조건 이행분)·D-5(CSS 한 곳+패널 2곳 스코프)·Non-Goals(골격 추상화 금지·파일 락 제외). specsVerifyFocus: 잔존 엣지 게이트 4건. adversarialScope: full change scope (NOT narrowed by this brief).
+>
+> **검증 상태 구분**: 서브에이전트 3팀 — 정적 추적(diff·현재 파일·grep)에 더해 **실행 실측 2건**: web typecheck(`tsc --noEmit`) exit 0, server jest **306/306 PASS(28 suites) 재실행**. 디자인 리뷰(3-2): 화면 작업 존재(D-5+ccacbe6 N건 표기) — 이번 라운드 웹 변경은 버튼 라벨·로직 위주라 verify 5.1 실픽셀(100건 픽스처·캡 540px·바 상단) 증거 인용 + **정적 검토**로 수행, 기준 4·7에 병합.
+
+## 2차 치명 2건 추적
+
+1. **웹 batch_too_large 미처리(201건 이상 일괄 영구 불능)** → **해결됨** (ccacbe6 실측). `api.ts:197-224` `applyInChunks`가 approve/reject를 각각 200건 슬라이스로 분할(청크당 반대편 배열 `[]` — 합계 상한 위반 불가), **PRD·features·userflow 3경로 전부** 경유(`App.tsx:542/573/612`), 서버 판정 `> 200`(routes/docs.ts:252)과 오프바이원 정합(정확히 200건 통과). 400 응답의 `error === "batch_too_large"` 분기 + 한글 안내(api.ts:236-241 외 2곳), 결과 합산(applied 누적·skipped concat) 유실 없음, 청크 간 순차 await + 버튼 `disabled={busy}` + 진입 가드 2중 방어. 청크 N의 서버측 prune이 청크 N+1을 깨뜨리지 않음도 추적 확인(요청마다 큐 재독·서로소 슬라이스·미실재 id는 200+skipped). stale "하단에" 주석 2곳도 이 커밋에서 수정됨.
+2. **엣지 테스트 7건 보강** → **부분 해결**. cd29898이 7건 추가(빈 문서 3종·미폐합 펜스·혼합 EOL 결정론·non-string id 2종) — 품질 실측: assert-nothing 없음, 5건은 바이트/상태 강단언(약점은 skip 사유 단언 2건의 느슨함뿐). 그러나 **verify 상주 테스트 기준으로 4건 잔존**(아래 치명 1) — 2차가 요구한 7건 중 prd 계열과 특수문자 prune이 미작성/임시 테스트로만 실증된 상태.
+
+## 반드시 수정해야 할 항목
+
+1. **[기준 9·verify 게이트] 엣지 게이트 4건 잔존 — verify FAIL로 archive가 기계적으로 닫혀 있음. 코드 위험은 4건 전부 정적 추적상 0(BENIGN-GAP), 필요한 건 상주 테스트 5건.** 판정 근거: ① prd 혼합 EOL — prd도 공유 `detectEol/restoreEol` 사용(docs.ts:24 import·:266 호출)이나 조립 경로가 features/userflow(`lines.join(eol)`)와 달리 **전체 문자열 조립 후 restoreEol**이고, 혼합 `\r\n`이 살아남을 유일 지점(preamble raw slice, docs.ts:248)은 restoreEol의 선정규화(eol.ts:16)가 흡수 — 구조상 안전하되 userFlowDocs.test.ts:477의 전이는 "같은 detectEol"까지만이라 prd 전용 테스트가 싼 보험. ② prd non-string id — 읽기 필터가 **코드에 이미 존재**(docs.ts:184 `typeof id === "string"`, features/userflow와 동일 구조)하고 readDocsPrdSuggestions는 절대 throw 안 함 — 테스트만 부재(features :408·userflow :488은 있음). ③④ 특수문자 prune ×3 — `Set<string>.has` + 원시 문자열 filter(docs.ts:331-336·featureDocs.ts:275-280·userFlowDocs.ts:298-303)라 `__proto__`·빈 문자열·유니코드 전부 무해 + 23:26 run의 임시 테스트로 실측 PASS 이력 있음(삭제됨). 수정 = 테스트 5건 추가: (a) docsPrdApproval.test.ts 혼합 EOL 결정론(CRLF/LF 카운트 등식+preamble 보존) (b) 동 파일 non-string id 읽기 필터+prune sanitize (c)(d)(e) prune 3형제 특수문자 id(`__proto__`·한글·빈 문자열) 잔존/제거 단언 → verify 재실행으로 게이트 재개방.
+2. **[기준 5·9] 청크 도중 실패 시 `.catch`가 재조회 없이 에러만 표시 — 부분 반영이 UI에 은폐되고 재시도 시 오경보. ccacbe6가 만든 신규 실패 모드, 2팀(픽스 검증·적대 파괴자) 중복 발견 → 심각도 상승.** `App.tsx:554-557`(prd)·`:591-594`(features)·`:631-634`(uflow) — 재조회(fetch)가 성공 체인(`.then`)에만 있다. 시나리오: 큐 450건 [모두 승인] → 청크 1(200건) 서버 반영 완료 → 청크 2 네트워크 실패 → 화면엔 처리된 200건 카드 + 반영 전 문서 뷰가 그대로 남음(실제 prd.md는 이미 변경). 재시도하면 데이터는 수렴하나(서버가 미실재 id를 skipped 처리) "일부 제안을 처리하지 못했습니다(skipped: 200개 나열)"라는 **오해성 경보**가 뜬다 — 대량 큐 신뢰성이라는 이 change의 명분과 충돌. 데이터 손실은 없음. 수정 = 세 `.catch`에서도 문서·큐 재조회 1회 + "일부 반영 후 실패" 고지(각 1-2줄). [팀 A c항 + 팀 C S-1, CONFIRMED·file:line 실증]
+
+## 수정하면 좋은 항목
+
+- **[기준 1·8] `APPLY_BATCH_CAP` 서버·웹 이중 정의 — 드리프트 시 2차 치명 1이 그대로 재발하고 안내 문구가 거짓이 됨.** `api.ts:187` ↔ `routes/docs.ts:248` 주석으로만 연결, 양쪽 다 이미 `@flowforge/shared`를 import하므로 상수 이동으로 구조 차단 가능. 서버만 100으로 내리면 모든 일괄이 400인데 메시지(api.ts:190)는 "자동 분할이 적용되지 않은 요청"이라 단언 — 능동적 오도. [파괴자+신입 교차 → 경미에서 승격]
+- **[기준 4] skipped 대량 시 상태 메시지 무제한 나열** — `App.tsx:545` `res.skipped.join(", ")`, 수백 건이면 상태바가 화면을 뒤덮음. 상위 N + "외 M건" 절단 권장.
+- **[기준 4·8] PRD 패널만 3중 비대칭 잔존** — `PrdApprovalPanel.tsx:90/98/107`: 일괄 바 하단·N건 표기 없음·리스트 무캡(2차 발견 계승 + N건 표기 누락은 신규). 청킹 자체는 PRD도 적용되므로 기능 결함 아님 — 후속 change 또는 스코프 확장 결정 필요.
+- **[기준 5·테스트] cd29898 skip 사유 단언 2건 느슨** — 빈 features 문서(`skipped.length > 0`)·미폐합 펜스(`/^s1: /` — 주석은 no-mermaid-block이라면서 아무 사유나 통과). 사유 문자열 정확 단언으로 조이면 회귀 감지력 상승.
+- **[기준 1] `applyInChunks` 빈 요청 시 서버 미호출로 `{remaining:0}` 조작 반환** — `api.ts:202-224`, 큐 100건이어도 remaining 0. 현재 호출부 미도달이나 문서화 안 된 계약 함정. 도큐 코멘트 1줄 또는 초기 remaining을 null로.
+- **[기준 3·web 테스트 인프라] web 워크스페이스 테스트 러너 부재로 applyInChunks(청크 경계·합산 규약)가 자동 검증 0으로 출고** — pre-existing 제약이지만 이번 변경의 핵심 로직이 무검증인 것은 사실. vitest 도입은 별도 결정.
+- **[경미] 패널 간 동시 apply 시 공유 `dashReqToken`이 앞선 apply의 재조회 결과 폐기** — `App.tsx:540/571/610`, 메커니즘은 pre-existing이나 청크화로 in-flight 창이 1요청→N요청으로 확대. busy 플래그가 패널별이라 교차 클릭 가능.
+- **[1차·2차 미해결 잔존]** 큐 쓰기(writeFileSync) 무보호 고아(pre-existing) / mid-apply 큐 통손상 재독 폴백(D-2 수용 범위) / lone-CR 가드(docs.ts:180-190) / 미폐합 펜스 skip 사유 세분화(`no-mermaid-block`→`unclosed-mermaid-block`) / 백틱 라벨 외부 렌더러 1회 확인(PLAUSIBLE 미실측) / cors 와일드카드+무인증 후속 change(index.ts:12, 스코프 밖) / 60vh→dvh 폴백.
+
+## 현재 상태로 유지해도 되는 항목
+
+- **청킹 설계 자체의 정당성**: "나눠서 하세요" 메시지 방식은 결함을 사용자에게 전가하는 반쪽 수정 — 청킹 ~40줄은 정당한 스코프(게으른 시니어 클린 판정). 혼합 approve+reject 합계 초과 불가(청크당 반대편 `[]` + 호출부가 애초 한쪽만 전송).
+- **잔존 엣지 게이트 4건의 코드 자체**: 위 치명 1 판정 — 전부 구조상 안전(BENIGN-GAP), 특수문자 prune은 임시 테스트 실측 PASS 이력까지 있음. 필요한 건 상주 테스트 박제뿐.
+- **청크 ↔ 서버 prune 정합**: 요청마다 큐 디스크 재독 + 서로소 슬라이스 + 미실재 id는 200+skipped(중단 아님) — 추적 확인.
+- **restoreEol 멱등**(선정규화로 `\r\r\n` 불가)·**prune ENOENT 폴백**(빈 큐 — 오히려 구 코드의 삭제 무효화보다 개선)·**중복 id cap 우회 불가**(큐 기준 dedupe)·**동시 요청 cap 우회 불가**(완전 동기 함수 — 이벤트 루프 직렬화)·**프로토타입 오염 벡터 없음**(Set 원소는 객체 키 아님, 파싱 객체 spread/merge 부재)·**400 응답 정보 노출 없음**.
+- **코딩 스타일**: 터치 파일 console.log 0·`any` 0·매직 넘버 명명(APPLY_BATCH_CAP)·tsc strict PASS(exit 0 실측).
+- **N건 표기·stale 주석**: Feature/UserFlow 패널 적용·수정 실측(FeatureApprovalPanel.tsx:116/125·:7, UserFlowApprovalPanel 동일). 카운트=전체 큐 길이, 필터 UI가 없어 혼동 여지 없음.
+
+## 리팩토링 추천 항목
+
+- api.ts 400/batch_too_large 처리 6줄 × 3함수 축자 복붙 → `throwIfBatchTooLarge(res)` 헬퍼 1개(18줄→6줄). 정상 운영에선 사문 경로(모든 호출이 청킹 경유)라는 점도 주석화.
+- 패널 래퍼 삽입부 재들여쓰기 생략·UserFlowApprovalPanel 잉여 빈 줄(2차 계승).
+- `findFirstMermaidBlock` 여닫이 비대칭(여는 펜스 trim 정확일치 vs 닫는 펜스 startsWith) — 4-백틱·info-string 미인식이 의도임을 주석 1줄로 명시(회귀 아님).
+- PRD `applied`가 청크 경계에서 섹션 중복 합산 가능(UI 미표시라 잠복) — 합산 규약 주석.
+
+## 적대적 검토 (4 페르소나)
+
+- **파괴자**: 발견 2건 — ① 청크 중도 실패 시 catch 재조회 부재 → 부분 반영 은폐 + 재시도 skipped 오경보(치명 2, CONFIRMED) ② 패널 간 동시 apply 시 dashReqToken 경합 창 확대(경미). 지시 프로브 8건(청크간 prune 정합·polling 경합·trailing CRLF·restoreEol 이중 적용·prune ENOENT·중복 id·동시성 cap 우회·오염)은 전부 무해 실추적.
+- **신입 개발자**: 발견 3건 — cap 상수 이중 정의+오도성 안내 문구(권장 승격), applyInChunks 빈 요청 숨은 계약, findFirstMermaidBlock 여닫이 비대칭 주석 부재.
+- **보안 감사자**: 발견 1건(경미) — 클릭 1회=ceil(N/200) POST 다요청 패턴 최초 도입 + rate limit 부재(순차 실행·100kb body 캡·로컬 전제로 실위험 낮음, 기록 가치). 클린 논증: cap 우회 불가(동기 직렬화)·프로토타입 오염 없음·에러 노출 없음(React 이스케이프로 skipped 반사 XSS 불가).
+- **게으른 시니어**: 발견 2건(경미) — api.ts 400 분기 3중 복붙(사실상 사문 경로), 패널 재들여쓰기 생략. 클린 논증: 청킹은 과설계 아님(대안이 결함 전가), cd29898 테스트 7건은 엣지 구멍 1:1 대응·부풀림 없음. 역지적: web 테스트 인프라 0으로 핵심 로직 무검증 출고.
+- **2+ 페르소나 중복 발견(심각도 상승)**: ① 청크 중도 실패 재조회 부재 — 픽스 검증팀·적대 파괴자 독립 중복 → **치명 승격**(치명 2) ② cap 상수 드리프트 — 파괴자+신입 교차 → 경미→권장 승격.
+
+## 최종 배포 가능 여부
+
+**조건부 가능 (치명 2건 수정 후)** — 2차 치명 2건 중 1건(웹 청크)은 완전 해결 실측, 1건(엣지 테스트)은 부분 해결. D-1~D-5 구현·서버 306/306·web typecheck 전부 PASS이고 신규 코드(청킹)도 설계 정합·상한 정합 확인. 남은 조건: ① **상주 엣지 테스트 5건 추가 → verify 재실행으로 archiveGate 재개방**(코드 위험 0이나 게이트가 기계적으로 닫혀 있고, 23:26 PASS는 삭제된 임시 테스트 의존이라 무효 — 상주 박제가 정답) ② **세 apply `.catch` 재조회 + 부분 반영 고지**(이 change가 만든 신규 실패 모드, 각 1-2줄). 두 건 모두 소규모이며 수정 후 verify 재실행 PASS면 재리뷰 없이 archive 진행 가능.
+
+## 개선 우선순위 (제안)
+
+1. **상주 엣지 테스트 5건(prd 혼합 EOL·prd non-string id·특수문자 prune ×3) + verify 재실행** — archive 재개방의 기계적 조건, 전부 기존 픽스처 재사용 박제.
+2. **청크 실패 `.catch` 재조회 + 부분 반영 고지 3곳** — 신규 실패 모드 봉합, 각 1-2줄.
+3. **APPLY_BATCH_CAP → @flowforge/shared 이동 + 안내 문구 정정** — 치명 1 재발 구조 차단.
+4. **skipped 나열 절단 + skip 사유 단언 2건 조이기** — UX·회귀 감지력, 각 소규모.
+5. **PRD 패널 정렬 여부 결정** — 스코프 판단(후속 change 권장, 2차 계승).
+6. **잔존 견고화 묶음**(큐 쓰기 무보호·재독 폴백·lone-CR·skip 사유 세분화·dvh·web 테스트 러너) — 전부 pre-existing 또는 방어적.
+7. **cors/인증 후속 change** — 1차부터 계승, 스코프 밖이나 실제 공격 경로.
+
+---
+
+# 이전 검토 이력 (2차)
+
 검토일: 2026-07-05 (2차 — 1차 치명 3건 픽스 후 재검토) / 검토 범위: 구현 커밋 789330f(D-2 큐 재독 차집합·D-3 배치 상한 200·D-5 패널 UI 캡) + 픽스 커밋 ee96b48(NUL 이스케이프)·81dbdb1(design 문구 정정)의 diff 및 직접 영향 파일 — `server/src/lib/docs.ts`·`featureDocs.ts`·`userFlowDocs.ts`·`routes/docs.ts`·`web/src/FeatureApprovalPanel.tsx`·`UserFlowApprovalPanel.tsx`·`styles.css` + 테스트 4종. 전체 앱 리뷰 아님.
 
 > **verify 입력**: verify.json(2026-07-05 22:55) = **FAIL** — 시나리오 10/10 PASS·5.1 게이트(299 테스트·100건 픽스처 실픽셀 캡 540px)까지 통과했으나 **엣지 게이트 7건 "검증 불충분"으로 archiveGate closed**. 이 리뷰는 verify를 재실행하지 않고 판단 입력으로 사용한다.
