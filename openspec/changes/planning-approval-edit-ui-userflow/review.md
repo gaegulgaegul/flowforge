@@ -1,4 +1,76 @@
 # 배포 전 최종 검토 — planning-approval-edit-ui-userflow
+검토일: 2026-07-05 (2차 재검토 — 1차 검토 원문은 하단 보존) / 검토 범위: 1차 리뷰 이후 diff 한정 — `server/src/lib/userFlowDocs.ts`+단위 테스트(631b993 fix), `web/src/App.tsx`(유저플로우 배선 +78줄)·`web/src/UserFlowApprovalPanel.tsx`(신규 132줄)·`web/src/api.ts`(함수 2개)·`web/src/styles.css`(+13줄)(8cea01c). 앱 전체 아님.
+
+## review criteria brief (2차)
+- changeTypes: **backend + frontend** (server lib fix + web 패널·배선·CSS — 파일 증거: `.tsx`·`styles.css` diff 존재, tasks 3.1~4.1 완료)
+- criteria: **1~10 전부 in-scope** (1차에서 out이던 4·7은 frontend 구현으로 in 전환)
+- ruleSets: resolvedFrom `~/.claude/rules/` (repo `.claude/rules/` 부재 재확인) / selected: 10-coding-style·20-testing·30-security·60-design·70-adversarial-review / absent: 없음
+- designYardsticks: design.md D-1~D-7 + Non-Goals(삭제·수정 op, 라벨 편집, 제안 생산기, 와이어프레임, 비화면 newNode — 오지적 금지) + 화면 구성("6b-features 패널과 동일 자리·스타일")
+- specsVerifyFocus: verify.json(2026-07-05 18:58) = **FAIL** — 서버 10/10 PASS(무력화 프로브 실측)·web 4/5 PASS(W1·W2·P1·P2 실픽셀), **P3 동시성 FAIL(재현 2/2)** → archiveGate closed. 이 FAIL이 본 리뷰 판정의 1차 근거.
+- adversarialScope: full change scope (NOT narrowed by this brief)
+
+## 1차 치명 항목 추적
+
+- **[해결됨] D-4 밖 문자(`[` `]` 백틱) 배치 독살 → 사유 없는 422** — fix 631b993(제안별 시험 append→재파싱 사전검사, `userFlowDocs.ts:216-223`). 본 리뷰에서 독립 실측 재검증: `[foo]` 라벨·백틱 펜스·펜스 열고/닫는 페어 프로브 전부 해당 제안만 `label-not-parse-safe` skipped, 유효 형제 정상 반영, 문서 불변. 시험은 누적 lines 대상이라 같은 배치 내 선행 승인 newNode를 참조하는 후속 제안도 올바르게 통과(실측). 트라이얼과 최종 배치 검사가 동일 상태·동일 expected를 보므로 "개별 통과·배치 실패" 우회 경로 미발견.
+- **[해결됨] web 미구현(spec Requirement 4 미충족)** — 8cea01c로 tasks 3.1·3.2·4.1·5.1 완료, verify 실픽셀 W1(승인→그래프·md 반영)·W2(빈 큐 미렌더)·P1(skipped 표면화)·P2(100건) PASS.
+
+## 반드시 수정해야 할 항목
+
+- **[치명] `switchPlanningFlow` dashReqToken race 가드 부재 — verify P3 FAIL(재현 2/2)·archive 게이트 차단.** `web/src/App.tsx:358-378`(본 리뷰에서 코드 직접 재확인): 그래프 fetch·큐 fetch 두 비동기 체인이 토큰 증가도 검사도 없이 setState — 같은 파일의 형제 핸들러 전부(openProject :385-518, openCapability :630-652, applyPrd :522-549, applyFeature :553-586, applyUserFlow :591-626)가 지키는 가드 체계에서 유일하게 이 함수만 불참. 발현 2형: ① 크로스-stem 불일치(셀렉트·그래프=v2, 패널=v1 큐 카드 — 실측 스크린샷 web-p3-race.png) ② stale 응답 last-write-wins로 사용자 최종 선택 소실. 셀렉트 onChange 2연타면 창이 열리므로 사람 손 속도(키보드 화살표·빠른 재선택)에서도 발현 가능(정적 추론 — verify 재현은 프로그래매틱 7연타). **2차 홀(본 리뷰 신규 발견)**: 이 함수가 토큰을 안 올리므로 in-flight `applyUserFlow` 응답이 stem 전환 후에도 자기 가드를 통과해 전환된 화면을 이전 stem 결과로 덮어씀 — 같은 1줄 수정으로 함께 닫힘. 영향은 표시 한정(GET만 — 서버 문서 훼손 없음, apply의 서버측 쓰기는 레이스 전에 정상 완결). 최소 수정: `const token = ++dashReqToken.current;` + 두 `.then`에 `if (token !== dashReqToken.current) return;` — 바로 아래 applyUserFlow(:596-609) 패턴 복사, 약 4줄. **부수 정정 필요**: tasks.md 4.1이 "dashReqToken race 가드 기존 패턴" 적용을 완료 주장하나 switchPlanningFlow에는 미적용 — 완료 주장과 코드 불일치.
+
+## 수정하면 좋은 항목
+
+- **[중간] fix가 도입한 O(n²) 트라이얼 비용 + apply 배치 상한 부재.** 제안별 시험이 매번 전체 문서 재파싱(`userFlowDocs.ts:216-223`→`userFlowInvariantHolds` 전량 비교). 실측: N=50→32ms, 100→79ms, 200→227ms, 400→866ms(초선형). Node 단일 스레드 동기 블록이라 무상한 배치는 가용성 리스크(파괴자+보안 중복 발견 → 낮음→중간 상향). 라우트 배치 크기 캡 권장. 현 사용 규모(100건 79ms)에선 실해 없음.
+- **[중간] "label-not-parse-safe" 사유가 원인을 오도하는 경로.** 1차 지적 4a(mermaid 블록 판별 이중화 — `userFlowDocs.ts:90-101` startsWith는 ```` ```mermaid-example ````도 매칭, `planningUserFlowBuilder.ts:22-25` 정규식은 정확 매칭)는 **여전히 존재**하나, fix 덕에 배치 독살→개별 skipped로 강등(실측: example 블록 선행 문서에서 `applied:0, skipped:["s1: label-not-parse-safe"]`, 문서 불변). 단 실제 원인은 라벨이 아니라 블록 타게팅 어긋남이라 사유 문자열이 오진 유도 — 블록 판별 단일화가 근본 수정.
+- **[중간] 대량 큐 UI: 100건 카드가 캡 없이 전부 나열, [모두 승인/반려]가 최하단.** `feature-approval`에 max-height/overflow 없음(정적 CSS) — 카드당 ~134px, 100건이면 ~13,000px 스크롤 끝에 일괄 버튼(스크린샷 web-p2-bulk.png 근거). 대량일수록 일괄 처리가 가장 멀어지는 역설 + 그래프가 폴드 밖으로. FeatureApprovalPanel 공통 부채 — 캡+overflow-y 또는 bulk 바 상단 이동 권장.
+- **[낮음] skipped 피드백이 화면 구석 status 텍스트 + 원문 코드 노출.** `sug-bad-from: from-not-in-doc`가 헤더 옆 작은 텍스트로만(스크린샷 web-p1-skipped.png) — 승인 버튼(화면 중앙)과 시선 단절, 비개발자에게 난해. 카드 인근 인라인 배너 권장.
+- **[낮음] stem 전환 시 낙관적 큐 클리어 플래시 + 로딩 인디케이터·셀렉트 비활성화 없음.** `App.tsx:372` 동기 `setUflowSuggestions([])` — 정상 전환에도 패널이 잠깐 소멸, "반려됨"으로 오독 여지. 기존 openProject 관례 답습이라 낮음.
+- **[낮음] 1차 잔존 항목(이번 커밋 범위 밖, 재확인됨)**: CRLF→LF 전변환(실측 재확인, `userFlowDocs.ts:268/:278`), 프로세스 간 큐 clobber(정적, :253→:295), 중복 id 이중 append(실측 재확인, :254/:260 — approve 1개에 2줄), 라벨 길이 상한 부재(grep 0건). 별도 정리 change 후보.
+- **[낮음] 에러 메시지에 `String(e)` 원문 노출**(`App.tsx:619` 등) — applyPrd/applyFeature 기존 패턴 답습, 로컬 단일 사용자라 실위험 낮음.
+
+## 현재 상태로 유지해도 되는 항목
+
+- **서버 fix 품질**: 배치 독살 해소 실측, 무력화 프로브 존치(재verify에서 mutation red 6/green 41 실측), 경로 이탈 가드 무손상, 트라이얼-배치 이중 검사 정합.
+- **web 보안 클린(증거 있음)**: React 텍스트 보간만·`dangerouslySetInnerHTML` 0·라벨/rationale XSS 벡터 없음, `encodeURIComponent` 적용(api.ts:311/:329), console.log·`any` 0(grep 실측), `import type` 준수, `npx tsc --noEmit` 0(실측).
+- **디자인 충실도 PASS(정적+verify 실픽셀 인용)**: 프로토타입 골격 요구 전 항목 구현 — 카드·from→▶to·실선/점선(색+뱃지 이중 인코딩+aria-label)·신규 화면 뱃지·rationale·개별/일괄 버튼·빈 큐 미렌더. FeatureApprovalPanel CSS 재사용으로 스타일 이탈 0(신규 CSS 13줄은 에지 표기 전용), 기존 다크 팔레트 정합. AI-slop 없음. DESIGN.md 미정의(프로토타입도 와이어프레임 모드) — 토큰 검사는 불가였음을 명시.
+- **`targetIdOf` 방어 폴백**(UserFlowApprovalPanel.tsx:12-14): 서버 필터가 이미 막는 계약 위반 대비 — 죽은코드 인접이나 무해, 유지.
+- **`.catch(() => setUflowSuggestions([]))`**(App.tsx:375): 큐 없음/오류를 빈 큐로 강등 — 주석으로 의도 명시된 설계 선택. 네트워크 장애와 "제안 없음"이 동일하게 보이는 트레이드오프는 인지하되 수용.
+- App.tsx 986줄(400줄 규칙 초과)은 기존 위반(커밋 전 910줄)의 연장 — 이 change에서 안 고쳐도 되나 부채 누적 중(아래 리팩토링).
+
+## 리팩토링 추천 항목
+
+- **승인 패널 3벌째 — rule of three 도달.** Prd/Feature/UserFlow 패널이 배너+카드 리스트+일괄 푸터 골격을 각자 소유(~40줄/벌 중복, CSS는 이미 공유). 4번째 전에 공유 `<ApprovalPanel>`(카드 본문 슬롯) 추출 권장. 1차의 큐 IO 3벌 복제(`readSuggestionQueue` 제네릭)와 같은 축.
+- App.tsx 유저플로우 배선(fetch effect·applyUserFlow·switchPlanningFlow)을 훅(`useUserFlowApproval`)으로 추출 — 이번 레이스 누락 같은 가드 불참이 격리 단위에서 더 잘 보임.
+- `|{sug.label}|` 파이프 표기(UserFlowApprovalPanel.tsx:83)에 의도 주석 1줄(Mermaid 라벨 표기 관습) — 잔재로 오독 여지.
+
+## 적대적 검토 (4 페르소나)
+
+- **파괴자**: 치명 1(P3 레이스 실측 2/2 + 2차 홀 — apply in-flight 응답이 stem 전환을 덮음)·중간 1(O(n²) 866ms@400 실측, 배치 상한 없음)·낮음(silent catch로 네트워크 장애=빈 큐 구분 불가, CRLF·중복 id 실측 잔존). 서버 문서 손상 벡터는 이번에도 못 뚫음 — 독살 fix 우회 프로브(펜스 페어·mermaid 키워드 라벨) 전부 개별 skipped·문서 불변 실측.
+- **신입 개발자**: switchPlanningFlow만 가드 없는 이유가 코드·주석 어디에도 없음(형제 함수 대조로만 발견 가능), 로딩 인디케이터·셀렉트 비활성화 부재, `|라벨|` 무주석 관습, tasks.md 4.1 완료 주장-코드 불일치, "label-not-parse-safe" 오도 사유. 반면 패널 헤더 docblock·에지 표기 접근성 처리는 평균 이상.
+- **보안 감사자**: XSS·인젝션·경로이탈 클린(증거: 텍스트 보간만·encodeURIComponent·stem 화이트리스트 무손상). 발견 = 무상한 배치 O(n²) 자원소진 벡터(가용성, 로컬 단일 사용자라 중간), `String(e)` 에러 원문 노출(기존 답습, 낮음).
+- **게으른 시니어**: 과잉구현 발견 = 승인 패널 골격 3벌째 복제(추출 시점 도과), targetIdOf 계약-위반 방어(죽은코드 인접). 반면 EdgeMark는 적절히 미니멀, CSS 신규 13줄뿐(재사용 우선), 죽은 export 0, 신규 추상화 0 — 부풀림 없음.
+- 2+ 페르소나 중복 발견(심각도 상승): **① O(n²)+배치 상한 부재**(파괴자+보안, 낮음→중간) **② 로딩 상태 부재·레이스 가시성**(파괴자+신입 — 치명 P3의 구성 요소로 병합)
+
+## 디자인 리뷰 (조건부 게이트 — 수행됨)
+
+frontend 변경 존재 → 수행. 방식 = **정적 검토 + verify 실픽셀 증거(스크린샷 6장) 인용** (라이브 재기동 없이). 판정: 프로토타입 충실도 PASS·패밀리 스타일 일관·차단급 시각 문제 없음. 발견은 위 항목에 병합 — criteria 4(UX/UI): skipped 피드백 위치·대량 큐 일괄 버튼 역설·플래시, criteria 7(반응형): 신규 CSS에 미디어쿼리 없음(`.uflow-approval-title` flex-wrap으로 좁은 폭 생존, 상위 max-width 920px 캡) — **모바일 실뷰포트·터치 타깃(버튼 padding 5px 14px)은 미검증**(스크린샷 전부 1280px).
+
+## 최종 배포 가능 여부
+
+**조건부 가능 (치명 1건 수정 후)** — 1차의 배포 불가 2축(web 미구현·배치 독살)은 해결 실측 확인. 잔여 차단은 P3 레이스 1건: verify FAIL로 archiveGate closed 상태이며, 수정은 기존 패턴 복사 ~4줄. 수정 → 재verify P3 PASS 확인 → archive 진행 가능. 그 외 발견은 전부 non-blocking(중간 3·낮음 다수, 상당수가 패밀리 공통 부채로 별도 change 적합).
+
+## 개선 우선순위 (제안)
+
+1. **치명: switchPlanningFlow에 dashReqToken 가드 4줄**(+tasks.md 4.1 주장 정정) → 재verify로 P3 PASS 실측 — archive 게이트를 여는 유일한 차단 항목.
+2. **mermaid 블록 판별 단일화 + skipped 사유 정확화** — "무언 422"는 사라졌지만 오진 사유가 그 자리를 이음.
+3. **apply 배치 크기 캡** — O(n²) 가용성 벡터 봉쇄(라우트 1곳).
+4. CRLF 보존·중복 id 필터 — 실측 확인된 저비용 수정, featureDocs 공통.
+5. 대량 큐 캡/bulk 버튼 위치 + skipped 인라인 피드백 + 로딩 표시 — UX 개선 묶음(패널 패밀리 공통).
+6. (별도 change) ApprovalPanel 골격 추출·큐 IO 제네릭·App.tsx 훅 분리 — rule of three 부채 일괄 해소.
+
+---
+
+# 배포 전 최종 검토 — planning-approval-edit-ui-userflow
 검토일: 2026-07-05 / 검토 범위: 이 change의 diff 한정 (앱 전체 아님) — `shared/src/user-flow-suggestion-types.ts`(신규)·`shared/src/index.ts`(배럴), `server/src/lib/userFlowDocs.ts`(신규)+단위 테스트, `server/src/routes/docs.ts`(라우트 2개 추가)+통합 테스트, `server/src/parser/planningUserFlowBuilder.ts`(리팩토링), `server/src/lib/docs.ts`(1줄)
 
 ## review criteria brief
