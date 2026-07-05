@@ -53,6 +53,11 @@ export type {
 } from './feature-suggestion-types.js';
 
 export type {
+  UserFlowSuggestion,
+  UserFlowSuggestionQueue,
+} from './user-flow-suggestion-types.js';
+
+export type {
   DocsDecision,
   DecisionTimeline,
 } from './docs-decision-types.js';
