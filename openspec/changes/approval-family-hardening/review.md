@@ -1,5 +1,71 @@
 # 배포 전 최종 검토 — approval-family-hardening
 
+검토일: 2026-07-05 (4차 — 3차 치명 2건 픽스 후 재검토) / 검토 범위: 픽스 커밋 7091c94(청크 실패 재동기화 3곳·상주 엣지 테스트 5건·APPLY_BATCH_CAP shared 단일화·skipped 절단)의 diff + 직접 영향 파일 — `web/src/App.tsx`·`api.ts`·`server/src/routes/docs.ts`·`shared/src/prd-suggestion-types.ts`·`index.ts`·서버 테스트 3종 — 및 전체 change 스코프 적대 재검토. 전체 앱 리뷰 아님.
+
+> **verify 입력**: verify.json(2026-07-05 23:56 4차) = **PASS** — 시나리오 10/10 PASS·엣지 게이트 전건 "충분"·archiveGate **open**. 3차의 잔존 엣지 갭 4건은 7091c94 상주 테스트 5건으로 해소 실측(verify layers.server 참조). 단 lint는 전 워크스페이스 스크립트 부재로 no-op — 커밋 메시지의 "린트 0"은 실검사 아님(verify.json도 동일 명시). 이 리뷰는 verify를 재실행하지 않고 판단 입력으로 사용한다.
+>
+> **criteria brief**: changeTypes=[backend, frontend] (신호: server 테스트 .ts + web .tsx/.ts diff). 기준 10개 전부 in-scope(4·7은 웹 상태 메시지 로직 한정). ruleSets: resolvedFrom `~/.claude/rules/`, selected 10-coding-style·20-testing·30-security·60-design·70-adversarial-review, absent 없음. designYardsticks: D-3(라우트 200 — CAP shared 단일화는 그 연장)·Non-Goals(골격 추상화 금지 — 단 웹 재동기화 복제는 치명 1 참조). specsVerifyFocus: 4차 verify 잔존 갭 0건 → 3차 review 치명 2건의 이행 추적이 초점. adversarialScope: full change scope (NOT narrowed by this brief).
+>
+> **검증 상태 구분**: 서브에이전트 2팀 — 정적 추적에 더해 **실행 실측**: `npm run build`(shared→server→web, vite 포함) exit 0, server jest **311/311 PASS(28 suites)**, 신규 엣지 테스트 5건 개별 verbose PASS, typecheck exit 0. 디자인 리뷰(3-2): 이번 라운드 웹 변경은 상태 메시지·재동기화 로직뿐(레이아웃 무접촉) — **정적 검토**로 기준 4에 병합.
+
+## 3차 치명 2건 추적
+
+1. **상주 엣지 테스트 5건** → **해결됨** (실측). prd 혼합 EOL 결정론(`docsPrdApproval.test.ts:319` — 전 LF가 CR 선행하는 바이트 등식 + preamble 보존), prd non-string id 읽기 필터+prune sanitize(`:331` — raw JSON에 `{id:7}` 주입), prune 3형제 특수문자(prd `:345`·features `docsFeatureApproval.test.ts:418`·userflow `userFlowDocs.test.ts:494` — `toEqual` 정확 잔존/제거 단언, 3파일이 각각 다른 특수 id(`__proto__`·한글·빈 문자열)를 제거 대상으로 삼아 교차 커버). 전부 개별 실행 PASS, verify 4차 엣지 게이트 전건 "충분" → archiveGate 재개방.
+2. **청크 실패 `.catch` 재조회 + 부분 반영 고지** → **부분 해결**. 고지 문구 3곳·prd catch(문서+큐 재조회, `App.tsx:560-570`)·features catch(문서+큐, `:605-614`)는 이행. 그러나 **userflow catch는 그래프만 재조회하고 큐(`fetchUserFlowSuggestions`)를 생략**(`:655-661`), features catch는 성공 경로가 재조회하는 `fetchPlanningScreens`를 생략(`:608-613`) — 아래 치명 1.
+
+3차 권장사항 중: **APPLY_BATCH_CAP shared 단일화 → 해결됨**(`shared/src/prd-suggestion-types.ts:57-62` 단일 정의, `routes/docs.ts:48`·`api.ts:187` 양쪽 소비 — workspace symlink 1개+exports→dist 단일이라 사본 분기 구조 불가, 오도성 안내 문구도 이제 정확: 청킹 경유는 상한 도달 불가). **skipped 절단 → 해결됨**(`App.tsx:537-540`, 5/6 경계 정확·오프바이원 없음). PRD 패널 비대칭·skip 사유 단언 느슨·web 테스트 러너 부재 → **미해결**(아래 재기재).
+
+## 반드시 수정해야 할 항목
+
+1. **[기준 5·9] userflow `.catch` 재동기화가 큐를 재조회하지 않음 — 3차 치명 2가 봉합하려던 "재시도 skipped 오경보"가 userflow 패널에 그대로 잔존. 4중 수렴(파괴자·신입·게으른 시니어·UX 정적 점검) → 심각도 상승.** `App.tsx:655-661` — 성공 경로는 6개 상태(그래프·노드·에지·flowName·versions·큐)를 복원하는데 catch는 그래프 계열 3개만. 시나리오: userflow 큐 450건 [모두 승인] → 청크 1(200건) 서버 반영 → 청크 2 실패 → 그래프는 재동기화되나 **큐 패널엔 반영된 200건이 pending으로 잔존** → 재클릭 → 서버가 미실재 id를 skipped 처리 → "일부 제안을 처리하지 못했습니다(외 195건)" 오경보 — 이 change의 명분과 정면 충돌하는 실패 모드가 3패널 중 1곳에 잔존. 같은 계열: features catch가 `fetchPlanningScreens` 생략(`:608-613`) — 성공 경로 자신의 주석(`:595` "화면 링크도 features.md에서 파생 — 함께 재조회해 stale 방지")과 모순, 부분 반영 후 연결화면 링크 stale. 데이터 손상은 없음(서버 멱등 skipped)·UI 정합성만의 문제. 수정 = 두 catch의 재조회 세트를 성공 경로와 동일하게(각 1-2줄), 또는 패널별 `resync()` 헬퍼 추출로 성공/실패 경로가 단일 진실 공유 — **같은 커밋 안에서 3곳 중 2곳이 이미 드리프트한 실측**이 있으므로 헬퍼가 구조적 정답. [팀 A(픽스 검증) MEDIUM + 팀 B S-1·N-3·L-1·UX 독립 수렴, CONFIRMED·file:line 실증]
+
+## 수정하면 좋은 항목
+
+- **[기준 3·10] `@flowforge/shared` value import 최초 도입으로 gitignore된 `shared/dist`가 jest·vite의 하드 런타임 의존이 됐는데, 루트 `test`/`dev:*` 스크립트는 shared를 선빌드하지 않음** — fresh clone에서 `npm ci && npm test`가 shared 수동 빌드 전까지 실패. `routes/docs.ts:48`·`api.ts:187`이 repo 유일의 비-type import(나머지 전부 `import type`=소거). 루트 스크립트에 선빌드 1줄. [파괴자 S-5]
+- **[기준 5] 부분 실패 고지가 "화면 재동기화"를 단정** — 네트워크 단절이면 재동기화 GET도 실패하는데 상태바는 이미 동기화됐다고 주장(3곳). "재동기화 시도"로 정직화 권장. 또 `applyInChunks`가 throw 시 로컬 applied 카운터를 소실(`api.ts:212-218`) — "N건 반영 후 실패" 정밀 고지가 구조적으로 불가, 에러에 부분 결과 첨부 고려.
+- **[기준 1·코딩스타일] 매직 넘버 5 ×2** — `App.tsx:538-539` slice와 조건에 이중 인라인(하나만 고치면 어긋나는 이중 정의), 상수화 1줄.
+- **[기준 1] `api.ts:187` 파일 중간 import + 고아 doc 주석** — 호이스팅으로 동작은 하나 상단 import 블록만 훑는 독자에게 비가시, `:185` 주석은 원래 아래 함수용. 상단 이동+주석 재배치.
+- **[경미]** skipped id 개별 길이 무제한(수 KB id 1건이면 절단에도 상태바 범람 — 자기 요청 에코라 영향 낮음) / `skippedSummary` 매 렌더 재생성+useCallback deps 부재(순수 함수라 무해, web lint 부재가 은폐).
+- **[3차 계승 미해결]** PRD 패널 3중 비대칭(`PrdApprovalPanel.tsx:90/98/107`) / cd29898 skip 사유 단언 2건 느슨 / **web 테스트 러너 부재 — 이번 치명 1이 정확히 그 무검증 사각(applyInChunks·재동기화)에서 발생** / dashReqToken 공유 경합 창 / applyInChunks 빈 요청 숨은 계약 / pre-existing 묶음(큐 쓰기 무보호·재독 폴백·lone-CR·skip 사유 세분화·백틱 라벨 외부 렌더러·cors 와일드카드·dvh).
+
+## 현재 상태로 유지해도 되는 항목
+
+- **catch 재동기화의 race 안전성**: inner `.then`이 token 재검사(`App.tsx:566/610/657`), 패널 상태를 바꾸는 모든 행위가 token bump — detached promise여도 신규 상태 clobber 불가. unhandled rejection 없음(내부 `.catch(() => undefined)` + void). [파괴자 프로브 무혐의]
+- **skipped 절단 경계 정확**(5건→접미 없음, 6건→"외 1건", 빈 배열은 호출부 가드로 도달 불가) + **절단이 행동성 저하 없음**(id는 패널 어디에도 표시 안 되던 값 — "외 M건" 규모 감각이 실질 정보, 절단 자체는 개선).
+- **CAP shared 단일화 구조**: 사본 분기 불가(단일 dist)·클라 변조는 서버 가드 독립 강제·`BATCH_TOO_LARGE_MSG` 이제 정확(청킹은 approve/reject 분리 청크라 1/1 실패에도 hedge 문구가 거짓 안 됨).
+- **신규 테스트 5건 비중복·비대 없음**: prune 3형제는 별개 구현 3개(`docs.ts:331`·`featureDocs.ts:275`·`userFlowDocs.ts:298`)의 각각 박제, prd 2건은 cd29898의 prd측 잔여 구멍 — +83줄, 기존 픽스처 재사용. [게으른 시니어 클린 판정]
+- **보안 clean**: skipped 반사는 React 텍스트 노드 이스케이프(`dangerouslySetInnerHTML` 0건 grep 실측), 에러 메시지 내부정보 누출 없음(큐레이션 메시지+status code뿐).
+
+## 리팩토링 추천 항목
+
+- 패널별 `resync()` 헬퍼 추출 — 치명 1의 구조적 수정과 동일 작업(성공/실패 경로 단일 진실). "조기 추상화 금지" 방침은 3개 호출부+작성 당일 드리프트 실측 앞에서 예외가 타당.
+- 매직 넘버 5 상수화·api.ts import 상단 이동(위 권장과 동일 건).
+- (3차 계승) api.ts 400/batch_too_large 분기 3중 복붙 헬퍼화.
+
+## 적대적 검토 (4 페르소나)
+
+- **파괴자**: 발견 2건 — ① userflow catch 큐 미재조회+features screens 미재조회(치명 1, CONFIRMED) ② "재동기화" 단정 문구+fresh-clone shared/dist 의존(권장). 프로브 실추적 무혐의: race 가드 정합·unhandled rejection 없음·절단 경계 정확·1/1 청크 hedge 유효·CAP 사본 분기 불가.
+- **신입 개발자**: 발견 3건 — catch 재동기화 비대칭 무설명(의도인지 누락인지 코드만으론 판별 불가 → 치명 1 합류), api.ts 중간 import+고아 주석, 매직 넘버 5 ×2.
+- **보안 감사자**: 발견 1건(경미) — skipped id 개별 길이 무제한. 클린 논증: React 이스케이프 반사 불가(grep 실측)·에러 누출 없음·CAP 클라 변조 무의미(서버 독립 강제).
+- **게으른 시니어**: 발견 1건 — 재동기화 fetch+set 블록 ×3 복제가 같은 커밋 안에서 이미 2곳 드리프트(치명 1의 근원 — 헬퍼 1개였으면 구조적으로 불가능했던 결함, 복제 비용이 가설이 아니라 실측). 클린 논증: 신규 테스트 5건 비중복·비대 없음.
+- **2+ 페르소나 중복 발견(심각도 상승)**: catch 재동기화 불완전 — 픽스 검증팀 + 파괴자·신입·게으른 시니어·UX 정적 점검 **4중 수렴 → 치명 승격**(치명 1).
+
+## 최종 배포 가능 여부
+
+**조건부 가능 (치명 1건 수정 후)** — 3차 치명 2건 중 1건(상주 엣지 5건)은 완전 해결 실측(verify 4차 PASS 10/10·archiveGate open·jest 311/311·빌드/타입 exit 0), 1건(청크 실패 재동기화)은 prd 완전·features/userflow 부분 이행. CAP shared 단일화·skipped 절단도 해결 실측. 남은 조건: **userflow catch 큐 재조회 추가(+features screens) 또는 resync 헬퍼 추출** — 이 change의 명분(재시도 오경보 제거)에 대한 미완, 각 1-2줄(헬퍼면 ~15줄). 데이터 위험 0·서버 계층 무접촉이라 수정 후 web 빌드·타입체크 PASS 확인이면 verify 재실행 없이(스펙 시나리오 전건 서버 계층) archive 진행 가능.
+
+## 개선 우선순위 (제안)
+
+1. **userflow catch 큐 재조회(+features screens) 또는 resync 헬퍼 추출** — 치명 1, 오경보 잔존 봉합, 소규모.
+2. **루트 test/dev 스크립트 shared 선빌드 1줄** — fresh clone 즉사 방지.
+3. **부분 실패 문구 정직화 + 매직 넘버 5 상수화 + api.ts import 정리** — 각 소규모 위생.
+4. **web 테스트 러너 도입 결정** — 치명 1이 정확히 web 무검증 사각에서 발생(3차 계승, 재발 방지 조건).
+5. **PRD 패널 정렬·skip 사유 단언·pre-existing 묶음·cors 후속 change** — 3차 계승.
+
+---
+
+# 이전 검토 이력 (3차)
+
 검토일: 2026-07-05 (3차 — 2차 치명 2건 픽스 후 재검토) / 검토 범위: 픽스 커밋 ccacbe6(웹 200건 청크 전송·batch_too_large 안내·N건 표기)·cd29898(서버 엣지 테스트 7건)의 diff + 전체 change diff(1ba0d2d..HEAD, server/web 16파일 — `web/src/api.ts`·`App.tsx`·패널 3종·`server/src/lib/*` 3형제·`routes/docs.ts`·`eol.ts`·`planningUserFlowBuilder.ts`) 적대 재검토. 전체 앱 리뷰 아님.
 
 > **verify 입력**: verify.json(2026-07-05 23:29) = **FAIL** — 시나리오 10/10 PASS·layers server 306/306 PASS이나 **엣지 게이트 4건 "검증 불충분" 잔존으로 archiveGate closed**: [prd] EOL 보존(경계값=혼합 EOL missing), [prd] 큐 재작성(잘못된타입·특수문자 missing), [features]·[userflow] 큐 재작성(특수문자 missing). 같은 날 3차 verify가 2회 상충(23:26 PASS/개방 → 23:29 FAIL/차단)했는데, **독립 grep 실측 결과 23:29가 리포 실상과 일치** — 23:26의 PASS는 "실행 후 삭제된 임시(ad-hoc) 테스트 + 전이 논증"에 의존한 판정이었고, 상주 테스트 기준으로는 prd 혼합 EOL·prd non-string id·특수문자 prune 테스트가 리포 어디에도 없다. 이 리뷰는 verify를 재실행하지 않고 판단 입력으로 사용한다.
