@@ -6,7 +6,7 @@
  * 승인 3형제(docs/featureDocs/userFlowDocs)가 공유하는 유일한 헬퍼(로직 공통화 아님).
  */
 
-/** 문서 EOL 감지: `\r\n`이 하나라도 있으면 "\r\n", 아니면 "\n"(첫 감지 결정론). */
+/** 문서 EOL 감지: `\r\n`이 하나라도 있으면 "\r\n", 아니면 "\n"(CRLF 존재 감지 — any-CRLF-wins 결정론). */
 export function detectEol(text: string): "\r\n" | "\n" {
   return text.includes("\r\n") ? "\r\n" : "\n";
 }
