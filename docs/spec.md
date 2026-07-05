@@ -261,3 +261,20 @@ flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 �
 - 요구사항 노드만 capability 키 동치로 배지(clean→정합/fail→불합 N/unknown→미감사)를 렌더하고, 기능·상세기능 노드는 배지를 렌더하지 않는다. audit fetch 실패는 배지 없음 강등(그래프 렌더 유지).
 - 상세 패널 audit 섹션은 판정·PASS/FAIL/검증불가 건수를 표시하고, fail일 때만 FAIL claim(·reason)을 텍스트로 나열한다(HTML 주입 금지).
 - metric: 라이브 실픽셀 grounding — 배지 분포(정합/미감사)·패널 3케이스(정합 건수/미감사/비요구사항 생략)·콘솔 에러 0.
+
+## capability: planning-panel-screen-links
+
+기능명세 상세 패널에서 상세기능이 연결된 화면(N:M)을 표시하는 능력. 원천은 screenRegistry(features.md `<!-- screens: -->` 링크) 읽기전용 소비, 매칭은 상세기능 라벨 문자열 동치만(거짓 연결 0).
+
+### 기능: screen registry 노출 API (`GET /api/docs/:project/planning-screens`)
+- assert:endpoint GET /api/docs/:project/planning-screens
+- assert:symbol fetchPlanningScreens
+- 파싱된 screen registry(`{ screens, links }`)를 그대로 반환한다. `## 화면목록` 섹션이 없으면 빈 registry 200.
+- invariant: 파서(screenRegistry.ts) 무수정 — 라우트는 buildScreenRegistry 결과 소비만 한다.
+- invariant:safe-4xx 존재하지 않는 프로젝트·경로조작(`..`)은 404, 화면목록 부재는 빈 registry 200(읽기는 500으로 죽지 않음).
+- metric: 라우트 통합 테스트 PASS(docs.planning.test.ts — registry 반환·빈 registry·404) + 라이브 재조회.
+
+### 기능: 상세 패널 연결화면(N:M) 표시 (web)
+- 상세기능 노드 라벨 ↔ `links[].detailLabel` 문자열 동치로 화면 목록(`{id,label}`)을 파생하고, 화면 label은 registry.screens에서 해석한다. dangling 화면 id는 label 대신 id로 강등 표시(숨기지 않음).
+- 링크 없는 상세기능은 섹션을 생략한다(빈 섹션·placeholder 없음). registry fetch 실패는 필드 없음 강등(그래프·패널 렌더 유지).
+- metric: 라이브 실픽셀 grounding — 링크 있는 상세기능 화면 나열·링크 없는 노드 섹션 생략·콘솔 에러 0.

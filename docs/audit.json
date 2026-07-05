@@ -3,11 +3,11 @@
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
-    "PASS": 67,
+    "PASS": 70,
     "FAIL": 0,
-    "UNVERIFIABLE": 84
+    "UNVERIFIABLE": 90
   },
-  "reason": "미검증(UNVERIFIABLE) 84건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 90건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -689,7 +689,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:45"
+      "evidence": "server/src/routes/docs.ts:46"
     },
     {
       "capability": "docs-ingest",
@@ -744,7 +744,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:52"
+      "evidence": "server/src/routes/docs.ts:53"
     },
     {
       "capability": "docs-ingest",
@@ -821,7 +821,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:65"
+      "evidence": "server/src/routes/docs.ts:66"
     },
     {
       "capability": "docs-ingest",
@@ -865,7 +865,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:78"
+      "evidence": "server/src/routes/docs.ts:79"
     },
     {
       "capability": "docs-ingest",
@@ -953,7 +953,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:91"
+      "evidence": "server/src/routes/docs.ts:92"
     },
     {
       "capability": "planning-prd-view",
@@ -1098,7 +1098,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:109"
+      "evidence": "server/src/routes/docs.ts:110"
     },
     {
       "capability": "planning-features-view",
@@ -1176,7 +1176,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:161"
+      "evidence": "server/src/routes/docs.ts:181"
     },
     {
       "capability": "planning-userflow-view",
@@ -1254,7 +1254,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:183"
+      "evidence": "server/src/routes/docs.ts:203"
     },
     {
       "capability": "planning-userflow-view",
@@ -1399,7 +1399,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:221"
+      "evidence": "server/src/routes/docs.ts:241"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1488,7 +1488,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:207"
+      "evidence": "server/src/routes/docs.ts:227"
     },
     {
       "capability": "planning-prd-approval-queue",
@@ -1555,7 +1555,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:127"
+      "evidence": "server/src/routes/docs.ts:128"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1643,7 +1643,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:213"
+      "evidence": "web/src/api.ts:214"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1673,6 +1673,105 @@
       "line": 263,
       "kind": "metric",
       "claim": "metric: 라이브 실픽셀 grounding — 배지 분포(정합/미감사)·패널 3케이스(정합 건수/미감사/비요구사항 생략)·콘솔 에러 0.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-panel-screen-links",
+      "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
+      "line": 270,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/planning-screens",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:142"
+    },
+    {
+      "capability": "planning-panel-screen-links",
+      "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
+      "line": 271,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol fetchPlanningScreens",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/api.ts:224"
+    },
+    {
+      "capability": "planning-panel-screen-links",
+      "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
+      "line": 272,
+      "kind": "freetext",
+      "claim": "파싱된 screen registry(`{ screens, links }`)를 그대로 반환한다. `## 화면목록` 섹션이 없으면 빈 registry 200.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-panel-screen-links",
+      "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
+      "line": 273,
+      "kind": "freetext",
+      "claim": "invariant: 파서(screenRegistry.ts) 무수정 — 라우트는 buildScreenRegistry 결과 소비만 한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-panel-screen-links",
+      "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
+      "line": 274,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx 존재하지 않는 프로젝트·경로조작(`..`)은 404, 화면목록 부재는 빈 registry 200(읽기는 500으로 죽지 않음).",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-panel-screen-links",
+      "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
+      "line": 275,
+      "kind": "metric",
+      "claim": "metric: 라우트 통합 테스트 PASS(docs.planning.test.ts — registry 반환·빈 registry·404) + 라이브 재조회.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-panel-screen-links",
+      "feature": "상세 패널 연결화면(N:M) 표시 (web)",
+      "line": 278,
+      "kind": "freetext",
+      "claim": "상세기능 노드 라벨 ↔ `links[].detailLabel` 문자열 동치로 화면 목록(`{id,label}`)을 파생하고, 화면 label은 registry.screens에서 해석한다. dangling 화면 id는 label 대신 id로 강등 표시(숨기지 않음).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-panel-screen-links",
+      "feature": "상세 패널 연결화면(N:M) 표시 (web)",
+      "line": 279,
+      "kind": "freetext",
+      "claim": "링크 없는 상세기능은 섹션을 생략한다(빈 섹션·placeholder 없음). registry fetch 실패는 필드 없음 강등(그래프·패널 렌더 유지).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-panel-screen-links",
+      "feature": "상세 패널 연결화면(N:M) 표시 (web)",
+      "line": 280,
+      "kind": "metric",
+      "claim": "metric: 라이브 실픽셀 grounding — 링크 있는 상세기능 화면 나열·링크 없는 노드 섹션 생략·콘솔 에러 0.",
       "verdict": "UNVERIFIABLE",
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
@@ -1708,17 +1807,17 @@
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-features-suggestions",
-      "source": "server/src/routes/docs.ts:245"
+      "source": "server/src/routes/docs.ts:265"
     },
     {
       "type": "endpoint",
       "what": "POST /api/docs/:project(*)/planning-features-suggestions/apply",
-      "source": "server/src/routes/docs.ts:259"
+      "source": "server/src/routes/docs.ts:279"
     },
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-ia",
-      "source": "server/src/routes/docs.ts:141"
+      "source": "server/src/routes/docs.ts:161"
     },
     {
       "type": "endpoint",
@@ -1728,7 +1827,7 @@
     {
       "type": "symbol",
       "what": "App",
-      "source": "web/src/App.tsx:78"
+      "source": "web/src/App.tsx:80"
     },
     {
       "type": "symbol",
@@ -1793,12 +1892,12 @@
     {
       "type": "symbol",
       "what": "applyDocsFeatureSuggestions",
-      "source": "web/src/api.ts:250"
+      "source": "web/src/api.ts:259"
     },
     {
       "type": "symbol",
       "what": "applyDocsPrdSuggestions",
-      "source": "web/src/api.ts:184"
+      "source": "web/src/api.ts:185"
     },
     {
       "type": "symbol",
@@ -1878,97 +1977,97 @@
     {
       "type": "symbol",
       "what": "fetchCapabilities",
-      "source": "web/src/api.ts:77"
+      "source": "web/src/api.ts:78"
     },
     {
       "type": "symbol",
       "what": "fetchCapabilityDetail",
-      "source": "web/src/api.ts:97"
+      "source": "web/src/api.ts:98"
     },
     {
       "type": "symbol",
       "what": "fetchChanges",
-      "source": "web/src/api.ts:45"
+      "source": "web/src/api.ts:46"
     },
     {
       "type": "symbol",
       "what": "fetchDocsFeatureSuggestions",
-      "source": "web/src/api.ts:238"
+      "source": "web/src/api.ts:247"
     },
     {
       "type": "symbol",
       "what": "fetchDocsGraph",
-      "source": "web/src/api.ts:149"
+      "source": "web/src/api.ts:150"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningFeatures",
-      "source": "web/src/api.ts:204"
+      "source": "web/src/api.ts:205"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningIa",
-      "source": "web/src/api.ts:225"
+      "source": "web/src/api.ts:234"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningPrd",
-      "source": "web/src/api.ts:168"
+      "source": "web/src/api.ts:169"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningUserFlow",
-      "source": "web/src/api.ts:287"
+      "source": "web/src/api.ts:296"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrd",
-      "source": "web/src/api.ts:161"
+      "source": "web/src/api.ts:162"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrdSuggestions",
-      "source": "web/src/api.ts:175"
+      "source": "web/src/api.ts:176"
     },
     {
       "type": "symbol",
       "what": "fetchDocsProjects",
-      "source": "web/src/api.ts:142"
+      "source": "web/src/api.ts:143"
     },
     {
       "type": "symbol",
       "what": "fetchDocsWireframe",
-      "source": "web/src/api.ts:155"
+      "source": "web/src/api.ts:156"
     },
     {
       "type": "symbol",
       "what": "fetchGraph",
-      "source": "web/src/api.ts:108"
+      "source": "web/src/api.ts:109"
     },
     {
       "type": "symbol",
       "what": "fetchIA",
-      "source": "web/src/api.ts:114"
+      "source": "web/src/api.ts:115"
     },
     {
       "type": "symbol",
       "what": "fetchPrd",
-      "source": "web/src/api.ts:126"
+      "source": "web/src/api.ts:127"
     },
     {
       "type": "symbol",
       "what": "fetchProjects",
-      "source": "web/src/api.ts:69"
+      "source": "web/src/api.ts:70"
     },
     {
       "type": "symbol",
       "what": "fetchSpecTree",
-      "source": "web/src/api.ts:132"
+      "source": "web/src/api.ts:133"
     },
     {
       "type": "symbol",
       "what": "fetchWireframe",
-      "source": "web/src/api.ts:120"
+      "source": "web/src/api.ts:121"
     },
     {
       "type": "symbol",
@@ -2048,12 +2147,12 @@
     {
       "type": "symbol",
       "what": "saveDocsPlanningUserFlowLayout",
-      "source": "web/src/api.ts:298"
+      "source": "web/src/api.ts:307"
     },
     {
       "type": "symbol",
       "what": "saveLayout",
-      "source": "web/src/api.ts:269"
+      "source": "web/src/api.ts:278"
     },
     {
       "type": "symbol",
@@ -2083,7 +2182,7 @@
     {
       "type": "symbol",
       "what": "toFeatureTreeFlow",
-      "source": "web/src/featureTreeAdapter.ts:89"
+      "source": "web/src/featureTreeAdapter.ts:95"
     },
     {
       "type": "symbol",
@@ -2124,6 +2223,6 @@
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-audit-badge-absorb-20260705.html",
-  "runId": "audit-badge-absorb-20260705"
+  "historyHtml": "audit-screen-links-absorb-20260705.html",
+  "runId": "screen-links-absorb-20260705"
 }
