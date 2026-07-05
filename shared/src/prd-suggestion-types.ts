@@ -54,3 +54,9 @@ export interface PrdApplyResult {
    */
   readonly writeFailed?: boolean;
 }
+
+/**
+ * 승인 apply 배치 상한(D-3, approval-family-hardening) — 서버 라우트 가드와
+ * 웹 청크 분할(applyInChunks)이 같은 값을 봐야 한다(이중 정의 드리프트 = 일괄 기능 재파손).
+ */
+export const APPLY_BATCH_CAP = 200;

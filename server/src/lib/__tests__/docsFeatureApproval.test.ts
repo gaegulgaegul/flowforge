@@ -413,3 +413,25 @@ describe("엣지: 빈 문서·non-string id (features)", () => {
     expect(readDocsFeatureSuggestions(dir).suggestions.map((x) => x.id)).toEqual(["ok"]);
   });
 });
+
+/** 엣지 게이트 상주 보강(3차 review) — prune 특수문자 id. */
+describe("엣지: features prune 특수문자 id", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "feat-edge2-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("__proto__·한글·빈 문자열 id는 값 비교로만 처리(정확 잔존/제거)", () => {
+    const dir = makePlanning(root, "p", "## 데모 <!-- capability: demo -->\n", [
+      sug("__proto__", ["데모"], { priority: "높음" }),
+      sug("한글아이디", ["데모"], { status: "완료" }),
+      sug("", ["데모"], { priority: "낮음" }),
+    ]);
+    const remaining = pruneFeatureQueue(dir, new Set(["한글아이디"]));
+    expect(remaining).toBe(2);
+    expect(readDocsFeatureSuggestions(dir).suggestions.map((x) => x.id)).toEqual(["__proto__", ""]);
+  });
+});

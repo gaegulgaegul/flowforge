@@ -490,3 +490,21 @@ describe("엣지: 빈 문서·미폐합 펜스·혼합 EOL·non-string id", () =
     expect(readUserFlowSuggestions(dir, STEM).suggestions.map((s) => s.id)).toEqual(["ok"]);
   });
 });
+
+/** 엣지 게이트 상주 보강(3차 review) — prune 특수문자 id. */
+describe("엣지: userflow prune 특수문자 id", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "uflow-edge2-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("__proto__·한글·빈 문자열 id는 값 비교로만 처리(정확 잔존/제거)", () => {
+    const dir = makeFlow(root, FLOW_MD, [sug("__proto__"), sug("한글아이디"), sug("")]);
+    const remaining = pruneUserFlowQueue(dir, STEM, new Set([""]));
+    expect(remaining).toBe(2);
+    expect(readUserFlowSuggestions(dir, STEM).suggestions.map((s) => s.id)).toEqual(["__proto__", "한글아이디"]);
+  });
+});

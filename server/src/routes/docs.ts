@@ -45,6 +45,7 @@ import { readUserFlowSuggestions, applyUserFlowSuggestions } from "../lib/userFl
 import { readAuditCapabilities } from "../lib/auditSummary.js";
 import { isLayoutOverlay } from "../lib/changes.js";
 import { safe } from "../lib/safe-error.js";
+import { APPLY_BATCH_CAP } from "@flowforge/shared";
 
 export const docsRouter = Router();
 
@@ -243,9 +244,7 @@ docsRouter.get(
   }),
 );
 
-/** D-3 apply 배치 상한 — approve+reject 합계가 이 값을 넘으면 400(문서·큐 무접촉).
- * 사이드카 큐 경유 무상한 배치가 동기 재파싱으로 이벤트 루프를 막는 가용성 리스크 차단. */
-const APPLY_BATCH_CAP = 200;
+// D-3 apply 배치 상한 = shared APPLY_BATCH_CAP 단일 정의 소비(웹 청크 분할과 드리프트 방지).
 
 /** 배치 상한 초과면 400 응답을 쓰고 true 반환(호출부는 즉시 return). 3개 apply 라우트 공유. */
 function rejectOversizedBatch(body: { approve: readonly string[]; reject: readonly string[] }, res: Response): boolean {

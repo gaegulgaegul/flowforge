@@ -533,6 +533,12 @@ export function App(): JSX.Element {
 
   // PRD 제안 승인/반려 적용 — POST apply 후 PRD·제안 큐 재조회(반영·큐 갱신을 화면에 반사).
   // race 가드: 제출 시점의 프로젝트로 재조회하고, 그 사이 다른 카드로 이동했으면 폐기.
+  // skipped 대량 나열 절단(3차 review): 상위 5건 + "외 M건" — 수백 건이 상태바를 뒤덮지 않게.
+  const skippedSummary = (skipped: readonly string[]): string => {
+    const head = skipped.slice(0, 5).join(", ");
+    return skipped.length > 5 ? `${head} 외 ${skipped.length - 5}건` : head;
+  };
+
   const applyPrd = useCallback(
     (approve: string[], reject: string[]) => {
       const project = dashProject?.name;
@@ -542,7 +548,7 @@ export function App(): JSX.Element {
       applyInChunks((r) => applyDocsPrdSuggestions(project, r), { approve, reject })
         .then((res) => {
           if (res.skipped.length > 0) {
-            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${res.skipped.join(", ")}).`);
+            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${skippedSummary(res.skipped)}).`);
           }
           return Promise.all([fetchDocsPlanningPrd(project), fetchDocsPrdSuggestions(project)]);
         })
@@ -553,7 +559,15 @@ export function App(): JSX.Element {
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
-          setStatus(`PRD 승인/반려 실패: ${String(e)}`);
+          // 청크 도중 실패면 앞 청크는 이미 반영됨 — 화면을 서버 상태로 재동기화하고 부분 반영 가능성을 고지.
+          setStatus(`PRD 승인/반려 실패(일부는 반영됐을 수 있음 — 화면 재동기화): ${String(e)}`);
+          void Promise.all([fetchDocsPlanningPrd(project), fetchDocsPrdSuggestions(project)])
+            .then(([prdRes, sugRes]) => {
+              if (token !== dashReqToken.current) return;
+              setPlanningPrd(prdRes.prd);
+              setPrdSuggestions(sugRes.queue.suggestions);
+            })
+            .catch(() => undefined);
         })
         .finally(() => {
           setPrdApplyBusy(false);
@@ -573,7 +587,7 @@ export function App(): JSX.Element {
       applyInChunks((r) => applyDocsFeatureSuggestions(project, r), { approve, reject })
         .then((res) => {
           if (res.skipped.length > 0) {
-            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${res.skipped.join(", ")}).`);
+            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${skippedSummary(res.skipped)}).`);
           }
           return Promise.all([
             fetchDocsPlanningFeatures(project),
@@ -590,7 +604,14 @@ export function App(): JSX.Element {
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
-          setStatus(`기능명세 승인/반려 실패: ${String(e)}`);
+          setStatus(`기능명세 승인/반려 실패(일부는 반영됐을 수 있음 — 화면 재동기화): ${String(e)}`);
+          void Promise.all([fetchDocsPlanningFeatures(project), fetchDocsFeatureSuggestions(project)])
+            .then(([featRes, sugRes]) => {
+              if (token !== dashReqToken.current) return;
+              setPlanningFeatures(featRes.tree.root);
+              setFeatureSuggestions(sugRes.queue.suggestions);
+            })
+            .catch(() => undefined);
         })
         .finally(() => {
           setFeatureApplyBusy(false);
@@ -612,7 +633,7 @@ export function App(): JSX.Element {
       applyInChunks((r) => applyUserFlowSuggestions(project, flow, r), { approve, reject })
         .then((res) => {
           if (res.skipped.length > 0) {
-            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${res.skipped.join(", ")}).`);
+            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${skippedSummary(res.skipped)}).`);
           }
           return Promise.all([
             fetchDocsPlanningUserFlow(project, flow),
@@ -630,7 +651,15 @@ export function App(): JSX.Element {
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
-          setStatus(`유저플로우 승인/반려 실패: ${String(e)}`);
+          setStatus(`유저플로우 승인/반려 실패(일부는 반영됐을 수 있음 — 화면 재동기화): ${String(e)}`);
+          void fetchDocsPlanningUserFlow(project, flow)
+            .then((flowRes) => {
+              if (token !== dashReqToken.current) return;
+              setPlanningUserFlow(flowRes.graph);
+              setPlanningFlowNodes(toFlowNodes(flowRes.graph, flowRes.layout));
+              setPlanningFlowEdges(toFlowEdges(flowRes.graph));
+            })
+            .catch(() => undefined);
         })
         .finally(() => {
           setUflowApplyBusy(false);

@@ -305,3 +305,46 @@ describe("엣지: 빈 prd.md", () => {
     expect(readDocsPrdSuggestions(dir).suggestions).toHaveLength(1);
   });
 });
+
+/** 엣지 게이트 상주 보강(3차 review) — prd 혼합 EOL 결정론·non-string id·prune 특수문자. */
+describe("엣지: prd 혼합 EOL·non-string id·prune 특수문자", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "prd-edge2-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("혼합 EOL prd.md는 any-CRLF-wins로 결정론 수렴하고 preamble이 보존된다", () => {
+    const mixed = PRD_MD.replace("\n## 개요", "\r\n## 개요"); // CRLF 1개 혼합
+    const dir = makePlanning(root, "p", mixed, [sug("s1", "overview", "새 개요")]);
+    const r = applyPrdSuggestions(dir, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(1);
+    const out = readFileSync(join(dir, "planning", "prd.md"), "utf-8");
+    expect(out).toContain("새 개요");
+    expect(out).toContain("# PRD: 데모프로젝트"); // preamble(H1) 보존
+    expect(out.split("\r\n").length - 1).toBe(out.split("\n").length - 1); // 전체 CRLF 수렴
+  });
+
+  it("큐의 non-string id는 읽기에서 걸러지고, prune도 문자열 id만 남긴다", () => {
+    const dir = makePlanning(root, "p", PRD_MD, [sug("ok", "overview", "새 개요")]);
+    // 파일에 non-string id 제안을 직접 끼워 넣는다(생산자 오염 시뮬레이션).
+    writeFileSync(
+      join(dir, "planning", "prd.suggestions.json"),
+      JSON.stringify({ version: 1, suggestions: [sug("ok", "overview", "새 개요"), { id: 7, section: "value", op: "replace", proposedBody: "x" }] }),
+    );
+    expect(readDocsPrdSuggestions(dir).suggestions.map((x) => x.id)).toEqual(["ok"]);
+    const remaining = prunePrdQueue(dir, new Set(["ok"]));
+    expect(remaining).toBe(0); // non-string은 재독 필터에서 이미 소거 — 잔존/증식 없음
+  });
+
+  it("prune은 특수문자 id(__proto__·한글·빈 문자열)를 값 비교로만 다룬다(오염·오삭제 없음)", () => {
+    const specials = [sug("__proto__", "overview", "a"), sug("한글아이디", "value", "b"), sug("", "target", "c")];
+    const dir = makePlanning(root, "p", PRD_MD, specials);
+    // __proto__만 처리 — 나머지(한글·빈 문자열)는 정확히 잔존해야 한다.
+    const remaining = prunePrdQueue(dir, new Set(["__proto__"]));
+    expect(remaining).toBe(2);
+    expect(readDocsPrdSuggestions(dir).suggestions.map((x) => x.id)).toEqual(["한글아이디", ""]);
+  });
+});

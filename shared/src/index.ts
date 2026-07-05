@@ -82,3 +82,5 @@ export type {
   CapabilityAuditFailClaim,
   CapabilityAuditSummary,
 } from './audit-capability-types.js';
+
+export { APPLY_BATCH_CAP } from "./prd-suggestion-types.js";

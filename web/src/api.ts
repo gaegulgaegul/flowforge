@@ -183,8 +183,8 @@ export async function fetchDocsPrdSuggestions(
 }
 
 /** PRD 제안 승인/반려 적용. 승인분만 prd.md 반영, 반려는 큐에서만 제거. */
-/** 서버 apply 배치 상한(routes/docs.ts APPLY_BATCH_CAP과 정합 — D-3). */
-export const APPLY_BATCH_CAP = 200;
+/** 서버 apply 배치 상한 — shared 단일 정의 소비(드리프트 방지). */
+import { APPLY_BATCH_CAP } from "@flowforge/shared";
 
 /** batch_too_large(400) 안내 — 청크 헬퍼를 안 거친 직접 호출이 상한에 걸렸을 때의 명확한 메시지. */
 const BATCH_TOO_LARGE_MSG = `한 번에 처리할 수 있는 제안은 ${APPLY_BATCH_CAP}건까지입니다(자동 분할이 적용되지 않은 요청).`;
