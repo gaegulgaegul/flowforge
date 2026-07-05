@@ -1,16 +1,16 @@
 {
   "change": "planning-approval-edit-ui-userflow",
-  "verifiedAt": "2026-07-05T18:58:59+09:00",
-  "finalJudgment": "FAIL",
+  "verifiedAt": "2026-07-05T19:24:49+09:00",
+  "finalJudgment": "PASS",
   "counts": {
-    "pass": 14,
-    "fail": 1,
+    "pass": 15,
+    "fail": 0,
     "검증안함": 0,
     "skipped": 0
   },
   "archiveGate": {
-    "open": false,
-    "reason": "scenario FAIL 존재"
+    "open": true,
+    "reason": ""
   },
   "requirements": [
     {
@@ -35,34 +35,34 @@
         {
           "scenario": "큐 파일이 있으면 제안 목록을 반환한다",
           "layer": "server",
-          "means": "jest 단위 '정상 큐를 파싱해 반환한다' + 라우트 통합 'GET — 큐 있으면 200 + 제안 목록'",
-          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts",
+          "means": "jest 라우트 통합 'GET — 큐 있으면 200 + 제안 목록'(docsUserFlowApproval.test.ts:67) + 단위 정상 큐 파싱",
+          "basis": "server/package.json(jest) + 대상 테스트 2파일",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "text": "본 verify에서 재실행(2026-07-05 18:5x KST): jest 전체 28 suites / 283 tests PASS, 진짜 exit=0(${PIPESTATUS[0]} 실측). 대상 2파일 41/41 PASS (userFlowDocs 28 + docsUserFlowApproval 13)."
+            "text": "본 재verify(2026-07-05 19:16 KST)에서 재실행: 전체 28 suites/283 tests PASS(진짜 exit=0, PIPESTATUS 실측), 대상 2파일 41/41 PASS(userFlowDocs 28 + docsUserFlowApproval 13)."
           }
         },
         {
           "scenario": "큐 파일 부재는 빈 큐 200이다",
           "layer": "server",
-          "means": "jest 단위 '큐 파일이 없으면 빈 큐를 반환한다(404 아님)' + 라우트 통합 'GET — 큐 파일 없으면 200 + 빈 큐(404 아님)'",
+          "means": "jest 'GET — 큐 파일 없으면 200 + 빈 큐(404 아님)'(docsUserFlowApproval.test.ts:80)",
           "basis": "server/package.json(jest) + 대상 테스트 2파일",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "text": "재실행 41/41 PASS. web P3 프로브의 main-v2(큐 파일 없는 stem)에서도 GET이 200 빈 큐로 응답함을 브라우저 네트워크로 간접 재확인."
+            "text": "재실행 41/41 PASS(19:16 KST). web W2/P3의 main-v2(큐 파일 없는 stem)에서도 GET 200 빈 큐 동작을 브라우저로 간접 재확인."
           }
         },
         {
           "scenario": "깨진 큐·무효 제안은 걸러진다",
           "layer": "server",
-          "means": "jest 단위 '깨진 JSON이면 빈 큐(throw 금지)'·'무효 제안은 걸러내고 유효만 남긴다(필드 누락·to+newNode 동시·둘 다 없음·어휘 밖)'·'stem 안전 토큰 아니면 빈 큐(경로 이탈 차단)'",
+          "means": "jest '깨진 JSON이면 빈 큐(throw 금지)'(userFlowDocs.test.ts:89)·'무효 제안 필터(필드 누락·to+newNode 동시·둘 다 없음·어휘 밖)'(:100)·stem 안전 토큰 검사",
           "basis": "server/package.json(jest) + 대상 테스트 2파일",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "text": "재실행 41/41 PASS (2026-07-05 18:5x KST)."
+            "text": "재실행 41/41 PASS (2026-07-05 19:16 KST)."
           }
         }
       ]
@@ -89,57 +89,57 @@
         {
           "scenario": "기존 노드 간 happy 에지 승인이 문서에 반영된다",
           "layer": "server",
-          "means": "jest '기존 노드 대상 happy 에지 승인 → `From -->|라벨| To` append + 재파싱 kind:happy'·'append는 첫 mermaid 블록 닫는 펜스 직전' + 라우트 통합 '승인 시 에지 append + 재조회 그래프 반영' + web W1에서 실제 md append 실측",
+          "means": "jest happy 승인 append+재파싱 kind:happy(userFlowDocs.test.ts:123)·append 위치(닫는 펜스 직전) + 라우트 통합 + web W1 실제 md append 파일 재조회",
           "basis": "jest 대상 2파일 + gstack W1 서버측 효과 재조회",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "text": "jest 41/41 PASS. web W1에서도 main-v1.md 첫 mermaid 펜스 직전에 '  Detail -->|뒤로가기| Home' 라인 append를 파일 재조회로 실측."
+            "text": "jest 41/41 PASS. web W1(r3)에서 main-v1.md 첫 mermaid 닫는 펜스 직전 '  Detail -->|뒤로가기| Home' append를 파일 재조회로 실측 + 오케스트레이터가 픽스처 잔존 파일로 독립 재확인."
           }
         },
         {
           "scenario": "신규 화면 노드로의 에지케이스 에지 승인이 반영된다",
           "layer": "server",
-          "means": "jest 'newNode 대상 edgecase 승인 → `From -.->|라벨| NewId[\\\"라벨\\\"]` append + 재파싱 새 노드' + 라우트 통합(happy+edgecase 신규 노드 동시)",
+          "means": "jest 'newNode 대상 edgecase 승인 → From -.->|라벨| NewId append + 재파싱 새 노드'(userFlowDocs.test.ts:136) + 라우트 통합",
           "basis": "jest 대상 2파일",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "text": "재실행 41/41 PASS. web W1 fixture의 edgecase 제안(Login→신규 LoginError)도 카드에 점선·에지케이스·신규 화면 뱃지로 렌더됨(스크린샷 web-w1-before.png)."
+            "text": "재실행 41/41 PASS. web W1(r3) fixture의 edgecase 제안(Login→신규 LoginError)도 점선·에지케이스·신규 화면 뱃지로 렌더 실측(web-w1-before-r3.png)."
           }
         },
         {
           "scenario": "반려는 문서를 건드리지 않고 큐에서만 제거된다",
           "layer": "server",
-          "means": "jest '반려하면 문서는 바이트 단위로 불변, 큐에서만 제거' + 라우트 통합 '반려 시 문서 바이트 불변 + 큐에서 제거'",
+          "means": "jest '반려하면 문서는 바이트 단위로 불변, 큐에서만 제거'(userFlowDocs.test.ts:248) + 라우트 통합",
           "basis": "jest 대상 2파일",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "text": "재실행 41/41 PASS. 바이트 단위 동일성 단언(toBe 문자열 비교)."
+            "text": "재실행 41/41 PASS (19:16 KST). 바이트 단위 동일성 단언."
           }
         },
         {
           "scenario": "검증 위반 제안은 skipped로 표면화된다",
           "layer": "server",
-          "means": "jest from부재·newNode id 충돌(대소문자 무시)·라벨 금지문자(D-4) 각각 skipped+원본 불변+유효분 정상 반영 + review 치명1 fix 커버 '파싱 오염 라벨은 그 제안만 skipped, 유효 형제는 정상 반영(배치 독살 금지)'·'백틱 펜스 newNode 라벨도 개별 skipped'·'roundtrip 깨는 제안은 개별 skipped(배치 writeFailed 아님)' + web P1 실픽셀",
-          "basis": "jest 대상 2파일 + gstack P1",
+          "means": "jest from부재·newNode id 충돌·라벨 금지문자(D-4) skipped + 배치 독살 차단(제안별 사전 roundtrip, userFlowDocs.test.ts:308) + web P1 실픽셀",
+          "basis": "jest 대상 2파일 + gstack P1(r3)",
           "result": "PASS",
           "evidence": {
             "kind": "screenshot",
-            "path": "evidence/web-p1-skipped.png",
-            "caption": "P1: [모두 승인] 후 상단 status 바에 '일부 제안을 처리하지 못했습니다(skipped: sug-bad-from: from-not-in-doc).' 표면화. 유효 1건만 그래프·md 반영, skipped 제안은 큐 잔존(silent drop 없음). 콘솔 에러 0."
+            "path": "evidence/web-p1-skipped-r3.png",
+            "caption": "P1(r3): [모두 승인] 후 status 바 '일부 제안을 처리하지 못했습니다(skipped: sug-bad-from: from-not-in-doc).' 표면화. 유효 1건만 그래프·md 반영, Ghost 에지 미반영, skipped 제안 큐 잔존. 콘솔 에러 0."
           }
         },
         {
           "scenario": "이미 존재하는 에지 제안은 멱등 skipped다",
           "layer": "server",
-          "means": "jest '동일 from·to·kind 에지가 이미 있으면 skipped(라벨 달라도) — 재적용 멱등'",
+          "means": "jest '동일 from·to·kind 에지가 이미 있으면 skipped(라벨 달라도) — 재적용 멱등'(userFlowDocs.test.ts:223)",
           "basis": "jest 대상 2파일",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "text": "재실행 41/41 PASS (2026-07-05 18:5x KST)."
+            "text": "재실행 41/41 PASS (2026-07-05 19:16 KST)."
           }
         }
       ]
@@ -167,23 +167,23 @@
         {
           "scenario": "방어 위반 시 422와 원본 보존",
           "layer": "server",
-          "means": "jest 'roundtrip 불변식 깨면 write하지 않고 writeFailed(문서·큐 불변)'·'기존 엣지 라인 소실 afterLines→false'·'<stem>.md 부재 시 writeFailed(원본 보호·큐 불변)'·'불안전 stem이면 writeFailed + unsafe-stem 사유' + 라우트 통합 writeFailed→422 변환",
+          "means": "jest 'roundtrip 불변식 깨면 write 안 함 writeFailed(문서·큐 불변)'·'기존 엣지 라인 소실 afterLines→false'·'<stem>.md 부재 writeFailed'(userFlowDocs.test.ts:273-284) + 라우트 writeFailed→422(docsUserFlowApproval.test.ts:215)",
           "basis": "jest 대상 2파일",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "text": "재실행 41/41 PASS (2026-07-05 18:5x KST)."
+            "text": "재실행 41/41 PASS (2026-07-05 19:16 KST)."
           }
         },
         {
           "scenario": "방어 무력화 프로브 — 방어가 항상 통과하도록 조작되면 테스트가 실패한다",
           "layer": "server",
-          "means": "실측 mutation 프로브: userFlowInvariantHolds 본문을 `return true`로 강제 치환 후 jest 실행 → red 확인 → git checkout 복원 → green 재확인",
-          "basis": "본 verify에서 직접 mutation 수행(테스트 존재 확인 아님)",
+          "means": "실측 mutation 프로브(본 verify에서 재수행): userFlowInvariantHolds 본문 첫 줄에 return true 삽입 → jest red 확인 → git checkout 복원 → green 재확인",
+          "basis": "userFlowDocs.ts:155에 직접 mutation 수행(테스트 존재 확인 아님)",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "text": "무력화 상태: 대상 2파일 6 failed / 35 passed (RED, exit 1 — '기대 에지가 있는데 아무것도 추가 안 된 afterLines는 false' 등 방어 커버 테스트가 red). git checkout 복원 후 41/41 PASS (GREEN, exit 0). 작업트리 clean 확인. 2026-07-05 18:5x KST."
+            "text": "무력화 상태: 대상 2파일 6 failed/35 passed (RED, exit 1 — '기대 에지가 있는데 아무것도 추가 안 된 afterLines는 false' 등 방어 커버 6건 red). 복원 후 41/41 PASS(GREEN, exit 0), git status clean. 2026-07-05 19:16 KST."
           }
         }
       ]
@@ -211,61 +211,61 @@
         {
           "scenario": "큐가 있으면 패널이 뜨고 승인 후 그래프가 갱신된다",
           "layer": "web",
-          "means": "gstack 실픽셀: fixture 큐 2건(happy Detail→Home + edgecase Login→신규 LoginError) → 패널 '제안 2건' 카드 렌더 확인 → happy 카드 [승인] 클릭 → networkidle 후 '제안 1건'·그래프 에지 2→3(라벨 '뒤로가기' 등장) + POST apply 200 후 GET 재조회 네트워크 로그 + md append 파일 재조회",
-          "basis": "web/package.json(vite+react)+web/dist(index.html)+gstack READY. 정적(step 4a): UserFlowApprovalPanel.tsx:40·api.ts:311/326·App.tsx:44-45/373/485/592-628/848-855 배선 확인",
+          "means": "gstack 실픽셀(r3): fixture 큐 2건(happy Detail→Home + edgecase Login→신규 LoginError) → 패널 '제안 2건' 렌더 → happy [승인] → '제안 1건' + 그래프 라벨 '뒤로가기' 등장 + md append 파일 재조회",
+          "basis": "server/src/index.ts:23-31(express가 web/dist 정적 서빙) + web 재빌드(tsc 0·build 0, fix 포함 보장) + gstack READY",
           "result": "PASS",
           "evidence": {
             "kind": "screenshot",
-            "path": "evidence/web-w1-after.png",
-            "caption": "승인 후: 패널 '제안 1건'(edgecase 카드만 잔존), 그래프에 승인 에지 반영. BEFORE=web-w1-before.png(카드 2건: 실선/점선·에지케이스·신규 화면 뱃지·라벨·rationale). 서버측 main-v1.md에 '  Detail -->|뒤로가기| Home' append 실측. 승인~재조회 구간 콘솔 에러 0(프로젝트 오픈 시점의 404 2건은 fixture에 features.md 부재로 인한 설계상 폴백 리소스 로드)."
+            "path": "evidence/web-w1-after-r3.png",
+            "caption": "승인 후: 패널 '제안 1건'(edgecase만 잔존), 그래프에 승인 에지 반영. BEFORE=web-w1-before-r3.png(카드 2건: 실선/점선·에지케이스·신규 화면 뱃지). 서버측 main-v1.md append + 큐에서 sug-happy 제거 실측. 승인~재조회 콘솔 에러 0(오픈 시점 404 2건은 features.md 부재 폴백 — 설계상 노이즈, 직전 verify와 동일)."
           }
         },
         {
           "scenario": "빈 큐면 패널이 렌더되지 않는다",
           "layer": "web",
-          "means": "gstack 실픽셀: 버전 셀렉트로 main-v2(큐 파일 없음) 전환 → [data-testid=uflow-approval] === null, 그래프 노드 3·에지 2 정상 렌더, 버전 셀렉트 등 기존 동작 유지",
-          "basis": "동일(gstack READY + 정적 배선 확인)",
+          "means": "gstack 실픽셀(r3): main-v2(큐 파일 없음) 전환 → [data-testid=uflow-approval] === null, 그래프 정상 렌더, 셀렉트 등 기존 동작 유지",
+          "basis": "동일(gstack READY + dist 재빌드)",
           "result": "PASS",
           "evidence": {
             "kind": "screenshot",
-            "path": "evidence/web-w2-empty.png",
-            "caption": "빈 큐 stem: 승인 패널 부재, 그래프 정상. 해당 구간 콘솔 에러 0(console --clear 후 측정)."
+            "path": "evidence/web-w2-empty-r3.png",
+            "caption": "빈 큐 stem: 승인 패널 부재, 그래프 정상(노드 3·에지 2). 콘솔 에러 0(clear 후 측정)."
           }
         },
         {
           "scenario": "[추가 엣지 프로브 P1 — 에러경로] apply skipped가 UI에 표면화된다",
           "layer": "web",
-          "means": "gstack: 유효 1건 + 서버 검증 위반 1건(from 부재) 큐에서 [모두 승인] → skipped 사유 status 바 표면화 + 유효분만 반영 + skipped 제안 큐 잔존",
+          "means": "gstack(r3): 유효 1건 + from 부재 위반 1건 큐에서 [모두 승인] → skipped 사유 status 바 표면화 + 유효분만 반영 + skipped 제안 큐 잔존",
           "basis": "gstack READY + App.tsx applyUserFlow skipped 메시지 경로",
           "result": "PASS",
           "evidence": {
             "kind": "screenshot",
-            "path": "evidence/web-p1-skipped.png",
-            "caption": "'일부 제안을 처리하지 못했습니다(skipped: sug-bad-from: from-not-in-doc).' 표면화, 유효 에지만 그래프·md 반영, Ghost 에지 미반영. 콘솔 에러 0."
+            "path": "evidence/web-p1-skipped-r3.png",
+            "caption": "skipped 사유 표면화, 유효 에지만 그래프·md 반영, Ghost 노드/에지 미반영(노드 3 유지). 콘솔 에러 0."
           }
         },
         {
           "scenario": "[추가 엣지 프로브 P2 — 대량] 제안 100건 큐가 렌더된다",
           "layer": "web",
-          "means": "gstack: 유효 제안 100건 큐(노드 101개 문서) → 배너 '제안 100건', 카드 정확히 100개, 승인 버튼 101개, 그래프 노드 101개 동시 렌더",
+          "means": "gstack(r3): 유효 제안 100건 큐(노드 101개 문서) → 배너 '제안 100건', 카드 100개, 승인 버튼 101개(100+모두승인), 그래프 노드 101개",
           "basis": "gstack READY",
           "result": "PASS",
           "evidence": {
             "kind": "screenshot",
-            "path": "evidence/web-p2-bulk.png",
-            "caption": "100건 카드 렌더. 패널/대량 렌더 자체 콘솔 에러 0(오픈 시점 404 2건은 fixture 폴백 리소스 로드)."
+            "path": "evidence/web-p2-bulk-r3.png",
+            "caption": "100건 카드 렌더. 콘솔 에러 0. 전환 직후 순간 카드 0(큐 fetch 미정착)은 정착 후 100 확인 — 렌더 지연이지 레이스 아님(최종 상태 일관)."
           }
         },
         {
-          "scenario": "[추가 엣지 프로브 P3 — 동시성] 버전 빠른 전환 시 stem-큐 상태 일관성",
+          "scenario": "[추가 엣지 프로브 P3 — 동시성] 버전 빠른 전환 시 stem-큐 상태 일관성 (직전 FAIL → e6c8189 재검증)",
           "layer": "web",
-          "means": "gstack: 버전 셀렉트 v1↔v2 연속 전환(프로그래매틱 7회 디스패치, 대기 없음) 후 최종 상태 일관성 단언",
-          "basis": "gstack READY. 코드 확인: App.tsx switchPlanningFlow(~357-377)에 dashReqToken race 가드 부재(openProject·applyUserFlow에는 있음)",
-          "result": "FAIL",
+          "means": "gstack(r3): 직전 FAIL 재현 절차 그대로 — 버전 셀렉트 v1↔v2 프로그래매틱 연속 디스패치 7회/트라이얼(대기 없음) × 6 트라이얼 + 2차 홀 프로브(승인 클릭+동일 틱 v2 전환)",
+          "basis": "e6c8189 diff(App.tsx switchPlanningFlow에 dashReqToken 가드 +16/-3) + gstack READY. 직전 verify는 동일 절차로 2/2 발현",
+          "result": "PASS",
           "evidence": {
             "kind": "screenshot",
-            "path": "evidence/web-p3-race.png",
-            "caption": "재현 2/2. 1차: 셀렉트=main-v2·그래프=v2인데 승인 패널은 v1 큐 카드 잔존(크로스-stem 불일치 — 스크린샷). 2차: 최종 선택 v2인데 화면 전체가 v1로 귀결(stale 응답 last-write-wins, 사용자 최종 선택 소실). 단일 정상 전환은 즉시 일관. 콘솔 에러 0(크래시 아님, 상태 불일치). 한계: 사람 손 속도보다 빠른 연속 전환 조건 — 발현 빈도는 낮을 수 있으나 가드 없는 비동기 창은 코드로도 확인됨. 수정 지점: switchPlanningFlow에 기존 dashReqToken 패턴 적용."
+            "path": "evidence/web-p3-consistent-r3.png",
+            "caption": "레이스 발현 0/6 (직전 2/2): 6 트라이얼 전부 셀렉트==그래프 stem==패널 stem 일관, 최종 선택 소실 0건. 2차 홀 프로브(web-p3-secondhole-r3.png): 승인+즉시 v2 전환 → v2 화면이 v1 apply 응답으로 덮이지 않음(UI만 stale 폐기), 서버측은 apply 정상 착지(md append+큐 갱신)를 파일 재조회로 실측 — 오케스트레이터가 픽스처 잔존물로 독립 재확인. 콘솔 에러 0."
           }
         }
       ]
@@ -279,16 +279,16 @@
       "passed": 41,
       "failed": 0,
       "basis": "server/package.json(jest) + 대상 테스트 2파일 존재",
-      "reason": "전체 스위트 283/283 PASS(진짜 exit 0) + 대상 2파일 41/41 + tsc --noEmit 0(server·shared) + mutation 프로브 red(6)/green(41) 실측 + review 치명1(배치 독살) fix 테스트 3건 커버 확인 + 작업트리 clean"
+      "reason": "전체 283/283 PASS(진짜 exit 0, PIPESTATUS 실측) + 대상 2파일 41/41 + tsc --noEmit 0(server·shared) + mutation 프로브 red(6)/green(41) 재실측 + 작업트리 clean (19:16 KST)"
     },
     {
       "layer": "web",
-      "status": "FAIL",
+      "status": "PASS",
       "ran": 5,
-      "passed": 4,
-      "failed": 1,
-      "basis": "web/package.json(vite+react) + web/dist(index.html) + gstack READY",
-      "reason": "스펙 시나리오 W1·W2 PASS + 엣지 프로브 P1(skipped 표면화)·P2(100건 대량) PASS. P3 동시성 FAIL: switchPlanningFlow(App.tsx ~357-377) dashReqToken 가드 부재 → 빠른 버전 전환 시 크로스-stem 패널 잔존/최종 선택 소실(재현 2/2, 스크린샷). tsc 0·build 0"
+      "passed": 5,
+      "failed": 0,
+      "basis": "web/package.json(vite+react) + server가 web/dist 정적 서빙(src/index.ts:23-31) + gstack READY",
+      "reason": "W1·W2·P1·P2 회귀 전부 PASS + P3 동시성 레이스 발현 0/6(직전 2/2 → e6c8189 dashReqToken 가드로 해소 실측) + 2차 홀 프로브 PASS. tsc 0·build 0(dist에 fix 포함 재빌드)"
     },
     {
       "layer": "android",
@@ -310,5 +310,5 @@
     }
   ],
   "reportHtml": "verify.html",
-  "historyHtml": "verify-20260705-1858.html"
+  "historyHtml": "verify-20260705-1924.html"
 }
