@@ -652,12 +652,17 @@ export function App(): JSX.Element {
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
           setStatus(`유저플로우 승인/반려 실패(일부는 반영됐을 수 있음 — 화면 재동기화): ${String(e)}`);
-          void fetchDocsPlanningUserFlow(project, flow)
-            .then((flowRes) => {
+          void Promise.all([
+            fetchDocsPlanningUserFlow(project, flow),
+            fetchUserFlowSuggestions(project, flow).catch(() => null),
+          ])
+            .then(([flowRes, sugRes]) => {
               if (token !== dashReqToken.current) return;
               setPlanningUserFlow(flowRes.graph);
               setPlanningFlowNodes(toFlowNodes(flowRes.graph, flowRes.layout));
               setPlanningFlowEdges(toFlowEdges(flowRes.graph));
+              // 큐도 재동기화 — 처리된 카드가 남아 재시도 시 오경보(skipped 나열)를 만드는 것 방지.
+              setUflowSuggestions(sugRes ? sugRes.queue.suggestions : []);
             })
             .catch(() => undefined);
         })
