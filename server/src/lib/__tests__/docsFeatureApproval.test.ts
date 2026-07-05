@@ -386,3 +386,30 @@ describe("pruneFeatureQueue (D-2 재독 차집합)", () => {
     expect(pruneFeatureQueue(dir, new Set(["s1"]))).toBe(0);
   });
 });
+
+/** 엣지 게이트 보강 — 빈 features.md·non-string id (BENIGN 박제). */
+describe("엣지: 빈 문서·non-string id (features)", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "feat-edge-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("빈 features.md는 노드 미발견 skipped·문서 불변(빈 파일 안전)", () => {
+    const dir = makePlanning(root, "p", "", [sug("s1", ["없는 요구사항"], { priority: "높음" })]);
+    const r = applyFeatureSuggestions(dir, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(0);
+    expect(r.skipped.length).toBeGreaterThan(0);
+    expect(readFileSync(join(dir, "planning", "features.md"), "utf-8")).toBe("");
+  });
+
+  it("큐의 non-string id 제안은 읽기에서 걸러진다", () => {
+    const dir = makePlanning(root, "p", "## 데모 <!-- capability: demo -->\n", [
+      sug("ok", ["데모"], { priority: "높음" }),
+      { ...sug("x", ["데모"], { priority: "높음" }), id: 42 },
+    ]);
+    expect(readDocsFeatureSuggestions(dir).suggestions.map((x) => x.id)).toEqual(["ok"]);
+  });
+});

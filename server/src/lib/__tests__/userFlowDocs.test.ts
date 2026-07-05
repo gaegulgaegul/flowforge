@@ -446,3 +446,47 @@ describe("pruneUserFlowQueue (D-2 재독 차집합)", () => {
     expect(readUserFlowSuggestions(dir, STEM)).toEqual({ version: 1, suggestions: [] });
   });
 });
+
+/** 엣지 게이트 보강(approval-family-hardening 2차 review) — 전부 BENIGN 확인용 박제. */
+describe("엣지: 빈 문서·미폐합 펜스·혼합 EOL·non-string id", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "uflow-edge-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("빈 <stem>.md는 전건 no-mermaid-block skipped·문서 불변", () => {
+    const dir = makeFlow(root, "", [sug("s1")]);
+    const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(0);
+    expect(r.skipped).toContain("s1: no-mermaid-block");
+    expect(readMd(dir)).toBe("");
+  });
+
+  it("여는 펜스만 있고 닫히지 않은 mermaid 블록도 no-mermaid-block skipped·문서 불변", () => {
+    const md = ["# 흐름", "", "```mermaid", "flowchart TD", '  A(["시작"]) --> B["홈"]', ""].join("\n");
+    const dir = makeFlow(root, md, [sug("s1", { from: "A", to: "B" })]);
+    const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(0);
+    expect(r.skipped).toEqual(expect.arrayContaining([expect.stringMatching(/^s1: /)]));
+    expect(readMd(dir)).toBe(md);
+  });
+
+  it("혼합 EOL 문서는 any-CRLF-wins로 결정론 수렴한다(D-1 수용 동작 박제)", () => {
+    const mixed = FLOW_MD.replace("flowchart TD\n", "flowchart TD\r\n"); // CRLF 1줄 혼합
+    const dir = makeFlow(root, mixed, [sug("s1")]);
+    const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(1);
+    const out = readMd(dir);
+    expect(out).toContain("D -->|재시작| A");
+    // 결정론: CRLF가 하나라도 있으면 전체 CRLF로 수렴(설계 수용) — LF 단독 줄이 남지 않는다.
+    expect(out.split("\r\n").length - 1).toBe(out.split("\n").length - 1);
+  });
+
+  it("큐의 non-string id 제안은 읽기에서 걸러진다(프로토타입 오염류 무해)", () => {
+    const dir = makeFlow(root, FLOW_MD, [sug("ok"), { ...sug("x"), id: 123 }, { ...sug("y"), id: null }]);
+    expect(readUserFlowSuggestions(dir, STEM).suggestions.map((s) => s.id)).toEqual(["ok"]);
+  });
+});

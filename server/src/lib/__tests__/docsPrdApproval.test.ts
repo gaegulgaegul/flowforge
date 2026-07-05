@@ -285,3 +285,23 @@ describe("prunePrdQueue (D-2 재독 차집합)", () => {
     expect(prunePrdQueue(dir, new Set(["s1"]))).toBe(0);
   });
 });
+
+/** 엣지 게이트 보강 — 빈 prd.md (BENIGN 박제: 5섹션 부재 → writeFailed, 원본 보존). */
+describe("엣지: 빈 prd.md", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "prd-edge-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("빈 prd.md에 승인 적용은 writeFailed(원본·큐 보존)", () => {
+    const dir = makePlanning(root, "p", "", [sug("s1", "overview", "새 개요")]);
+    const r = applyPrdSuggestions(dir, { approve: ["s1"], reject: [] });
+    expect(r.writeFailed).toBe(true);
+    expect(r.applied).toBe(0);
+    expect(readFileSync(join(dir, "planning", "prd.md"), "utf-8")).toBe("");
+    expect(readDocsPrdSuggestions(dir).suggestions).toHaveLength(1);
+  });
+});
