@@ -24,6 +24,7 @@ import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from ".
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
 import { buildDocsPlanningFeatures } from "../parser/featureTreeBuilder.js";
 import { buildPlanningIaTree } from "../parser/planningIaBuilder.js";
+import { buildScreenRegistry } from "../parser/screenRegistry.js";
 import { buildDocsPlanningUserFlow } from "../parser/planningUserFlowBuilder.js";
 import {
   listDocsProjects,
@@ -135,6 +136,25 @@ docsRouter.get(
     }
     // resolveDocsDir는 docs 디렉토리를 반환 — 리더는 projectDir 기준(<projectDir>/docs/audit.json)
     res.json({ project, capabilities: readAuditCapabilities(dirname(dir)) });
+  }),
+);
+
+docsRouter.get(
+  "/api/docs/:project(*)/planning-screens",
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    // features.md 부재 → null이지만 화면목록은 부가 정보 — 빈 레지스트리 200(에러 아님).
+    const registry = buildScreenRegistry(dir);
+    if (!registry) {
+      res.json({ screens: [], links: [] });
+      return;
+    }
+    res.json({ screens: registry.screens, links: registry.links });
   }),
 );
 

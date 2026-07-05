@@ -2,8 +2,8 @@
 
 ### Sequential: 라우트 (RED → GREEN)
 
-- [ ] 1.1 RED: `server/src/routes/__tests__/docs.planning.test.ts`에 `GET /api/docs/:project/planning-screens` 통합 테스트 — (a) `## 화면목록` 2화면+`<!-- screens: -->` 링크 픽스처에서 `{ screens, links }` 반환 단언 (b) 화면목록 없는 프로젝트 빈 registry 200 (c) 존재하지 않는 프로젝트·경로조작(`..`) 404. 픽스처는 기존 makeFeatures 헬퍼에 화면목록 본문 추가.
-- [ ] 1.2 GREEN: `server/src/routes/docs.ts` 라우트 추가 — 기존 planning-* 라우트의 프로젝트 해석·404 패턴 재사용, `buildScreenRegistry(docsDir)` 소비(null이면 빈 `{ screens: [], links: [] }`). 파서 무수정.
+- [x] 1.1 RED: `server/src/routes/__tests__/docs.planning.test.ts`에 `GET /api/docs/:project/planning-screens` 통합 테스트 — (a) `## 화면목록` 2화면+`<!-- screens: -->` 링크 픽스처에서 `{ screens, links }` 반환 단언 (b) 화면목록 없는 프로젝트 빈 registry 200 (c) 존재하지 않는 프로젝트·경로조작(`..`) 404. 픽스처는 기존 makeFeatures 헬퍼에 화면목록 본문 추가.
+- [x] 1.2 GREEN: `server/src/routes/docs.ts` 라우트 추가 — 기존 planning-* 라우트의 프로젝트 해석·404 패턴 재사용, `buildScreenRegistry(docsDir)` 소비(null이면 빈 `{ screens: [], links: [] }`). 파서 무수정.
 
 ### Parallel Group 1 (라우트 완료 후 — 서로 다른 파일, 동시 실행 가능)
 
