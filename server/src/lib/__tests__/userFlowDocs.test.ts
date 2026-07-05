@@ -166,10 +166,10 @@ describe("applyUserFlowSuggestions", () => {
     expect(readMd(dir)).toBe(expected); // 전체 파일 정확 비교 — 위치·나머지 불변까지 못박음
   });
 
-  it("from이 문서에 없으면 skipped, 원본 불변, 큐 잔존", () => {
+  it("from이 문서에 없으면 skipped(사유 포함), 원본 불변, 큐 잔존", () => {
     const dir = makeFlow(root, FLOW_MD, [sug("s1", { from: "ZZZ" })]);
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
-    expect(r.skipped).toContain("s1");
+    expect(r.skipped).toContain("s1: from-not-in-doc");
     expect(r.applied).toBe(0);
     expect(r.remaining).toBe(1);
     expect(readMd(dir)).toBe(FLOW_MD);
@@ -178,7 +178,7 @@ describe("applyUserFlowSuggestions", () => {
   it("to(기존 노드 지정)가 문서에 없으면 skipped", () => {
     const dir = makeFlow(root, FLOW_MD, [sug("s1", { to: "Ghost" })]);
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
-    expect(r.skipped).toContain("s1");
+    expect(r.skipped).toContain("s1: to-not-in-doc");
     expect(readMd(dir)).toBe(FLOW_MD);
   });
 
@@ -187,7 +187,7 @@ describe("applyUserFlowSuggestions", () => {
       sug("s1", { to: undefined, newNode: { id: "b", label: "새 화면" } }), // 기존 B와 충돌
     ]);
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
-    expect(r.skipped).toContain("s1");
+    expect(r.skipped).toContain("s1: newNode-id-collision");
     expect(readMd(dir)).toBe(FLOW_MD);
   });
 
@@ -196,7 +196,7 @@ describe("applyUserFlowSuggestions", () => {
       sug("s1", { to: undefined, newNode: { id: "New-Node", label: "새 화면" } }),
     ]);
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
-    expect(r.skipped).toContain("s1");
+    expect(r.skipped).toContain("s1: newNode-id-invalid");
     expect(readMd(dir)).toBe(FLOW_MD);
   });
 
@@ -208,7 +208,14 @@ describe("applyUserFlowSuggestions", () => {
       sug("s4", { to: undefined, newNode: { id: "N1", label: "라벨|금지" } }),
     ]);
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1", "s2", "s3", "s4"], reject: [] });
-    expect(r.skipped).toEqual(expect.arrayContaining(["s1", "s2", "s3", "s4"]));
+    expect(r.skipped).toEqual(
+      expect.arrayContaining([
+        "s1: label-forbidden-char",
+        "s2: label-forbidden-char",
+        "s3: label-forbidden-char",
+        "s4: newNode-label-forbidden-char",
+      ]),
+    );
     expect(r.applied).toBe(0);
     expect(readMd(dir)).toBe(FLOW_MD);
   });
@@ -224,7 +231,7 @@ describe("applyUserFlowSuggestions", () => {
       JSON.stringify({ version: 1, suggestions: [sug("s2", { label: "다른라벨" })] }),
     );
     const r2 = applyUserFlowSuggestions(dir, STEM, { approve: ["s2"], reject: [] });
-    expect(r2.skipped).toContain("s2");
+    expect(r2.skipped).toContain("s2: duplicate-edge");
     expect(r2.applied).toBe(0);
     expect(readMd(dir)).toBe(snapshot);
   });
@@ -233,7 +240,7 @@ describe("applyUserFlowSuggestions", () => {
     const md = "# 유저 플로우\n\n초안만 있음.\n";
     const dir = makeFlow(root, md, [sug("s1")]);
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
-    expect(r.skipped).toContain("s1");
+    expect(r.skipped).toContain("s1: no-mermaid-block");
     expect(r.applied).toBe(0);
     expect(readMd(dir)).toBe(md);
   });
@@ -247,12 +254,20 @@ describe("applyUserFlowSuggestions", () => {
     expect(readMd(dir)).toBe(before); // 바이트 동일
   });
 
-  it("미실재 approve id는 skipped로 표면화한다(silent drop 금지)", () => {
+  it("미실재 approve id는 skipped로 사유와 함께 표면화한다(silent drop 금지)", () => {
     const dir = makeFlow(root, FLOW_MD, [sug("s1")]);
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["nope"], reject: [] });
-    expect(r.skipped).toContain("nope");
+    expect(r.skipped).toContain("nope: not-in-queue");
     expect(r.applied).toBe(0);
     expect(r.remaining).toBe(1);
+  });
+
+  it("불안전 stem이면 writeFailed + 전 id를 unsafe-stem 사유로 skipped(어떤 경로에도 안 씀)", () => {
+    const dir = makeFlow(root, FLOW_MD, [sug("s1")]);
+    const r = applyUserFlowSuggestions(dir, "../evil", { approve: ["s1"], reject: ["s2"] });
+    expect(r.writeFailed).toBe(true);
+    expect(r.skipped).toEqual(["s1: unsafe-stem", "s2: unsafe-stem"]);
+    expect(readMd(dir)).toBe(FLOW_MD);
   });
 
   it("<stem>.md가 없으면 writeFailed(원본 보호, 큐 불변)", () => {
