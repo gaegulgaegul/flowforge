@@ -1,5 +1,7 @@
 # planning-only-recognition
 
+## Purpose
+
 charter 산출물(`user-flow.md`/`PRD.md`) 없이 `docs/planning/prd.md`만 가진 프로젝트를 flowforge가 docs 프로젝트로 인식하는 능력. 인식 판정은 `hasDocs` 단일 게이트로 수렴하므로 `resolveDocsDir`(단일 해석)와 `listDocsProjects`(전체 스캔) 양쪽에 일관 적용된다.
 
 ## Requirements

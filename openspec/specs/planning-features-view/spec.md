@@ -1,5 +1,7 @@
 # planning-features-view
 
+## Purpose
+
 flowforge가 `docs/planning/features.md`(기획 단계 산출물)를 읽어 전용 `FeatureTree`로 파싱하고 ReactFlow 트리로 렌더하는 능력. 타입 전략 B(분리) — 기존 change spec-tree(`SpecTree`) 타입·렌더와 독립이다.
 
 ## Requirements

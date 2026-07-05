@@ -1,5 +1,7 @@
 # planning-prd-view
 
+## Purpose
+
 flowforge가 `docs/planning/prd.md`(기획 단계 산출물)를 읽어 기존 PrdPanel로 PRD 5섹션을 렌더하는 능력.
 
 ## Requirements

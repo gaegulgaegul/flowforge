@@ -1,5 +1,7 @@
 # planning-features-generation
 
+## Purpose
+
 openspec-plan 스킬이 PRD 생성 다음 단계에서 `docs/planning/features.md`를 manyfast식 3단 트리 기능명세서로 생성하는 능력. 이 산출물은 기획↔구현 매핑의 출발점(요구사항별 capability 키)이다.
 
 ## Requirements

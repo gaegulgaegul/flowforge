@@ -1,5 +1,7 @@
 # planning-prd-generation
 
+## Purpose
+
 openspec-plan 스킬이 기획 단계 산출물 중 PRD를 생성하는 능력(예광탄 슬라이스 — PRD 생성만, 기능명세/유저플로우/와이어는 후속 change).
 
 ## Requirements

@@ -1,5 +1,7 @@
 # planning-prd-approval-queue
 
+## Purpose
+
 flowforge가 `docs/planning/prd.suggestions.json`(PRD 갱신 제안 큐)을 읽어 반환하는 읽기전용 능력. 제안 큐는 AI(openspec-plan 스킬/봇)가 쓴 섹션 단위 제안 배열이며, flowforge는 이를 생성하지 않고 소비만 한다(manyfast 수정-승인 루프의 읽기 측).
 
 ## Requirements

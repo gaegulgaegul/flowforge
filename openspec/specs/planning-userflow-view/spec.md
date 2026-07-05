@@ -1,5 +1,7 @@
 # planning-userflow-view
 
+## Purpose
+
 flowforge가 `docs/planning/user-flow/<group>-vN.md`의 Mermaid flowchart를 파싱해 SpecGraph로 렌더하고, 드래그한 좌표를 `<group>-vN.overlay.json`에 저장하는 능력. SpecGraph 타입(공용)·web graphAdapter/SpecNode를 재사용한다. docs 디렉토리에 처음으로 쓰기(좌표 저장)가 추가된다.
 
 ## Requirements

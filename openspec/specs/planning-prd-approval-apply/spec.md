@@ -1,5 +1,7 @@
 # planning-prd-approval-apply
 
+## Purpose
+
 flowforge가 PRD 제안 큐의 항목을 개별/일괄로 승인·반려하고, 승인분만 `docs/planning/prd.md`에 섹션 교체 반영하는 능력. flowforge가 명세 `.md`에 처음으로 쓰는 경로 — SSOT를 "승인을 통해서만 바뀐다"로 재정의(승인=사용자 의도). 반려는 원본 불변.
 
 ## Requirements

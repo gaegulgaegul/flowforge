@@ -1,5 +1,7 @@
 # planning-userflow-generation
 
+## Purpose
+
 openspec-plan 스킬이 기능명세 다음 단계에서 `docs/planning/user-flow/<group>-vN.md`를 Mermaid flowchart 명세로 생성하는 능력. 화면 흐름을 그래프로 표현하며, 기능명세에 기능이 ≥1 있어야 진행하는 manyfast 순차 게이트의 다음 단계다.
 
 ## Requirements
