@@ -279,15 +279,17 @@ describe("applyUserFlowSuggestions", () => {
   });
 
   // D-4는 `"`·`|`·개행만 금지라 `]`는 검증을 통과하지만, 인라인 정의 `Err["취소]확인"]`은
-  // 재파싱 시 라벨이 "취소"로 잘려 roundtrip이 깨진다 → 가드가 write를 막는 결정론 경로.
-  it("append 결과가 roundtrip 불변식을 깨면 write하지 않고 writeFailed(문서·큐 불변)", () => {
+  // 재파싱 시 라벨이 "취소"로 잘려 roundtrip이 깨진다 → 제안별 사전 roundtrip이 그 제안만
+  // skipped 처리하고 문서를 건드리지 않는다(배치 writeFailed 독살 아님 — review 치명 1 수정).
+  it("roundtrip을 깨는 제안은 개별 skipped·문서 불변(배치 writeFailed 아님)", () => {
     const dir = makeFlow(root, FLOW_MD, [
       sug("s1", { to: undefined, newNode: { id: "Err", label: "취소]확인" }, label: undefined }),
     ]);
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
-    expect(r.writeFailed).toBe(true);
+    expect(r.writeFailed).toBeUndefined();
     expect(r.applied).toBe(0);
-    expect(r.remaining).toBe(1); // 큐 불변
+    expect(r.skipped).toEqual(expect.arrayContaining([expect.stringMatching(/^s1: /)]));
+    expect(r.remaining).toBe(1); // 검증 위반은 큐에 남는다
     expect(readMd(dir)).toBe(FLOW_MD); // 문서 불변
   });
 
@@ -302,6 +304,29 @@ describe("applyUserFlowSuggestions", () => {
     expect(after.rawEdges).toHaveLength(before.rawEdges.length + 1);
     for (const e of before.rawEdges) expect(after.rawEdges).toContainEqual(e);
     expect(after.rawEdges).toContainEqual({ from: "D", to: "A", kind: "happy", label: "재시작" });
+  });
+  it("파싱을 오염시키는 라벨(`[foo]`)은 그 제안만 skipped, 유효 형제는 정상 반영(배치 독살 금지)", () => {
+    // `[foo]`는 D-4 금지문자 밖이지만 재파싱 시 노드 모양으로 벗겨져 라벨이 달라진다 —
+    // 개별 사전 roundtrip이 없으면 배치 전체가 사유 없는 422로 죽는다(review 치명 1).
+    const dir = makeFlow(root, FLOW_MD, [sug("poison", { label: "선택지 [예/아니오]" }), sug("ok", { label: "재시작" })]);
+    const r = applyUserFlowSuggestions(dir, STEM, { approve: ["poison", "ok"], reject: [] });
+    expect(r.writeFailed).toBeUndefined();
+    expect(r.applied).toBe(1);
+    expect(r.skipped).toEqual(expect.arrayContaining([expect.stringMatching(/^poison: /)]));
+    const out = readMd(dir);
+    expect(out).toContain("D -->|재시작| A");
+    expect(out).not.toContain("예/아니오");
+  });
+
+  it("백틱 펜스가 든 newNode 라벨도 그 제안만 skipped(블록 절단 독살 금지)", () => {
+    const dir = makeFlow(root, FLOW_MD, [
+      sug("tick", { to: undefined, newNode: { id: "Tk", label: "코드 ``` 블록" }, edgeKind: "edgecase" }),
+      sug("ok", { label: "재시작" }),
+    ]);
+    const r = applyUserFlowSuggestions(dir, STEM, { approve: ["tick", "ok"], reject: [] });
+    expect(r.writeFailed).toBeUndefined();
+    expect(r.applied).toBe(1);
+    expect(r.skipped).toEqual(expect.arrayContaining([expect.stringMatching(/^tick: /)]));
   });
 });
 
