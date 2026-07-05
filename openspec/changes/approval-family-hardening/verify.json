@@ -1,0 +1,383 @@
+{
+  "change": "approval-family-hardening",
+  "verifiedAt": "2026-07-05T21:04:02+09:00",
+  "finalJudgment": "FAIL",
+  "counts": {
+    "pass": 4,
+    "fail": 0,
+    "검증안함": 6,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": false,
+    "reason": "예외 미검증(검증 불충분): [prd] apply는 원문 개행 스타일을 보존한다, [prd] 큐 재작성은 처리분만 제거한다, [prd] apply 배치 크기를 제한한다, [features] apply는 원문 개행 스타일을 보존한다, [features] 큐 재작성은 처리분만 제거한다, [features] apply 배치 크기를 제한한다, [userflow] apply는 원문 개행 스타일을 보존한다, [userflow] 큐 재작성은 처리분만 제거한다, [userflow] apply 배치 크기를 제한한다"
+  },
+  "requirements": [
+    {
+      "title": "[prd] apply는 원문 개행 스타일을 보존한다",
+      "edgeCase": {
+        "verdict": "검증 불충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "missing",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "파일 내용은 항상 문자열(fs read) — 타입 변형 경로 없음, typecheck PASS",
+          "동시성": "동기 단일 프로세스 쓰기 — 동시성 우려는 '큐 재작성' 요구사항에서 별도 취급",
+          "대량": "restoreEol은 순수 replaceAll — 크기에 따른 동작 분기 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "CRLF prd.md 승인 후 개행 보존",
+          "layer": "server",
+          "means": "jest 단위 테스트(바이트 단언)",
+          "basis": "package.json server workspace + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "docsPrdApproval.test.ts:235 'CRLF prd.md 승인 반영 후 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' PASS (suite 290/290, exit 0). 구현: lib/docs.ts:24 detectEol/restoreEol import, :266 writeFileSync(restoreEol(out, detectEol(original)))",
+            "caption": "EOL roundtrip 테스트 + 구현 확인"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[prd] 큐 재작성은 처리분만 제거한다",
+      "edgeCase": {
+        "verdict": "검증 불충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "missing",
+          "에러경로": "covered",
+          "동시성": "missing",
+          "대량": "missing",
+          "특수문자": "missing"
+        },
+        "naReasons": {}
+      },
+      "scenarios": [
+        {
+          "scenario": "apply 도중 추가된 제안이 생존한다",
+          "layer": "server",
+          "means": "(매핑 없음 — 기능 미구현)",
+          "basis": "정적 grep: lib/docs.ts:276 초기 스냅샷 read → :319-320 스냅샷 filter 후 write. 재독(re-read) 코드 부재",
+          "result": "검증 안 함",
+          "evidence": {
+            "kind": "text",
+            "text": "lib/docs.ts:276 `const queue = readDocsPrdSuggestions(docsDir)` … :319 `queue.suggestions.filter((s) => !removed.has(s.id))` :320 write — 초기 스냅샷 기준 재작성. apply 도중 추가분은 clobber됨. 테스트도 부재(grep 재독|생존|clobber → 0건). tasks.md 3.1/3.2 미완과 일치",
+            "caption": "기능 미구현 — 환경 SKIP 아님"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[prd] apply 배치 크기를 제한한다",
+      "edgeCase": {
+        "verdict": "검증 불충분",
+        "classes": {
+          "null": "missing",
+          "빈값": "missing",
+          "잘못된타입": "covered",
+          "경계값": "missing",
+          "에러경로": "missing",
+          "동시성": "missing",
+          "대량": "missing",
+          "특수문자": "missing"
+        },
+        "naReasons": {}
+      },
+      "scenarios": [
+        {
+          "scenario": "초과 배치는 400",
+          "layer": "server",
+          "means": "(매핑 없음 — 기능 미구현)",
+          "basis": "정적 grep: routes/docs.ts:245-267 shape 검증만, 길이 상한 부재",
+          "result": "검증 안 함",
+          "evidence": {
+            "kind": "text",
+            "text": "grep -rniE 'batch|MAX_|length > N' server/src → batch_too_large·상한 게이트 0건. routes/docs.ts prd apply는 isPrdApplyRequest shape 검증만. 201건 배치가 그대로 처리됨. tasks.md 4.1 미완과 일치",
+            "caption": "기능 미구현"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[features] apply는 원문 개행 스타일을 보존한다",
+      "edgeCase": {
+        "verdict": "검증 불충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "missing",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "파일 내용은 항상 문자열 — 타입 변형 경로 없음",
+          "동시성": "동기 단일 프로세스 쓰기 — 큐 재작성 요구사항에서 별도 취급",
+          "대량": "lines.join(eol) 순수 조립 — 크기 분기 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "CRLF features.md 승인 후 개행 보존",
+          "layer": "server",
+          "means": "jest 단위 테스트(바이트 단언)",
+          "basis": "package.json server workspace + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "docsFeatureApproval.test.ts:273 'CRLF features.md 승인 반영 후 속성 줄만 교체되고 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' PASS. 구현: lib/featureDocs.ts:25 detectEol import, :252 writeFileSync(lines.join(eol))",
+            "caption": "EOL roundtrip 테스트 + 구현 확인"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[features] 큐 재작성은 처리분만 제거한다",
+      "edgeCase": {
+        "verdict": "검증 불충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "missing",
+          "에러경로": "covered",
+          "동시성": "missing",
+          "대량": "missing",
+          "특수문자": "missing"
+        },
+        "naReasons": {}
+      },
+      "scenarios": [
+        {
+          "scenario": "apply 도중 추가된 제안이 생존한다",
+          "layer": "server",
+          "means": "(매핑 없음 — 기능 미구현)",
+          "basis": "정적 grep: lib/featureDocs.ts:200 스냅샷 read → :268-269 스냅샷 filter 후 write",
+          "result": "검증 안 함",
+          "evidence": {
+            "kind": "text",
+            "text": "lib/featureDocs.ts:200 스냅샷 read → :268 `queue.suggestions.filter(...)` :269 write — 재독 부재, prd와 동일한 clobber 패턴. 테스트 부재. tasks.md 3.1/3.2 미완",
+            "caption": "기능 미구현"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[features] apply 배치 크기를 제한한다",
+      "edgeCase": {
+        "verdict": "검증 불충분",
+        "classes": {
+          "null": "missing",
+          "빈값": "missing",
+          "잘못된타입": "covered",
+          "경계값": "missing",
+          "에러경로": "missing",
+          "동시성": "missing",
+          "대량": "missing",
+          "특수문자": "missing"
+        },
+        "naReasons": {}
+      },
+      "scenarios": [
+        {
+          "scenario": "초과 배치는 400",
+          "layer": "server",
+          "means": "(매핑 없음 — 기능 미구현)",
+          "basis": "정적 grep: routes/docs.ts:283-306 features apply — 상한 부재",
+          "result": "검증 안 함",
+          "evidence": {
+            "kind": "text",
+            "text": "routes/docs.ts:283-306 features apply에 길이 상한 없음. 유일한 400 테스트는 shape('잘못된 body는 400' docsFeatureApproval.test.ts:113). tasks.md 4.1 미완",
+            "caption": "기능 미구현"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[userflow] apply는 원문 개행 스타일을 보존한다",
+      "edgeCase": {
+        "verdict": "검증 불충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "missing",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "파일 내용은 항상 문자열 — 타입 변형 경로 없음",
+          "동시성": "동기 단일 프로세스 쓰기 — 큐 재작성 요구사항에서 별도 취급",
+          "대량": "lines.join(eol) 순수 조립 — 크기 분기 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "CRLF 유저플로우 문서 승인 후 개행 보존",
+          "layer": "server",
+          "means": "jest 단위 테스트(바이트 단언)",
+          "basis": "package.json server workspace + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "userFlowDocs.test.ts:278 'CRLF 문서에 add-edge 승인 → append 줄도 CRLF, 기존 줄 CRLF 불변(EOL roundtrip)' PASS. 구현: lib/userFlowDocs.ts:26 detectEol import, :269 writeFileSync(lines.join(eol))",
+            "caption": "EOL roundtrip 테스트 + 구현 확인"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[userflow] 큐 재작성은 처리분만 제거한다",
+      "edgeCase": {
+        "verdict": "검증 불충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "missing",
+          "에러경로": "covered",
+          "동시성": "missing",
+          "대량": "missing",
+          "특수문자": "covered"
+        },
+        "naReasons": {}
+      },
+      "scenarios": [
+        {
+          "scenario": "apply 도중 추가된 제안이 생존한다",
+          "layer": "server",
+          "means": "(매핑 없음 — 기능 미구현)",
+          "basis": "정적 grep: lib/userFlowDocs.ts:241 스냅샷 read → :285-286 스냅샷 filter 후 write",
+          "result": "검증 안 함",
+          "evidence": {
+            "kind": "text",
+            "text": "lib/userFlowDocs.ts:241 스냅샷 read → :285 `queue.suggestions.filter(...)` :286 write — 재독 부재, 동일 clobber 패턴. 테스트 부재. tasks.md 3.1/3.2 미완",
+            "caption": "기능 미구현"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[userflow] apply 배치 크기를 제한한다",
+      "edgeCase": {
+        "verdict": "검증 불충분",
+        "classes": {
+          "null": "missing",
+          "빈값": "missing",
+          "잘못된타입": "covered",
+          "경계값": "missing",
+          "에러경로": "missing",
+          "동시성": "missing",
+          "대량": "missing",
+          "특수문자": "missing"
+        },
+        "naReasons": {}
+      },
+      "scenarios": [
+        {
+          "scenario": "초과 배치는 400",
+          "layer": "server",
+          "means": "(매핑 없음 — 기능 미구현)",
+          "basis": "정적 grep: routes/docs.ts:328-357 user-flow apply — 상한 부재",
+          "result": "검증 안 함",
+          "evidence": {
+            "kind": "text",
+            "text": "routes/docs.ts:328-357 user-flow apply에 길이 상한 없음. shape-400 테스트만 존재(docsUserFlowApproval.test.ts:185). tasks.md 4.1 미완",
+            "caption": "기능 미구현"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[userflow] append 위치와 재파싱은 같은 mermaid 블록을 본다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "입력은 내부 API lines 배열 — 컴파일 타임 보장(typecheck PASS)",
+          "동시성": "순수 함수(부수효과 없음)",
+          "대량": "순수 동기 라인 스캔 — 크기에 따른 동작 분기 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "mermaid-example 블록이 선행해도 유효 제안이 반영된다",
+          "layer": "server",
+          "means": "jest 단위 테스트(파서+lib 양쪽)",
+          "basis": "package.json server workspace + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "userFlowDocs.test.ts:251 '```mermaid-example 블록이 진짜 블록 앞에 있어도 승인이 진짜 mermaid 블록에 append된다' + planningUserFlowBuilder.test.ts:176(진짜 블록 인덱스)·:192(블록 없음 null) PASS. 구현: parser/planningUserFlowBuilder.ts:27 export findFirstMermaidBlock, lib/userFlowDocs.ts:27 import 소비, firstMermaidCloseIdx 구현부 제거 확인",
+            "caption": "블록 판별 단일화 테스트 + 구현 확인"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 4,
+      "passed": 4,
+      "failed": 0,
+      "basis": "package.json workspaces(server) + jest 스위트 존재",
+      "reason": "jest 290/290 PASS(exit 0)·typecheck exit 0. 매핑된 4개 시나리오 전부 PASS. 나머지 6개는 기능 미구현으로 검증 안 함(레이어 문제 아님)"
+    },
+    {
+      "layer": "web",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "web workspace 존재(적용 가능)하나 이 change의 spec 시나리오는 전부 서버 계층",
+      "reason": "spec 시나리오 매핑 0건 — UI 태스크 4.2(패널 캡)는 tasks.md 항목일 뿐 spec 시나리오 아님"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "android 프로젝트 파일 없음(build.gradle 등 부재)",
+      "reason": "적용 불가"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "비 macOS(Linux) + ios 프로젝트 없음",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260705-2104.html"
+}
