@@ -183,6 +183,42 @@ export async function fetchDocsPrdSuggestions(
 }
 
 /** PRD 제안 승인/반려 적용. 승인분만 prd.md 반영, 반려는 큐에서만 제거. */
+/** 서버 apply 배치 상한(routes/docs.ts APPLY_BATCH_CAP과 정합 — D-3). */
+export const APPLY_BATCH_CAP = 200;
+
+/** batch_too_large(400) 안내 — 청크 헬퍼를 안 거친 직접 호출이 상한에 걸렸을 때의 명확한 메시지. */
+const BATCH_TOO_LARGE_MSG = `한 번에 처리할 수 있는 제안은 ${APPLY_BATCH_CAP}건까지입니다(자동 분할이 적용되지 않은 요청).`;
+
+/**
+ * 대량 일괄 승인/반려를 서버 상한(200)에 맞춰 순차 청크로 전송하고 결과를 합산한다.
+ * 큐가 201건 이상이어도 [모두 승인/반려]가 죽지 않게 하는 클라이언트 측 분할(D-3 짝).
+ * 청크 도중 실패하면 그 시점까지의 반영은 유지된 채 throw(서버가 청크 단위로 원자 처리).
+ */
+export async function applyInChunks(
+  applyOnce: (req: PrdApplyRequest) => Promise<PrdApplyResult>,
+  req: PrdApplyRequest,
+): Promise<PrdApplyResult> {
+  let applied = 0;
+  let rejected = 0;
+  let remaining = 0;
+  const skipped: string[] = [];
+  const chunks: PrdApplyRequest[] = [];
+  for (let a = 0; a < req.approve.length; a += APPLY_BATCH_CAP) {
+    chunks.push({ approve: req.approve.slice(a, a + APPLY_BATCH_CAP), reject: [] });
+  }
+  for (let r = 0; r < req.reject.length; r += APPLY_BATCH_CAP) {
+    chunks.push({ approve: [], reject: req.reject.slice(r, r + APPLY_BATCH_CAP) });
+  }
+  for (const c of chunks) {
+    const res = await applyOnce(c);
+    applied += res.applied;
+    rejected += res.rejected;
+    remaining = res.remaining; // 마지막 청크의 잔여가 최신
+    skipped.push(...res.skipped);
+  }
+  return { applied, rejected, remaining, skipped };
+}
+
 export async function applyDocsPrdSuggestions(
   project: string,
   req: PrdApplyRequest,
@@ -196,6 +232,12 @@ export async function applyDocsPrdSuggestions(
     // 422(prd_write_failed) = prd.md 형식이 예상과 달라 반영 못 함(원본·큐 보존). 원인을 명확히 전달.
     if (res.status === 422) {
       throw new Error("prd.md 형식이 예상과 달라 반영하지 못했습니다(원본·큐는 보존됨).");
+    }
+    if (res.status === 400) {
+      const body: unknown = await res.json().catch(() => null);
+      if (typeof body === "object" && body !== null && (body as { error?: string }).error === "batch_too_large") {
+        throw new Error(BATCH_TOO_LARGE_MSG);
+      }
     }
     throw new Error(`prd-apply ${res.status}`);
   }
@@ -271,6 +313,12 @@ export async function applyDocsFeatureSuggestions(
     if (res.status === 422) {
       throw new Error("features.md 형식이 예상과 달라 반영하지 못했습니다(원본·큐는 보존됨).");
     }
+    if (res.status === 400) {
+      const body: unknown = await res.json().catch(() => null);
+      if (typeof body === "object" && body !== null && (body as { error?: string }).error === "batch_too_large") {
+        throw new Error(BATCH_TOO_LARGE_MSG);
+      }
+    }
     throw new Error(`features-apply ${res.status}`);
   }
   return (await res.json()) as PrdApplyResult;
@@ -340,6 +388,12 @@ export async function applyUserFlowSuggestions(
     // 422(user_flow_write_failed) = <flow>.md 부재/roundtrip 위반/쓰기 실패로 반영 못 함(원본·큐 보존). 원인을 명확히 전달.
     if (res.status === 422) {
       throw new Error("유저플로우 문서에 반영하지 못했습니다(형식/검증 위반 — 원본·큐는 보존됨).");
+    }
+    if (res.status === 400) {
+      const body: unknown = await res.json().catch(() => null);
+      if (typeof body === "object" && body !== null && (body as { error?: string }).error === "batch_too_large") {
+        throw new Error(BATCH_TOO_LARGE_MSG);
+      }
     }
     throw new Error(`user-flow-apply ${res.status}`);
   }

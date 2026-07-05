@@ -4,7 +4,7 @@
  * FeatureApprovalPanel의 유저플로우판. 제안 큐(UserFlowSuggestionQueue)가 있으면 에지별 제안 카드를 렌더한다.
  * 카드 구조: [from —▶ to] 에지 표기(happy=실선, edgecase=점선 + «에지케이스» 뱃지) + 라벨 + rationale.
  * 신규 화면 노드 제안(newNode)이면 "신규 화면" 뱃지와 노드 라벨을 함께 보여준다(D-3: to 측 인라인 정의만).
- * 각 카드에 [승인]/[반려], 하단에 [모두 승인]/[모두 반려]를 둔다. 실제 반영(POST apply)·재조회는
+ * 각 카드에 [승인]/[반려], 상단(배너 직후)에 [모두 승인]/[모두 반려]를 둔다(대량 큐에서도 즉시 도달, D-5). 실제 반영(POST apply)·재조회는
  * 부모(App)가 콜백으로 처리한다(이 패널은 표시 + 인터랙션만, LLM 호출 없음).
  * 큐가 비면 이 패널은 아무것도 렌더하지 않는다(순수 읽기 그래프 뷰는 App의 ReactFlow가 담당).
  */
@@ -69,7 +69,7 @@ export function UserFlowApprovalPanel({
           disabled={busy}
           onClick={onRejectAll}
         >
-          모두 반려
+          모두 반려 ({suggestions.length}건)
         </button>
         <button
           type="button"
@@ -78,7 +78,7 @@ export function UserFlowApprovalPanel({
           disabled={busy}
           onClick={onApproveAll}
         >
-          모두 승인
+          모두 승인 ({suggestions.length}건)
         </button>
       </div>
 

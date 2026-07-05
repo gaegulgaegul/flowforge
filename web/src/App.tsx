@@ -47,6 +47,7 @@ import {
   fetchPlanningScreens,
   type CapabilitySummary,
   type ChangeSummary,
+  applyInChunks,
 } from "./api.js";
 import type { ProjectCard } from "@flowforge/shared";
 import { ProjectGrid } from "./ProjectGrid.js";
@@ -538,7 +539,7 @@ export function App(): JSX.Element {
       if (!project || prdApplyBusy) return;
       const token = ++dashReqToken.current;
       setPrdApplyBusy(true);
-      applyDocsPrdSuggestions(project, { approve, reject })
+      applyInChunks((r) => applyDocsPrdSuggestions(project, r), { approve, reject })
         .then((res) => {
           if (res.skipped.length > 0) {
             setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${res.skipped.join(", ")}).`);
@@ -569,7 +570,7 @@ export function App(): JSX.Element {
       if (!project || featureApplyBusy) return;
       const token = ++dashReqToken.current;
       setFeatureApplyBusy(true);
-      applyDocsFeatureSuggestions(project, { approve, reject })
+      applyInChunks((r) => applyDocsFeatureSuggestions(project, r), { approve, reject })
         .then((res) => {
           if (res.skipped.length > 0) {
             setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${res.skipped.join(", ")}).`);
@@ -608,7 +609,7 @@ export function App(): JSX.Element {
       if (!project || !flow || uflowApplyBusy) return;
       const token = ++dashReqToken.current;
       setUflowApplyBusy(true);
-      applyUserFlowSuggestions(project, flow, { approve, reject })
+      applyInChunks((r) => applyUserFlowSuggestions(project, flow, r), { approve, reject })
         .then((res) => {
           if (res.skipped.length > 0) {
             setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${res.skipped.join(", ")}).`);

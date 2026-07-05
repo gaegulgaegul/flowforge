@@ -4,7 +4,7 @@
  * 6a PrdApprovalPanel의 features판. 제안 큐(FeatureSuggestionQueue)가 있으면 노드별 제안 카드를 렌더한다.
  * 6a와의 유일한 구조 차이: diff가 "섹션 body 대비"가 아니라 **노드 속성(중요도·상태) before/after 대비**다.
  * 현재값은 features 트리(nodePath로 노드를 찾아)에서 뽑고, 제안값은 큐에서 뽑아 [현재 → 제안]으로 보여준다.
- * 각 카드에 [승인]/[반려], 하단에 [모두 승인]/[모두 반려]를 둔다. 실제 반영(POST apply)·재조회는
+ * 각 카드에 [승인]/[반려], 상단(배너 직후)에 [모두 승인]/[모두 반려]를 둔다(대량 큐에서도 즉시 도달, D-5). 실제 반영(POST apply)·재조회는
  * 부모(App)가 콜백으로 처리한다(이 패널은 표시 + 인터랙션만, LLM 호출 없음).
  * 큐가 비면 이 패널은 아무것도 렌더하지 않는다(순수 읽기 트리 뷰는 App의 ReactFlow가 담당).
  */
@@ -113,7 +113,7 @@ export function FeatureApprovalPanel({
           disabled={busy}
           onClick={onRejectAll}
         >
-          모두 반려
+          모두 반려 ({suggestions.length}건)
         </button>
         <button
           type="button"
@@ -122,7 +122,7 @@ export function FeatureApprovalPanel({
           disabled={busy}
           onClick={onApproveAll}
         >
-          모두 승인
+          모두 승인 ({suggestions.length}건)
         </button>
       </div>
 
