@@ -278,3 +278,31 @@ flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 �
 - 상세기능 노드 라벨 ↔ `links[].detailLabel` 문자열 동치로 화면 목록(`{id,label}`)을 파생하고, 화면 label은 registry.screens에서 해석한다. dangling 화면 id는 label 대신 id로 강등 표시(숨기지 않음).
 - 링크 없는 상세기능은 섹션을 생략한다(빈 섹션·placeholder 없음). registry fetch 실패는 필드 없음 강등(그래프·패널 렌더 유지).
 - metric: 라이브 실픽셀 grounding — 링크 있는 상세기능 화면 나열·링크 없는 노드 섹션 생략·콘솔 에러 0.
+
+## capability: planning-userflow-approval-edit
+
+유저플로우 문서(docs/planning/user-flow/<stem>.md)에 대한 에지 추가 제안을 per-stem 사이드카 큐(<stem>.suggestions.json)로 받고, 승인분만 결정론 검증 + self-roundtrip 방어를 거쳐 Mermaid에 append 반영하는 능력. 반려·검증 위반은 문서를 건드리지 않는다. 기존 줄은 한 줄도 수정하지 않는다(append-only — 인라인 노드 정의 SSOT 보호).
+
+### 기능: 제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)
+- assert:endpoint GET /api/docs/:project/planning-user-flow-suggestions
+- assert:symbol readUserFlowSuggestions
+- per-stem 큐를 반환한다. 파일 부재는 빈 큐 200, 깨진 JSON·무효 제안은 필터.
+- invariant:safe-4xx 존재하지 않는 프로젝트·경로조작·불안전 stem은 404, 읽기는 500으로 죽지 않는다.
+- metric: userFlowDocs 단위 + 라우트 통합 테스트 PASS.
+
+### 기능: 승인 apply API (`POST .../planning-user-flow-suggestions/apply`)
+- assert:endpoint POST /api/docs/:project/planning-user-flow-suggestions/apply
+- assert:symbol applyUserFlowSuggestions
+- assert:symbol userFlowInvariantHolds
+- 승인분만 첫 mermaid 블록 닫는 펜스 직전에 에지 줄 append. 계약은 6a/6b의 PrdApplyRequest/PrdApplyResult 재사용.
+- invariant: 결정론 검증(from/to 존재·newNode id 충돌·라벨 금지문자·중복 에지 멱등) 위반은 해당 제안만 skipped로 사유와 함께 표면화 — 배치 전체를 죽이지 않는다(제안별 사전 roundtrip 포함).
+- invariant: self-roundtrip 방어 — append 후 재파싱해 기존 노드·에지 완전 보존 + 승인분 에지만 정확히 추가됐을 때만 write, 위반 시 422·원본 보존·큐 유지(무력화 프로브 테스트 존치).
+- invariant: 반려는 문서 바이트 불변, 큐에서만 제거.
+- metric: 단위(검증·append·방어·무력화 프로브) + 통합 테스트 PASS + 실픽셀 grounding(개별 승인=1줄 append·반려=문서 불변).
+
+### 기능: 유저플로우 탭 승인 패널 (web)
+- assert:symbol UserFlowApprovalPanel
+- assert:symbol fetchUserFlowSuggestions
+- 큐가 비어있지 않으면 그래프 위에 제안 카드(from→to·실선/점선·라벨·rationale·신규 화면 뱃지)와 개별/일괄 승인·반려를 렌더, 빈 큐면 패널 미렌더. apply 후 그래프·큐 재조회.
+- invariant: stem 전환·apply 재조회는 dashReqToken race 가드를 지킨다(stale 응답이 화면을 덮지 않는다).
+- metric: 실픽셀 grounding — 카드 렌더·개별/일괄 승인·반려·빈 큐 패널 소멸·콘솔 에러 0.

@@ -3,11 +3,11 @@
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
-    "PASS": 70,
+    "PASS": 78,
     "FAIL": 0,
-    "UNVERIFIABLE": 90
+    "UNVERIFIABLE": 100
   },
-  "reason": "미검증(UNVERIFIABLE) 90건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 100건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -689,7 +689,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:46"
+      "evidence": "server/src/routes/docs.ts:50"
     },
     {
       "capability": "docs-ingest",
@@ -744,7 +744,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:53"
+      "evidence": "server/src/routes/docs.ts:57"
     },
     {
       "capability": "docs-ingest",
@@ -821,7 +821,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:66"
+      "evidence": "server/src/routes/docs.ts:70"
     },
     {
       "capability": "docs-ingest",
@@ -865,7 +865,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:79"
+      "evidence": "server/src/routes/docs.ts:83"
     },
     {
       "capability": "docs-ingest",
@@ -953,7 +953,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:92"
+      "evidence": "server/src/routes/docs.ts:96"
     },
     {
       "capability": "planning-prd-view",
@@ -1098,7 +1098,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:110"
+      "evidence": "server/src/routes/docs.ts:114"
     },
     {
       "capability": "planning-features-view",
@@ -1176,7 +1176,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:181"
+      "evidence": "server/src/routes/docs.ts:185"
     },
     {
       "capability": "planning-userflow-view",
@@ -1187,7 +1187,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/parser/planningUserFlowBuilder.ts:64"
+      "evidence": "server/src/parser/planningUserFlowBuilder.ts:169"
     },
     {
       "capability": "planning-userflow-view",
@@ -1254,7 +1254,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:203"
+      "evidence": "server/src/routes/docs.ts:207"
     },
     {
       "capability": "planning-userflow-view",
@@ -1399,7 +1399,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:241"
+      "evidence": "server/src/routes/docs.ts:245"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1465,7 +1465,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (4토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/docsPrdApproval.test.ts:114",
+      "evidence": "server/src/routes/__tests__/docsUserFlowApproval.test.ts:173",
       "llmHint": "approve id의 section을 proposedBody로 교체해 prd.md 원자적 재작성(H1 서문·미승인 섹션 보존) 후 큐에서 제거, reject는 반영 없이 큐에서 제거, 미실재 id는 skipped로 표면화, write 전 self-roundtrip으로 5섹션 정합 검증"
     },
     {
@@ -1488,7 +1488,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:227"
+      "evidence": "server/src/routes/docs.ts:231"
     },
     {
       "capability": "planning-prd-approval-queue",
@@ -1555,7 +1555,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:128"
+      "evidence": "server/src/routes/docs.ts:132"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1643,7 +1643,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:214"
+      "evidence": "web/src/api.ts:215"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1687,7 +1687,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:142"
+      "evidence": "server/src/routes/docs.ts:146"
     },
     {
       "capability": "planning-panel-screen-links",
@@ -1698,7 +1698,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:224"
+      "evidence": "web/src/api.ts:225"
     },
     {
       "capability": "planning-panel-screen-links",
@@ -1776,6 +1776,204 @@
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
       "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
+      "line": 287,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/planning-user-flow-suggestions",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:308"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
+      "line": 288,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol readUserFlowSuggestions",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/userFlowDocs.ts:66"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
+      "line": 289,
+      "kind": "freetext",
+      "claim": "per-stem 큐를 반환한다. 파일 부재는 빈 큐 200, 깨진 JSON·무효 제안은 필터.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
+      "line": 290,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx 존재하지 않는 프로젝트·경로조작·불안전 stem은 404, 읽기는 500으로 죽지 않는다.",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
+      "line": 291,
+      "kind": "metric",
+      "claim": "metric: userFlowDocs 단위 + 라우트 통합 테스트 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
+      "line": 294,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint POST /api/docs/:project/planning-user-flow-suggestions/apply",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:328"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
+      "line": 295,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol applyUserFlowSuggestions",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/api.ts:326"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
+      "line": 296,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol userFlowInvariantHolds",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/userFlowDocs.ts:150"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
+      "line": 297,
+      "kind": "freetext",
+      "claim": "승인분만 첫 mermaid 블록 닫는 펜스 직전에 에지 줄 append. 계약은 6a/6b의 PrdApplyRequest/PrdApplyResult 재사용.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
+      "line": 298,
+      "kind": "freetext",
+      "claim": "invariant: 결정론 검증(from/to 존재·newNode id 충돌·라벨 금지문자·중복 에지 멱등) 위반은 해당 제안만 skipped로 사유와 함께 표면화 — 배치 전체를 죽이지 않는다(제안별 사전 roundtrip 포함).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
+      "line": 299,
+      "kind": "freetext",
+      "claim": "invariant: self-roundtrip 방어 — append 후 재파싱해 기존 노드·에지 완전 보존 + 승인분 에지만 정확히 추가됐을 때만 write, 위반 시 422·원본 보존·큐 유지(무력화 프로브 테스트 존치).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
+      "line": 300,
+      "kind": "freetext",
+      "claim": "invariant: 반려는 문서 바이트 불변, 큐에서만 제거.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
+      "line": 301,
+      "kind": "metric",
+      "claim": "metric: 단위(검증·append·방어·무력화 프로브) + 통합 테스트 PASS + 실픽셀 grounding(개별 승인=1줄 append·반려=문서 불변).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "유저플로우 탭 승인 패널 (web)",
+      "line": 304,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol UserFlowApprovalPanel",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/UserFlowApprovalPanel.tsx:40"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "유저플로우 탭 승인 패널 (web)",
+      "line": 305,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol fetchUserFlowSuggestions",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/api.ts:311"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "유저플로우 탭 승인 패널 (web)",
+      "line": 306,
+      "kind": "freetext",
+      "claim": "큐가 비어있지 않으면 그래프 위에 제안 카드(from→to·실선/점선·라벨·rationale·신규 화면 뱃지)와 개별/일괄 승인·반려를 렌더, 빈 큐면 패널 미렌더. apply 후 그래프·큐 재조회.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "유저플로우 탭 승인 패널 (web)",
+      "line": 307,
+      "kind": "freetext",
+      "claim": "invariant: stem 전환·apply 재조회는 dashReqToken race 가드를 지킨다(stale 응답이 화면을 덮지 않는다).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "유저플로우 탭 승인 패널 (web)",
+      "line": 308,
+      "kind": "metric",
+      "claim": "metric: 실픽셀 grounding — 카드 렌더·개별/일괄 승인·반려·빈 큐 패널 소멸·콘솔 에러 0.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
     }
   ],
   "ghosts": [
@@ -1807,17 +2005,17 @@
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-features-suggestions",
-      "source": "server/src/routes/docs.ts:265"
+      "source": "server/src/routes/docs.ts:269"
     },
     {
       "type": "endpoint",
       "what": "POST /api/docs/:project(*)/planning-features-suggestions/apply",
-      "source": "server/src/routes/docs.ts:279"
+      "source": "server/src/routes/docs.ts:283"
     },
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-ia",
-      "source": "server/src/routes/docs.ts:161"
+      "source": "server/src/routes/docs.ts:165"
     },
     {
       "type": "endpoint",
@@ -1827,7 +2025,7 @@
     {
       "type": "symbol",
       "what": "App",
-      "source": "web/src/App.tsx:80"
+      "source": "web/src/App.tsx:84"
     },
     {
       "type": "symbol",
@@ -1892,12 +2090,12 @@
     {
       "type": "symbol",
       "what": "applyDocsFeatureSuggestions",
-      "source": "web/src/api.ts:259"
+      "source": "web/src/api.ts:260"
     },
     {
       "type": "symbol",
       "what": "applyDocsPrdSuggestions",
-      "source": "web/src/api.ts:185"
+      "source": "web/src/api.ts:186"
     },
     {
       "type": "symbol",
@@ -1956,6 +2154,11 @@
     },
     {
       "type": "symbol",
+      "what": "buildUserFlowFromLines",
+      "source": "server/src/parser/planningUserFlowBuilder.ts:149"
+    },
+    {
+      "type": "symbol",
       "what": "buildWireframe",
       "source": "server/src/parser/wireframeBuilder.ts:25"
     },
@@ -1977,97 +2180,97 @@
     {
       "type": "symbol",
       "what": "fetchCapabilities",
-      "source": "web/src/api.ts:78"
+      "source": "web/src/api.ts:79"
     },
     {
       "type": "symbol",
       "what": "fetchCapabilityDetail",
-      "source": "web/src/api.ts:98"
+      "source": "web/src/api.ts:99"
     },
     {
       "type": "symbol",
       "what": "fetchChanges",
-      "source": "web/src/api.ts:46"
+      "source": "web/src/api.ts:47"
     },
     {
       "type": "symbol",
       "what": "fetchDocsFeatureSuggestions",
-      "source": "web/src/api.ts:247"
+      "source": "web/src/api.ts:248"
     },
     {
       "type": "symbol",
       "what": "fetchDocsGraph",
-      "source": "web/src/api.ts:150"
+      "source": "web/src/api.ts:151"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningFeatures",
-      "source": "web/src/api.ts:205"
+      "source": "web/src/api.ts:206"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningIa",
-      "source": "web/src/api.ts:234"
+      "source": "web/src/api.ts:235"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningPrd",
-      "source": "web/src/api.ts:169"
+      "source": "web/src/api.ts:170"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningUserFlow",
-      "source": "web/src/api.ts:296"
+      "source": "web/src/api.ts:297"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrd",
-      "source": "web/src/api.ts:162"
+      "source": "web/src/api.ts:163"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrdSuggestions",
-      "source": "web/src/api.ts:176"
+      "source": "web/src/api.ts:177"
     },
     {
       "type": "symbol",
       "what": "fetchDocsProjects",
-      "source": "web/src/api.ts:143"
+      "source": "web/src/api.ts:144"
     },
     {
       "type": "symbol",
       "what": "fetchDocsWireframe",
-      "source": "web/src/api.ts:156"
+      "source": "web/src/api.ts:157"
     },
     {
       "type": "symbol",
       "what": "fetchGraph",
-      "source": "web/src/api.ts:109"
+      "source": "web/src/api.ts:110"
     },
     {
       "type": "symbol",
       "what": "fetchIA",
-      "source": "web/src/api.ts:115"
+      "source": "web/src/api.ts:116"
     },
     {
       "type": "symbol",
       "what": "fetchPrd",
-      "source": "web/src/api.ts:127"
+      "source": "web/src/api.ts:128"
     },
     {
       "type": "symbol",
       "what": "fetchProjects",
-      "source": "web/src/api.ts:70"
+      "source": "web/src/api.ts:71"
     },
     {
       "type": "symbol",
       "what": "fetchSpecTree",
-      "source": "web/src/api.ts:133"
+      "source": "web/src/api.ts:134"
     },
     {
       "type": "symbol",
       "what": "fetchWireframe",
-      "source": "web/src/api.ts:121"
+      "source": "web/src/api.ts:122"
     },
     {
       "type": "symbol",
@@ -2083,6 +2286,11 @@
       "type": "symbol",
       "what": "isLayoutOverlay",
       "source": "server/src/lib/changes.ts:94"
+    },
+    {
+      "type": "symbol",
+      "what": "isSafeFlowToken",
+      "source": "server/src/lib/docs.ts:105"
     },
     {
       "type": "symbol",
@@ -2147,12 +2355,12 @@
     {
       "type": "symbol",
       "what": "saveDocsPlanningUserFlowLayout",
-      "source": "web/src/api.ts:307"
+      "source": "web/src/api.ts:350"
     },
     {
       "type": "symbol",
       "what": "saveLayout",
-      "source": "web/src/api.ts:278"
+      "source": "web/src/api.ts:279"
     },
     {
       "type": "symbol",
@@ -2223,6 +2431,6 @@
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-screen-links-absorb-20260705.html",
-  "runId": "screen-links-absorb-20260705"
+  "historyHtml": "audit-uflow-approval-absorb-20260705.html",
+  "runId": "uflow-approval-absorb-20260705"
 }
