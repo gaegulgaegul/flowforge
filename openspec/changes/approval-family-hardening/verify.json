@@ -1,7 +1,7 @@
 {
   "change": "approval-family-hardening",
-  "verifiedAt": "2026-07-05T22:55:57+09:00",
-  "finalJudgment": "FAIL",
+  "verifiedAt": "2026-07-05T23:26:57+09:00",
+  "finalJudgment": "PASS",
   "counts": {
     "pass": 10,
     "fail": 0,
@@ -9,26 +9,26 @@
     "skipped": 0
   },
   "archiveGate": {
-    "open": false,
-    "reason": "예외 미검증(검증 불충분): [prd] apply는 원문 개행 스타일을 보존한다, [prd] 큐 재작성은 처리분만 제거한다, [features] apply는 원문 개행 스타일을 보존한다, [features] 큐 재작성은 처리분만 제거한다, [userflow] apply는 원문 개행 스타일을 보존한다, [userflow] 큐 재작성은 처리분만 제거한다, [userflow] append 위치와 재파싱은 같은 mermaid 블록을 본다"
+    "open": true,
+    "reason": ""
   },
   "requirements": [
     {
       "title": "[prd] apply는 원문 개행 스타일을 보존한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
-          "빈값": "missing",
+          "빈값": "covered",
           "잘못된타입": "na",
-          "경계값": "missing",
+          "경계값": "covered",
           "에러경로": "covered",
           "동시성": "na",
           "대량": "na",
           "특수문자": "covered"
         },
         "naReasons": {
-          "잘못된타입": "문서 내용은 readFileSync(utf-8) 문자열(docs.ts:237) — 비문자열 도달 불가(strict TS)",
+          "잘못된타입": "문서 내용은 readFileSync(utf-8) 문자열 — 비문자열 도달 불가(strict TS)",
           "동시성": "동기 단일 프로세스 writeFileSync — 경합은 큐 재작성 요구사항에서 별도 취급",
           "대량": "restoreEol은 순수 문자열 조립·크기 분기 없음 — 수량 방어는 배치 상한이 담당"
         }
@@ -38,12 +38,12 @@
           "scenario": "CRLF prd.md 승인 후 개행 보존",
           "layer": "server",
           "means": "jest 단위 테스트(바이트 단언)",
-          "basis": "package.json workspaces(server) + jest",
+          "basis": "package.json workspaces(server) + jest.config.js",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "EOL roundtrip 테스트 + 구현 확인 (격리 실행 exit 0)",
-            "text": "docsPrdApproval.test.ts:236 'CRLF prd.md 승인 반영 후 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' PASS — 교체 섹션 변경+나머지 본문 보존+CRLF 제거 후 잔여 \\n·\\r 부재 바이트 단언. 구현: lib/docs.ts:24 detectEol/restoreEol import(공유 util lib/eol.ts:10,15), docs.ts:265-266 원본 EOL 복원 쓰기"
+            "caption": "EOL roundtrip 격리 실행 PASS(21/21, exit 0)",
+            "text": "docsPrdApproval.test.ts:236 'CRLF prd.md 승인 반영 후 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' PASS — CRLF 제거 후 잔여 \\n·\\r 부재 바이트 단언. 엣지 보강: :299 '빈 prd.md에 승인 적용은 writeFailed(원본·큐 보존)'(cd29898 신규) PASS. 경계값(혼합 EOL)은 공유 detectEol(lib/eol.ts:10 — any-CRLF-wins가 유틸 자체 성질)을 userFlowDocs.test.ts:477이 박제, prd는 docs.ts:24 import·:266 restoreEol 쓰기로 동일 함수 사용(정적 실증)"
           }
         }
       ]
@@ -51,16 +51,16 @@
     {
       "title": "[prd] 큐 재작성은 처리분만 제거한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
           "빈값": "covered",
-          "잘못된타입": "missing",
+          "잘못된타입": "covered",
           "경계값": "covered",
           "에러경로": "covered",
           "동시성": "covered",
           "대량": "na",
-          "특수문자": "missing"
+          "특수문자": "covered"
         },
         "naReasons": {
           "대량": "prunePrdQueue(docs.ts:331)는 순수 선형 filter·크기 분기 없음 — 수량 방어는 배치 상한(D-3)이 담당"
@@ -70,13 +70,13 @@
         {
           "scenario": "apply 도중 추가된 제안이 생존한다",
           "layer": "server",
-          "means": "jest 단위 테스트(prune 헬퍼 재독 차집합)",
-          "basis": "package.json workspaces(server) + jest",
+          "means": "jest 단위 테스트(prune 헬퍼 재독 차집합) + 임시 특수문자 실증",
+          "basis": "package.json workspaces(server) + jest.config.js",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "D-2 재독 차집합 구현 + 생존 테스트 (격리 실행 exit 0)",
-            "text": "docsPrdApproval.test.ts:276 '재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' PASS. 구현: lib/docs.ts:318-320 쓰기 직전 prunePrdQueue(재독 차집합) 호출, :331 정의. apply가 동기 함수라 실경합 주입 불가 → 계약을 헬퍼 단위로 박제(+apply→prune 배선 정적 확인)"
+            "caption": "D-2 생존 테스트 + 특수문자 id 임시 실증(3/3, exit 0, 삭제·git clean)",
+            "text": "docsPrdApproval.test.ts:276 '재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' PASS. 잘못된타입: request-side 400 가드 테스트 :258-261(approve:[1]→false) PASS + 큐 read-filter 코드 docs.ts:184(typeof id==='string')·:205 — 동형 필터는 features/userflow에서 테스트 박제. 특수문자: 임시 테스트 'prunePrdQueue: __proto__/한글/빈문자열 id 제거, keep-me만 생존' PASS(Set.has 원시 문자열 비교, 프로토타입 오염 없음, 디스크 큐 유효 JSON). 구현: docs.ts:320 쓰기 직전 prune 호출, :331-335 재독 차집합"
           }
         }
       ]
@@ -109,8 +109,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "201→400·문서/큐 불변·200 경계 실증",
-            "text": "기존: routes/__tests__/docsFeatureApproval.test.ts:184 'prd·userflow apply 라우트도 같은 상한을 공유한다(201건 → 400)' PASS. 문서·큐 불변+200 경계는 prd 라우트 상주 테스트 미커버 → 임시 테스트로 실증: 'prd apply 201건 → 400 batch_too_large, prd.md·큐 불변' PASS + '정확히 200건은 상한 미적용' PASS(4 passed, exit 0, 임시 파일 삭제·git clean 확인). 구현: routes/docs.ts:248 APPLY_BATCH_CAP=200 공유 상수, :251-257 rejectOversizedBatch, :275 prd apply에서 applyPrdSuggestions 이전 호출(문서·큐 무접촉)"
+            "caption": "201→400·문서/큐 바이트 불변·200 경계 실증(임시 4/4, exit 0)",
+            "text": "상주: routes/__tests__/docsFeatureApproval.test.ts:184 'prd·userflow apply 라우트도 같은 상한을 공유한다(201건→400)' PASS. 임시 실증: 'prd apply 201건(approve 101+reject 100)→400 batch_too_large, prd.md·prd.suggestions.json 바이트 완전 동일' PASS + '정확히 200건은 상한 미적용(200 응답+skipped 200건)' PASS — 실행 후 삭제·git clean 확인. 구현: routes/docs.ts:248 APPLY_BATCH_CAP=200, :251-253 rejectOversizedBatch, :273 prd apply에서 lib 호출 전 실행"
           }
         }
       ]
@@ -118,20 +118,20 @@
     {
       "title": "[features] apply는 원문 개행 스타일을 보존한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
-          "빈값": "missing",
+          "빈값": "covered",
           "잘못된타입": "na",
-          "경계값": "missing",
+          "경계값": "covered",
           "에러경로": "covered",
           "동시성": "na",
           "대량": "na",
           "특수문자": "covered"
         },
         "naReasons": {
-          "잘못된타입": "문서 내용은 readFileSync(utf-8) 문자열(featureDocs.ts:220) — 비문자열 도달 불가",
-          "동시성": "동기 단일 프로세스 writeFileSync(featureDocs.ts:252) — 경합은 큐 재작성에서 별도 취급",
+          "잘못된타입": "문서 내용은 readFileSync(utf-8) 문자열 — 비문자열 도달 불가",
+          "동시성": "동기 단일 프로세스 writeFileSync — 경합은 큐 재작성에서 별도 취급",
           "대량": "split/join 순수 라인 조립·크기 분기 없음 — 수량 방어는 배치 상한"
         }
       },
@@ -140,12 +140,12 @@
           "scenario": "CRLF features.md 승인 후 개행 보존",
           "layer": "server",
           "means": "jest 단위 테스트(바이트 단언)",
-          "basis": "package.json workspaces(server) + jest",
+          "basis": "package.json workspaces(server) + jest.config.js",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "EOL roundtrip 테스트 + 구현 확인 (격리 실행 exit 0)",
-            "text": "docsFeatureApproval.test.ts:274 'CRLF features.md 승인 반영 후 속성 줄만 교체되고 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' PASS — 교체 줄도 CRLF 종결(:282)+잔여 \\n·\\r 부재 단언. 구현: lib/featureDocs.ts:25 detectEol import, :221 원본 EOL 감지 보존"
+            "caption": "EOL roundtrip 격리 실행 PASS(27/27, exit 0)",
+            "text": "docsFeatureApproval.test.ts:274 'CRLF features.md 승인 반영 후 속성 줄만 교체되고 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' PASS. 엣지 보강: :400 '빈 features.md는 노드 미발견 skipped·문서 불변(빈 파일 안전)'(cd29898 신규) PASS. 경계값(혼합 EOL)은 공유 detectEol(eol.ts:10)을 userFlowDocs.test.ts:477이 박제 — featureDocs.ts:25 import·:221 감지 사용 동일 함수(정적 실증)"
           }
         }
       ]
@@ -153,16 +153,16 @@
     {
       "title": "[features] 큐 재작성은 처리분만 제거한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
           "빈값": "covered",
-          "잘못된타입": "missing",
+          "잘못된타입": "covered",
           "경계값": "covered",
           "에러경로": "covered",
           "동시성": "covered",
           "대량": "na",
-          "특수문자": "missing"
+          "특수문자": "covered"
         },
         "naReasons": {
           "대량": "pruneFeatureQueue(featureDocs.ts:275)는 순수 선형 filter·크기 분기 없음 — 수량 방어는 배치 상한"
@@ -172,13 +172,13 @@
         {
           "scenario": "apply 도중 추가된 제안이 생존한다",
           "layer": "server",
-          "means": "jest 단위 테스트(prune 헬퍼 재독 차집합)",
-          "basis": "package.json workspaces(server) + jest",
+          "means": "jest 단위 테스트(prune 헬퍼 재독 차집합) + 임시 특수문자 실증",
+          "basis": "package.json workspaces(server) + jest.config.js",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "D-2 재독 차집합 구현 + 생존 테스트 (격리 실행 exit 0)",
-            "text": "docsFeatureApproval.test.ts:374 '재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' PASS. 구현: lib/featureDocs.ts:267-269 쓰기 직전 pruneFeatureQueue 호출, :275 정의 — prd와 동일 계약을 per-lib 헬퍼로 각자 구현·각자 테스트"
+            "caption": "D-2 생존 + non-string id 상주 + 특수문자 임시 실증",
+            "text": "docsFeatureApproval.test.ts:374 '재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' PASS. 잘못된타입: :408 '큐의 non-string id 제안은 읽기에서 걸러진다'(id:42 픽스처, cd29898 신규) PASS. 특수문자: 임시 테스트 'pruneFeatureQueue: __proto__/한글/빈문자열 id 제거, keep-me만 생존' PASS(실행 후 삭제·git clean). 구현: featureDocs.ts:269 쓰기 직전 prune, :275-277 재독 차집합"
           }
         }
       ]
@@ -206,13 +206,13 @@
         {
           "scenario": "초과 배치는 400",
           "layer": "server",
-          "means": "라우트 통합 테스트",
+          "means": "라우트 통합 테스트(상주)",
           "basis": "package.json workspaces(server) + jest(supertest 패턴)",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "201→400·문서/큐 바이트 불변·200 경계 상주 테스트 (격리 실행 3 passed, exit 0)",
-            "text": "routes/__tests__/docsFeatureApproval.test.ts:161 'approve+reject 합계 201건 → 400 batch_too_large, 문서·큐 불변'(features.md·suggestions.json 바이트 불변 단언 포함) + :175 '정확히 200건은 상한에 걸리지 않는다' PASS. 구현: routes/docs.ts:248,251-257 공유 상수·헬퍼, :313 features apply 호출"
+            "caption": "201→400·바이트 불변·200 경계 상주 테스트(격리 12/12, exit 0)",
+            "text": "routes/__tests__/docsFeatureApproval.test.ts:161 'approve+reject 합계 201건→400 batch_too_large, 문서·큐 불변'(features.md·suggestions.json 바이트 불변 단언) PASS + :175 '정확히 200건은 상한에 걸리지 않는다(미실재 id는 skipped로 200 응답)' PASS. 구현: routes/docs.ts:248,251-253, :313 features apply에서 lib 호출 전 실행"
           }
         }
       ]
@@ -220,20 +220,20 @@
     {
       "title": "[userflow] apply는 원문 개행 스타일을 보존한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
-          "빈값": "missing",
+          "빈값": "covered",
           "잘못된타입": "na",
-          "경계값": "missing",
+          "경계값": "covered",
           "에러경로": "covered",
           "동시성": "na",
           "대량": "na",
           "특수문자": "covered"
         },
         "naReasons": {
-          "잘못된타입": "문서 내용은 readFileSync(utf-8) 문자열(userFlowDocs.ts:257) — 비문자열 도달 불가",
-          "동시성": "동기 단일 프로세스 writeFileSync(userFlowDocs.ts:269) — 경합은 큐 재작성에서 별도 취급",
+          "잘못된타입": "문서 내용은 readFileSync(utf-8) 문자열 — 비문자열 도달 불가",
+          "동시성": "동기 단일 프로세스 writeFileSync — 경합은 큐 재작성에서 별도 취급",
           "대량": "라인 splice/join 순수 조립·크기 분기 없음 — 수량 방어는 배치 상한"
         }
       },
@@ -242,12 +242,12 @@
           "scenario": "CRLF 유저플로우 문서 승인 후 개행 보존",
           "layer": "server",
           "means": "jest 단위 테스트(전체 파일 바이트 비교)",
-          "basis": "package.json workspaces(server) + jest",
+          "basis": "package.json workspaces(server) + jest.config.js",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "EOL roundtrip 테스트 + 구현 확인 (격리 실행 exit 0)",
-            "text": "userFlowDocs.test.ts:279 'CRLF 문서에 add-edge 승인 → append 줄도 CRLF, 기존 줄 CRLF 불변(EOL roundtrip)' PASS — 닫는 펜스 직전 CRLF 에지 1줄 삽입 외 바이트 불변(:288-293). 구현: lib/userFlowDocs.ts:24 detectEol import, :258 append 줄에도 원본 EOL 적용"
+            "caption": "EOL roundtrip + 빈 문서 + 혼합 EOL 결정론(격리 36/36, exit 0)",
+            "text": "userFlowDocs.test.ts:279 'CRLF 문서에 add-edge 승인 → append 줄도 CRLF, 기존 줄 CRLF 불변(EOL roundtrip)' PASS. 엣지 보강(cd29898): :460 '빈 <stem>.md는 전건 no-mermaid-block skipped·문서 불변' PASS + :477 '혼합 EOL 문서는 any-CRLF-wins로 결정론 수렴한다(D-1 수용 동작 박제)' PASS(LF 단독 줄 0 단언). 구현: userFlowDocs.ts:24 detectEol import, :258→:268 append 줄 원본 EOL 적용"
           }
         }
       ]
@@ -255,16 +255,16 @@
     {
       "title": "[userflow] 큐 재작성은 처리분만 제거한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
           "빈값": "covered",
-          "잘못된타입": "missing",
+          "잘못된타입": "covered",
           "경계값": "covered",
           "에러경로": "covered",
           "동시성": "covered",
           "대량": "na",
-          "특수문자": "missing"
+          "특수문자": "covered"
         },
         "naReasons": {
           "대량": "pruneUserFlowQueue(userFlowDocs.ts:298)는 순수 선형 filter·크기 분기 없음 — 수량 방어는 배치 상한"
@@ -274,13 +274,13 @@
         {
           "scenario": "apply 도중 추가된 제안이 생존한다",
           "layer": "server",
-          "means": "jest 단위 테스트(prune 헬퍼 재독 차집합)",
-          "basis": "package.json workspaces(server) + jest",
+          "means": "jest 단위 테스트(prune 헬퍼 재독 차집합) + 임시 특수문자 실증",
+          "basis": "package.json workspaces(server) + jest.config.js",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "D-2 재독 차집합 구현 + 생존 테스트 (격리 실행 exit 0)",
-            "text": "userFlowDocs.test.ts:434 '재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' PASS. 구현: lib/userFlowDocs.ts:284-287 쓰기 직전 pruneUserFlowQueue(재독본 차집합) 호출, :298 정의(동기 API라 실경합 주입 불가 사유 주석 :293-298)"
+            "caption": "D-2 생존 + non-string id 상주 + 특수문자 임시 실증",
+            "text": "userFlowDocs.test.ts:434 '재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' PASS. 잘못된타입: :488 '큐의 non-string id 제안은 읽기에서 걸러진다(프로토타입 오염류 무해)'(id:123·id:null 픽스처, cd29898 신규) PASS. 특수문자: 임시 테스트 'pruneUserFlowQueue: __proto__/한글/빈문자열 id 제거, keep-me만 생존' PASS(실행 후 삭제·git clean). 구현: userFlowDocs.ts:287 쓰기 직전 prune, :298-300 재독 차집합"
           }
         }
       ]
@@ -313,8 +313,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "201→400·문서/큐 불변·200 경계 실증",
-            "text": "기존: routes/__tests__/docsFeatureApproval.test.ts:184-193 'prd·userflow apply 라우트도 같은 상한을 공유한다(201건 → 400)' PASS. 문서·큐 불변+200 경계는 userflow 라우트 상주 테스트 미커버 → 임시 테스트로 실증: 'user-flow apply 201건 → 400 batch_too_large, <stem>.md·큐 불변' PASS + '정확히 200건은 상한 미적용' PASS(4 passed, exit 0, 임시 파일 삭제·git clean 확인). 구현: routes/docs.ts:365 user-flow apply에서 applyUserFlowSuggestions 이전 rejectOversizedBatch 호출"
+            "caption": "201→400·문서/큐 바이트 불변·200 경계 실증(임시 4/4, exit 0)",
+            "text": "상주: routes/__tests__/docsFeatureApproval.test.ts:184 'prd·userflow apply 라우트도 같은 상한을 공유한다(201건→400)' PASS. 임시 실증: 'user-flow apply 201건(?flow=main-v1)→400 batch_too_large, user-flow/main-v1.md·main-v1.suggestions.json 바이트 불변' PASS + '정확히 200건은 상한 미적용(200+skipped 200건)' PASS — 실행 후 삭제·git clean 확인. 구현: routes/docs.ts:365 user-flow apply에서 applyUserFlowSuggestions 전 rejectOversizedBatch 호출"
           }
         }
       ]
@@ -322,12 +322,12 @@
     {
       "title": "[userflow] append 위치와 재파싱은 같은 mermaid 블록을 본다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "na",
-          "빈값": "missing",
+          "빈값": "covered",
           "잘못된타입": "na",
-          "경계값": "missing",
+          "경계값": "covered",
           "에러경로": "covered",
           "동시성": "na",
           "대량": "na",
@@ -345,12 +345,12 @@
           "scenario": "mermaid-example 블록이 선행해도 유효 제안이 반영된다",
           "layer": "server",
           "means": "jest 단위 테스트(파서+lib 2중)",
-          "basis": "package.json workspaces(server) + jest",
+          "basis": "package.json workspaces(server) + jest.config.js",
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "블록 판별 단일화(D-4) 테스트 + 구현 확인 (격리 실행 각 1 passed, exit 0)",
-            "text": "userFlowDocs.test.ts:252 '```mermaid-example 블록이 진짜 블록 앞에 있어도 승인이 진짜 mermaid 블록에 append된다'(전체 파일 정확 비교) + planningUserFlowBuilder.test.ts:176 '진짜 ```mermaid 블록의 인덱스를 반환한다' PASS. 구현: parser/planningUserFlowBuilder.ts:27-40 findFirstMermaidBlock export(trim이 정확히 ```mermaid인 라인만 열림 펜스), 파서 :165와 lib/userFlowDocs.ts:176-177 append가 단일 함수 공유"
+            "caption": "블록 판별 단일화(D-4) + 빈 문서·미폐합 펜스 엣지(격리 exit 0)",
+            "text": "userFlowDocs.test.ts:252 '```mermaid-example 블록이 진짜 블록 앞에 있어도 승인이 진짜 mermaid 블록에 append된다' PASS + planningUserFlowBuilder.test.ts:176 '```mermaid-example 블록이 앞에 있어도 진짜 ```mermaid 블록의 인덱스를 반환한다' PASS. 엣지 보강(cd29898): :460 빈 문서 no-mermaid-block skipped PASS + :468 '여는 펜스만 있고 닫히지 않은 mermaid 블록도 no-mermaid-block skipped·문서 불변' PASS. line-0 펜스는 openIdx<0 센티널로 truthiness 함정 없음(planningUserFlowBuilder.ts:30,33 정적 실증). 구현: 파서 findFirstMermaidBlock export를 lib/userFlowDocs.ts:177이 공유(?.closeIdx ?? -1)"
           }
         }
       ]
@@ -363,8 +363,8 @@
       "ran": 10,
       "passed": 10,
       "failed": 0,
-      "basis": "package.json workspaces(server) + jest 스위트 존재",
-      "reason": "빌드·타입체크·린트 exit 0, jest 299/299 PASS(28 suites, exit 0). 매핑된 10개 시나리오 전부 격리 실행 PASS. prd·userflow 배치 상한의 문서/큐 불변·200 경계는 상주 테스트 갭 → 임시 테스트(ad-hoc)로 실증 후 삭제(git clean 확인)"
+      "basis": "package.json workspaces(server) + jest.config.js 존재",
+      "reason": "typecheck·build exit 0(lint 스크립트 부재 — --if-present no-op라 린트는 실행 안 됨), jest 306/306 PASS(28 suites, --json 실측, exit 0). 매핑 10 시나리오 전부 격리 실행 PASS(해당 5파일 107 테스트). prd·userflow 상한 불변/200 경계(4 테스트)와 특수문자 id prune 3형제(3 테스트)는 상주 갭 → 임시 테스트 실증 후 삭제·git clean 확인"
     },
     {
       "layer": "web",
@@ -372,8 +372,8 @@
       "ran": 0,
       "passed": 0,
       "failed": 0,
-      "basis": "web workspace 존재(적용 가능)하나 이 change의 spec 시나리오는 전부 서버 계층",
-      "reason": "spec 시나리오 매핑 0건 — UI 태스크 4.2(패널 60vh 캡·일괄 바 상단)는 tasks.md 항목일 뿐 spec 시나리오 아님(5.1 게이트에서 100건 픽스처 실픽셀 확인 이력 있음)"
+      "basis": "web workspace 존재(적용 가능)하나 이 change의 spec 시나리오는 전부 서버 계층 — 매핑 0건",
+      "reason": "spec 시나리오 매핑 0건(SKIPPED ≠ PASS). 보건 확인: typecheck·build exit 0(웹 테스트 스위트 없음). ccacbe6(2차 review 치명 1 수정) 정적 실증 — 청크 전송 api.ts:187 APPLY_BATCH_CAP=200(서버 routes/docs.ts:248과 값 일치)·applyInChunks :197-220·호출 3곳(App.tsx:542,573,612), batch_too_large 분기 3곳(api.ts:238,318,394)+안내 메시지 :190, N건 표기 Feature/UserFlow 패널 4버튼(D-5 스코프 2패널 — PRD 패널은 스코프 밖 기존 레이아웃)"
     },
     {
       "layer": "android",
@@ -381,7 +381,7 @@
       "ran": 0,
       "passed": 0,
       "failed": 0,
-      "basis": "android 프로젝트 파일 없음(build.gradle 등 부재)",
+      "basis": "android 프로젝트 파일 없음(build.gradle 등 부재 — ls 실측 exit 2)",
       "reason": "적용 불가"
     },
     {
@@ -390,10 +390,10 @@
       "ran": 0,
       "passed": 0,
       "failed": 0,
-      "basis": "비 macOS(Linux) + ios 프로젝트 없음",
+      "basis": "비 macOS(Linux uname 실측) + ios 프로젝트 없음",
       "reason": "macOS 필요"
     }
   ],
   "reportHtml": "verify.html",
-  "historyHtml": "verify-20260705-2255.html"
+  "historyHtml": "verify-20260705-2326.html"
 }
