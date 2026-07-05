@@ -102,7 +102,7 @@ export function readDocsFile(docsDir: string, name: string): string | null {
 // 명세는 <group>-vN.md(Mermaid, 읽기전용), 좌표는 <group>-vN.overlay.json(읽기+쓰기).
 
 /** user-flow 파일명 토큰(group/version) 화이트리스트: 영숫자/-/_ 만. '..'·슬래시 차단. */
-function isSafeFlowToken(s: string): boolean {
+export function isSafeFlowToken(s: string): boolean {
   return /^[A-Za-z0-9_-]+$/.test(s);
 }
 

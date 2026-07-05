@@ -57,18 +57,30 @@ interface RawNode {
   label: string;
 }
 
-/**
- * docsDir + flow stem(`<group>-vN`) → SpecGraph. 파일 없으면 null(라우트가 404).
- * mermaid 블록이 없으면 빈 그래프({nodes:[],edges:[]}).
- */
-export function buildDocsPlanningUserFlow(docsDir: string, stem: string): SpecGraph | null {
-  const md = readDocsUserFlowSpec(docsDir, stem);
-  if (md === null) return null;
-  const body = extractMermaid(md);
+/** 파싱된 raw 엣지 — mermaid 원문 id 기준(from/to). 6b-userflow 검증·roundtrip 비교용. */
+export interface UserFlowRawEdge {
+  readonly from: string;
+  readonly to: string;
+  readonly kind: "happy" | "edgecase";
+  readonly label: string;
+}
 
-  // 1) 노드 수집: mermaidId → RawNode (한 줄에 여러 노드 정의 가능, 엣지 양끝 포함).
+/**
+ * 라인 파싱 결과 — 공용 SpecGraph에 더해 raw mermaid 데이터를 노출한다.
+ * GraphNode.id는 `uflow-<slug>-<id>`로 변환되므로 "mermaid id X가 문서에 있나" 검사에
+ * 못 쓴다 → 다운스트림(userFlowDocs 승인 검증·self-roundtrip)이 raw id/엣지를 직접 본다.
+ */
+export interface UserFlowParse {
+  readonly graph: SpecGraph;
+  /** raw mermaid id → 라벨. */
+  readonly rawNodes: ReadonlyMap<string, string>;
+  readonly rawEdges: readonly UserFlowRawEdge[];
+}
+
+/** mermaid 본문 라인들 → mermaidId → RawNode (한 줄에 여러 노드 정의 가능, 엣지 양끝 포함). */
+function collectRawNodes(bodyLines: readonly string[]): Map<string, RawNode> {
   const nodes = new Map<string, RawNode>();
-  for (const line of body.split(/\r?\n/)) {
+  for (const line of bodyLines) {
     const t = line.trim();
     if (!t || t.startsWith("%%") || /^(flowchart|graph|subgraph|end|classDef|class|style|linkStyle)\b/.test(t)) {
       continue; // 미지원/선언 라인 무시
@@ -86,12 +98,22 @@ export function buildDocsPlanningUserFlow(docsDir: string, stem: string): SpecGr
       scan = scan.replace(new RegExp(re.source, "g"), " ");
     }
   }
+  return nodes;
+}
 
-  // 2) 엣지 수집 + 엣지 양끝의 bare id(모양 없이 등장)도 노드로 보강.
-  //    노드 정의(모양)를 mermaidId만 남기고 벗겨야 `A([..]) --> B[..]`에서 A·B를 잡는다.
+/**
+ * mermaid 본문 라인들 → 엣지 수집 + 엣지 양끝의 bare id(모양 없이 등장)를 nodes에 보강.
+ * 노드 정의(모양)를 mermaidId만 남기고 벗겨야 `A([..]) --> B[..]`에서 A·B를 잡는다.
+ */
+function collectEdges(
+  bodyLines: readonly string[],
+  nodes: Map<string, RawNode>,
+  scenario: string,
+): { edges: GraphEdge[]; rawEdges: UserFlowRawEdge[] } {
   const edges: GraphEdge[] = [];
+  const rawEdges: UserFlowRawEdge[] = [];
   let edgeSeq = 0;
-  for (const line of body.split(/\r?\n/)) {
+  for (const line of bodyLines) {
     const t = stripNodeShapes(line.trim());
     if (!t || t.startsWith("%%")) continue;
     RE_EDGE.lastIndex = 0;
@@ -102,17 +124,33 @@ export function buildDocsPlanningUserFlow(docsDir: string, stem: string): SpecGr
       for (const id of [from!, to!]) {
         if (!nodes.has(id)) nodes.set(id, { mermaidId: id, kind: "screen", label: id });
       }
+      const kind = dotted ? ("edgecase" as const) : ("happy" as const);
       edges.push({
         id: `uflow-edge-${edgeSeq++}`,
         source: nodeId(from!, nodes),
         target: nodeId(to!, nodes),
         label: (label ?? "").trim(),
-        scenario: stem,
+        scenario,
         dangling: false,
-        kind: dotted ? "edgecase" : "happy",
+        kind,
       });
+      rawEdges.push({ from: from!, to: to!, kind, label: (label ?? "").trim() });
     }
   }
+  return { edges, rawEdges };
+}
+
+/**
+ * 유저플로우 문서 라인 배열 → UserFlowParse. 파일 IO 없이 in-memory 라인만 파싱한다.
+ * 6b self-roundtrip 검증이 "아직 안 쓴 새 라인"을 디스크 왕복 없이 재파싱하려고 분리했다
+ * (featureTreeBuilder.buildFeatureTreeFromLines와 같은 이유). 첫 mermaid 블록만 파싱하며,
+ * buildDocsPlanningUserFlow는 파일을 읽어 이 함수에 위임하는 얇은 래퍼.
+ */
+export function buildUserFlowFromLines(lines: readonly string[], scenario = ""): UserFlowParse {
+  const body = extractMermaid(lines.join("\n"));
+  const bodyLines = body.split(/\r?\n/);
+  const nodes = collectRawNodes(bodyLines);
+  const { edges, rawEdges } = collectEdges(bodyLines, nodes, scenario);
 
   const outNodes: GraphNode[] = [...nodes.values()].map((n) => ({
     id: nodeId(n.mermaidId, nodes),
@@ -120,7 +158,18 @@ export function buildDocsPlanningUserFlow(docsDir: string, stem: string): SpecGr
     label: n.label,
     specName: n.mermaidId,
   }));
-  return { nodes: outNodes, edges };
+  const rawNodes = new Map<string, string>([...nodes.values()].map((n) => [n.mermaidId, n.label]));
+  return { graph: { nodes: outNodes, edges }, rawNodes, rawEdges };
+}
+
+/**
+ * docsDir + flow stem(`<group>-vN`) → SpecGraph. 파일 없으면 null(라우트가 404).
+ * mermaid 블록이 없으면 빈 그래프({nodes:[],edges:[]}).
+ */
+export function buildDocsPlanningUserFlow(docsDir: string, stem: string): SpecGraph | null {
+  const md = readDocsUserFlowSpec(docsDir, stem);
+  if (md === null) return null;
+  return buildUserFlowFromLines(md.split(/\r?\n/), stem).graph;
 }
 
 /** mermaidId → 안정 노드 id. 라벨 slug 충돌 대비 mermaidId를 접미로 붙여 고유 보장. */
