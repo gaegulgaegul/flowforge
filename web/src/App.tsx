@@ -19,6 +19,7 @@ import type {
   FeatureTreeNode as FeatureTreeNodeT,
   PrdSuggestion,
   FeatureSuggestion,
+  UserFlowSuggestion,
   CapabilityAuditSummary,
   ScreenRegistry,
 } from "@flowforge/shared";
@@ -40,6 +41,8 @@ import {
   applyDocsPrdSuggestions,
   fetchDocsFeatureSuggestions,
   applyDocsFeatureSuggestions,
+  fetchUserFlowSuggestions,
+  applyUserFlowSuggestions,
   fetchAuditCapabilities,
   fetchPlanningScreens,
   type CapabilitySummary,
@@ -60,6 +63,7 @@ import { WireframePanel } from "./WireframePanel.js";
 import { PrdPanel } from "./PrdPanel.js";
 import { PrdApprovalPanel } from "./PrdApprovalPanel.js";
 import { FeatureApprovalPanel } from "./FeatureApprovalPanel.js";
+import { UserFlowApprovalPanel } from "./UserFlowApprovalPanel.js";
 import { FeatureDetailPanel } from "./FeatureDetailPanel.js";
 import { FlowDetailPanel } from "./FlowDetailPanel.js";
 import { IADetailPanel } from "./IADetailPanel.js";
@@ -142,6 +146,11 @@ export function App(): JSX.Element {
   const [planningFlowEdges, setPlanningFlowEdges] = useState<Edge[]>([]);
   const [planningFlowName, setPlanningFlowName] = useState<string>(""); // 현재 flow stem(저장 시 사용)
   const [planningFlowVersions, setPlanningFlowVersions] = useState<string[]>([]);
+  // 유저플로우 에지 제안 큐(user-flow/<stem>.suggestions.json) — 승인/반려 편집 UI(6b-userflow).
+  // per-stem 사이드카라 항상 "현재 stem(planningFlowName)"의 큐만 보관 — stem 전환 시 함께 갱신.
+  // 큐 fetch 실패는 빈 큐 강등(탭 렌더 유지, 순수 읽기 그래프 뷰).
+  const [uflowSuggestions, setUflowSuggestions] = useState<readonly UserFlowSuggestion[]>([]);
+  const [uflowApplyBusy, setUflowApplyBusy] = useState(false);
 
   // 기능명세서 3단 트리 상태
   const [specRoot, setSpecRoot] = useState<SpecTreeNodeT | null>(null);
@@ -345,10 +354,12 @@ export function App(): JSX.Element {
   }, [dashProject, planningFlowName]);
 
   // 버전(flow) 전환: 선택한 flow로 재조회해 nodes/edges/저장좌표를 다시 세팅.
+  // 에지 제안 큐는 per-stem — 전환한 stem의 큐로 함께 갱신(실패는 빈 큐 강등).
   const switchPlanningFlow = useCallback(
     (flow: string) => {
       if (!dashProject) return;
-      fetchDocsPlanningUserFlow(dashProject.name, flow)
+      const project = dashProject.name;
+      fetchDocsPlanningUserFlow(project, flow)
         .then((r) => {
           setPlanningUserFlow(r.graph);
           setPlanningFlowNodes(toFlowNodes(r.graph, r.layout));
@@ -358,6 +369,10 @@ export function App(): JSX.Element {
           setStatus("");
         })
         .catch((e: unknown) => setStatus(`기획 유저플로우 로드 실패: ${String(e)}`));
+      setUflowSuggestions([]);
+      fetchUserFlowSuggestions(project, flow)
+        .then((q) => setUflowSuggestions(q.queue.suggestions))
+        .catch(() => setUflowSuggestions([])); // 제안 큐 없음/오류 — 순수 읽기 그래프 뷰
     },
     [dashProject],
   );
@@ -456,6 +471,7 @@ export function App(): JSX.Element {
     setPlanningFlowEdges([]);
     setPlanningFlowName("");
     setPlanningFlowVersions([]);
+    setUflowSuggestions([]);
     fetchDocsPlanningUserFlow(card.name)
       .then((r) => {
         if (token !== dashReqToken.current) return;
@@ -464,6 +480,17 @@ export function App(): JSX.Element {
         setPlanningFlowEdges(toFlowEdges(r.graph));
         setPlanningFlowName(r.flow);
         setPlanningFlowVersions(r.versions);
+        // 해석된 stem(r.flow)의 에지 제안 큐 로드 — per-stem이라 stem 확정 후에만 가능.
+        // 실패/부재는 빈 큐 강등(그래프 렌더 유지, 순수 읽기 뷰).
+        void fetchUserFlowSuggestions(card.name, r.flow)
+          .then((q) => {
+            if (token !== dashReqToken.current) return;
+            setUflowSuggestions(q.queue.suggestions);
+          })
+          .catch(() => {
+            if (token !== dashReqToken.current) return;
+            setUflowSuggestions([]); // 제안 큐 없음/오류 — 순수 읽기 그래프 뷰
+          });
       })
       .catch(() => {
         if (token !== dashReqToken.current) return;
@@ -556,6 +583,46 @@ export function App(): JSX.Element {
         });
     },
     [dashProject, featureApplyBusy],
+  );
+
+  // 유저플로우 에지 제안 승인/반려 적용 — POST apply 후 그래프·제안 큐 재조회(append 에지·큐 갱신을 화면에 반사).
+  // 6b applyFeature와 대칭. per-stem: 제출 시점의 stem(planningFlowName)으로 적용·재조회.
+  // race 가드: 그 사이 다른 카드/버전으로 이동했으면 폐기. 큐 재조회 실패는 빈 큐 강등(그래프는 유지).
+  const applyUserFlow = useCallback(
+    (approve: string[], reject: string[]) => {
+      const project = dashProject?.name;
+      const flow = planningFlowName;
+      if (!project || !flow || uflowApplyBusy) return;
+      const token = ++dashReqToken.current;
+      setUflowApplyBusy(true);
+      applyUserFlowSuggestions(project, flow, { approve, reject })
+        .then((res) => {
+          if (res.skipped.length > 0) {
+            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${res.skipped.join(", ")}).`);
+          }
+          return Promise.all([
+            fetchDocsPlanningUserFlow(project, flow),
+            fetchUserFlowSuggestions(project, flow).catch(() => null),
+          ]);
+        })
+        .then(([flowRes, sugRes]) => {
+          if (token !== dashReqToken.current) return; // 그 사이 다른 클릭 → 폐기
+          setPlanningUserFlow(flowRes.graph);
+          setPlanningFlowNodes(toFlowNodes(flowRes.graph, flowRes.layout));
+          setPlanningFlowEdges(toFlowEdges(flowRes.graph));
+          setPlanningFlowName(flowRes.flow);
+          setPlanningFlowVersions(flowRes.versions);
+          setUflowSuggestions(sugRes ? sugRes.queue.suggestions : []);
+        })
+        .catch((e: unknown) => {
+          if (token !== dashReqToken.current) return;
+          setStatus(`유저플로우 승인/반려 실패: ${String(e)}`);
+        })
+        .finally(() => {
+          setUflowApplyBusy(false);
+        });
+    },
+    [dashProject, planningFlowName, uflowApplyBusy],
   );
 
   // capability 클릭: 그 capability 단위 종합 상세(capChanges)로 — features 서브트리 +
@@ -777,6 +844,15 @@ export function App(): JSX.Element {
                     </select>
                   )}
                 </h3>
+                {/* 제안 큐가 있으면 에지 추가 승인/반려 편집 UI(6b-userflow), 큐 비면 렌더 안 함(순수 읽기 그래프 뷰). */}
+                <UserFlowApprovalPanel
+                  suggestions={uflowSuggestions}
+                  busy={uflowApplyBusy}
+                  onApprove={(id) => applyUserFlow([id], [])}
+                  onReject={(id) => applyUserFlow([], [id])}
+                  onApproveAll={() => applyUserFlow(uflowSuggestions.map((s) => s.id), [])}
+                  onRejectAll={() => applyUserFlow([], uflowSuggestions.map((s) => s.id))}
+                />
                 <div className="dash-plan-flow">
                   <ReactFlow
                     key="d-planning-user-flow"

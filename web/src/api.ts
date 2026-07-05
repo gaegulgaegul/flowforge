@@ -13,6 +13,7 @@ import type {
   PrdApplyRequest,
   PrdApplyResult,
   FeatureSuggestionQueue,
+  UserFlowSuggestionQueue,
   CapabilityAuditSummary,
   ScreenRegistry,
 } from "@flowforge/shared";
@@ -301,6 +302,48 @@ export async function fetchDocsPlanningUserFlow(
   const res = await fetch(`/api/docs/${project}/planning-user-flow${qs}`);
   if (!res.ok) throw new Error(`docs planning-user-flow ${res.status}`);
   return (await res.json()) as DocsPlanningUserFlowResponse;
+}
+
+/**
+ * 유저플로우 에지 제안 큐 읽기(docs/planning/user-flow/<flow>.suggestions.json — per-stem 사이드카).
+ * 큐 없으면 빈 큐(version:1, suggestions:[]). 6b fetchDocsFeatureSuggestions의 유저플로우판.
+ */
+export async function fetchUserFlowSuggestions(
+  project: string,
+  flow: string,
+): Promise<{ project: string; flow: string; queue: UserFlowSuggestionQueue }> {
+  const res = await fetch(
+    `/api/docs/${project}/planning-user-flow-suggestions?flow=${encodeURIComponent(flow)}`,
+  );
+  if (!res.ok) throw new Error(`user-flow-suggestions ${res.status}`);
+  return (await res.json()) as { project: string; flow: string; queue: UserFlowSuggestionQueue };
+}
+
+/**
+ * 유저플로우 에지 제안 승인/반려 적용. 승인분만 <flow>.md 첫 mermaid 블록 끝에 에지 append,
+ * 반려는 큐에서만 제거(문서 바이트 불변). apply body/result는 6a와 동형(PrdApplyRequest/PrdApplyResult 재사용).
+ */
+export async function applyUserFlowSuggestions(
+  project: string,
+  flow: string,
+  req: PrdApplyRequest,
+): Promise<PrdApplyResult> {
+  const res = await fetch(
+    `/api/docs/${project}/planning-user-flow-suggestions/apply?flow=${encodeURIComponent(flow)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req),
+    },
+  );
+  if (!res.ok) {
+    // 422(user_flow_write_failed) = <flow>.md 부재/roundtrip 위반/쓰기 실패로 반영 못 함(원본·큐 보존). 원인을 명확히 전달.
+    if (res.status === 422) {
+      throw new Error("유저플로우 문서에 반영하지 못했습니다(형식/검증 위반 — 원본·큐는 보존됨).");
+    }
+    throw new Error(`user-flow-apply ${res.status}`);
+  }
+  return (await res.json()) as PrdApplyResult;
 }
 
 /** 기획 유저플로우 드래그 좌표 저장(명세 .md는 안 건드림 — overlay JSON만). */

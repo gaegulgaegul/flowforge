@@ -13,13 +13,13 @@
 
 ### Parallel Group 1 (서버 완료 후 — 서로 다른 파일, 동시 실행 가능)
 
-- [ ] 3.1 web fetch/apply: `web/src/api.ts`에 `fetchUserFlowSuggestions(project, flow)`·`applyUserFlowSuggestions(project, flow, body)` 추가. [parallel]
-- [ ] 3.2 승인 패널: `web/src/UserFlowApprovalPanel.tsx` 신설 — FeatureApprovalPanel 구조 차용(빈 큐 null·개별/일괄·rationale), 카드에 from→to·실선/점선 표기·라벨. 신규 노드 제안은 "신규 화면" 뱃지. [parallel]
+- [x] 3.1 web fetch/apply: `web/src/api.ts`에 `fetchUserFlowSuggestions(project, flow)`·`applyUserFlowSuggestions(project, flow, body)` 추가. [parallel]
+- [x] 3.2 승인 패널: `web/src/UserFlowApprovalPanel.tsx` 신설 — FeatureApprovalPanel 구조 차용(빈 큐 null·개별/일괄·rationale), 카드에 from→to·실선/점선 표기·라벨. 신규 노드 제안은 "신규 화면" 뱃지. [parallel]
 
 ### Sequential: App 배선 (패널·API 완료 후)
 
-- [ ] 4.1 `web/src/App.tsx` 유저플로우 탭 배선 — flow 탭 로드부에서 현재 stem 큐 fetch, 그래프 위에 패널 렌더, 승인/반려 콜백 → apply 후 유저플로우 그래프·큐 재조회(dashReqToken race 가드 기존 패턴), skipped 표면화 메시지. 버전(stem) 전환 시 해당 stem 큐로 갱신.
+- [x] 4.1 `web/src/App.tsx` 유저플로우 탭 배선 — flow 탭 로드부에서 현재 stem 큐 fetch, 그래프 위에 패널 렌더, 승인/반려 콜백 → apply 후 유저플로우 그래프·큐 재조회(dashReqToken race 가드 기존 패턴), skipped 표면화 메시지. 버전(stem) 전환 시 해당 stem 큐로 갱신.
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
-- [ ] 5.1 VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(신규 단위·통합 + 무력화 프로브 포함, 기존 회귀 0) → UI: 실데이터(또는 픽스처 큐)로 유저플로우 탭 실픽셀 — 제안 카드 렌더, 승인→에지가 그래프에 실제 추가(점선 에지케이스 포함), 반려→문서 불변, 빈 큐 패널 미렌더, 콘솔 에러 0 전부 PASS
+- [x] 5.1 VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(신규 단위·통합 + 무력화 프로브 포함, 기존 회귀 0) → UI: 실데이터(또는 픽스처 큐)로 유저플로우 탭 실픽셀 — 제안 카드 렌더, 승인→에지가 그래프에 실제 추가(점선 에지케이스 포함), 반려→문서 불변, 빈 큐 패널 미렌더, 콘솔 에러 0 전부 PASS

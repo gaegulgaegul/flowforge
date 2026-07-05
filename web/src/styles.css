@@ -535,6 +535,19 @@ button:hover { border-color: var(--lime); }
 .feature-approval-btns { display: flex; gap: 8px; }
 .feature-approval-bulk { padding: 12px 14px; background: #1b1e24; display: flex; gap: 10px; justify-content: flex-end; }
 
+/* 유저플로우 에지 제안 승인 UI(6b-userflow) — feature-approval 골격 재사용, 에지(실선/점선) 표기만 추가. */
+.uflow-approval-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.uflow-edge { display: inline-flex; align-items: center; }
+.uflow-edge-line { width: 34px; border-top: 2px solid #8a909a; }
+.uflow-edge-line--dashed { border-top-style: dashed; border-top-color: #f0a05a; }
+.uflow-edge-head { color: #8a909a; font-size: 11px; line-height: 1; }
+.uflow-badge { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 400; }
+.uflow-badge--edgecase { background: #3a2a12; color: #f0a05a; border: 1px solid #6a4a1a; }
+.uflow-badge--new { background: #17351f; color: #7ec98f; border: 1px solid #2a5a38; }
+.uflow-approval-newnode { font-size: 12.5px; color: var(--text); margin: 0 0 8px; }
+.uflow-approval-nodeid { color: #8a909a; }
+.uflow-approval-label { font-size: 12.5px; color: var(--text); margin: 0 0 8px; }
+
 /* === 기능명세 노드 상세 패널 — 데스크탑 우측 슬라이드 / 모바일(≤820px) 하단 시트 === */
 /* 오버레이: 모바일 하단 시트 뒤 배경(데스크탑에선 숨김 — 그래프 계속 클릭 가능). */
 .feature-detail-overlay {
