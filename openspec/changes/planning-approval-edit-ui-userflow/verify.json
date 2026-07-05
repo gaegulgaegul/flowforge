@@ -1,0 +1,281 @@
+{
+  "change": "planning-approval-edit-ui-userflow",
+  "verifiedAt": "2026-07-05T18:08:18+09:00",
+  "finalJudgment": "조건부",
+  "counts": {
+    "pass": 10,
+    "fail": 0,
+    "검증안함": 2,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": false,
+    "reason": "검증 안 함 2건 / SKIPPED 0건"
+  },
+  "requirements": [
+    {
+      "title": "에지 추가 제안 큐를 조회한다 (GET planning-user-flow-suggestions)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "동시성": "큐 읽기는 readFileSync 동기 단일 블록(Node 단일 스레드) — 핸들러 내 인터리빙 지점(await) 없음. 단일 사용자 로컬 도구"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "큐 파일이 있으면 제안 목록을 반환한다",
+          "layer": "server",
+          "means": "jest 단위 '정상 큐를 파싱해 반환한다' + 라우트 통합 'GET — 큐 있으면 200 + 제안 목록'",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest 전체 스위트 재실행: 28 suites / 281 tests PASS, REAL_EXIT=0 (pipefail·PIPESTATUS 실측, 2026-07-05T18:04 KST). 대상 2파일 재실행 39/39 PASS."
+          }
+        },
+        {
+          "scenario": "큐 파일 부재는 빈 큐 200이다",
+          "layer": "server",
+          "means": "jest 단위 '큐 파일이 없으면 빈 큐(404 아님)' + 라우트 통합 '큐 파일 없으면 200 + 빈 큐(404 아님)'",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest 전체 스위트 재실행: 28 suites / 281 tests PASS, REAL_EXIT=0 (pipefail·PIPESTATUS 실측, 2026-07-05T18:04 KST). 대상 2파일 재실행 39/39 PASS."
+          }
+        },
+        {
+          "scenario": "깨진 큐·무효 제안은 걸러진다",
+          "layer": "server",
+          "means": "jest 단위 '깨진 JSON이면 빈 큐(throw 금지)'·'무효 제안은 걸러내고 유효만 남긴다(필드 누락·to+newNode 동시·둘 다 없음·어휘 밖)'",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest 전체 스위트 재실행: 28 suites / 281 tests PASS, REAL_EXIT=0 (pipefail·PIPESTATUS 실측, 2026-07-05T18:04 KST). 대상 2파일 재실행 39/39 PASS."
+          }
+        }
+      ]
+    },
+    {
+      "title": "승인분만 검증을 거쳐 Mermaid에 append 반영한다 (POST apply)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "동시성": "apply 전체가 동기 블록(readFileSync→검증→userFlowInvariantHolds→writeFileSync, await 없음) — Node 단일 스레드에서 요청 간 인터리빙 불가. 단일 사용자 로컬 도구"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "기존 노드 간 happy 에지 승인이 문서에 반영된다",
+          "layer": "server",
+          "means": "jest 단위 'happy 에지 승인 → `From -->|라벨| To` append + 재파싱 kind:happy' + 라우트 통합 '승인 시 에지 append + 재조회 그래프에 반영'",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest 전체 스위트 재실행: 28 suites / 281 tests PASS, REAL_EXIT=0 (pipefail·PIPESTATUS 실측, 2026-07-05T18:04 KST). 대상 2파일 재실행 39/39 PASS. 재조회 그래프에 kind:happy 에지 확인(라우트 테스트가 apply 후 GET 재조회 단언)."
+          }
+        },
+        {
+          "scenario": "신규 화면 노드로의 에지케이스 에지 승인이 반영된다",
+          "layer": "server",
+          "means": "jest 단위 'newNode 대상 edgecase 승인 → `From -.->|라벨| NewId[\"라벨\"]` append + 재파싱 새 노드' + 라우트 통합(happy+edgecase 신규 노드 동시 검증)",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest 전체 스위트 재실행: 28 suites / 281 tests PASS, REAL_EXIT=0 (pipefail·PIPESTATUS 실측, 2026-07-05T18:04 KST). 대상 2파일 재실행 39/39 PASS."
+          }
+        },
+        {
+          "scenario": "반려는 문서를 건드리지 않고 큐에서만 제거된다",
+          "layer": "server",
+          "means": "jest 단위 '반려하면 문서는 바이트 단위로 불변, 큐에서만 제거' + 라우트 통합 '반려 시 문서 바이트 불변 + 큐에서 제거'",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest 전체 스위트 재실행: 28 suites / 281 tests PASS, REAL_EXIT=0 (pipefail·PIPESTATUS 실측, 2026-07-05T18:04 KST). 대상 2파일 재실행 39/39 PASS. 바이트 단위 동일성 단언(toBe 문자열 비교)."
+          }
+        },
+        {
+          "scenario": "검증 위반 제안은 skipped로 표면화된다",
+          "layer": "server",
+          "means": "jest 단위 from부재·to부재·newNode id 충돌(대소문자 무시)·id 형식 위반·라벨 금지문자(\"·|·개행) 각각 skipped(사유 포함)+원본 불변+동일 apply 내 유효분 정상 반영 + 라우트 통합 'skipped로 사유 표면화(silent drop 금지)'",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest 전체 스위트 재실행: 28 suites / 281 tests PASS, REAL_EXIT=0 (pipefail·PIPESTATUS 실측, 2026-07-05T18:04 KST). 대상 2파일 재실행 39/39 PASS."
+          }
+        },
+        {
+          "scenario": "이미 존재하는 에지 제안은 멱등 skipped다",
+          "layer": "server",
+          "means": "jest 단위 '동일 from·to·kind 에지 기존재 시 skipped(라벨 달라도) — 재적용 멱등'",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest 전체 스위트 재실행: 28 suites / 281 tests PASS, REAL_EXIT=0 (pipefail·PIPESTATUS 실측, 2026-07-05T18:04 KST). 대상 2파일 재실행 39/39 PASS."
+          }
+        }
+      ]
+    },
+    {
+      "title": "self-roundtrip 방어가 쓰기를 게이트한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "userFlowInvariantHolds 입력은 내부 생성 UserFlowParse·lines·ExpectedNewEdge[] — TypeScript strict 타입으로 null 유입 경로 없음(외부 입력은 라우트 400/스키마 필터가 선차단)",
+          "동시성": "순수 함수(부수효과 없음) — 동시성 표면 자체가 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "방어 위반 시 422와 원본 보존",
+          "layer": "server",
+          "means": "jest 단위 'roundtrip 불변식 깨면 write하지 않고 writeFailed(문서·큐 불변)'·'기존 엣지 라인 소실 afterLines→false'·'기대와 다른 에지 추가→false' + 라우트 통합 writeFailed→422 변환('<stem>.md 부재 시 422(원본 보호·큐 불변)')",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest 전체 스위트 재실행: 28 suites / 281 tests PASS, REAL_EXIT=0 (pipefail·PIPESTATUS 실측, 2026-07-05T18:04 KST). 대상 2파일 재실행 39/39 PASS."
+          }
+        },
+        {
+          "scenario": "방어 무력화 프로브 — 방어가 항상 통과하도록 조작되면 테스트가 실패한다",
+          "layer": "server",
+          "means": "실측 mutation 프로브: userFlowInvariantHolds 본문을 `return true`로 강제 치환 후 jest 실행",
+          "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "무력화 상태 실행: userFlowDocs.test.ts → 4 failed / 22 passed (RED, exit 1) — 방어가 실제 게이트임을 실증. git checkout 복원 후 재실행: 39/39 PASS (GREEN, exit 0). 2026-07-05T18:06 KST 본 verify에서 직접 수행(테스트 존재 확인이 아니라 mutation 실행)."
+          }
+        }
+      ]
+    },
+    {
+      "title": "유저플로우 탭에 승인 패널을 표시한다 (web UI)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "기능 미구현(tasks 3.1·3.2·4.1 미착수) — web 코드 부재로 어떤 에지 클래스도 실행 불가, 시나리오 전체가 '검증 안 함'으로 집계됨. 스펙 설계상 빈값 에지(빈 큐 패널 미렌더) 시나리오는 존재 — 구현 후 재verify에서 판정",
+          "빈값": "기능 미구현(tasks 3.1·3.2·4.1 미착수) — web 코드 부재로 어떤 에지 클래스도 실행 불가, 시나리오 전체가 '검증 안 함'으로 집계됨. 스펙 설계상 빈값 에지(빈 큐 패널 미렌더) 시나리오는 존재 — 구현 후 재verify에서 판정",
+          "잘못된타입": "기능 미구현(tasks 3.1·3.2·4.1 미착수) — web 코드 부재로 어떤 에지 클래스도 실행 불가, 시나리오 전체가 '검증 안 함'으로 집계됨. 스펙 설계상 빈값 에지(빈 큐 패널 미렌더) 시나리오는 존재 — 구현 후 재verify에서 판정",
+          "경계값": "기능 미구현(tasks 3.1·3.2·4.1 미착수) — web 코드 부재로 어떤 에지 클래스도 실행 불가, 시나리오 전체가 '검증 안 함'으로 집계됨. 스펙 설계상 빈값 에지(빈 큐 패널 미렌더) 시나리오는 존재 — 구현 후 재verify에서 판정",
+          "에러경로": "기능 미구현(tasks 3.1·3.2·4.1 미착수) — web 코드 부재로 어떤 에지 클래스도 실행 불가, 시나리오 전체가 '검증 안 함'으로 집계됨. 스펙 설계상 빈값 에지(빈 큐 패널 미렌더) 시나리오는 존재 — 구현 후 재verify에서 판정",
+          "동시성": "기능 미구현(tasks 3.1·3.2·4.1 미착수) — web 코드 부재로 어떤 에지 클래스도 실행 불가, 시나리오 전체가 '검증 안 함'으로 집계됨. 스펙 설계상 빈값 에지(빈 큐 패널 미렌더) 시나리오는 존재 — 구현 후 재verify에서 판정",
+          "대량": "기능 미구현(tasks 3.1·3.2·4.1 미착수) — web 코드 부재로 어떤 에지 클래스도 실행 불가, 시나리오 전체가 '검증 안 함'으로 집계됨. 스펙 설계상 빈값 에지(빈 큐 패널 미렌더) 시나리오는 존재 — 구현 후 재verify에서 판정",
+          "특수문자": "기능 미구현(tasks 3.1·3.2·4.1 미착수) — web 코드 부재로 어떤 에지 클래스도 실행 불가, 시나리오 전체가 '검증 안 함'으로 집계됨. 스펙 설계상 빈값 에지(빈 큐 패널 미렌더) 시나리오는 존재 — 구현 후 재verify에서 판정"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "큐가 있으면 패널이 뜨고 승인 후 그래프가 갱신된다",
+          "layer": "web",
+          "means": "(매핑 없음 — 기능 미구현)",
+          "basis": "정적 확인(step 4a): grep -rn 'UserFlowApprovalPanel|fetchUserFlowSuggestions|applyUserFlowSuggestions' web/src → 0건. tasks.md 3.1·3.2·4.1·5.1 미체크와 일치 → 기능 미구현(환경 SKIP 아님)",
+          "result": "검증 안 함",
+          "evidence": {
+            "kind": "text",
+            "text": "web/src에 UserFlowApprovalPanel.tsx·fetchUserFlowSuggestions·applyUserFlowSuggestions 부재(grep 0건). tasks 3.1·3.2·4.1 미체크. 코드가 없어 실행 불가 — 환경 SKIP이 아니라 기능 미구현."
+          }
+        },
+        {
+          "scenario": "빈 큐면 패널이 렌더되지 않는다",
+          "layer": "web",
+          "means": "(매핑 없음 — 기능 미구현)",
+          "basis": "정적 확인(step 4a): grep -rn 'UserFlowApprovalPanel|fetchUserFlowSuggestions|applyUserFlowSuggestions' web/src → 0건. tasks.md 3.1·3.2·4.1·5.1 미체크와 일치 → 기능 미구현(환경 SKIP 아님)",
+          "result": "검증 안 함",
+          "evidence": {
+            "kind": "text",
+            "text": "동일 — 패널 컴포넌트 자체가 없어 '미렌더' 검증 대상이 성립하지 않음(기능 미구현)."
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 39,
+      "passed": 39,
+      "failed": 0,
+      "basis": "server/package.json(jest) + src/lib/__tests__/userFlowDocs.test.ts·src/routes/__tests__/docsUserFlowApproval.test.ts 존재",
+      "reason": "전체 스위트 281/281 PASS(REAL_EXIT=0) + 대상 2파일 39/39 + tsc --noEmit 0 + mutation 프로브 red/green 실측 + ad-hoc 에지 프로브(10k 대량·빈 배열) 2/2 PASS 후 제거"
+    },
+    {
+      "layer": "web",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "web/package.json 존재(환경 자체는 있음)",
+      "reason": "기능 미구현(tasks 3.1·3.2·4.1 미착수) — 시나리오 2건은 SKIP이 아니라 '검증 안 함(기능 미구현)'으로 집계(step 4a)"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "android/·*.gradle 부재",
+      "reason": "적용 불가: android 프로젝트 아님"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "host=linux",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260705-1808.html"
+}
