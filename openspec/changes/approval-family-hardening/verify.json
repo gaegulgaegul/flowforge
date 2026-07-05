@@ -1,7 +1,7 @@
 {
   "change": "approval-family-hardening",
-  "verifiedAt": "2026-07-05T23:29:39+09:00",
-  "finalJudgment": "FAIL",
+  "verifiedAt": "2026-07-05T23:56:27+09:00",
+  "finalJudgment": "PASS",
   "counts": {
     "pass": 10,
     "fail": 0,
@@ -9,19 +9,19 @@
     "skipped": 0
   },
   "archiveGate": {
-    "open": false,
-    "reason": "예외 미검증(검증 불충분): [prd] apply는 원문 개행 스타일을 보존한다, [prd] 큐 재작성은 처리분만 제거한다, [features] 큐 재작성은 처리분만 제거한다, [userflow] 큐 재작성은 처리분만 제거한다"
+    "open": true,
+    "reason": ""
   },
   "requirements": [
     {
       "title": "[prd] apply는 원문 개행 스타일을 보존한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
           "빈값": "covered",
           "잘못된타입": "na",
-          "경계값": "missing",
+          "경계값": "covered",
           "에러경로": "covered",
           "동시성": "na",
           "대량": "na",
@@ -42,8 +42,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "docsPrdApproval.test.ts:236 격리 실행 1 passed, exit 0",
-            "text": "'CRLF prd.md 승인 반영 후 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' — CRLF쌍 제거 후 잔여 \\n·\\r 부재 바이트 단언. 구현: docs.ts:266 restoreEol(공유 eol.ts)"
+            "caption": "docsPrdApproval.test.ts:236 격리 실행 24/24 passed, exit 0",
+            "text": "'CRLF prd.md 승인 반영 후 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' PASS — CRLF쌍 제거 후 잔여 \\n·\\r 부재 바이트 단언. 경계값(혼합 EOL)은 :319 '혼합 EOL prd.md는 any-CRLF-wins로 결정론 수렴하고 preamble이 보존된다'(7091c94 신규 상주)로 covered"
           }
         }
       ]
@@ -51,16 +51,16 @@
     {
       "title": "[prd] 큐 재작성은 처리분만 제거한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
           "빈값": "covered",
-          "잘못된타입": "missing",
+          "잘못된타입": "covered",
           "경계값": "covered",
           "에러경로": "covered",
           "동시성": "covered",
           "대량": "na",
-          "특수문자": "missing"
+          "특수문자": "covered"
         },
         "naReasons": {
           "대량": "prunePrdQueue(docs.ts:331-336)는 순수 선형 filter·크기 분기 없음 — 수량 방어는 배치 상한(D-3)"
@@ -75,8 +75,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "docsPrdApproval.test.ts:276 격리 실행 1 passed, exit 0",
-            "text": "'재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' — 스냅샷 이후 추가된 s2 생존, 처리된 s1만 제거, 큐 ids === ['s2']"
+            "caption": "docsPrdApproval.test.ts:276 격리 실행 24/24 passed, exit 0",
+            "text": "'재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' PASS. 잘못된타입 :330 non-string id 읽기 필터+prune 문자열 유지, 특수문자 :342 __proto__·한글·빈 문자열 값 비교(오염·오삭제 없음) — 둘 다 7091c94 신규 상주로 covered"
           }
         }
       ]
@@ -96,8 +96,8 @@
           "특수문자": "na"
         },
         "naReasons": {
-          "동시성": "rejectOversizedBatch(routes/docs.ts:251-257)는 요청 body 길이 합의 순수 산술 검사 — 공유 상태 없음",
-          "특수문자": "상한 검사는 배열 길이만 봄 — 원소 내용이 판정에 관여 불가(routes/docs.ts:252)"
+          "동시성": "rejectOversizedBatch(routes/docs.ts:250-257)는 요청 body 길이 합의 순수 산술 검사 — 공유 상태 없음",
+          "특수문자": "상한 검사는 배열 길이만 봄 — 원소 내용이 판정에 관여 불가(routes/docs.ts:251)"
         }
       },
       "scenarios": [
@@ -109,8 +109,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "routes/docsFeatureApproval.test.ts:186(400·batch_too_large) + ad-hoc 불변 단언 4/4 PASS 후 삭제(git clean)",
-            "text": "상주: prd 201건 → 400 batch_too_large. ad-hoc: 400 + prd.md 바이트 불변 + prd.suggestions.json 바이트 불변, 200 경계(정확히 200건은 batch_too_large 아님·status 200) PASS. 상주 테스트는 prd 문서·큐 불변을 직접 단언하지 않음(승격 후보)"
+            "caption": "routes/docsFeatureApproval.test.ts:184(prd 201건→400) + ad-hoc 불변 단언 3/3 PASS 후 삭제(git clean)",
+            "text": "상주: prd 201건 → 400 batch_too_large(shared APPLY_BATCH_CAP 단일 정의, 7091c94). ad-hoc: 400 + prd.md 바이트 불변 + prd.suggestions.json 바이트 불변, 200 정확 경계는 batch_too_large 아님(status 200) PASS. 상주 테스트는 prd 문서·큐 불변을 직접 단언하지 않음(승격 후보 유지)"
           }
         }
       ]
@@ -144,8 +144,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "docsFeatureApproval.test.ts:274 격리 실행 1 passed, exit 0",
-            "text": "'CRLF features.md 승인 반영 후 속성 줄만 교체되고 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' — 교체 속성 줄 CRLF 종결 + 잔여 \\n·\\r 부재 단언. 경계값(혼합 EOL)은 공유 detectEol(eol.ts:10) 단일 판정 + userFlowDocs.test.ts:477 실측 체인으로 covered"
+            "caption": "docsFeatureApproval.test.ts:274 격리 실행 28/28 passed, exit 0",
+            "text": "'CRLF features.md 승인 반영 후 속성 줄만 교체되고 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)' PASS — 교체 속성 줄 CRLF 종결 + 잔여 \\n·\\r 부재 단언. 경계값(혼합 EOL)은 공유 detectEol(eol.ts) 단일 판정 + prd :319·userflow :477 실측 체인으로 covered"
           }
         }
       ]
@@ -153,7 +153,7 @@
     {
       "title": "[features] 큐 재작성은 처리분만 제거한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
           "빈값": "covered",
@@ -162,7 +162,7 @@
           "에러경로": "covered",
           "동시성": "covered",
           "대량": "na",
-          "특수문자": "missing"
+          "특수문자": "covered"
         },
         "naReasons": {
           "대량": "pruneFeatureQueue(featureDocs.ts:275-280)는 순수 선형 filter·크기 분기 없음 — 배치 상한이 담당"
@@ -177,8 +177,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "docsFeatureApproval.test.ts:374 격리 실행 1 passed, exit 0",
-            "text": "'재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' — 인플라이트 s2 생존, remaining=1, 큐 ids === ['s2']. 잘못된타입은 :408 non-string id 읽기 필터(cd29898 신규)로 해소"
+            "caption": "docsFeatureApproval.test.ts:374 격리 실행 28/28 passed, exit 0",
+            "text": "'재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' PASS — 인플라이트 s2 생존, 큐 ids === ['s2']. 잘못된타입 :408 non-string id 읽기 필터, 특수문자 :427 __proto__·한글·빈 문자열 정확 잔존/제거(7091c94 신규 상주)로 covered"
           }
         }
       ]
@@ -198,7 +198,7 @@
           "특수문자": "na"
         },
         "naReasons": {
-          "동시성": "순수 길이 산술 검사·공유 상태 없음(routes/docs.ts:251-257)",
+          "동시성": "순수 길이 산술 검사·공유 상태 없음(routes/docs.ts:250-257)",
           "특수문자": "길이 합만 검사 — 원소 내용 무관"
         }
       },
@@ -211,8 +211,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "routes/docsFeatureApproval.test.ts:161 격리 실행 3 passed, exit 0",
-            "text": "'approve+reject 합계 201건 → 400 batch_too_large, 문서·큐 불변' — status 400 + features.md·features.suggestions.json 바이트 불변 직접 단언. :175 '정확히 200건은 상한에 걸리지 않는다' 경계 포함"
+            "caption": "routes/docsFeatureApproval.test.ts:161 격리 실행 12/12 passed, exit 0",
+            "text": "'approve+reject 합계 201건 → 400 batch_too_large, 문서·큐 불변' PASS — status 400 + features.md·features.suggestions.json 바이트 불변 직접 단언. :175 '정확히 200건은 상한에 걸리지 않는다' 경계 포함. 상한 정의는 shared APPLY_BATCH_CAP 단일 소스(7091c94)"
           }
         }
       ]
@@ -246,8 +246,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "userFlowDocs.test.ts:279 격리 실행 1 passed, exit 0",
-            "text": "'CRLF 문서에 add-edge 승인 → append 줄도 CRLF, 기존 줄 CRLF 불변(EOL roundtrip)' — 닫는 펜스 앞 CRLF 에지 1줄 삽입 외 바이트 동일. 경계값: :477 혼합 EOL any-CRLF-wins 결정론(cd29898 신규)"
+            "caption": "userFlowDocs.test.ts:279 격리 실행 37/37 passed, exit 0",
+            "text": "'CRLF 문서에 add-edge 승인 → append 줄도 CRLF, 기존 줄 CRLF 불변(EOL roundtrip)' PASS — 닫는 펜스 앞 CRLF 에지 1줄 삽입 외 바이트 동일. 경계값: :477 혼합 EOL any-CRLF-wins 결정론 수렴"
           }
         }
       ]
@@ -255,7 +255,7 @@
     {
       "title": "[userflow] 큐 재작성은 처리분만 제거한다",
       "edgeCase": {
-        "verdict": "검증 불충분",
+        "verdict": "충분",
         "classes": {
           "null": "covered",
           "빈값": "covered",
@@ -264,7 +264,7 @@
           "에러경로": "covered",
           "동시성": "covered",
           "대량": "na",
-          "특수문자": "missing"
+          "특수문자": "covered"
         },
         "naReasons": {
           "대량": "pruneUserFlowQueue(userFlowDocs.ts:298-303)는 순수 선형 filter·크기 분기 없음 — 배치 상한이 담당"
@@ -279,8 +279,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "userFlowDocs.test.ts:434 격리 실행 1 passed, exit 0",
-            "text": "'재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' — 인플라이트 s2 생존, 큐 ids === ['s2']. 잘못된타입은 :488 non-string id(123·null 2변종) 읽기 필터(cd29898 신규)로 해소"
+            "caption": "userFlowDocs.test.ts:434 격리 실행 37/37 passed, exit 0",
+            "text": "'재독본에만 있는 신규 제안은 보존하고 처리 id만 제거한다' PASS — 인플라이트 s2 생존, 큐 ids === ['s2']. 잘못된타입 :488 non-string id 읽기 필터, 특수문자 :504 __proto__·한글·빈 문자열 정확 잔존/제거(7091c94 신규 상주)로 covered"
           }
         }
       ]
@@ -300,7 +300,7 @@
           "특수문자": "na"
         },
         "naReasons": {
-          "동시성": "순수 길이 산술 검사·공유 상태 없음(routes/docs.ts:251-257)",
+          "동시성": "순수 길이 산술 검사·공유 상태 없음(routes/docs.ts:250-257)",
           "특수문자": "길이 합만 검사 — 원소 내용 무관"
         }
       },
@@ -313,8 +313,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "routes/docsFeatureApproval.test.ts:186(400·batch_too_large) + ad-hoc 불변 단언 PASS 후 삭제(git clean)",
-            "text": "상주: userflow 201건 → 400 batch_too_large(공유 rejectOversizedBatch, routes/docs.ts:251-257·:365 호출). ad-hoc: 400 + <stem>.md·<stem>.suggestions.json 바이트 불변 + 200 경계 PASS. 상주 테스트는 userflow 문서·큐 불변을 직접 단언하지 않음(승격 후보)"
+            "caption": "routes/docsFeatureApproval.test.ts:184(userflow 201건→400) + ad-hoc 불변 단언 3/3 PASS 후 삭제(git clean)",
+            "text": "상주: userflow 201건 → 400 batch_too_large(공유 rejectOversizedBatch·shared APPLY_BATCH_CAP). ad-hoc: 400 + main-v1.md·main-v1.suggestions.json 바이트 불변 + 200 정확 경계 PASS. 상주 테스트는 userflow 문서·큐 불변을 직접 단언하지 않음(승격 후보 유지)"
           }
         }
       ]
@@ -349,8 +349,8 @@
           "result": "PASS",
           "evidence": {
             "kind": "text",
-            "caption": "planningUserFlowBuilder.test.ts:176 + userFlowDocs.test.ts:252 격리 실행 각 1 passed, exit 0",
-            "text": "파서: mermaid-example 펜스를 건너뛰고 진짜 ```mermaid 인덱스 반환(정확 일치 판정). lib: 승인이 진짜 블록에 append(전체 파일 정확 비교). 빈값(:460 빈 문서 전건 skipped)·경계값(:468 미폐합 펜스 skipped·문서 불변, cd29898 신규) 커버"
+            "caption": "parser/planningUserFlowBuilder.test.ts(11/11) + userFlowDocs.test.ts:252(37/37) 격리 실행 각 exit 0",
+            "text": "파서: mermaid-example 펜스를 건너뛰고 진짜 ```mermaid 인덱스 반환 PASS. lib: 승인이 진짜 블록에 append(전체 파일 정확 비교) PASS. 빈값 :460 빈 문서 전건 skipped·경계값 :468 미폐합 펜스 skipped·문서 불변 커버"
           }
         }
       ]
@@ -364,7 +364,7 @@
       "passed": 10,
       "failed": 0,
       "basis": "package.json workspaces(server) + jest 스위트 존재",
-      "reason": "타입체크·빌드 exit 0, jest 306/306 PASS(28 suites, 파이프 없는 exit 0 + 리포터 카운트 이중확인). 매핑 10개 시나리오 전부 격리 실행 PASS. prd·userflow 배치 상한의 문서/큐 불변·200 경계는 상주 테스트 갭 → 임시 테스트(4건)로 실증 후 삭제(git status clean 확인). lint 스크립트는 전 워크스페이스 부재(--if-present no-op) — exit 0이나 실검사 아님"
+      "reason": "타입체크·빌드 exit 0, jest 311/311 PASS(28 suites, NODE_OPTIONS=--experimental-vm-modules, 파이프 없는 exit 0 + 리포터 카운트 이중확인). 매핑 10개 시나리오 전부 격리 실행 PASS. 3차 엣지 갭 4건(prd 경계값·잘못된타입·특수문자, features/userflow 특수문자)은 7091c94 상주 테스트 5건으로 해소 실측. prd·userflow 배치 상한의 문서/큐 불변·200 경계는 임시 테스트 3건으로 실증 후 삭제(git status clean). lint 스크립트는 전 워크스페이스 부재(--if-present no-op) — exit 0이나 실검사 아님"
     },
     {
       "layer": "web",
@@ -373,7 +373,7 @@
       "passed": 0,
       "failed": 0,
       "basis": "web workspace 존재(적용 가능)하나 이 change의 spec 시나리오 10건 전부 서버 계층",
-      "reason": "spec 시나리오 매핑 0건. 웹 청크 전송(ccacbe6, review 치명 1 대응)은 spec 시나리오가 아닌 review 조건 — web 빌드·타입체크 exit 0으로 회귀 없음만 확인"
+      "reason": "spec 시나리오 매핑 0건. 웹 청크 전송·실패 재동기화(ccacbe6·7091c94)는 spec 시나리오가 아닌 review 조건 — web 빌드·타입체크 exit 0으로 회귀 없음만 확인. APPLY_BATCH_CAP은 shared 단일 정의 소비 확인(api.ts:187)"
     },
     {
       "layer": "android",
@@ -395,5 +395,5 @@
     }
   ],
   "reportHtml": "verify.html",
-  "historyHtml": "verify-20260705-2329.html"
+  "historyHtml": "verify-20260705-2356.html"
 }
