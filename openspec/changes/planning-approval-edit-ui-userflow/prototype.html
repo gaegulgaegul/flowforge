@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>prototype — planning-approval-edit-ui-userflow</title>
+<style>
+  /* ---- DESIGN.md tokens (verbatim, only if present) ---- */
+  
+  /* ---- prototype chrome ---- */
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; margin:0; padding:24px; background:#fafbfc;
+         color:#1f2328; line-height:1.5; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .sub { color:#6e7781; margin:0 0 16px; font-size:13px; }
+  .label { padding:12px 14px; border-radius:8px; margin:0 0 12px; font-size:13px; }
+  .label.native { background:#fff8e1; border:1px solid #e6c200; }
+  .label.web { background:#ddf4ff; border:1px solid #54aeff; }
+  .label.design-on { background:#e6f4ea; border:1px solid #4ac26b; }
+  .label.design-off { background:#f6f8fa; border:1px solid #d0d7de; color:#57606a; }
+  .label code { background:#eaeef2; padding:1px 5px; border-radius:4px; }
+
+  /* ---- layout: phone on the left, flow list on the right ---- */
+  .stage { display:flex; flex-wrap:wrap; gap:32px; align-items:flex-start; }
+
+  /* ---- single phone, one screen at a time ---- */
+  .phone { width:320px; border:2px solid #1f2328; border-radius:28px; overflow:hidden;
+           background:#f6f8fa; box-shadow:0 6px 24px rgba(0,0,0,.14); flex:0 0 auto; }
+  .chrome { background:#1f2328; color:#f6f8fa; display:flex; align-items:center;
+            gap:8px; padding:8px 10px; font-size:12px; }
+  .chrome button { background:rgba(255,255,255,.16); color:inherit; border:0;
+            border-radius:6px; padding:4px 9px; font-size:12px; cursor:pointer; }
+  .chrome button:hover { background:rgba(255,255,255,.32); }
+  .chrome button:disabled { opacity:.35; cursor:default; }
+  .chrome .title { flex:1; text-align:center; font-weight:600;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .screen-stack { position:relative; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+  .frame-body { padding:14px; min-height:420px; display:flex; flex-direction:column; gap:8px; }
+
+  .wf { border:1px dashed #d0d7de; border-radius:6px; padding:10px;
+        background:#ffffff; color:#1f2328; font-size:12px; position:relative; }
+  .wf-tag { display:inline-block; font-size:9px; text-transform:uppercase;
+            background:#f6f8fa; color:#6e7781; border-radius:3px; padding:1px 5px;
+            margin-right:6px; letter-spacing:.04em; }
+  .wf-header { font-weight:600; }
+  .wf-list { min-height:60px; }
+  .wf-button { background:#1f2328; color:#fff; text-align:center; border-style:solid; font-weight:600; }
+  .wf-button .wf-tag { background:rgba(255,255,255,.25); color:#fff; }
+  .wf-empty { color:#6e7781; font-style:italic; text-align:center; }
+  /* clickable box (has an outgoing flow) */
+  .wf-go { cursor:pointer; }
+  .wf-go:hover { box-shadow:0 0 0 2px #1f2328; }
+  .wf-go:focus-visible { outline:2px solid #1f2328; outline-offset:1px; }
+  .wf-arrow { position:absolute; right:9px; top:50%; transform:translateY(-50%); font-size:11px; }
+
+  /* ---- flow list (right side) ---- */
+  .flows-panel { flex:1; min-width:240px; max-width:420px; }
+  .flows { font-size:13px; }
+  .flows h4 { margin:0 0 8px; font-size:13px; }
+  .flows ul { margin:0; padding:0; list-style:none; }
+  .flow { margin-bottom:10px; }
+  .flow-btn { background:#fff; border:1px solid #d0d7de; border-radius:8px;
+            padding:8px 12px; font-size:13px; cursor:pointer; text-align:left;
+            width:100%; color:#0969da; font-weight:600; }
+  .flow-btn:hover { border-color:#0969da; background:#f0f7ff; }
+  .flow-btn.dangling { color:#9a6700; }
+  .flow-btn.dangling:hover { border-color:#d4a72c; background:#fff8e1; }
+  .flow-note { color:#6e7781; font-size:11px; margin:3px 2px 0; }
+  .warn { color:#9a6700; font-weight:600; }
+  .muted { color:#6e7781; }
+  .toast { position:fixed; left:50%; bottom:28px; transform:translateX(-50%);
+            background:#9a6700; color:#fff; padding:10px 16px; border-radius:8px;
+            font-size:13px; max-width:90vw; box-shadow:0 4px 16px rgba(0,0,0,.25);
+            opacity:0; pointer-events:none; transition:opacity .18s; z-index:50; }
+  .toast.show { opacity:1; }
+
+  .cards { margin-top:8px; }
+  .card { border:1px solid #d0d7de; border-radius:8px; padding:14px 16px;
+          margin-bottom:14px; background:#f6f8fa; }
+  .card h4 { margin:0 0 8px; }
+  .card .req h5 { margin:8px 0 4px; font-size:13px; }
+  .card ul { margin:0; padding-left:18px; font-size:12px; }
+  .stage-wrap > h3, .cards-wrap > h3 { font-size:14px; border-bottom:1px solid #d0d7de; padding-bottom:6px; margin-top:24px; }
+  .hint-bar { font-size:12px; color:#6e7781; margin:4px 0 14px; }
+</style></head>
+<body>
+  <h1>화면 프로토타입 — planning-approval-edit-ui-userflow</h1>
+  <p class="sub">openspec-propose가 spec 시나리오에서 자동 생성 · 구현(apply) 전 화면 구성·흐름을 <b>직접 클릭</b>해 확인</p>
+  <div class="label design-off">📐 와이어프레임 모드 — DESIGN.md가 없어 골격만 그렸습니다. <code>/design-consultation</code>으로 디자인 시스템을 정의하면 다음 propose부터 실제 디자인으로 렌더됩니다.</div>
+  <div class="label web">🧩 구현 참고용 와이어프레임 — 화면 구조와 흐름의 명세입니다.</div>
+  <p class="hint-bar">💡 폰 안의 <b>버튼/박스(▶)</b> 또는 오른쪽 <b>흐름</b>을 클릭하면 다음 화면으로 넘어갑니다. 상단의 <b>← 뒤로</b>·<b>⌂ 처음</b>으로 돌아올 수 있어요.</p>
+  <div class="stage-wrap">
+    <h3>화면 (1)</h3>
+    <div class="stage">
+      <div class="phone">
+        <div class="chrome">
+          <button type="button" id="btn-back" title="뒤로" disabled>←</button>
+          <button type="button" id="btn-home" title="처음 화면">⌂</button>
+          <span class="title" id="chrome-title">planning-userflow-approval-edit</span>
+          <select id="screen-picker" title="화면 바로가기"><option value="screen-planning-userflow-approval-edit">planning-userflow-approval-edit</option></select>
+        </div>
+        <div class="screen-stack">
+        <section class="screen active" id="screen-planning-userflow-approval-edit" data-screen-name="planning-userflow-approval-edit">
+          <div class="frame-body">
+            <div class="wf wf-field" title="응답 큐에 그 2건이 담긴다"><span class="wf-tag">field</span>큐 파일이 있으면 제안 목록을 반환한다</div>
+<div class="wf wf-list" title="응답은 HTTP 200에 빈 제안 목록이며 404가 아니다"><span class="wf-tag">list</span>큐 파일 부재는 빈 큐 200이다</div>
+<div class="wf wf-empty" title="깨진 파일은 빈 큐로, 무효 제안은 제외하고 유효분만 반환하며 에러를 던지지 않는다"><span class="wf-tag">empty</span>깨진 큐·무효 제안은 걸러진다</div>
+<div class="wf wf-field" title="문서의 mermaid 블록 끝에 `A --&gt;|라벨| B` 형태의 줄이 추가되고, 재조회한 유저플로우 그래프에 그 에지(kind happy)가 나타난다"><span class="wf-tag">field</span>기존 노드 간 happy 에지 승인이 문서에 반영된다</div>
+<div class="wf wf-field" title="`A -.-&gt;|라벨| NewId[&quot;라벨&quot;]` 형태의 줄이 추가되고, 재조회 그래프에 신규 화면 노드와 kind edgecase 에지가 나타난다"><span class="wf-tag">field</span>신규 화면 노드로의 에지케이스 에지 승인이 반영된다</div>
+<div class="wf wf-field" title="문서 내용은 바이트 단위로 불변이고, 그 제안만 큐에서 사라진다"><span class="wf-tag">field</span>반려는 문서를 건드리지 않고 큐에서만 제거된다</div>
+<div class="wf wf-field" title="그 제안은 문서에 반영되지 않고 `skipped`에 사유와 함께 담기며, 같은 apply의 다른 유효 제안은 정상 반영된다"><span class="wf-tag">field</span>검증 위반 제안은 skipped로 표면화된다</div>
+<div class="wf wf-field" title="중복 줄을 추가하지 않고 `skipped`로 표면화된다"><span class="wf-tag">field</span>이미 존재하는 에지 제안은 멱등 skipped다</div>
+<div class="wf wf-field" title="응답은 422이고 문서와 큐는 변경 전 그대로다"><span class="wf-tag">field</span>방어 위반 시 422와 원본 보존</div>
+<div class="wf wf-field" title="방어 커버 테스트가 red가 된다(방어가 실제로 게이트임을 증명)"><span class="wf-tag">field</span>방어 무력화 프로브 — 방어가 항상 통과하도록 조작되면 테스트가 실패한다</div>
+<div class="wf wf-field" title="apply 후 큐 재조회로 카드가 1건으로 줄고, 그래프 재조회로 승인된 에지가 나타난다"><span class="wf-tag">field</span>큐가 있으면 패널이 뜨고 승인 후 그래프가 갱신된다</div>
+<div class="wf wf-button" title="승인 패널은 렌더되지 않고 그래프·드래그 저장 등 기존 동작은 그대로다"><span class="wf-tag">button</span>빈 큐면 패널이 렌더되지 않는다</div>
+          </div>
+          <div class="flows muted">이 화면에서 나가는 이동 없음 (종착 화면)</div>
+        </section></div>
+      </div>
+      <div class="flows-panel" id="flows-panel"></div>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+<script>
+(function() {
+  var stack = document.querySelector('.screen-stack');
+  var screens = Array.prototype.slice.call(stack.querySelectorAll('.screen'));
+  var panel = document.getElementById('flows-panel');
+  var titleEl = document.getElementById('chrome-title');
+  var picker = document.getElementById('screen-picker');
+  var backBtn = document.getElementById('btn-back');
+  var homeBtn = document.getElementById('btn-home');
+  var toastEl = document.getElementById('toast');
+  var firstId = screens.length ? screens[0].id : null;
+  var history = firstId ? [firstId] : [];
+  var toastTimer = null;
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toastEl.classList.remove('show'); }, 2600);
+  }
+
+  function render() {
+    var cur = history[history.length - 1];
+    screens.forEach(function(s) { s.classList.toggle('active', s.id === cur); });
+    var active = document.getElementById(cur);
+    if (!active) return;
+    titleEl.textContent = active.getAttribute('data-screen-name') || cur;
+    picker.value = cur;
+    backBtn.disabled = history.length <= 1;
+    // move the active screen's flow list into the side panel
+    var flows = active.querySelector('.flows');
+    panel.innerHTML = '';
+    if (flows) panel.appendChild(flows.cloneNode(true));
+    bindFlowButtons();
+  }
+
+  function go(id) {
+    if (!document.getElementById(id)) { toast('대상 화면을 찾지 못했어요: ' + id); return; }
+    history.push(id);
+    render();
+  }
+
+  function dangling() {
+    toast('⚠ 대상 화면이 spec에 정의돼 있지 않습니다 (딥링크/이동 대상 누락 의심)');
+  }
+
+  function bindFlowButtons() {
+    panel.querySelectorAll('.flow-btn').forEach(function(b) {
+      b.addEventListener('click', function() {
+        if (b.getAttribute('data-dangling')) { dangling(); return; }
+        var t = b.getAttribute('data-go');
+        if (t) go(t);
+      });
+    });
+  }
+
+  // clickable wireframe boxes (inside the phone)
+  stack.addEventListener('click', function(e) {
+    var box = e.target.closest('.wf-go');
+    if (!box) return;
+    if (box.getAttribute('data-dangling')) { dangling(); return; }
+    var t = box.getAttribute('data-go');
+    if (t) go(t);
+  });
+  stack.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var box = e.target.closest('.wf-go');
+    if (!box) return;
+    e.preventDefault();
+    if (box.getAttribute('data-dangling')) { dangling(); return; }
+    var t = box.getAttribute('data-go');
+    if (t) go(t);
+  });
+
+  backBtn.addEventListener('click', function() {
+    if (history.length > 1) { history.pop(); render(); }
+  });
+  homeBtn.addEventListener('click', function() {
+    if (firstId) { history = [firstId]; render(); }
+  });
+  picker.addEventListener('change', function() { go(picker.value); });
+
+  render();
+})();
+</script>
+</body></html>
