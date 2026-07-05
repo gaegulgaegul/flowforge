@@ -22,6 +22,7 @@ import type {
   PrdApplyResult,
 } from "@flowforge/shared";
 import { buildFeatureTreeFromLines } from "../parser/featureTreeBuilder.js";
+import { detectEol } from "./eol.js";
 
 // featureTreeBuilder.ts와 동일 문법(정합 필수): ## 요구사항 / ### 기능 / #### 상세기능 헤더,
 // 그리고 헤더 직후 줄의 `(중요도: …, 상태: …)` 속성 줄(줄 전체 앵커).
@@ -214,8 +215,11 @@ export function applyFeatureSuggestions(docsDir: string, req: PrdApplyRequest): 
       return { applied: 0, rejected: 0, remaining: queue.suggestions.length, skipped, writeFailed: true };
     }
     let lines: string[];
+    let eol: "\r\n" | "\n"; // 읽을 때 감지한 EOL을 쓸 때 복원(CRLF 보존 — lib/eol.ts)
     try {
-      lines = readFileSync(path, "utf-8").split(/\r?\n/);
+      const raw = readFileSync(path, "utf-8");
+      eol = detectEol(raw);
+      lines = raw.split(/\r?\n/);
     } catch {
       return { applied: 0, rejected: 0, remaining: queue.suggestions.length, skipped, writeFailed: true };
     }
@@ -245,7 +249,7 @@ export function applyFeatureSuggestions(docsDir: string, req: PrdApplyRequest): 
         return { applied: 0, rejected: 0, remaining: queue.suggestions.length, skipped, writeFailed: true };
       }
       try {
-        writeFileSync(path, lines.join("\n"), "utf-8");
+        writeFileSync(path, lines.join(eol), "utf-8");
       } catch {
         return { applied: 0, rejected: 0, remaining: queue.suggestions.length, skipped, writeFailed: true };
       }

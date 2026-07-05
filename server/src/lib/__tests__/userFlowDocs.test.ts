@@ -274,6 +274,25 @@ describe("applyUserFlowSuggestions", () => {
     expect(readMd(dir)).toBe(expected);
   });
 
+  // EOL 보존(D-1): CRLF 문서에 append하면 새 에지 줄도 CRLF, 기존 줄도 CRLF 그대로.
+  it("CRLF 문서에 add-edge 승인 → append 줄도 CRLF, 기존 줄 CRLF 불변(EOL roundtrip)", () => {
+    const dir = makeFlow(root, FLOW_MD.replaceAll("\n", "\r\n"), [sug("s1")]);
+    const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(1);
+    const out = readMd(dir);
+    // 바이트 단위: 모든 줄바꿈이 \r\n — CRLF 쌍을 걷어내면 홀로 남는 \n·\r이 없어야 한다.
+    const stripped = out.replaceAll("\r\n", "");
+    expect(stripped).not.toContain("\n");
+    expect(stripped).not.toContain("\r");
+    // 전체 파일 정확 비교: 닫는 펜스 직전 CRLF 에지 한 줄 삽입 외엔 바이트 불변.
+    const beforeLines = FLOW_MD.split("\n");
+    const closeIdx = beforeLines.indexOf("```", beforeLines.indexOf("```mermaid") + 1);
+    const expected = [...beforeLines.slice(0, closeIdx), "  D -->|재시작| A", ...beforeLines.slice(closeIdx)].join(
+      "\r\n",
+    );
+    expect(out).toBe(expected);
+  });
+
   it("반려하면 문서는 바이트 단위로 불변, 큐에서만 제거한다", () => {
     const dir = makeFlow(root, FLOW_MD, [sug("s1")]);
     const before = readMd(dir);

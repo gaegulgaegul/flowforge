@@ -7,8 +7,8 @@
 
 ### Sequential: 개행 보존 (공통 문자열 유틸 + 3 lib)
 
-- [ ] 2.1 RED: 3개 lib 테스트 각각에 CRLF 문서 왕복 — apply 후 기존 줄 CRLF 보존 + 패치/append 분만 변경(바이트 단언).
-- [ ] 2.2 GREEN: EOL 감지·복원 유틸(순수 함수 1개, D-1 "첫 감지" 결정론) 신설 후 `lib/docs.ts`(prd apply)·`lib/featureDocs.ts`·`lib/userFlowDocs.ts`의 split/join 지점에 적용.
+- [x] 2.1 RED: 3개 lib 테스트 각각에 CRLF 문서 왕복 — apply 후 기존 줄 CRLF 보존 + 패치/append 분만 변경(바이트 단언).
+- [x] 2.2 GREEN: EOL 감지·복원 유틸(순수 함수 1개, D-1 "첫 감지" 결정론) 신설 후 `lib/docs.ts`(prd apply)·`lib/featureDocs.ts`·`lib/userFlowDocs.ts`의 split/join 지점에 적용.
 
 ### Sequential: 큐 clobber 완화 (3 lib)
 

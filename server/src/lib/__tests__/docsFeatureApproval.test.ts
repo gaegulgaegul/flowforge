@@ -269,6 +269,22 @@ describe("applyFeatureSuggestions", () => {
     expect(r.remaining).toBe(1);
   });
 
+  // EOL 보존(D-1): CRLF 문서는 승인 반영 후에도 CRLF 그대로 — LF로 뭉개지 않는다.
+  it("CRLF features.md 승인 반영 후 속성 줄만 교체되고 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)", () => {
+    const dir = makePlanning(root, "p", FEATURES_MD.replaceAll("\n", "\r\n"), [
+      sug("s1", ["기획 산출물 생성"], { priority: "낮음", status: "완료" }),
+    ]);
+    const r = applyFeatureSuggestions(dir, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(1);
+    const out = readFileSync(join(dir, "planning", "features.md"), "utf-8");
+    // 속성 줄 교체됨(교체된 줄도 CRLF로 끝난다)
+    expect(out).toContain("(중요도: 낮음, 상태: 완료)\r\n");
+    // 바이트 단위: 모든 줄바꿈이 \r\n — CRLF 쌍을 걷어내면 홀로 남는 \n·\r이 없어야 한다.
+    const stripped = out.replaceAll("\r\n", "");
+    expect(stripped).not.toContain("\n");
+    expect(stripped).not.toContain("\r");
+  });
+
   it("features.md가 없으면 writeFailed(원본 보호, 큐 불변)", () => {
     const dir = makePlanning(root, "p", null, [sug("s1", ["A"], { priority: "낮음" })]);
     const r = applyFeatureSuggestions(dir, { approve: ["s1"], reject: [] });

@@ -21,6 +21,7 @@ import type {
   PrdApplyResult,
 } from "@flowforge/shared";
 import { splitSections } from "../parser/markdown.js";
+import { detectEol, restoreEol } from "./eol.js";
 
 /** docs 스캔 루트. 기본: cwd. */
 export function docsRoot(): string {
@@ -261,7 +262,8 @@ export function writeDocsPlanningPrd(
     if (!roundtrip.has(title.toLowerCase())) return false;
   }
 
-  writeFileSync(path, out, "utf-8");
+  // EOL 보존: LF 기준으로 조립한 out을 원본에서 감지한 EOL로 복원해 쓴다(CRLF 문서 보호).
+  writeFileSync(path, restoreEol(out, detectEol(original)), "utf-8");
   return true;
 }
 

@@ -230,6 +230,23 @@ describe("applyPrdSuggestions", () => {
     expect(r.applied).toBe(0);
     expect(r.remaining).toBe(1); // s1은 안 건드림
   });
+
+  // EOL 보존(D-1): CRLF 문서는 승인 반영 후에도 CRLF 그대로 — LF로 뭉개지 않는다.
+  it("CRLF prd.md 승인 반영 후 모든 줄바꿈이 CRLF로 보존된다(EOL roundtrip)", () => {
+    const dir = makePlanning(root, "p", PRD_MD.replaceAll("\n", "\r\n"), [sug("s1", "overview", "승인된 개요")]);
+    const r = applyPrdSuggestions(dir, { approve: ["s1"], reject: [] });
+    expect(r.applied).toBe(1);
+    const out = readFileSync(join(dir, "planning", "prd.md"), "utf-8");
+    // 교체 섹션만 바뀌고 나머지 본문은 그대로
+    expect(out).toContain("승인된 개요");
+    expect(out).not.toContain("원래 개요 본문.");
+    expect(out).toContain("원래 핵심가치.");
+    // 바이트 단위: 모든 줄바꿈이 \r\n — CRLF 쌍을 걷어내면 홀로 남는 \n·\r이 없어야 한다.
+    expect(out).toContain("\r\n");
+    const stripped = out.replaceAll("\r\n", "");
+    expect(stripped).not.toContain("\n");
+    expect(stripped).not.toContain("\r");
+  });
 });
 
 describe("isPrdApplyRequest", () => {
