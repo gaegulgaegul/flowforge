@@ -1,4 +1,62 @@
 # 배포 전 최종 검토 — planning-approval-edit-ui-userflow
+검토일: 2026-07-05 (3차 재검토 — 2차·1차 원문 하단 보존) / 검토 범위: 2차 리뷰 이후 diff 한정 — `web/src/App.tsx` switchPlanningFlow dashReqToken 가드(e6c8189, +16/-3) + 2차 치명 항목 해소 판정 + 재verify PASS 반영. 앱 전체 아님.
+
+## review criteria brief (3차)
+- changeTypes: **frontend** (신규 diff = web/src/App.tsx 단일 파일 로직 fix — 시각 표면 무변)
+- criteria: 신규 diff 19줄 기준 1·2·5·9 집중 / 3·6·8·10 = 신규 표면 없음(서버 무접촉·GET 표시 경로만) / 4·7 = verify 실픽셀 r3 인용
+- ruleSets: resolvedFrom `~/.claude/rules/` / selected: 10-coding-style·60-design·70-adversarial-review / absent: 없음
+- designYardsticks: design.md D-1~D-7 무변(서버 코드 무접촉) + tasks 4.1 "dashReqToken race 가드 기존 패턴" 조항
+- specsVerifyFocus: verify.json(2026-07-05 19:24) = **PASS** — 15/15 PASS·FAIL 0·검증안함 0·archiveGate **open**. P3 동일 절차 재현 0/6(직전 2/2) + 2차 홀 프로브 PASS + mutation red 6/green 41 재실측 + 서버 283/283.
+- adversarialScope: full change scope (NOT narrowed by this brief)
+
+## 2차 치명 항목 추적
+
+- **[해결됨] `switchPlanningFlow` dashReqToken race 가드 부재(verify P3 FAIL)** — fix e6c8189. 본 리뷰 코드 직접 재확인(`web/src/App.tsx:364-386`): 권고(then 2곳 ~4줄)보다 넓게 **4개 비동기 지점 전부**(then/catch × 그래프·큐 fetch) 가드 — 형제 핸들러 catch 가드 관례와 정합. grep 실측으로 App.tsx 내 dashReqToken 소비 핸들러 전원 가드 참여 확인(불참 함수 0). 재verify 실측: 동일 재현 절차 6트라이얼 발현 0(직전 2/2), 2차 홀(in-flight apply 응답이 전환 화면 덮기)도 UI stale 폐기·서버 정상 착지(md append+큐 갱신 파일 재조회) 확인. 의도 주석 2줄 포함(2차 신입 지적 해소).
+- **[해결됨-부수] tasks.md 4.1 완료 주장-코드 불일치** — 코드가 주장을 따라와 정합(별도 문서 수정 불요).
+
+## 반드시 수정해야 할 항목
+
+- 없음
+
+## 수정하면 좋은 항목
+
+- **2차 잔존 항목 전부 유지**(이번 diff 무접촉 — 재검토 대상 아님, 이월만): mermaid 블록 판별 이중화+`label-not-parse-safe` 오도 사유(중간), O(n²) 트라이얼+apply 배치 상한 부재(중간), 대량 큐 카드 캡/bulk 버튼 위치(중간), skipped 인라인 피드백·낙관적 큐 클리어 플래시·CRLF 전변환·큐 clobber·중복 id·라벨 길이 상한·`String(e)` 노출(낮음). 전부 non-blocking — 상당수 패널/큐 패밀리 공통 부채로 별도 change 적합.
+
+## 현재 상태로 유지해도 되는 항목
+
+- **공유 토큰 의미론(최신 상호작용 승리)**: switchPlanningFlow가 토큰을 올리면 in-flight 형제 응답(진행 중 apply의 에러 status 포함)이 폐기됨 — 형제 전체가 같은 규약이고 서버측 쓰기는 레이스 전에 완결되므로 표시 한정. 의도적 일관으로 수용.
+- **suggestions fetch catch의 토큰 가드**(App.tsx:386): 동기 클리어(:380)가 선행해 근사-중복이나 형제 catch 관례와 일관, 무해 — 삭제 비권장.
+
+## 리팩토링 추천 항목
+
+- 2차 항목 유지: ApprovalPanel 골격 추출(rule of three)·`useUserFlowApproval` 훅 분리(이번 같은 가드 불참이 격리 단위에서 더 잘 보임)·`|라벨|` 의도 주석. 이번 fix로 시급성 변화 없음 — 별도 change.
+
+## 적대적 검토 (4 페르소나)
+
+- **파괴자**: 신규 diff에서 미가드 비동기 지점 0 — then/catch 4/4 가드, grep 실측으로 전 핸들러 가드 정합(불참 0). 발견 = stem 전환이 진행 중 apply의 *에러 표시*까지 조용히 폐기(서버 착지는 정상 — verify 2차 홀 프로브로 실측) → 의미론상 의도로 판정, 유지 티어 기록. 잔존 이월: O(n²)·큐 clobber.
+- **신입 개발자**: 2차 지적 "왜 이 함수만 가드 없나 설명 부재"가 의도 주석 2줄(App.tsx:357-358)로 해소. 잔여 발견 = 로딩 인디케이터·셀렉트 비활성화 부재는 여전(2차 이월, 낮음).
+- **보안 감사자**: 신규 공격 표면 0 — GET 표시 경로만, 쓰기·인젝션·민감정보 벡터 무변. 발견 = 2차 이월 O(n²) 배치 상한(중간, 서버측 — 이번 diff 밖).
+- **게으른 시니어**: 16줄로 권고 4줄보다 크지만 catch 가드 2곳 추가는 형제 관례 정합이라 부풀림 아님. 발견 = suggestions catch의 가드는 엄밀히 생략 가능(동기 클리어 선행)이나 일관성 가치가 더 커 유지가 옳음 — "덜 짤 여지"는 있었으되 비권장.
+- 2+ 페르소나 중복 발견(심각도 상승): 신규 diff 한정 없음. 2차 상승분(O(n²), 파괴자+보안)은 이월 유지.
+
+## 디자인 리뷰 (조건부 게이트)
+
+frontend fix이나 시각 표면 무변(로직만) — verify r3 실픽셀 6장(W1·W2·P1·P2·P3·2차홀)이 시각 회귀 0을 재실측. 신규 디자인 리뷰 불요, 2차 판정(프로토타입 충실 PASS·모바일 실뷰포트/터치 타깃 미검증) 유지.
+
+## 최종 배포 가능 여부
+
+**배포 가능** — 1차 배포 불가 2축(web 미구현·배치 독살)과 2차 치명 1건(P3 레이스) 전부 해결 실측 확인. verify 최종 **PASS**(15/15, FAIL 0, archiveGate open). 잔존 발견은 전부 non-blocking(패밀리 공통 부채 위주). → `openspec-archive` 진행 가능.
+
+## 개선 우선순위 (제안)
+
+1. (별도 change) mermaid 블록 판별 단일화 + skipped 사유 정확화 — 잔존 중 오진 유도로 실사용 영향 최대.
+2. (별도 change) apply 배치 크기 캡 — O(n²) 가용성 벡터 봉쇄(라우트 1곳).
+3. (별도 change) CRLF 보존·중복 id 필터·큐 clobber 완화 — featureDocs 공통 저비용 묶음.
+4. (별도 change) 패널 패밀리 UX 묶음(대량 캡·bulk 위치·skipped 인라인·로딩 표시) + ApprovalPanel 골격/훅 추출 — rule of three 부채 일괄 해소.
+
+---
+
+# 배포 전 최종 검토 — planning-approval-edit-ui-userflow
 검토일: 2026-07-05 (2차 재검토 — 1차 검토 원문은 하단 보존) / 검토 범위: 1차 리뷰 이후 diff 한정 — `server/src/lib/userFlowDocs.ts`+단위 테스트(631b993 fix), `web/src/App.tsx`(유저플로우 배선 +78줄)·`web/src/UserFlowApprovalPanel.tsx`(신규 132줄)·`web/src/api.ts`(함수 2개)·`web/src/styles.css`(+13줄)(8cea01c). 앱 전체 아님.
 
 ## review criteria brief (2차)
