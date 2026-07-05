@@ -1,0 +1,184 @@
+{
+  "change": "planning-panel-screen-links",
+  "verifiedAt": "2026-07-05T07:42:33+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 7,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "screen registry를 API로 노출한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "HTTP 경로 파라미터는 항상 문자열로 도착(라우팅 계층) — 부재·비정상 값은 404 시나리오가 커버",
+          "잘못된타입": "URL 경로에는 문자열 외 타입이 존재하지 않음 — 비정상 문자열 입력은 404(부재·경로조작) 시나리오가 커버"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "화면목록·링크가 있는 프로젝트는 registry를 반환한다",
+          "layer": "server",
+          "means": "jest 통합테스트 '화면목록 2개 + 상세기능 링크 픽스처에서 { screens, links } 200 반환' ✓ + dist 실서버(8899) flowforge 실데이터 GET 재현",
+          "basis": "server/ 워크스페이스 + routes/__tests__/docs.planning.test.ts (jest)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "GET /api/docs/flowforge/planning-screens → 200\nscreens: [grid=프로젝트 카드 그리드, skeleton=기획 뷰(뼈대), features=기능명세 화면]\nlinks: [planning-prd 라우트 조회→[skeleton], planning-features 라우트 조회→[features,skeleton], priority·status·capability 시각화→[features]]\njest: 26 suites / 242 tests 전부 PASS (EXIT=0)",
+            "caption": "실데이터 응답 + jest 통합테스트"
+          }
+        },
+        {
+          "scenario": "화면목록 없는 프로젝트는 빈 registry 200이다",
+          "layer": "server",
+          "means": "jest '화면목록 섹션 없는 프로젝트는 빈 screens/links 200 (에러 아님)' ✓ + 실서버 ssoksok(화면목록 없음) 재현",
+          "basis": "server/ 워크스페이스 + docs.planning.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "GET /api/docs/ssoksok/planning-screens → 200 {\"screens\":[],\"links\":[]}",
+            "caption": "실데이터 빈 registry 200"
+          }
+        },
+        {
+          "scenario": "존재하지 않는 프로젝트·경로조작은 404다",
+          "layer": "server",
+          "means": "jest '존재하지 않는 프로젝트 → 404' + '경로 조작(..) 차단 → 404 (safe-4xx)' ✓ + 실서버 재현 2건",
+          "basis": "server/ 워크스페이스 + docs.planning.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "GET /api/docs/no-such-proj-xyz/planning-screens → 404\nGET /api/docs/..%2Fflowforge/planning-screens → 404",
+            "caption": "부재·경로조작 404 실측"
+          }
+        }
+      ]
+    },
+    {
+      "title": "상세 패널에 연결화면(N:M)을 표시한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "TypeScript strict + 서버 응답 스키마 고정 — 패널에 도달하는 자유형 외부 입력 없음(라벨은 파서 산출물)"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "링크 있는 상세기능 클릭 시 연결화면이 나열된다",
+          "layer": "web",
+          "means": "gstack 실픽셀 — flowforge 실데이터에서 'planning-features 라우트 조회' 노드 클릭 → '🖥️ 연결된 화면 (N:M)' 섹션에 '기능명세 화면'·'기획 뷰(뼈대)' label 2개 표시. 콘솔 에러 0",
+          "basis": "web/ 워크스페이스(React+Vite) — vite build 산출물 + dist 실서버",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s4-linked-screens.png",
+            "caption": "2화면 링크 노드 클릭 → label 나열(실데이터)"
+          }
+        },
+        {
+          "scenario": "링크 없는 상세기능은 섹션이 생략된다",
+          "layer": "web",
+          "means": "gstack 실픽셀 — 링크 없는 '5섹션 PRD 작성' 노드 클릭 → '연결된 화면' 문자열 부재(hasScreenSection=false), 빈 섹션·placeholder 없음, 다른 필드 정상",
+          "basis": "web/ 워크스페이스(React+Vite)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s5-no-link-omitted.png",
+            "caption": "링크 없는 노드 — 섹션 생략"
+          }
+        },
+        {
+          "scenario": "dangling 화면 id는 id 그대로 강등 표시된다",
+          "layer": "web",
+          "means": "gstack 실픽셀 — 픽스처(ghost-screen 미정의 id 링크)에서 노드 클릭 → 패널에 '기능명세 화면'(해석됨)과 'ghost-screen'(id 강등) 병렬 표시",
+          "basis": "web/ 워크스페이스 + /tmp 픽스처 서버(8898)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s6-dangling-id.png",
+            "caption": "미정의 id → id 문자열 강등 노출"
+          }
+        },
+        {
+          "scenario": "registry fetch 실패에도 그래프·패널은 정상 동작한다",
+          "layer": "web",
+          "means": "gstack — window.fetch 오버라이드로 planning-screens 요청만 reject → 그래프 51노드 정상 렌더, 패널 다른 필드(중요도·원본 위치) 정상, 연결화면 섹션만 생략(hasScreenSection=false)",
+          "basis": "web/ 워크스페이스(React+Vite)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s7-fetch-fail-degrade.png",
+            "caption": "fetch 실패 유도 — 섹션만 생략, 그래프·패널 무영향"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 3,
+      "passed": 3,
+      "failed": 0,
+      "basis": "server/ 워크스페이스(Express+jest) — docs.planning.test.ts에 planning-screens describe 존재",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 4,
+      "passed": 4,
+      "failed": 0,
+      "basis": "web/ 워크스페이스(React+Vite) — 빌드 산출물을 dist 서버로 서빙, gstack 실픽셀",
+      "reason": ""
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "루트에 android/·gradle 파일 없음 (node workspaces 웹 프로젝트)",
+      "reason": "적용 불가: Android 프로젝트 아님"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "플랫폼 linux — ios 어댑터는 macOS 필수",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260705-0742.html"
+}

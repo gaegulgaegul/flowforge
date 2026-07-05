@@ -1,0 +1,48 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — planning-panel-screen-links</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — planning-panel-screen-links</h1>
+<p class="muted">검증일: 2026-07-05T07:42:33+09:00 · 환경: server(jest 통합 + dist 실서버:8899 실데이터) · web(gstack 실픽셀, 빌드 산출물) 검증 / android(안드로이드 프로젝트 아님)·ios(macOS 필요) SKIPPED. 라이브 컨테이너(8812)는 본 change 이전 빌드라 미사용 — 동일 코드 로컬 기동으로 대체 · run: run-20260705-0742</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 7 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>screen registry를 API로 노출한다</td><td>화면목록·링크가 있는 프로젝트는 registry를 반환한다</td><td>server</td><td>jest 통합테스트 &#x27;화면목록 2개 + 상세기능 링크 픽스처에서 { screens, links } 200 반환&#x27; ✓ + dist 실서버(8899) flowforge 실데이터 GET 재현</td><td><code>server/ 워크스페이스 + routes/__tests__/docs.planning.test.ts (jest)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">GET /api/docs/flowforge/planning-screens → 200
+screens: [grid=프로젝트 카드 그리드, skeleton=기획 뷰(뼈대), features=기능명세 화면]
+links: [planning-prd 라우트 조회→[skeleton], planning-features 라우트 조회→[features,skeleton], priority·status·capability 시각화→[features]]
+jest: 26 suites / 242 tests 전부 PASS (EXIT=0)</pre></td></tr>
+<tr><td>screen registry를 API로 노출한다</td><td>화면목록 없는 프로젝트는 빈 registry 200이다</td><td>server</td><td>jest &#x27;화면목록 섹션 없는 프로젝트는 빈 screens/links 200 (에러 아님)&#x27; ✓ + 실서버 ssoksok(화면목록 없음) 재현</td><td><code>server/ 워크스페이스 + docs.planning.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">GET /api/docs/ssoksok/planning-screens → 200 {&quot;screens&quot;:[],&quot;links&quot;:[]}</pre></td></tr>
+<tr><td>screen registry를 API로 노출한다</td><td>존재하지 않는 프로젝트·경로조작은 404다</td><td>server</td><td>jest &#x27;존재하지 않는 프로젝트 → 404&#x27; + &#x27;경로 조작(..) 차단 → 404 (safe-4xx)&#x27; ✓ + 실서버 재현 2건</td><td><code>server/ 워크스페이스 + docs.planning.test.ts</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">GET /api/docs/no-such-proj-xyz/planning-screens → 404
+GET /api/docs/..%2Fflowforge/planning-screens → 404</pre></td></tr>
+<tr><td>상세 패널에 연결화면(N:M)을 표시한다</td><td>링크 있는 상세기능 클릭 시 연결화면이 나열된다</td><td>web</td><td>gstack 실픽셀 — flowforge 실데이터에서 &#x27;planning-features 라우트 조회&#x27; 노드 클릭 → &#x27;🖥️ 연결된 화면 (N:M)&#x27; 섹션에 &#x27;기능명세 화면&#x27;·&#x27;기획 뷰(뼈대)&#x27; label 2개 표시. 콘솔 에러 0</td><td><code>web/ 워크스페이스(React+Vite) — vite build 산출물 + dist 실서버</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/s4-linked-screens.png"><img src="evidence/s4-linked-screens.png" alt="2화면 링크 노드 클릭 → label 나열(실데이터)" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>상세 패널에 연결화면(N:M)을 표시한다</td><td>링크 없는 상세기능은 섹션이 생략된다</td><td>web</td><td>gstack 실픽셀 — 링크 없는 &#x27;5섹션 PRD 작성&#x27; 노드 클릭 → &#x27;연결된 화면&#x27; 문자열 부재(hasScreenSection=false), 빈 섹션·placeholder 없음, 다른 필드 정상</td><td><code>web/ 워크스페이스(React+Vite)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/s5-no-link-omitted.png"><img src="evidence/s5-no-link-omitted.png" alt="링크 없는 노드 — 섹션 생략" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>상세 패널에 연결화면(N:M)을 표시한다</td><td>dangling 화면 id는 id 그대로 강등 표시된다</td><td>web</td><td>gstack 실픽셀 — 픽스처(ghost-screen 미정의 id 링크)에서 노드 클릭 → 패널에 &#x27;기능명세 화면&#x27;(해석됨)과 &#x27;ghost-screen&#x27;(id 강등) 병렬 표시</td><td><code>web/ 워크스페이스 + /tmp 픽스처 서버(8898)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/s6-dangling-id.png"><img src="evidence/s6-dangling-id.png" alt="미정의 id → id 문자열 강등 노출" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>상세 패널에 연결화면(N:M)을 표시한다</td><td>registry fetch 실패에도 그래프·패널은 정상 동작한다</td><td>web</td><td>gstack — window.fetch 오버라이드로 planning-screens 요청만 reject → 그래프 51노드 정상 렌더, 패널 다른 필드(중요도·원본 위치) 정상, 연결화면 섹션만 생략(hasScreenSection=false)</td><td><code>web/ 워크스페이스(React+Vite)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/s7-fetch-fail-degrade.png"><img src="evidence/s7-fetch-fail-degrade.png" alt="fetch 실패 유도 — 섹션만 생략, 그래프·패널 무영향" style="max-width:240px;border:1px solid #ccc"></a></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>screen registry를 API로 노출한다</td><td style="background:#f0f1f2;color:#6e7781" title="HTTP 경로 파라미터는 항상 문자열로 도착(라우팅 계층) — 부재·비정상 값은 404 시나리오가 커버">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="URL 경로에는 문자열 외 타입이 존재하지 않음 — 비정상 문자열 입력은 404(부재·경로조작) 시나리오가 커버">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>상세 패널에 연결화면(N:M)을 표시한다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="TypeScript strict + 서버 응답 스키마 고정 — 패널에 도달하는 자유형 외부 입력 없음(라벨은 파서 산출물)">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>3</td><td>3</td><td>0</td><td>server/ 워크스페이스(Express+jest) — docs.planning.test.ts에 planning-screens describe 존재</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>4</td><td>4</td><td>0</td><td>web/ 워크스페이스(React+Vite) — 빌드 산출물을 dist 서버로 서빙, gstack 실픽셀</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가: Android 프로젝트 아님</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>macOS 필요</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>
