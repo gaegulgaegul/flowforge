@@ -230,6 +230,13 @@ flowforge가 PRD 제안 큐 항목을 개별/일괄로 승인·반려하고 승�
 - behavior: approve id의 section을 proposedBody로 교체해 prd.md 원자적 재작성(H1 서문·미승인 섹션 보존) 후 큐에서 제거, reject는 반영 없이 큐에서 제거, 미실재 id는 skipped로 표면화, write 전 self-roundtrip으로 5섹션 정합 검증
 - metric: 승인 반영 후 prd.md 5섹션 무결성 유지율 목표 100%
 
+### 기능: 승인 apply 견고화 — prd (approval-family-hardening)
+- assert:symbol detectEol
+- assert:symbol restoreEol
+- invariant: 원문 개행 스타일 보존 — CRLF 문서에 승인 반영해도 전 파일 EOL 전환이 일어나지 않는다(혼합 개행은 any-CRLF-wins 결정론).
+- invariant: 큐 재작성은 쓰기 직전 재독본에서 처리 id만 차집합 — apply 진행 중 추가된 신규 제안을 통삭제하지 않는다.
+- invariant: apply 배치 상한(APPLY_BATCH_CAP=200, shared 단일 정의) 초과는 400 batch_too_large, 문서·큐 무접촉. 웹은 청크 분할 전송으로 어떤 큐 크기에도 일괄 동작.
+- metric: 상주 엣지 테스트(빈 문서·혼합 EOL·특수문자 id prune·non-string id 필터) + 라우트 상한 테스트 PASS.
 ## capability: planning-prd-approval-queue — PRD 제안 큐 읽기
 
 flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 제안 큐)을 읽어 반환하는 읽기전용 능력. 큐가 없으면 빈 큐(version:1, suggestions:[])를 200으로 반환하고(404 아님), 깨진 JSON·미인식 항목은 안전 폴백(빈 큐/필터)한다. flowforge는 큐를 생성하지 않고 소비만 한다(제안 생성 주체=외부 스킬).
@@ -306,3 +313,34 @@ flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 �
 - 큐가 비어있지 않으면 그래프 위에 제안 카드(from→to·실선/점선·라벨·rationale·신규 화면 뱃지)와 개별/일괄 승인·반려를 렌더, 빈 큐면 패널 미렌더. apply 후 그래프·큐 재조회.
 - invariant: stem 전환·apply 재조회는 dashReqToken race 가드를 지킨다(stale 응답이 화면을 덮지 않는다).
 - metric: 실픽셀 grounding — 카드 렌더·개별/일괄 승인·반려·빈 큐 패널 소멸·콘솔 에러 0.
+
+### 기능: 승인 apply 견고화 — userflow (approval-family-hardening)
+- assert:symbol detectEol
+- assert:symbol restoreEol
+- invariant: 원문 개행 스타일 보존 — CRLF 문서에 승인 반영해도 전 파일 EOL 전환이 일어나지 않는다(혼합 개행은 any-CRLF-wins 결정론).
+- invariant: 큐 재작성은 쓰기 직전 재독본에서 처리 id만 차집합 — apply 진행 중 추가된 신규 제안을 통삭제하지 않는다.
+- invariant: apply 배치 상한(APPLY_BATCH_CAP=200, shared 단일 정의) 초과는 400 batch_too_large, 문서·큐 무접촉. 웹은 청크 분할 전송으로 어떤 큐 크기에도 일괄 동작.
+- metric: 상주 엣지 테스트(빈 문서·혼합 EOL·특수문자 id prune·non-string id 필터) + 라우트 상한 테스트 PASS.
+- assert:symbol findFirstMermaidBlock
+- invariant: append 위치와 재파싱이 같은 mermaid 블록을 본다(블록 판별을 파서 한 곳으로 단일화 — mermaid-example 선행 문서 오도 skipped 해소).
+
+## capability: planning-features-approval-apply — 기능명세 속성 제안 승인/반려 적용
+
+flowforge가 기능명세 제안 큐(features.suggestions.json) 항목을 개별/일괄로 승인·반려하고, 승인분만 docs/planning/features.md의 해당 노드 속성 줄(중요도·상태)을 제자리 교체 반영하는 능력(6b-features). 반려는 원본 불변. write 전 재파싱 fingerprint(노드 수·capability 키 집합) 비교로 구조 불변을 검증하고 위반 시 422로 원본을 보호한다.
+
+### 기능: 승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)
+- assert:endpoint POST /api/docs/:project/planning-features-suggestions/apply
+- assert:symbol applyFeatureSuggestions
+- assert:symbol structureInvariantHolds
+- invariant:safe-4xx 잘못된 body 400, 경로조작 404, 구조 불변 위반은 422로 막고 파일 미작성(원본 보호 — 무력화 프로브 테스트 존치).
+- invariant: 동일 label 형제 모호성·미실재 id는 skipped로 표면화(silent drop 금지).
+- behavior: 승인 노드의 속성 줄만 제자리 교체(라벨·본문·자식 불변), 반려는 큐에서만 제거.
+- metric: featureDocs 단위 + 라우트 통합 테스트 PASS + 실픽셀 grounding(승인 반영·반려 불변).
+
+### 기능: 승인 apply 견고화 — features (approval-family-hardening)
+- assert:symbol detectEol
+- assert:symbol restoreEol
+- invariant: 원문 개행 스타일 보존 — CRLF 문서에 승인 반영해도 전 파일 EOL 전환이 일어나지 않는다(혼합 개행은 any-CRLF-wins 결정론).
+- invariant: 큐 재작성은 쓰기 직전 재독본에서 처리 id만 차집합 — apply 진행 중 추가된 신규 제안을 통삭제하지 않는다.
+- invariant: apply 배치 상한(APPLY_BATCH_CAP=200, shared 단일 정의) 초과는 400 batch_too_large, 문서·큐 무접촉. 웹은 청크 분할 전송으로 어떤 큐 크기에도 일괄 동작.
+- metric: 상주 엣지 테스트(빈 문서·혼합 EOL·특수문자 id prune·non-string id 필터) + 라우트 상한 테스트 PASS.

@@ -3,11 +3,11 @@
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
-    "PASS": 78,
+    "PASS": 89,
     "FAIL": 0,
-    "UNVERIFIABLE": 100
+    "UNVERIFIABLE": 116
   },
-  "reason": "미검증(UNVERIFIABLE) 100건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 116건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -689,7 +689,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:50"
+      "evidence": "server/src/routes/docs.ts:52"
     },
     {
       "capability": "docs-ingest",
@@ -700,7 +700,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:49"
+      "evidence": "server/src/lib/docs.ts:50"
     },
     {
       "capability": "docs-ingest",
@@ -744,7 +744,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:57"
+      "evidence": "server/src/routes/docs.ts:59"
     },
     {
       "capability": "docs-ingest",
@@ -821,7 +821,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:70"
+      "evidence": "server/src/routes/docs.ts:72"
     },
     {
       "capability": "docs-ingest",
@@ -865,7 +865,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:83"
+      "evidence": "server/src/routes/docs.ts:85"
     },
     {
       "capability": "docs-ingest",
@@ -953,7 +953,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:96"
+      "evidence": "server/src/routes/docs.ts:98"
     },
     {
       "capability": "planning-prd-view",
@@ -1031,7 +1031,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:80"
+      "evidence": "server/src/lib/docs.ts:81"
     },
     {
       "capability": "planning-only-recognition",
@@ -1042,7 +1042,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:49"
+      "evidence": "server/src/lib/docs.ts:50"
     },
     {
       "capability": "planning-only-recognition",
@@ -1098,7 +1098,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:114"
+      "evidence": "server/src/routes/docs.ts:116"
     },
     {
       "capability": "planning-features-view",
@@ -1176,7 +1176,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:185"
+      "evidence": "server/src/routes/docs.ts:187"
     },
     {
       "capability": "planning-userflow-view",
@@ -1187,7 +1187,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/parser/planningUserFlowBuilder.ts:169"
+      "evidence": "server/src/parser/planningUserFlowBuilder.ts:184"
     },
     {
       "capability": "planning-userflow-view",
@@ -1198,7 +1198,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:115"
+      "evidence": "server/src/lib/docs.ts:116"
     },
     {
       "capability": "planning-userflow-view",
@@ -1254,7 +1254,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:207"
+      "evidence": "server/src/routes/docs.ts:209"
     },
     {
       "capability": "planning-userflow-view",
@@ -1265,7 +1265,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:150"
+      "evidence": "server/src/lib/docs.ts:151"
     },
     {
       "capability": "planning-userflow-view",
@@ -1399,7 +1399,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:245"
+      "evidence": "server/src/routes/docs.ts:258"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1410,7 +1410,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:273"
+      "evidence": "server/src/lib/docs.ts:275"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1421,7 +1421,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:228"
+      "evidence": "server/src/lib/docs.ts:229"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1432,7 +1432,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:329"
+      "evidence": "server/src/lib/docs.ts:339"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1480,31 +1480,97 @@
       "evidence": null
     },
     {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 apply 견고화 — prd (approval-family-hardening)",
+      "line": 234,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol detectEol",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/eol.ts:10"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 apply 견고화 — prd (approval-family-hardening)",
+      "line": 235,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol restoreEol",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/eol.ts:15"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 apply 견고화 — prd (approval-family-hardening)",
+      "line": 236,
+      "kind": "freetext",
+      "claim": "invariant: 원문 개행 스타일 보존 — CRLF 문서에 승인 반영해도 전 파일 EOL 전환이 일어나지 않는다(혼합 개행은 any-CRLF-wins 결정론).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 apply 견고화 — prd (approval-family-hardening)",
+      "line": 237,
+      "kind": "freetext",
+      "claim": "invariant: 큐 재작성은 쓰기 직전 재독본에서 처리 id만 차집합 — apply 진행 중 추가된 신규 제안을 통삭제하지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 apply 견고화 — prd (approval-family-hardening)",
+      "line": 238,
+      "kind": "freetext",
+      "claim": "invariant: apply 배치 상한(APPLY_BATCH_CAP=200, shared 단일 정의) 초과는 400 batch_too_large, 문서·큐 무접촉. 웹은 청크 분할 전송으로 어떤 큐 크기에도 일괄 동작.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 apply 견고화 — prd (approval-family-hardening)",
+      "line": 239,
+      "kind": "metric",
+      "claim": "metric: 상주 엣지 테스트(빈 문서·혼합 EOL·특수문자 id prune·non-string id 필터) + 라우트 상한 테스트 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 238,
+      "line": 245,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint GET /api/docs/:project/planning-prd-suggestions",
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:231"
+      "evidence": "server/src/routes/docs.ts:233"
     },
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 239,
+      "line": 246,
       "kind": "assert:symbol",
       "claim": "assert:symbol readDocsPrdSuggestions",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:195"
+      "evidence": "server/src/lib/docs.ts:196"
     },
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 240,
+      "line": 247,
       "kind": "invariant",
       "claim": "invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 docs 루트 밖 파일 미접근",
       "verdict": "PASS",
@@ -1515,7 +1581,7 @@
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 241,
+      "line": 248,
       "kind": "invariant",
       "claim": "invariant:safe-4xx 경로 조작 project는 404, 큐 파일 부재는 빈 큐 200(읽기는 절대 500으로 죽지 않음)",
       "verdict": "PASS",
@@ -1526,7 +1592,7 @@
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 242,
+      "line": 249,
       "kind": "behavior",
       "claim": "behavior: prd.suggestions.json을 JSON.parse 후 isValidPrdSuggestion(section 5키·op=replace만)으로 필터해 유효 제안만 반환, 파일 없음·깨진 JSON은 빈 큐로 폴백",
       "verdict": "UNVERIFIABLE",
@@ -1538,7 +1604,7 @@
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 243,
+      "line": 250,
       "kind": "metric",
       "claim": "metric: 제안 큐 조회 응답 시간 목표 200ms",
       "verdict": "UNVERIFIABLE",
@@ -1549,18 +1615,18 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 250,
+      "line": 257,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint GET /api/docs/:project/audit-capabilities",
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:132"
+      "evidence": "server/src/routes/docs.ts:134"
     },
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 251,
+      "line": 258,
       "kind": "assert:symbol",
       "claim": "assert:symbol aggregateAuditItems",
       "verdict": "PASS",
@@ -1571,7 +1637,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 252,
+      "line": 259,
       "kind": "assert:symbol",
       "claim": "assert:symbol readAuditCapabilities",
       "verdict": "PASS",
@@ -1582,7 +1648,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 253,
+      "line": 260,
       "kind": "freetext",
       "claim": "audit.json items[]를 capability 키별로 집계한다: FAIL≥1→fail / FAIL 0·PASS≥1→clean / 그 외(항목 없음·전부 UNVERIFIABLE)→unknown. UNVERIFIABLE은 판정을 깎지 않고 건수로만 노출한다.",
       "verdict": "UNVERIFIABLE",
@@ -1593,7 +1659,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 254,
+      "line": 261,
       "kind": "freetext",
       "claim": "invariant: audit.json 없음·깨진 JSON·items 비배열은 빈 맵 폴백(HTTP 200)이며 throw하지 않는다.",
       "verdict": "UNVERIFIABLE",
@@ -1604,7 +1670,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 255,
+      "line": 262,
       "kind": "freetext",
       "claim": "invariant: audit.json 내부 경로(scanRoot 등)는 신뢰하지 않는다 — 읽기 경로는 검증된 projDir 기준으로만 구성하고 items[]의 capability·verdict·kind·claim·reason만 소비한다.",
       "verdict": "UNVERIFIABLE",
@@ -1615,7 +1681,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 256,
+      "line": 263,
       "kind": "freetext",
       "claim": "invariant: 읽기전용 — audit.json 산출은 openspec-audit 소유, flowforge는 소비만 한다.",
       "verdict": "UNVERIFIABLE",
@@ -1626,7 +1692,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 257,
+      "line": 264,
       "kind": "metric",
       "claim": "metric: auditSummary 단위(집계·폴백) + 라우트 통합 테스트 PASS(auditSummary.test.ts, docs.planning.test.ts) + 라이브 실픽셀(요구사항 노드 배지·패널 audit 섹션·콘솔 0).",
       "verdict": "UNVERIFIABLE",
@@ -1637,18 +1703,18 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
-      "line": 260,
+      "line": 267,
       "kind": "assert:symbol",
       "claim": "assert:symbol fetchAuditCapabilities",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:215"
+      "evidence": "web/src/api.ts:257"
     },
     {
       "capability": "planning-feature-audit-badge",
       "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
-      "line": 261,
+      "line": 268,
       "kind": "freetext",
       "claim": "요구사항 노드만 capability 키 동치로 배지(clean→정합/fail→불합 N/unknown→미감사)를 렌더하고, 기능·상세기능 노드는 배지를 렌더하지 않는다. audit fetch 실패는 배지 없음 강등(그래프 렌더 유지).",
       "verdict": "UNVERIFIABLE",
@@ -1659,7 +1725,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
-      "line": 262,
+      "line": 269,
       "kind": "freetext",
       "claim": "상세 패널 audit 섹션은 판정·PASS/FAIL/검증불가 건수를 표시하고, fail일 때만 FAIL claim(·reason)을 텍스트로 나열한다(HTML 주입 금지).",
       "verdict": "UNVERIFIABLE",
@@ -1670,7 +1736,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
-      "line": 263,
+      "line": 270,
       "kind": "metric",
       "claim": "metric: 라이브 실픽셀 grounding — 배지 분포(정합/미감사)·패널 3케이스(정합 건수/미감사/비요구사항 생략)·콘솔 에러 0.",
       "verdict": "UNVERIFIABLE",
@@ -1681,29 +1747,29 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 270,
+      "line": 277,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint GET /api/docs/:project/planning-screens",
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:146"
+      "evidence": "server/src/routes/docs.ts:148"
     },
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 271,
+      "line": 278,
       "kind": "assert:symbol",
       "claim": "assert:symbol fetchPlanningScreens",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:225"
+      "evidence": "web/src/api.ts:267"
     },
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 272,
+      "line": 279,
       "kind": "freetext",
       "claim": "파싱된 screen registry(`{ screens, links }`)를 그대로 반환한다. `## 화면목록` 섹션이 없으면 빈 registry 200.",
       "verdict": "UNVERIFIABLE",
@@ -1714,7 +1780,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 273,
+      "line": 280,
       "kind": "freetext",
       "claim": "invariant: 파서(screenRegistry.ts) 무수정 — 라우트는 buildScreenRegistry 결과 소비만 한다.",
       "verdict": "UNVERIFIABLE",
@@ -1725,7 +1791,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 274,
+      "line": 281,
       "kind": "invariant",
       "claim": "invariant:safe-4xx 존재하지 않는 프로젝트·경로조작(`..`)은 404, 화면목록 부재는 빈 registry 200(읽기는 500으로 죽지 않음).",
       "verdict": "PASS",
@@ -1736,7 +1802,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 275,
+      "line": 282,
       "kind": "metric",
       "claim": "metric: 라우트 통합 테스트 PASS(docs.planning.test.ts — registry 반환·빈 registry·404) + 라이브 재조회.",
       "verdict": "UNVERIFIABLE",
@@ -1747,7 +1813,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "상세 패널 연결화면(N:M) 표시 (web)",
-      "line": 278,
+      "line": 285,
       "kind": "freetext",
       "claim": "상세기능 노드 라벨 ↔ `links[].detailLabel` 문자열 동치로 화면 목록(`{id,label}`)을 파생하고, 화면 label은 registry.screens에서 해석한다. dangling 화면 id는 label 대신 id로 강등 표시(숨기지 않음).",
       "verdict": "UNVERIFIABLE",
@@ -1758,7 +1824,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "상세 패널 연결화면(N:M) 표시 (web)",
-      "line": 279,
+      "line": 286,
       "kind": "freetext",
       "claim": "링크 없는 상세기능은 섹션을 생략한다(빈 섹션·placeholder 없음). registry fetch 실패는 필드 없음 강등(그래프·패널 렌더 유지).",
       "verdict": "UNVERIFIABLE",
@@ -1769,7 +1835,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "상세 패널 연결화면(N:M) 표시 (web)",
-      "line": 280,
+      "line": 287,
       "kind": "metric",
       "claim": "metric: 라이브 실픽셀 grounding — 링크 있는 상세기능 화면 나열·링크 없는 노드 섹션 생략·콘솔 에러 0.",
       "verdict": "UNVERIFIABLE",
@@ -1780,29 +1846,29 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 287,
+      "line": 294,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint GET /api/docs/:project/planning-user-flow-suggestions",
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:308"
+      "evidence": "server/src/routes/docs.ts:323"
     },
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 288,
+      "line": 295,
       "kind": "assert:symbol",
       "claim": "assert:symbol readUserFlowSuggestions",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/userFlowDocs.ts:66"
+      "evidence": "server/src/lib/userFlowDocs.ts:67"
     },
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 289,
+      "line": 296,
       "kind": "freetext",
       "claim": "per-stem 큐를 반환한다. 파일 부재는 빈 큐 200, 깨진 JSON·무효 제안은 필터.",
       "verdict": "UNVERIFIABLE",
@@ -1813,7 +1879,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 290,
+      "line": 297,
       "kind": "invariant",
       "claim": "invariant:safe-4xx 존재하지 않는 프로젝트·경로조작·불안전 stem은 404, 읽기는 500으로 죽지 않는다.",
       "verdict": "PASS",
@@ -1824,7 +1890,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 291,
+      "line": 298,
       "kind": "metric",
       "claim": "metric: userFlowDocs 단위 + 라우트 통합 테스트 PASS.",
       "verdict": "UNVERIFIABLE",
@@ -1835,40 +1901,40 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 294,
+      "line": 301,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint POST /api/docs/:project/planning-user-flow-suggestions/apply",
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:328"
+      "evidence": "server/src/routes/docs.ts:343"
     },
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 295,
+      "line": 302,
       "kind": "assert:symbol",
       "claim": "assert:symbol applyUserFlowSuggestions",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:326"
+      "evidence": "web/src/api.ts:374"
     },
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 296,
+      "line": 303,
       "kind": "assert:symbol",
       "claim": "assert:symbol userFlowInvariantHolds",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/userFlowDocs.ts:150"
+      "evidence": "server/src/lib/userFlowDocs.ts:137"
     },
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 297,
+      "line": 304,
       "kind": "freetext",
       "claim": "승인분만 첫 mermaid 블록 닫는 펜스 직전에 에지 줄 append. 계약은 6a/6b의 PrdApplyRequest/PrdApplyResult 재사용.",
       "verdict": "UNVERIFIABLE",
@@ -1879,7 +1945,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 298,
+      "line": 305,
       "kind": "freetext",
       "claim": "invariant: 결정론 검증(from/to 존재·newNode id 충돌·라벨 금지문자·중복 에지 멱등) 위반은 해당 제안만 skipped로 사유와 함께 표면화 — 배치 전체를 죽이지 않는다(제안별 사전 roundtrip 포함).",
       "verdict": "UNVERIFIABLE",
@@ -1890,7 +1956,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 299,
+      "line": 306,
       "kind": "freetext",
       "claim": "invariant: self-roundtrip 방어 — append 후 재파싱해 기존 노드·에지 완전 보존 + 승인분 에지만 정확히 추가됐을 때만 write, 위반 시 422·원본 보존·큐 유지(무력화 프로브 테스트 존치).",
       "verdict": "UNVERIFIABLE",
@@ -1901,7 +1967,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 300,
+      "line": 307,
       "kind": "freetext",
       "claim": "invariant: 반려는 문서 바이트 불변, 큐에서만 제거.",
       "verdict": "UNVERIFIABLE",
@@ -1912,7 +1978,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 301,
+      "line": 308,
       "kind": "metric",
       "claim": "metric: 단위(검증·append·방어·무력화 프로브) + 통합 테스트 PASS + 실픽셀 grounding(개별 승인=1줄 append·반려=문서 불변).",
       "verdict": "UNVERIFIABLE",
@@ -1923,7 +1989,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 304,
+      "line": 311,
       "kind": "assert:symbol",
       "claim": "assert:symbol UserFlowApprovalPanel",
       "verdict": "PASS",
@@ -1934,18 +2000,18 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 305,
+      "line": 312,
       "kind": "assert:symbol",
       "claim": "assert:symbol fetchUserFlowSuggestions",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:311"
+      "evidence": "web/src/api.ts:359"
     },
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 306,
+      "line": 313,
       "kind": "freetext",
       "claim": "큐가 비어있지 않으면 그래프 위에 제안 카드(from→to·실선/점선·라벨·rationale·신규 화면 뱃지)와 개별/일괄 승인·반려를 렌더, 빈 큐면 패널 미렌더. apply 후 그래프·큐 재조회.",
       "verdict": "UNVERIFIABLE",
@@ -1956,7 +2022,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 307,
+      "line": 314,
       "kind": "freetext",
       "claim": "invariant: stem 전환·apply 재조회는 dashReqToken race 가드를 지킨다(stale 응답이 화면을 덮지 않는다).",
       "verdict": "UNVERIFIABLE",
@@ -1967,9 +2033,241 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 308,
+      "line": 315,
       "kind": "metric",
       "claim": "metric: 실픽셀 grounding — 카드 렌더·개별/일괄 승인·반려·빈 큐 패널 소멸·콘솔 에러 0.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
+      "line": 318,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol detectEol",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/eol.ts:10"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
+      "line": 319,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol restoreEol",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/eol.ts:15"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
+      "line": 320,
+      "kind": "freetext",
+      "claim": "invariant: 원문 개행 스타일 보존 — CRLF 문서에 승인 반영해도 전 파일 EOL 전환이 일어나지 않는다(혼합 개행은 any-CRLF-wins 결정론).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
+      "line": 321,
+      "kind": "freetext",
+      "claim": "invariant: 큐 재작성은 쓰기 직전 재독본에서 처리 id만 차집합 — apply 진행 중 추가된 신규 제안을 통삭제하지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
+      "line": 322,
+      "kind": "freetext",
+      "claim": "invariant: apply 배치 상한(APPLY_BATCH_CAP=200, shared 단일 정의) 초과는 400 batch_too_large, 문서·큐 무접촉. 웹은 청크 분할 전송으로 어떤 큐 크기에도 일괄 동작.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
+      "line": 323,
+      "kind": "metric",
+      "claim": "metric: 상주 엣지 테스트(빈 문서·혼합 EOL·특수문자 id prune·non-string id 필터) + 라우트 상한 테스트 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
+      "line": 324,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol findFirstMermaidBlock",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/parser/planningUserFlowBuilder.ts:27"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
+      "line": 325,
+      "kind": "freetext",
+      "claim": "invariant: append 위치와 재파싱이 같은 mermaid 블록을 본다(블록 판별을 파서 한 곳으로 단일화 — mermaid-example 선행 문서 오도 skipped 해소).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
+      "line": 332,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint POST /api/docs/:project/planning-features-suggestions/apply",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:297"
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
+      "line": 333,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol applyFeatureSuggestions",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/featureDocs.ts:199"
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
+      "line": 334,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol structureInvariantHolds",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/featureDocs.ts:175"
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
+      "line": 335,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx 잘못된 body 400, 경로조작 404, 구조 불변 위반은 422로 막고 파일 미작성(원본 보호 — 무력화 프로브 테스트 존치).",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
+      "line": 336,
+      "kind": "freetext",
+      "claim": "invariant: 동일 label 형제 모호성·미실재 id는 skipped로 표면화(silent drop 금지).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
+      "line": 337,
+      "kind": "behavior",
+      "claim": "behavior: 승인 노드의 속성 줄만 제자리 교체(라벨·본문·자식 불변), 반려는 큐에서만 제거.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (6토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/lib/__tests__/docsFeatureApproval.test.ts:153",
+      "llmHint": "승인 노드의 속성 줄만 제자리 교체(라벨·본문·자식 불변), 반려는 큐에서만 제거."
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
+      "line": 338,
+      "kind": "metric",
+      "claim": "metric: featureDocs 단위 + 라우트 통합 테스트 PASS + 실픽셀 grounding(승인 반영·반려 불변).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인 apply 견고화 — features (approval-family-hardening)",
+      "line": 341,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol detectEol",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/eol.ts:10"
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인 apply 견고화 — features (approval-family-hardening)",
+      "line": 342,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol restoreEol",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/eol.ts:15"
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인 apply 견고화 — features (approval-family-hardening)",
+      "line": 343,
+      "kind": "freetext",
+      "claim": "invariant: 원문 개행 스타일 보존 — CRLF 문서에 승인 반영해도 전 파일 EOL 전환이 일어나지 않는다(혼합 개행은 any-CRLF-wins 결정론).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인 apply 견고화 — features (approval-family-hardening)",
+      "line": 344,
+      "kind": "freetext",
+      "claim": "invariant: 큐 재작성은 쓰기 직전 재독본에서 처리 id만 차집합 — apply 진행 중 추가된 신규 제안을 통삭제하지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인 apply 견고화 — features (approval-family-hardening)",
+      "line": 345,
+      "kind": "freetext",
+      "claim": "invariant: apply 배치 상한(APPLY_BATCH_CAP=200, shared 단일 정의) 초과는 400 batch_too_large, 문서·큐 무접촉. 웹은 청크 분할 전송으로 어떤 큐 크기에도 일괄 동작.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인 apply 견고화 — features (approval-family-hardening)",
+      "line": 346,
+      "kind": "metric",
+      "claim": "metric: 상주 엣지 테스트(빈 문서·혼합 EOL·특수문자 id prune·non-string id 필터) + 라우트 상한 테스트 PASS.",
       "verdict": "UNVERIFIABLE",
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
@@ -2005,17 +2303,12 @@
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-features-suggestions",
-      "source": "server/src/routes/docs.ts:269"
-    },
-    {
-      "type": "endpoint",
-      "what": "POST /api/docs/:project(*)/planning-features-suggestions/apply",
       "source": "server/src/routes/docs.ts:283"
     },
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-ia",
-      "source": "server/src/routes/docs.ts:165"
+      "source": "server/src/routes/docs.ts:167"
     },
     {
       "type": "endpoint",
@@ -2025,7 +2318,7 @@
     {
       "type": "symbol",
       "what": "App",
-      "source": "web/src/App.tsx:84"
+      "source": "web/src/App.tsx:85"
     },
     {
       "type": "symbol",
@@ -2090,17 +2383,17 @@
     {
       "type": "symbol",
       "what": "applyDocsFeatureSuggestions",
-      "source": "web/src/api.ts:260"
+      "source": "web/src/api.ts:302"
     },
     {
       "type": "symbol",
       "what": "applyDocsPrdSuggestions",
-      "source": "web/src/api.ts:186"
+      "source": "web/src/api.ts:222"
     },
     {
       "type": "symbol",
-      "what": "applyFeatureSuggestions",
-      "source": "server/src/lib/featureDocs.ts:198"
+      "what": "applyInChunks",
+      "source": "web/src/api.ts:197"
     },
     {
       "type": "symbol",
@@ -2155,7 +2448,7 @@
     {
       "type": "symbol",
       "what": "buildUserFlowFromLines",
-      "source": "server/src/parser/planningUserFlowBuilder.ts:149"
+      "source": "server/src/parser/planningUserFlowBuilder.ts:164"
     },
     {
       "type": "symbol",
@@ -2175,7 +2468,7 @@
     {
       "type": "symbol",
       "what": "docsRoot",
-      "source": "server/src/lib/docs.ts:26"
+      "source": "server/src/lib/docs.ts:27"
     },
     {
       "type": "symbol",
@@ -2195,7 +2488,7 @@
     {
       "type": "symbol",
       "what": "fetchDocsFeatureSuggestions",
-      "source": "web/src/api.ts:248"
+      "source": "web/src/api.ts:290"
     },
     {
       "type": "symbol",
@@ -2205,12 +2498,12 @@
     {
       "type": "symbol",
       "what": "fetchDocsPlanningFeatures",
-      "source": "web/src/api.ts:206"
+      "source": "web/src/api.ts:248"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningIa",
-      "source": "web/src/api.ts:235"
+      "source": "web/src/api.ts:277"
     },
     {
       "type": "symbol",
@@ -2220,7 +2513,7 @@
     {
       "type": "symbol",
       "what": "fetchDocsPlanningUserFlow",
-      "source": "web/src/api.ts:297"
+      "source": "web/src/api.ts:345"
     },
     {
       "type": "symbol",
@@ -2280,7 +2573,7 @@
     {
       "type": "symbol",
       "what": "hasDocs",
-      "source": "server/src/lib/docs.ts:36"
+      "source": "server/src/lib/docs.ts:37"
     },
     {
       "type": "symbol",
@@ -2290,7 +2583,7 @@
     {
       "type": "symbol",
       "what": "isSafeFlowToken",
-      "source": "server/src/lib/docs.ts:105"
+      "source": "server/src/lib/docs.ts:106"
     },
     {
       "type": "symbol",
@@ -2319,23 +2612,38 @@
     },
     {
       "type": "symbol",
+      "what": "pruneFeatureQueue",
+      "source": "server/src/lib/featureDocs.ts:275"
+    },
+    {
+      "type": "symbol",
+      "what": "prunePrdQueue",
+      "source": "server/src/lib/docs.ts:331"
+    },
+    {
+      "type": "symbol",
+      "what": "pruneUserFlowQueue",
+      "source": "server/src/lib/userFlowDocs.ts:298"
+    },
+    {
+      "type": "symbol",
       "what": "readDocsFeatureSuggestions",
-      "source": "server/src/lib/featureDocs.ts:57"
+      "source": "server/src/lib/featureDocs.ts:58"
     },
     {
       "type": "symbol",
       "what": "readDocsFile",
-      "source": "server/src/lib/docs.ts:91"
+      "source": "server/src/lib/docs.ts:92"
     },
     {
       "type": "symbol",
       "what": "readDocsUserFlowOverlay",
-      "source": "server/src/lib/docs.ts:135"
+      "source": "server/src/lib/docs.ts:136"
     },
     {
       "type": "symbol",
       "what": "readDocsUserFlowSpec",
-      "source": "server/src/lib/docs.ts:129"
+      "source": "server/src/lib/docs.ts:130"
     },
     {
       "type": "symbol",
@@ -2355,12 +2663,12 @@
     {
       "type": "symbol",
       "what": "saveDocsPlanningUserFlowLayout",
-      "source": "web/src/api.ts:350"
+      "source": "web/src/api.ts:404"
     },
     {
       "type": "symbol",
       "what": "saveLayout",
-      "source": "web/src/api.ts:279"
+      "source": "web/src/api.ts:327"
     },
     {
       "type": "symbol",
@@ -2381,11 +2689,6 @@
       "type": "symbol",
       "what": "splitSections",
       "source": "server/src/parser/markdown.ts:21"
-    },
-    {
-      "type": "symbol",
-      "what": "structureInvariantHolds",
-      "source": "server/src/lib/featureDocs.ts:174"
     },
     {
       "type": "symbol",
@@ -2415,7 +2718,7 @@
     {
       "type": "symbol",
       "what": "treeFingerprint",
-      "source": "server/src/lib/featureDocs.ts:140"
+      "source": "server/src/lib/featureDocs.ts:141"
     },
     {
       "type": "symbol",
@@ -2431,6 +2734,6 @@
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-uflow-approval-absorb-20260705.html",
-  "runId": "uflow-approval-absorb-20260705"
+  "historyHtml": "audit-family-hardening-absorb-20260706.html",
+  "runId": "family-hardening-absorb-20260706"
 }
