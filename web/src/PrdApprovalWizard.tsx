@@ -71,12 +71,15 @@ export function PrdApprovalWizard({
   suggestions,
   busy,
   onApply,
+  appliedTick,
 }: {
   project: string;
   prd: Prd | null;
   suggestions: readonly PrdSuggestion[];
   busy: boolean;
   onApply: (approve: string[], reject: string[]) => void;
+  /** 반영 성공 카운터 — 증가하면 결정 맵을 리셋한다(실패 시엔 안 오름 = 결정 보존). */
+  appliedTick: number;
 }): JSX.Element | null {
   const ids = useMemo(() => suggestions.map((s) => s.id), [suggestions]);
 
@@ -87,6 +90,13 @@ export function PrdApprovalWizard({
   useEffect(() => {
     setDecisions(loadCheckpoint(project, ids));
   }, [project, ids]);
+
+  // 반영 성공 시 결정 리셋 — skip만 남은 큐가 요약에 갇히지 않고 카드로 다시 나타난다
+  // (spec: "건너뛰기한 제안은 다음 위저드 진입 때 다시 나타난다"). 위 복원 effect보다
+  // 뒤에 선언해 같은 커밋에서 리셋이 이긴다. 실패 경로는 tick이 안 올라 결정 보존.
+  useEffect(() => {
+    if (appliedTick > 0) setDecisions({});
+  }, [appliedTick]);
 
   // 결정 변경 시 체크포인트 저장(파싱 실패·용량 초과는 조용히 무시).
   useEffect(() => {

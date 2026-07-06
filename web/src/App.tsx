@@ -115,6 +115,8 @@ export function App(): JSX.Element {
   // PRD 제안 큐(docs/planning/prd.suggestions.json) — 승인/반려 편집 UI(6a). 큐 비면 순수 읽기 뷰.
   const [prdSuggestions, setPrdSuggestions] = useState<readonly PrdSuggestion[]>([]);
   const [prdApplyBusy, setPrdApplyBusy] = useState(false);
+  // PRD 위저드 반영 성공 카운터 — 성공 시에만 증가시켜 위저드 결정 맵을 리셋(실패=보존).
+  const [prdAppliedTick, setPrdAppliedTick] = useState(0);
   // 기획 단계 기능명세서(docs/planning/features.md) — 프로젝트 단위(skeleton에서 표시).
   // 가상 루트 노드(children=요구사항들)를 보관, adapter로 RF nodes/edges로 변환해 렌더.
   const [planningFeatures, setPlanningFeatures] = useState<FeatureTreeNodeT | null>(null);
@@ -564,10 +566,13 @@ export function App(): JSX.Element {
           if (token !== dashReqToken.current) return; // 그 사이 다른 클릭 → 폐기
           setPlanningPrd(prdRes.prd);
           setPrdSuggestions(sugRes.queue.suggestions);
+          // 반영 성공 신호 → 위저드 결정 리셋(skip 잔존 큐가 요약에 갇히지 않게).
+          setPrdAppliedTick((t) => t + 1);
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
           // 청크 도중 실패면 앞 청크는 이미 반영됨 — 화면을 서버에서 다시 불러와 실제 상태로 맞춘다(아래 재조회).
+          // tick은 안 올린다 — 결정 보존(재시도 가능)이 실패 경로의 계약.
           setStatus(`PRD 승인/반려 실패(일부는 반영됐을 수 있음 — 화면을 다시 불러옵니다): ${String(e)}`);
           void Promise.all([fetchDocsPlanningPrd(project), fetchDocsPrdSuggestions(project)])
             .then(([prdRes, sugRes]) => {
@@ -827,6 +832,7 @@ export function App(): JSX.Element {
                   suggestions={prdSuggestions}
                   busy={prdApplyBusy}
                   onApply={(approve, reject) => applyPrd(approve, reject)}
+                  appliedTick={prdAppliedTick}
                 />
                 <PrdPanel prd={planningPrd} />
               </section>
