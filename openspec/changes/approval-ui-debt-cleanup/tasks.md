@@ -8,15 +8,15 @@
 
 ### Parallel Group 1 (server 3-lib RED — 서로 다른 테스트 파일, 독립 동시 실행 가능)
 
-- [ ] 2.1 RED prd: prune write 실패 주입 시 apply가 200+`queuePruneFailed` 반환 + 중복 id 큐 읽기 1건 유지 테스트 (docsPrdApproval 테스트 파일) [parallel]
-- [ ] 2.2 RED features: 동형 2건 (featureDocs 테스트 파일) [parallel]
-- [ ] 2.3 RED userflow: 동형 2건 + 중복 id 승인 1회=에지 1줄 + cd29898 느슨 skip 사유 단언 2건을 정확 `"<id>: <reason>"` 문자열로 강화 (userFlowDocs 테스트 파일) [parallel]
+- [x] 2.1 RED prd: prune write 실패 주입 시 apply가 200+`queuePruneFailed` 반환 + 중복 id 큐 읽기 1건 유지 테스트 (docsPrdApproval 테스트 파일) [parallel]
+- [x] 2.2 RED features: 동형 2건 (featureDocs 테스트 파일) [parallel]
+- [x] 2.3 RED userflow: 동형 2건 + 중복 id 승인 1회=에지 1줄 + cd29898 느슨 skip 사유 단언 2건을 정확 `"<id>: <reason>"` 문자열로 강화 (userFlowDocs 테스트 파일) [parallel]
 
 ### Parallel Group 2 (server 3-lib GREEN — 서로 다른 소스 파일, 독립 동시 실행 가능)
 
-- [ ] 3.1 GREEN docs.ts: `prunePrdQueue` 호출 try/catch → 결과에 `queuePruneFailed`, `readDocsPrdSuggestions`에 id 유일성 필터(첫 항목 승리) [parallel]
-- [ ] 3.2 GREEN featureDocs.ts: 동형 (`pruneFeatureQueue`·read 필터) [parallel]
-- [ ] 3.3 GREEN userFlowDocs.ts: 동형 (`pruneUserFlowQueue`·read 필터) [parallel]
+- [x] 3.1 GREEN docs.ts: `prunePrdQueue` 호출 try/catch → 결과에 `queuePruneFailed`, `readDocsPrdSuggestions`에 id 유일성 필터(첫 항목 승리) [parallel]
+- [x] 3.2 GREEN featureDocs.ts: 동형 (`pruneFeatureQueue`·read 필터) [parallel]
+- [x] 3.3 GREEN userFlowDocs.ts: 동형 (`pruneUserFlowQueue`·read 필터) [parallel]
 
 ### Parallel Group 3 (web — 서로 다른 파일, server GREEN 후 동시 실행 가능)
 

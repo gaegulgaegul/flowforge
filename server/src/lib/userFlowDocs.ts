@@ -74,7 +74,15 @@ export function readUserFlowSuggestions(docsDir: string, stem: string): UserFlow
     if (typeof parsed !== "object" || parsed === null) return empty;
     const raw = (parsed as Record<string, unknown>)["suggestions"];
     if (!Array.isArray(raw)) return empty;
-    return { version: 1, suggestions: raw.filter(isValidUserFlowSuggestion) };
+    // id 유일성 보장(first-occurrence-wins): 같은 id가 두 번 들어오면 첫 제안만 남긴다 —
+    // 승인 id 하나가 두 큐 항목을 매칭해 에지가 중복 반영되는 것을 읽기 단계에서 차단한다.
+    const seen = new Set<string>();
+    const suggestions = raw.filter(isValidUserFlowSuggestion).filter((s) => {
+      if (seen.has(s.id)) return false;
+      seen.add(s.id);
+      return true;
+    });
+    return { version: 1, suggestions };
   } catch {
     return empty;
   }
@@ -284,9 +292,17 @@ export function applyUserFlowSuggestions(docsDir: string, stem: string, req: Prd
   // D-2: 시작 스냅샷이 아니라 쓰기 직전 재독본에서 차집합 — apply 진행 중
   // AI가 추가한 신규 제안이 통삭제되는 silent drop 창을 닫는다.
   const removed = new Set<string>([...approvedIds, ...rejectedIds]);
-  const remaining = pruneUserFlowQueue(docsDir, stem, removed);
-
-  return { applied: approvedIds.length, rejected: rejectedIds.length, remaining, skipped };
+  // 본문(.md) 반영은 이미 위에서 성공(또는 반려만)했다. 큐 정리(prune) 쓰기가 실패해도
+  // 문서는 되돌릴 수 없으므로 라우트를 500(safe throw)으로 몰지 않고 200-형으로 응답하되,
+  // 큐가 디스크에 그대로 남았음을 queuePruneFailed로 표면화한다(재승인은 duplicate-edge로
+  // 멱등 skip → 재동기화 신호). read는 절대 throw하지 않으므로 remaining을 안전히 재계산한다.
+  try {
+    const remaining = pruneUserFlowQueue(docsDir, stem, removed);
+    return { applied: approvedIds.length, rejected: rejectedIds.length, remaining, skipped };
+  } catch {
+    const remaining = readUserFlowSuggestions(docsDir, stem).suggestions.length;
+    return { applied: approvedIds.length, rejected: rejectedIds.length, remaining, skipped, queuePruneFailed: true };
+  }
 }
 
 /**

@@ -5,6 +5,7 @@
  * 임시 DOCS_ROOT에 features.md + features.suggestions.json 픽스처를 만들어 실제 파일 왕복을 검증.
  * 핵심 불변식: op="set-attrs"는 노드의 속성 줄(중요도/상태)만 교체하고 라벨·본문·자식은 불변.
  */
+import * as fs from "node:fs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -292,6 +293,55 @@ describe("applyFeatureSuggestions", () => {
     expect(r.writeFailed).toBe(true);
     expect(r.applied).toBe(0);
     expect(r.remaining).toBe(1);
+  });
+
+  // T1: 문서 반영(features.md write)은 성공했으나 그 뒤 큐 정리(prune) 쓰기가 실패한 경우 —
+  // 500으로 죽지 말고 200-shaped(queuePruneFailed:true)로 표면화한다.
+  // 주입: features.suggestions.json 을 읽기전용(0o444)으로 만들어 top read/prune re-read 는 성공하되
+  // prune 의 writeFileSync 만 EACCES 로 실패하게 한다(문서 features.md 쓰기는 정상). 결정론적.
+  // 단, root 는 파일 퍼미션을 무시(chmod 무효)하므로 이 주입이 성립하지 않는다 → root 에서는 스킵.
+  // ESM 프리셋에서 node:fs 는 frozen module 이라 jest.spyOn(fs.writeFileSync) 가 불가(read-only export)
+  // → 실 파일 주입으로 대체.
+  it("prune 쓰기 실패 시 throw하지 않고 queuePruneFailed=true, 문서는 반영된다", () => {
+    if (typeof process.getuid === "function" && process.getuid() === 0) {
+      // root: chmod read-only 가 무시되어 prune write 가 성공 → 실패 경로를 못 밟음. 거짓 통과 방지 위해 스킵.
+      return;
+    }
+    const dir = makePlanning(root, "p", FEATURES_MD, [
+      sug("s1", ["기획 산출물 생성"], { priority: "낮음", status: "완료" }),
+    ]);
+    const sugPath = join(dir, "planning", "features.suggestions.json");
+    fs.chmodSync(sugPath, 0o444); // 읽기전용 → read 는 성공, prune 의 writeFileSync 만 EACCES 로 throw.
+    try {
+      let result: ReturnType<typeof applyFeatureSuggestions> | undefined;
+      expect(() => {
+        result = applyFeatureSuggestions(dir, { approve: ["s1"], reject: [] });
+      }).not.toThrow();
+      expect(result?.queuePruneFailed).toBe(true);
+      expect(result?.applied).toBe(1);
+      // 문서는 이미 패치됨(prune 실패는 문서 쓰기 성공 이후 단계).
+      const out = readFileSync(join(dir, "planning", "features.md"), "utf-8");
+      expect(out).toContain("## 기획 산출물 생성\n<!-- capability: planning-authoring -->\n(중요도: 낮음, 상태: 완료)");
+    } finally {
+      // afterEach 의 rmSync 가 읽기전용 파일도 지울 수 있게 퍼미션 복원.
+      fs.chmodSync(sugPath, 0o644);
+    }
+  });
+
+  // T2: 큐에 동일 id가 두 번 있어도 읽기 dedup(first-occurrence-wins)으로 한 번만 반영된다.
+  it("큐에 같은 id가 두 번 있고 한 번 승인하면 정확히 한 번만 반영된다(id dedup)", () => {
+    const dir = makePlanning(root, "p", FEATURES_MD, [
+      sug("dup", ["기획 산출물 생성"], { priority: "낮음", status: "완료" }),
+      sug("dup", ["다른 요구사항"], { priority: "높음" }),
+    ]);
+    const r = applyFeatureSuggestions(dir, { approve: ["dup"], reject: [] });
+    // dedup으로 첫 항목만 남아 정확히 한 번 반영.
+    expect(r.applied).toBe(1);
+    const out = readFileSync(join(dir, "planning", "features.md"), "utf-8");
+    // 첫 제안(기획 산출물 생성) 속성만 교체됨.
+    expect(out).toContain("## 기획 산출물 생성\n<!-- capability: planning-authoring -->\n(중요도: 낮음, 상태: 완료)");
+    // 두 번째 dup 제안(다른 요구사항)은 dedup으로 사라져 반영되지 않음 — 원본 유지.
+    expect(out).toMatch(/## 다른 요구사항[\s\S]*?중요도: 중간, 상태: 시작전/);
   });
 
   // D5 self-roundtrip 불변식(spec scenario "self-roundtrip 불변식 위반 시 원본 보호"):

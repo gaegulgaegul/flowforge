@@ -202,7 +202,9 @@ export function readDocsPrdSuggestions(docsDir: string): PrdSuggestionQueue {
     if (typeof parsed !== "object" || parsed === null) return empty;
     const raw = (parsed as Record<string, unknown>)["suggestions"];
     if (!Array.isArray(raw)) return empty;
-    const suggestions = raw.filter(isValidPrdSuggestion);
+    // 유효성 필터 후 id 중복 제거(first-wins) — 생산자가 같은 id를 두 번 쌓아도 이중 처리 방지.
+    const seen = new Set<string>();
+    const suggestions = raw.filter(isValidPrdSuggestion).filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)));
     return { version: 1, suggestions };
   } catch {
     return empty;
@@ -317,14 +319,16 @@ export function applyPrdSuggestions(docsDir: string, req: PrdApplyRequest): PrdA
   // 큐 재작성: 승인 반영분(approvedIds) + 반려분만 제거.
   // D-2: 쓰기 직전 재독본 차집합 — apply 중 추가된 신규 제안 보존(userFlowDocs와 동일 계약).
   const removed = new Set<string>([...approvedIds, ...rejectedIds]);
-  const remaining = prunePrdQueue(docsDir, removed);
-
-  return {
-    applied,
-    rejected: rejectedIds.length,
-    remaining,
-    skipped,
-  };
+  try {
+    const remaining = prunePrdQueue(docsDir, removed);
+    return { applied, rejected: rejectedIds.length, remaining, skipped };
+  } catch {
+    // prune write 실패 = 문서(prd.md) write는 이미 성공한 뒤 큐 정리만 실패한 상태(부분반영).
+    // 문서는 반영됐으므로 throw로 라우트를 500으로 죽이지 않는다 → queuePruneFailed로 200-shaped 반환.
+    // 큐는 pruned되지 않았으므로 remaining은 재독(readDocsPrdSuggestions는 throw 안 함)으로 정직하게 실측.
+    const remaining = readDocsPrdSuggestions(docsDir).suggestions.length;
+    return { applied, rejected: rejectedIds.length, remaining, skipped, queuePruneFailed: true };
+  }
 }
 
 /** 큐 파일 재독 후 처리 id만 제거·재작성(D-2). 남은 제안 수 반환. 계약은 헬퍼 단위 테스트로 박제. */

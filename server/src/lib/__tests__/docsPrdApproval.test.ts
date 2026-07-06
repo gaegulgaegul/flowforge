@@ -5,7 +5,7 @@
  * applyPrdSuggestions(승인 반영·반려 제거)·isPrdApplyRequest(body 검증).
  * 임시 DOCS_ROOT에 prd.md + prd.suggestions.json 픽스처를 만들어 실제 파일 왕복을 검증.
  */
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -346,5 +346,86 @@ describe("엣지: prd 혼합 EOL·non-string id·prune 특수문자", () => {
     const remaining = prunePrdQueue(dir, new Set(["__proto__"]));
     expect(remaining).toBe(2);
     expect(readDocsPrdSuggestions(dir).suggestions.map((x) => x.id)).toEqual(["한글아이디", ""]);
+  });
+});
+
+/**
+ * 큐 prune write 실패(문서 write는 이미 성공) — 부분반영 계약.
+ * 문서(prd.md)는 이미 승인 반영됐는데 이어지는 큐(prd.suggestions.json) write가 throw하면,
+ * 라우트가 500으로 죽지 않도록 applyPrdSuggestions는 throw하지 않고 queuePruneFailed=true로
+ * 200-shaped 결과를 반환해야 한다(문서는 반영, 큐는 미정리 → remaining=미pruned 실측값).
+ *
+ * 주입 기법: 큐(prd.suggestions.json)를 valid JSON으로 두되 파일 자체를 read-only(0o444)로 만든다.
+ * → applyPrdSuggestions 최초 read(readFileSync)는 성공해 승인 섹션이 prd.md에 반영되고(applied=1),
+ *   이어지는 prune의 writeFileSync만 EACCES로 throw한다(문서 반영 후 큐 정리만 실패 = 부분반영).
+ * read≠write를 같은 경로에서 갈라야 하므로 디렉토리 충돌(read도 깨짐)은 부적합 → chmod를 쓴다.
+ * root는 0o444를 무시해 write가 안 막히므로, root(uid 0)에서는 이 검증을 건너뛴다(CI 안전 가드).
+ */
+const isRoot = typeof process.getuid === "function" && process.getuid() === 0;
+const describePruneFail = isRoot ? describe.skip : describe;
+describePruneFail("엣지: 큐 prune write 실패(문서 반영 성공) → queuePruneFailed", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "prd-prunefail-"));
+  });
+  afterEach(() => {
+    // read-only로 잠근 파일이 남아 rmSync가 막히지 않게 권한 복구 후 정리.
+    const q = join(root, "p", "docs", "planning", "prd.suggestions.json");
+    if (existsSync(q)) chmodSync(q, 0o644);
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("prune write가 throw해도 applyPrdSuggestions는 던지지 않고 queuePruneFailed로 반환(문서는 반영)", () => {
+    const dir = makePlanning(root, "p", PRD_MD, [sug("s1", "overview", "승인된 개요")]);
+    // 큐 파일을 read-only로 → 최초 read는 성공, 이어지는 prune write만 EACCES로 throw.
+    const queuePath = join(dir, "planning", "prd.suggestions.json");
+    chmodSync(queuePath, 0o444);
+
+    // 던지지 않아야 한다(라우트 500 방지). 문서는 이미 반영됐으므로 200-shaped 결과.
+    let result: ReturnType<typeof applyPrdSuggestions> | undefined;
+    expect(() => {
+      result = applyPrdSuggestions(dir, { approve: ["s1"], reject: [] });
+    }).not.toThrow();
+    expect(result?.queuePruneFailed).toBe(true);
+    expect(result?.applied).toBe(1);
+    // prune 실패로 큐는 미정리 → 남은 제안 수는 재독 실측(원 항목 1건 그대로).
+    expect(result?.remaining).toBe(1);
+    // 문서(prd.md)는 실제로 패치됐다(큐 write 실패와 무관하게 문서 write는 성공).
+    const out = readFileSync(join(dir, "planning", "prd.md"), "utf-8");
+    expect(out).toContain("승인된 개요");
+    expect(out).not.toContain("원래 개요 본문.");
+  });
+});
+
+/**
+ * 큐에 같은 id가 중복 존재 — 읽기 단계 dedup(first-wins)으로 승인은 정확히 1회만 반영.
+ * 생산자(스킬/봇)가 같은 id 제안을 두 번 쌓아도 flowforge가 이중 처리하지 않아야 한다.
+ */
+describe("엣지: 큐 중복 id 승인 → 정확히 1회 반영", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "prd-dupid-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("같은 id 두 항목을 한 번 승인하면 applied=1(읽기 dedup으로 하나만 고려)", () => {
+    // 같은 id "dup"이 두 번(같은 섹션) — 파일에 직접 중복을 심는다.
+    const dir = makePlanning(root, "p", PRD_MD, [sug("dup", "overview", "승인 개요")]);
+    writeFileSync(
+      join(dir, "planning", "prd.suggestions.json"),
+      JSON.stringify({
+        version: 1,
+        suggestions: [sug("dup", "overview", "승인 개요"), sug("dup", "overview", "승인 개요")],
+      }),
+    );
+    // 읽기 단계에서 first-wins dedup → 큐에는 한 항목만 존재한다.
+    expect(readDocsPrdSuggestions(dir).suggestions).toHaveLength(1);
+
+    const r = applyPrdSuggestions(dir, { approve: ["dup"], reject: [] });
+    expect(r.applied).toBe(1); // 이중 반영 없음
+    expect(r.remaining).toBe(0); // dedup된 유일 항목이 제거됨
+    expect(readFileSync(join(dir, "planning", "prd.md"), "utf-8")).toContain("승인 개요");
   });
 });

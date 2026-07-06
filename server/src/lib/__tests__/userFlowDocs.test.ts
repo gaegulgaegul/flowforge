@@ -6,7 +6,7 @@
  * 임시 docsDir에 <stem>.md + <stem>.suggestions.json 픽스처를 만들어 실제 파일 왕복을 검증.
  * 핵심 불변식: 승인=첫 mermaid 블록 닫는 펜스 직전에 에지 한 줄 append만, 반려=원본 바이트 불변.
  */
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -337,7 +337,9 @@ describe("applyUserFlowSuggestions", () => {
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
     expect(r.writeFailed).toBeUndefined();
     expect(r.applied).toBe(0);
-    expect(r.skipped).toEqual(expect.arrayContaining([expect.stringMatching(/^s1: /)]));
+    // 정확 사유 못박음(느슨 prefix 매칭 금지) — `Err["취소]확인"]`은 재파싱 시 라벨이 "취소"로
+    // 잘려 제안별 사전 roundtrip이 깨진다 → label-not-parse-safe. 사유 문자열 회귀 시 FAIL.
+    expect(r.skipped).toContain("s1: label-not-parse-safe");
     expect(r.remaining).toBe(1); // 검증 위반은 큐에 남는다
     expect(readMd(dir)).toBe(FLOW_MD); // 문서 불변
   });
@@ -361,7 +363,9 @@ describe("applyUserFlowSuggestions", () => {
     const r = applyUserFlowSuggestions(dir, STEM, { approve: ["poison", "ok"], reject: [] });
     expect(r.writeFailed).toBeUndefined();
     expect(r.applied).toBe(1);
-    expect(r.skipped).toEqual(expect.arrayContaining([expect.stringMatching(/^poison: /)]));
+    // 정확 사유 못박음 — `선택지 [예/아니오]`는 재파싱 시 `[...]`가 노드 모양으로 벗겨져 라벨이
+    // 달라진다 → label-not-parse-safe. 느슨 prefix 매칭 대신 사유까지 회귀 감지한다.
+    expect(r.skipped).toContain("poison: label-not-parse-safe");
     const out = readMd(dir);
     expect(out).toContain("D -->|재시작| A");
     expect(out).not.toContain("예/아니오");
@@ -383,6 +387,55 @@ describe("applyUserFlowSuggestions", () => {
     const parsed = buildUserFlowFromLines(readMd(dir).split(/\r?\n/));
     expect(parsed.rawEdges).toHaveLength(6);
     expect(parsed.rawNodes.get("Tk")).toBe("코드 ``` 블록");
+  });
+
+  // T1: 본문 append는 성공했으나 그 뒤 큐 정리(prune) 쓰기가 실패한 경우 —
+  // 문서는 이미 반영됐으므로 prune 예외로 500(라우트 safe throw)이 되지 않고 200-형
+  // (queuePruneFailed:true)로 응답, 큐는 디스크에 그대로 남는다(재승인은 duplicate-edge로
+  // 멱등 skip → 재동기화 신호). 주입: 사이드카 파일을 읽기는 되지만 쓰기는 막히도록
+  // read-only(0o444)로 만든다 → readUserFlowSuggestions는 s1을 정상 읽어 승인·.md append가
+  // 성공하고, pruneUserFlowQueue의 writeFileSync만 EACCES로 실패한다.
+  // (참고: 원안의 "사이드카를 디렉토리로" 주입은 read/write가 같은 경로라 read까지 EISDIR로
+  //  깨져 승인 대상이 사라지므로 이 시나리오에 성립하지 않는다 — deviation 보고 참조.)
+  it("본문 append 성공 후 큐 prune 쓰기 실패 → throw 안 함·queuePruneFailed:true·문서엔 반영됨", () => {
+    const dir = makeFlow(root, FLOW_MD, [sug("s1")]);
+    const sidecar = join(dir, "planning", "user-flow", `${STEM}.suggestions.json`);
+    chmodSync(sidecar, 0o444); // read ok, write(EACCES) — .md append는 별 파일이라 성공
+    try {
+      let result: ReturnType<typeof applyUserFlowSuggestions> | undefined;
+      expect(() => {
+        result = applyUserFlowSuggestions(dir, STEM, { approve: ["s1"], reject: [] });
+      }).not.toThrow();
+      expect(result?.queuePruneFailed).toBe(true);
+      expect(result?.applied).toBe(1);
+      // 문서엔 이미 새 에지가 append됐다(본문 반영은 성공).
+      expect(readMd(dir)).toContain("D -->|재시작| A");
+      // 큐는 정리되지 못해 디스크에 s1이 그대로 남는다 → remaining으로 반영(재동기화 신호).
+      expect(result?.remaining).toBe(1);
+    } finally {
+      chmodSync(sidecar, 0o644); // afterEach rmSync가 지울 수 있도록 권한 복원
+    }
+  });
+
+  // T2: 큐에 같은 id가 두 번 든 경우(스킬/편집 오류 등) — readUserFlowSuggestions의 first-wins
+  // id dedup으로 첫 제안만 남아 에지 라인이 정확히 한 번만 append된다(멱등). 승인 id 하나가
+  // 두 큐 항목을 매칭하는 것을 막는다.
+  //
+  // 두 항목의 "에지"가 완전히 같으면 기존 duplicate-edge 가드가 둘째 append를 이미 막아
+  // dedup 유무를 구분하지 못한다(edge-key 마스킹, 실측). 그래서 같은 id·"서로 다른 에지"
+  // (D→A vs D→C)로 구성해 dedup을 실제로 자극한다:
+  //   - dedup 없음(pre-fix): 두 항목 모두 willApply → applied 2, D→A·D→C 둘 다 append (RED)
+  //   - first-wins dedup(post-fix): 첫 D→A만 남음 → applied 1, D→C는 없음 (GREEN)
+  it("큐에 같은 id가 중복(서로 다른 에지)이면 첫 제안만 반영된다(first-wins dedup)", () => {
+    const dir = makeFlow(root, FLOW_MD, [
+      sug("dup", { to: "A", label: "재시작" }), // 첫 항목 — 이것만 살아남아야 한다
+      sug("dup", { to: "C", label: "다른" }), // 같은 id·다른 에지 — dedup으로 버려져야 한다
+    ]);
+    const r = applyUserFlowSuggestions(dir, STEM, { approve: ["dup"], reject: [] });
+    expect(r.applied).toBe(1); // dedup 없으면 2
+    const out = readMd(dir);
+    expect(out.split("D -->|재시작| A").length - 1).toBe(1); // 첫 에지는 정확히 1줄
+    expect(out).not.toContain("D -->|다른| C"); // 둘째(중복 id) 에지는 반영되지 않는다
   });
 });
 

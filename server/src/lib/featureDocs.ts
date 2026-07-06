@@ -64,7 +64,14 @@ export function readDocsFeatureSuggestions(docsDir: string): FeatureSuggestionQu
     if (typeof parsed !== "object" || parsed === null) return empty;
     const raw = (parsed as Record<string, unknown>)["suggestions"];
     if (!Array.isArray(raw)) return empty;
-    return { version: 1, suggestions: raw.filter(isValidFeatureSuggestion) };
+    // id 중복은 first-occurrence-wins로 dedup(같은 id 중복 승인 시 이중 반영 방지).
+    const seen = new Set<string>();
+    const suggestions = raw.filter(isValidFeatureSuggestion).filter((s) => {
+      if (seen.has(s.id)) return false;
+      seen.add(s.id);
+      return true;
+    });
+    return { version: 1, suggestions };
   } catch {
     return empty;
   }
@@ -266,9 +273,16 @@ export function applyFeatureSuggestions(docsDir: string, req: PrdApplyRequest): 
   // 큐 재작성: 승인 반영분(approvedIds) + 반려분만 제거(못 찾은 승인은 큐에 남긴다).
   // D-2: 쓰기 직전 재독본 차집합 — apply 중 추가된 신규 제안 보존(userFlowDocs와 동일 계약).
   const removed = new Set<string>([...approvedIds, ...rejectedIds]);
-  const remaining = pruneFeatureQueue(docsDir, removed);
-
-  return { applied, rejected: rejectedIds.length, remaining, skipped };
+  try {
+    const remaining = pruneFeatureQueue(docsDir, removed);
+    return { applied, rejected: rejectedIds.length, remaining, skipped };
+  } catch {
+    // 문서 반영(features.md write)은 이미 성공한 뒤 큐 정리 쓰기만 실패한 경우.
+    // 문서는 패치됐으니 500으로 죽지 말고 200-shaped로 표면화(재적용해도 멱등).
+    // remaining은 디스크 큐(정리 안 된 원본) 재독 — read는 절대 throw하지 않는다.
+    const remaining = readDocsFeatureSuggestions(docsDir).suggestions.length;
+    return { applied, rejected: rejectedIds.length, remaining, skipped, queuePruneFailed: true };
+  }
 }
 
 /** 큐 파일 재독 후 처리 id만 제거·재작성(D-2). 남은 제안 수 반환. 계약은 헬퍼 단위 테스트로 박제. */
