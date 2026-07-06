@@ -17,6 +17,8 @@ import type {
   CapabilityAuditSummary,
   ScreenRegistry,
 } from "@flowforge/shared";
+// 서버 apply 배치 상한 — shared 단일 정의 소비(드리프트 방지). 런타임 값이라 type import와 분리.
+import { APPLY_BATCH_CAP } from "@flowforge/shared";
 
 export interface GraphResponse {
   id: string;
@@ -182,10 +184,6 @@ export async function fetchDocsPrdSuggestions(
   return (await res.json()) as { project: string; queue: PrdSuggestionQueue };
 }
 
-/** PRD 제안 승인/반려 적용. 승인분만 prd.md 반영, 반려는 큐에서만 제거. */
-/** 서버 apply 배치 상한 — shared 단일 정의 소비(드리프트 방지). */
-import { APPLY_BATCH_CAP } from "@flowforge/shared";
-
 /** batch_too_large(400) 안내 — 청크 헬퍼를 안 거친 직접 호출이 상한에 걸렸을 때의 명확한 메시지. */
 const BATCH_TOO_LARGE_MSG = `한 번에 처리할 수 있는 제안은 ${APPLY_BATCH_CAP}건까지입니다(자동 분할이 적용되지 않은 요청).`;
 
@@ -202,6 +200,7 @@ export async function applyInChunks(
   let rejected = 0;
   let remaining = 0;
   const skipped: string[] = [];
+  let queuePruneFailed = false; // 어느 청크든 큐 정리 실패면 합산 결과에 표면화(무시 시 부분반영 은폐).
   const chunks: PrdApplyRequest[] = [];
   for (let a = 0; a < req.approve.length; a += APPLY_BATCH_CAP) {
     chunks.push({ approve: req.approve.slice(a, a + APPLY_BATCH_CAP), reject: [] });
@@ -215,10 +214,14 @@ export async function applyInChunks(
     rejected += res.rejected;
     remaining = res.remaining; // 마지막 청크의 잔여가 최신
     skipped.push(...res.skipped);
+    if (res.queuePruneFailed) queuePruneFailed = true;
   }
-  return { applied, rejected, remaining, skipped };
+  return queuePruneFailed
+    ? { applied, rejected, remaining, skipped, queuePruneFailed: true }
+    : { applied, rejected, remaining, skipped };
 }
 
+/** PRD 제안 승인/반려 적용. 승인분만 prd.md 반영, 반려는 큐에서만 제거. */
 export async function applyDocsPrdSuggestions(
   project: string,
   req: PrdApplyRequest,

@@ -20,9 +20,9 @@
 
 ### Parallel Group 3 (web — 서로 다른 파일, server GREEN 후 동시 실행 가능)
 
-- [ ] 4.1 PrdApprovalPanel.tsx: 일괄 바 배너 직후 상단 이동 + 버튼 라벨 `(N건)` + 목록 `feature-approval-list` 래퍼 — FeatureApprovalPanel 구조 그대로 이식, 신규 CSS 0 (기존 클래스 재사용) [parallel]
-- [ ] 4.2 App.tsx: 3경로 apply 응답의 `queuePruneFailed` 고지 배선("문서에는 반영됐지만 큐 정리 실패 — 같은 제안이 다시 보이면 반려로 정리") + skipped 미리보기 매직 넘버 5 → `SKIPPED_PREVIEW_CAP` 상수 단일화 + 청크 실패 "재동기화" 단정 문구를 실동작(재조회) 서술로 정직화 [parallel]
-- [ ] 4.3 api.ts: 파일 중간 import 상단 이동 + 고아 주석 정리 (동작 무변경 — 구조 커밋 분리) [parallel]
+- [x] 4.1 PrdApprovalPanel.tsx: 일괄 바 배너 직후 상단 이동 + 버튼 라벨 `(N건)` + 목록 `feature-approval-list` 래퍼 — FeatureApprovalPanel 구조 그대로 이식, 신규 CSS 0 (기존 클래스 재사용) [parallel]
+- [x] 4.2 App.tsx: 3경로 apply 응답의 `queuePruneFailed` 고지 배선("문서에는 반영됐지만 큐 정리 실패 — 같은 제안이 다시 보이면 반려로 정리") + skipped 미리보기 매직 넘버 5 → `SKIPPED_PREVIEW_CAP` 상수 단일화 + 청크 실패 "재동기화" 단정 문구를 실동작(재조회) 서술로 정직화 [parallel]
+- [x] 4.3 api.ts: 파일 중간 import 상단 이동 + 고아 주석 정리 (동작 무변경 — 구조 커밋 분리) + applyInChunks가 청크별 queuePruneFailed를 OR로 합산(무시 시 부분반영 은폐 — 4.2 배선의 전제) [parallel]
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 

@@ -73,6 +73,10 @@ import { IADetailPanel } from "./IADetailPanel.js";
 // featureTree는 기획 기능명세서 전용(specTree와 분리, 타입 전략 B).
 const nodeTypes: NodeTypes = { spec: SpecNode, ia: IANode, specTree: SpecTreeNode, featureTree: FeatureNode };
 
+// skipped 대량 나열 절단 상한 — 상위 N건만 상태바에 미리보기(수백 건이 상태바를 뒤덮지 않게).
+// 매직 넘버 인라인 이중 정의를 상수 1곳으로 단일화(드리프트 방지).
+const SKIPPED_PREVIEW_CAP = 5;
+
 // manyfast 파이프라인 순서: PRD → 기능명세서 → 유저플로우 → IA → 와이어프레임
 type Tab = "prd" | "spec" | "flow" | "ia" | "wire";
 // 계층 대시보드 4단 드릴다운(hierarchical-project-dashboard):
@@ -533,10 +537,12 @@ export function App(): JSX.Element {
 
   // PRD 제안 승인/반려 적용 — POST apply 후 PRD·제안 큐 재조회(반영·큐 갱신을 화면에 반사).
   // race 가드: 제출 시점의 프로젝트로 재조회하고, 그 사이 다른 카드로 이동했으면 폐기.
-  // skipped 대량 나열 절단(3차 review): 상위 5건 + "외 M건" — 수백 건이 상태바를 뒤덮지 않게.
+  // skipped 대량 나열 절단(3차 review): 상위 SKIPPED_PREVIEW_CAP건 + "외 M건" — 상태바 범람 방지.
   const skippedSummary = (skipped: readonly string[]): string => {
-    const head = skipped.slice(0, 5).join(", ");
-    return skipped.length > 5 ? `${head} 외 ${skipped.length - 5}건` : head;
+    const head = skipped.slice(0, SKIPPED_PREVIEW_CAP).join(", ");
+    return skipped.length > SKIPPED_PREVIEW_CAP
+      ? `${head} 외 ${skipped.length - SKIPPED_PREVIEW_CAP}건`
+      : head;
   };
 
   const applyPrd = useCallback(
@@ -547,7 +553,9 @@ export function App(): JSX.Element {
       setPrdApplyBusy(true);
       applyInChunks((r) => applyDocsPrdSuggestions(project, r), { approve, reject })
         .then((res) => {
-          if (res.skipped.length > 0) {
+          if (res.queuePruneFailed) {
+            setStatus("문서에는 반영됐지만 큐 정리에 실패했습니다 — 같은 제안이 다시 보이면 반려로 정리하세요.");
+          } else if (res.skipped.length > 0) {
             setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${skippedSummary(res.skipped)}).`);
           }
           return Promise.all([fetchDocsPlanningPrd(project), fetchDocsPrdSuggestions(project)]);
@@ -559,8 +567,8 @@ export function App(): JSX.Element {
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
-          // 청크 도중 실패면 앞 청크는 이미 반영됨 — 화면을 서버 상태로 재동기화하고 부분 반영 가능성을 고지.
-          setStatus(`PRD 승인/반려 실패(일부는 반영됐을 수 있음 — 화면 재동기화): ${String(e)}`);
+          // 청크 도중 실패면 앞 청크는 이미 반영됨 — 화면을 서버에서 다시 불러와 실제 상태로 맞춘다(아래 재조회).
+          setStatus(`PRD 승인/반려 실패(일부는 반영됐을 수 있음 — 화면을 다시 불러옵니다): ${String(e)}`);
           void Promise.all([fetchDocsPlanningPrd(project), fetchDocsPrdSuggestions(project)])
             .then(([prdRes, sugRes]) => {
               if (token !== dashReqToken.current) return;
@@ -586,7 +594,9 @@ export function App(): JSX.Element {
       setFeatureApplyBusy(true);
       applyInChunks((r) => applyDocsFeatureSuggestions(project, r), { approve, reject })
         .then((res) => {
-          if (res.skipped.length > 0) {
+          if (res.queuePruneFailed) {
+            setStatus("문서에는 반영됐지만 큐 정리에 실패했습니다 — 같은 제안이 다시 보이면 반려로 정리하세요.");
+          } else if (res.skipped.length > 0) {
             setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${skippedSummary(res.skipped)}).`);
           }
           return Promise.all([
@@ -604,7 +614,7 @@ export function App(): JSX.Element {
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
-          setStatus(`기능명세 승인/반려 실패(일부는 반영됐을 수 있음 — 화면 재동기화): ${String(e)}`);
+          setStatus(`기능명세 승인/반려 실패(일부는 반영됐을 수 있음 — 화면을 다시 불러옵니다): ${String(e)}`);
           void Promise.all([fetchDocsPlanningFeatures(project), fetchDocsFeatureSuggestions(project)])
             .then(([featRes, sugRes]) => {
               if (token !== dashReqToken.current) return;
@@ -632,7 +642,9 @@ export function App(): JSX.Element {
       setUflowApplyBusy(true);
       applyInChunks((r) => applyUserFlowSuggestions(project, flow, r), { approve, reject })
         .then((res) => {
-          if (res.skipped.length > 0) {
+          if (res.queuePruneFailed) {
+            setStatus("문서에는 반영됐지만 큐 정리에 실패했습니다 — 같은 제안이 다시 보이면 반려로 정리하세요.");
+          } else if (res.skipped.length > 0) {
             setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${skippedSummary(res.skipped)}).`);
           }
           return Promise.all([
@@ -651,7 +663,7 @@ export function App(): JSX.Element {
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
-          setStatus(`유저플로우 승인/반려 실패(일부는 반영됐을 수 있음 — 화면 재동기화): ${String(e)}`);
+          setStatus(`유저플로우 승인/반려 실패(일부는 반영됐을 수 있음 — 화면을 다시 불러옵니다): ${String(e)}`);
           void Promise.all([
             fetchDocsPlanningUserFlow(project, flow),
             fetchUserFlowSuggestions(project, flow).catch(() => null),
