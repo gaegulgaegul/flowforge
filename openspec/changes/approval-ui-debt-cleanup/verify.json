@@ -1,0 +1,410 @@
+{
+  "change": "approval-ui-debt-cleanup",
+  "verifiedAt": "2026-07-06T04:11:02+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 12,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "PRD 승인 패널은 대량 큐 UI 규약을 따른다 (일괄 바 상단·건수·캡 컨테이너·3패널 대칭)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "순수 UI 구조 요구(JSX 배치·CSS 클래스 재사용) — 런타임 입력값 없음",
+          "잘못된타입": "구조 요구라 타입 입력 경로 없음",
+          "경계값": "건수는 라벨에 그대로 보간(suggestions.length) — 경계 로직 없음",
+          "에러경로": "렌더 구조 요구 — 실패 경로 없음",
+          "동시성": "로컬 단일 사용자 전제(design Non-Goals)",
+          "대량": "목록은 feature-approval-list 스크롤 캡으로 이미 수용 — UI 구조 불변",
+          "특수문자": "제안 본문 렌더는 기존 카드 구조 재사용 — 이 change 범위 밖"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "일괄 바 상단 + 건수 표기 (N건 큐 렌더 시 [모두 승인(N건)]·[모두 반려(N건)] 바가 카드 목록 위, 목록은 스크롤 캡 안)",
+          "layer": "web",
+          "means": "소스 구조 검증(테스트 러너 부재) — PrdApprovalPanel.tsx JSX 순서·클래스 실측",
+          "basis": "web Vite/React, web/__tests__ 부재 → 소스 구조 검증(design Non-Goal: web 러너 미도입)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PrdApprovalPanel.tsx:51 <div className=feature-approval-bulk> (바 열림) → :59 모두 반려 ({suggestions.length}건) / :68 모두 승인 ({suggestions.length}건) → :70 바 닫힘 → :73 <div className=feature-approval-list> (목록 캡 래퍼, 바보다 뒤). 바가 목록보다 위임을 JSX 열림/닫힘 순서로 확증.",
+            "caption": "PRD 패널: 일괄 바 상단 + (N건) 라벨 + feature-approval-list 캡 래퍼"
+          }
+        },
+        {
+          "scenario": "3패널 구조 대칭 (PRD·features·userflow 같은 상단 일괄 바/건수/목록 캡, 신규 CSS 0)",
+          "layer": "web",
+          "means": "소스 구조 대조(3 패널 클래스 나란히) + CSS 번들 바이트 불변 + prd-approval-list grep 0",
+          "basis": "web 러너 부재 → 3 TSX 클래스 대조 + vite 번들 index-Dy40K0Hk.css 34.47kB 불변",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "feature-approval-bulk: prd:51 / feature:108 / userflow:64. (N건) 라벨: prd:59,68 / feature:116,125 / userflow:79,81. feature-approval-list: prd:73 / feature:129 / userflow:85. grep prd-approval-list → 0건(신규 목록 CSS 없음). vite 빌드 index-Dy40K0Hk.css 34.47kB(무변경)로 신규 CSS 0 실증. (관찰: styles.css:511 .prd-approval-bulk 데드 규칙 잔존 — 비차단.)",
+            "caption": "3패널 동일 구조 클래스 재사용, 신규 CSS 0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PRD: 큐 재작성 실패는 부분반영 상태로 고지 (200 + queuePruneFailed) / 문서 write 실패는 기존대로 실패",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "요구 자체가 에러경로(prune write throw) — null 입력 경로 아님",
+          "잘못된타입": "prune 실패는 fs write 예외 — 타입 입력 무관",
+          "경계값": "부울 상태 필드(queuePruneFailed) — 경계값 없음",
+          "동시성": "로컬 단일 사용자 전제(design Non-Goals)",
+          "대량": "prune write는 단일 파일 재작성 — 대량 경로 아님",
+          "특수문자": "prune 실패 주입은 chmod 권한 — 콘텐츠 특수문자 무관"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "prune write 실패 시 500 대신 부분 상태 고지 (prd.md 패치 성공·큐 write throw → 200 + queuePruneFailed:true, 화면 고지)",
+          "layer": "server",
+          "means": "docsPrdApproval.test.ts:378 — chmod 0o444로 큐 write 차단, not.toThrow + queuePruneFailed===true 단언; web App.tsx:557 고지 배선",
+          "basis": "server npm workspace jest ESM(28 suites 317 tests PASS)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "코드 docs.ts:322-331 prunePrdQueue try/catch → catch에서 queuePruneFailed:true 반환. 테스트 docsPrdApproval.test.ts:382 chmodSync(queuePath,0o444)[실 fs, uid≠0 root-guard] → :387 not.toThrow · :389 queuePruneFailed===true · :390 applied===1 · :392 remaining===1 · :395 문서 실제 패치됨. web App.tsx:556-557 res.queuePruneFailed→문서에는 반영됐지만 큐 정리에 실패했습니다 — 같은 제안이 다시 보이면 반려로 정리하세요; api.ts:217 청크별 sticky OR 합산.",
+            "caption": "PRD prune 실패 → 200+queuePruneFailed, 실 fs chmod 주입"
+          }
+        },
+        {
+          "scenario": "문서 write 실패는 기존대로 실패 (prd.md 패치 write 자체 실패 → 에러 응답·문서·큐 불변)",
+          "layer": "server",
+          "means": "docsPrdApproval.test.ts:299 writeFailed 경로(빈 prd.md/5섹션 파싱 실패) + route 422; 단 literal writeFileSync throw(docs.ts:268 무가드)는 직접 주입 안 됨",
+          "basis": "server jest — 가드 실패 경로로 기존대로 422·불변 계약 단언",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "lib docsPrdApproval.test.ts:302 writeFailed===true · :303 applied===0 · :304 원본 불변 · :305 큐 길이 1. route docsPrdApproval.test.ts:168 422(원본 보호). 주의: docs.ts:268의 실제 writeFileSync throw(무가드)는 직접 EACCES 주입되지 않음 — 관찰 계약(applied=0·에러표면·문서/큐 불변)은 가드 실패 경로로 단언됨. features/userflow는 write가 try/catch로 감싸져 더 강하게 커버.",
+            "caption": "PRD 문서 write 실패 → writeFailed/422, 원본·큐 불변"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PRD: 큐 읽기는 중복 id를 제거 (같은 id 2건 승인 1회 = 반영 1회)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "isValidPrdSuggestion 필터가 무효 항목 선제거 후 dedup — null 항목 경로는 기존 검증",
+          "잘못된타입": "readDocsPrdSuggestions가 유효성 필터 후 dedup — 타입 방어는 기존",
+          "경계값": "id 유일성은 Set 멤버십 — 경계값 없음",
+          "에러경로": "읽기 경계 순수 필터 — 실패 경로 없음",
+          "동시성": "로컬 단일 사용자 전제(design Non-Goals)",
+          "대량": "Set 필터는 O(n) 선형 — 대량 특이 경로 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "같은 id 2건 승인 1회 = 반영 1회 (큐에 같은 id 2건 → 문서 정확히 1회 반영)",
+          "layer": "server",
+          "means": "docsPrdApproval.test.ts:413 — 같은 id 2건 픽스처, readDocsPrdSuggestions().suggestions 길이 1 + applied===1 단언",
+          "basis": "server jest — 실 temp 파일 2건 same-id 픽스처",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "코드 docs.ts:206-207 Set 기반 first-wins dedup. 테스트 docsPrdApproval.test.ts:418-421 sug(dup) 2건 큐 파일 직접 기록 → :424 readDocsPrdSuggestions(dir).suggestions.toHaveLength(1) · :427 applied===1 · :428 remaining===0.",
+            "caption": "PRD 중복 id 첫 항목 승리 — 1회만 반영"
+          }
+        }
+      ]
+    },
+    {
+      "title": "features: 큐 재작성 실패는 부분반영 고지 / 문서 write 실패는 기존대로 실패",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "요구 자체가 에러경로(prune throw) — null 입력 경로 아님",
+          "잘못된타입": "prune 실패는 fs write 예외 — 타입 무관",
+          "경계값": "부울 상태 필드 — 경계값 없음",
+          "동시성": "로컬 단일 사용자 전제",
+          "대량": "prune write 단일 파일 재작성",
+          "특수문자": "chmod 권한 주입 — 콘텐츠 무관"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "prune write 실패 시 500 대신 부분 상태 고지 (features.md 패치 성공·큐 write throw → 200 + queuePruneFailed, 화면 고지)",
+          "layer": "server",
+          "means": "docsFeatureApproval.test.ts:305 — chmod 0o444 실 fs 주입, not.toThrow + queuePruneFailed===true; web App.tsx:598 고지",
+          "basis": "server jest ESM",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "코드 featureDocs.ts:276-285 pruneFeatureQueue try/catch → queuePruneFailed:true. 테스트 docsFeatureApproval.test.ts:314 chmodSync 0o444[실 fs, root-guard] → :317 not.toThrow · :320 queuePruneFailed===true · :321 applied===1 · :324 features.md 속성 라인 실제 패치. web App.tsx:597-598 동일 고지 문구.",
+            "caption": "features prune 실패 → 200+queuePruneFailed"
+          }
+        },
+        {
+          "scenario": "문서 write 실패는 기존대로 실패 (features.md 패치 write 자체 실패 → 에러·문서·큐 불변)",
+          "layer": "server",
+          "means": "docsFeatureApproval.test.ts:290 writeFailed(features.md 부재) + route 422; features write는 try/catch 래핑됨(featureDocs.ts:258-262)",
+          "basis": "server jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "lib docsFeatureApproval.test.ts:293 writeFailed===true · :294 applied===0 · :295 remaining===1. route docsFeatureApproval.test.ts:144 422(원본 보호). featureDocs.ts:258-262 writeFileSync try/catch로 감싸 write throw도 writeFailed로 표면화(PRD보다 강함).",
+            "caption": "features 문서 write 실패 → writeFailed/422, 불변"
+          }
+        }
+      ]
+    },
+    {
+      "title": "features: 큐 읽기는 중복 id를 제거 (같은 id 2건 승인 1회 = 반영 1회)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "유효성 필터 후 dedup — null 항목 경로는 기존",
+          "잘못된타입": "read 유효성 필터 후 dedup",
+          "경계값": "Set 멤버십 — 경계값 없음",
+          "에러경로": "읽기 순수 필터 — 실패 경로 없음",
+          "동시성": "로컬 단일 사용자 전제",
+          "대량": "Set 필터 O(n) 선형"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "같은 id 2건 승인 1회 = 반영 1회 (features.md 정확히 1회 반영)",
+          "layer": "server",
+          "means": "docsFeatureApproval.test.ts:332 — 같은 id 2건(다른 nodePath) 픽스처, applied===1 + 두 번째 원본 불변 단언",
+          "basis": "server jest — 실 temp 파일 same-id 2건",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "코드 featureDocs.ts:68-72 first-wins Set dedup. 테스트 docsFeatureApproval.test.ts:334-335 sug(dup) 2건(다른 nodePath) → :339 applied===1 · :342 첫 제안 노드만 패치 · :344 두 번째(dup) 노드 원본 유지(중요도:중간,상태:시작전).",
+            "caption": "features 중복 id — 1회만 반영, 두 번째 드롭"
+          }
+        }
+      ]
+    },
+    {
+      "title": "userflow: 큐 재작성 실패는 부분반영 고지 / 문서 write 실패는 기존대로 실패",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "요구 자체가 에러경로(prune throw)",
+          "잘못된타입": "prune 실패는 fs write 예외 — 타입 무관",
+          "경계값": "부울 상태 필드 — 경계값 없음",
+          "동시성": "로컬 단일 사용자 전제",
+          "대량": "prune write 단일 파일 재작성",
+          "특수문자": "chmod 권한 주입 — 콘텐츠 무관"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "prune write 실패 시 500 대신 부분 상태 고지 (userflow 문서 append 성공·큐 write throw → 200 + queuePruneFailed, 화면 고지)",
+          "layer": "server",
+          "means": "userFlowDocs.test.ts:400 — sidecar만 chmod 0o444(md는 별파일이라 append 성공), not.toThrow + queuePruneFailed===true; web App.tsx:646 고지",
+          "basis": "server jest — 실 fs, uid 1000 non-root 확인(0o444 실제 차단)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "코드 userFlowDocs.ts:299-305 pruneUserFlowQueue try/catch → :304 queuePruneFailed:true(성공 분기 :301은 미설정). 테스트 userFlowDocs.test.ts:403 chmodSync(sidecar,0o444)[실 fs] → :408 not.toThrow · :409 queuePruneFailed===true · :412 문서에 에지 반영(D-->|재시작| A) · :414 remaining===1(고아 큐). web App.tsx:645-646 동일 고지.",
+            "caption": "userflow prune 실패 → 200+queuePruneFailed, 고아 큐 방지 고지"
+          }
+        },
+        {
+          "scenario": "문서 write 실패는 기존대로 실패 (userflow 문서 write 자체 실패 → 에러·문서·큐 불변)",
+          "layer": "server",
+          "means": "userFlowDocs.test.ts:322 writeFailed(.md 부재) 경로; 단 literal mdPath writeFileSync throw(userFlowDocs.ts:277-280)는 직접 주입 안 됨",
+          "basis": "server jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "lib userFlowDocs.test.ts:325 writeFailed===true · :326 applied===0 · :327 remaining===1(큐 불변). 주의: userFlowDocs.ts:277-280 .md writeFileSync try/catch→failResult 경로는 .md 부재 분기로만 커버, 직접 EACCES 주입 없음. 관찰 계약(에러·불변)은 단언됨.",
+            "caption": "userflow 문서 write 실패 → writeFailed, 큐 불변"
+          }
+        }
+      ]
+    },
+    {
+      "title": "userflow: 큐 읽기는 중복 id를 제거 (같은 id 2건 승인 1회 = 에지 1줄)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "유효성 필터 후 dedup — null 항목 경로는 기존",
+          "잘못된타입": "read 유효성 필터 후 dedup",
+          "경계값": "Set 멤버십 — 경계값 없음",
+          "에러경로": "읽기 순수 필터 — 실패 경로 없음",
+          "동시성": "로컬 단일 사용자 전제",
+          "대량": "Set 필터 O(n) 선형"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "같은 id 2건 승인 1회 = 에지 1줄 (Mermaid 문서에 에지 정확히 1줄만 추가)",
+          "layer": "server",
+          "means": "userFlowDocs.test.ts:429 — 같은 id 2건(서로 다른 에지) 픽스처, 렌더 문서에서 에지 라인 발생 횟수 1 카운트 + 두 번째 에지 not-contains",
+          "basis": "server jest — 실 temp 파일, 에지 라인 수 실측(applied 수 아님)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "코드 userFlowDocs.ts:79-84 first-wins Set dedup. 테스트 userFlowDocs.test.ts:430-433 같은 id dup 다른 에지(D→A, D→C) → :437 out.split(D -->|재시작| A).length-1 === 1 (에지 라인 발생 횟수 1, applied 수 아닌 실 라인 수) · :438 두 번째 에지 not.toContain · :435 applied===1. duplicate-edge 가드가 아닌 dedup임을 보이려 다른 에지로 픽스처 설계.",
+            "caption": "userflow 중복 id — 에지 정확히 1줄"
+          }
+        }
+      ]
+    },
+    {
+      "title": "userflow: skip 사유 단언은 정확 문자열로 박제 (사유 회귀가 테스트로 잡힘)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "테스트 단언 강화 요구 — 런타임 null 입력 경로 아님",
+          "빈값": "정확 문자열 단언 조이기 — 빈값 경로 없음",
+          "잘못된타입": "단언 형식 강화 — 타입 입력 무관",
+          "경계값": "문자열 정확 매칭 — 경계값 없음",
+          "동시성": "로컬 단일 사용자 전제",
+          "대량": "skip 사유 소량 목록 — 대량 경로 아님"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "사유 문자열 회귀가 테스트로 잡힌다 (skip 사유 형식/값이 바뀌면 단언 테스트 실패)",
+          "layer": "server",
+          "means": "userFlowDocs.test.ts:342·368 — cd29898 느슨 stringMatching(/^…: /) 2건을 정확 <id>: <reason> toContain으로 강화",
+          "basis": "server jest — git show cd29898 대비 강화 확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "cd29898에서 loose였던 2건(stringMatching /^s1: /, /^poison: /)이 현재 정확 문자열로 조여짐: userFlowDocs.test.ts:342 toContain(s1: label-not-parse-safe) · :368 toContain(poison: label-not-parse-safe). id+정확 사유 전체 단언 — 사유값 회귀 시 실패. 이 pair에 toHaveLength/substring 미사용. (526줄 미폐합 펜스 stringMatching은 별개 에지테스트로 대상 밖.)",
+            "caption": "skip 사유 정확 문자열 박제 — 회귀 감지"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 317,
+      "passed": 317,
+      "failed": 0,
+      "basis": "npm run test --workspace server (jest ESM) — 28 suites 317 tests; TEST_EXIT=0(pipefail PIPESTATUS). shared/server/web 빌드 EXIT0.",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 3,
+      "passed": 3,
+      "failed": 0,
+      "basis": "테스트 러너 부재(design Non-Goal) → 소스 구조 검증. vite build EXIT0, index-Dy40K0Hk.css 34.47kB 불변(신규 CSS 0). 3패널 클래스 대칭·App.tsx 3경로 고지·api.ts sticky OR 실측.",
+      "reason": "web 자동 러너 미도입(design Non-Goal). UI 실픽셀(브라우저) 미실행 — 소스 구조/빌드 산출물로 대체. 사람 실픽셀 확인 권장."
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "build.gradle 부재 — 안드로이드 레이어 아님",
+      "reason": "적용 불가(Android 프로젝트 아님)"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "*.xcodeproj 부재 + non-macOS",
+      "reason": "적용 불가(iOS 프로젝트 아님, macOS 필요)"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260706-0411.html"
+}
