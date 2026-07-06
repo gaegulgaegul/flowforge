@@ -62,7 +62,7 @@ import { SpecTreeNode } from "./SpecTreeNode.js";
 import { FeatureNode } from "./FeatureNode.js";
 import { WireframePanel } from "./WireframePanel.js";
 import { PrdPanel } from "./PrdPanel.js";
-import { PrdApprovalPanel } from "./PrdApprovalPanel.js";
+import { PrdApprovalWizard } from "./PrdApprovalWizard.js";
 import { FeatureApprovalPanel } from "./FeatureApprovalPanel.js";
 import { UserFlowApprovalPanel } from "./UserFlowApprovalPanel.js";
 import { FeatureDetailPanel } from "./FeatureDetailPanel.js";
@@ -820,15 +820,13 @@ export function App(): JSX.Element {
             {planningPrd && activePlanTab === "prd" && (
               <section className="dash-planning-prd" data-testid="planning-prd">
                 <h3 className="dash-h">{dashProject?.displayName} — 기획 PRD</h3>
-                {/* 제안 큐가 있으면 승인/반려 편집 UI(6a), 큐 비면 렌더 안 함(순수 읽기 뷰). */}
-                <PrdApprovalPanel
+                {/* 제안 큐가 있으면 승인 위저드(한 건씩+진행+요약 일괄 반영), 큐 비면 렌더 안 함(순수 읽기 뷰). */}
+                <PrdApprovalWizard
+                  project={dashProject?.name ?? ""}
                   prd={planningPrd}
                   suggestions={prdSuggestions}
                   busy={prdApplyBusy}
-                  onApprove={(id) => applyPrd([id], [])}
-                  onReject={(id) => applyPrd([], [id])}
-                  onApproveAll={() => applyPrd(prdSuggestions.map((s) => s.id), [])}
-                  onRejectAll={() => applyPrd([], prdSuggestions.map((s) => s.id))}
+                  onApply={(approve, reject) => applyPrd(approve, reject)}
                 />
                 <PrdPanel prd={planningPrd} />
               </section>

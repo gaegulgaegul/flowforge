@@ -9,10 +9,10 @@
 
 ### Sequential: 위저드 UI (상태 모듈 위에)
 
-- [ ] 2.1 `PrdApprovalWizard.tsx` 신설 — 목업 모드 A 번역: 진행바+결정 점(n/N), 카드 1건(섹션 제목·사유·현재↔제안 diff — 기존 prd-approval 카드 마크업/클래스 재사용), [✕ 반려][건너뛰기][✓ 승인], 하단 탈출구 링크 2개, 요약 화면(카운트+결정 목록+[결정 반영하기]+[처음부터 다시])
-- [ ] 2.2 localStorage 체크포인트 배선 — 키 `prd-wizard:<project>`, 결정 변경 시 저장, 진입 시 복원(+stale 폐기), 반영 성공 시 삭제, 파싱 실패는 새 세션 폴백
-- [ ] 2.3 App.tsx 교체 배선 — PrdApprovalPanel → PrdApprovalWizard, [결정 반영하기]=기존 applyInChunks 재사용(성공/부분실패 고지 경로 그대로), 기존 PrdApprovalPanel.tsx 삭제(죽은 코드 금지)
-- [ ] 2.4 styles.css 위저드 스타일 — 진행바·점·카드 폭·요약. 기존 승인 패널 토큰(연두 보더·diff 배경) 재사용, 모바일(≤820px) 세로 스택 유지
+- [x] 2.1 `PrdApprovalWizard.tsx` 신설 — 목업 모드 A 번역: 진행바+결정 점(n/N), 카드 1건(섹션 제목·사유·현재↔제안 diff — 기존 prd-approval 카드 마크업/클래스 재사용), [✕ 반려][건너뛰기][✓ 승인], 하단 탈출구 링크 2개, 요약 화면(카운트+결정 목록+[결정 반영하기]+[처음부터 다시])
+- [x] 2.2 localStorage 체크포인트 배선 — 키 `prd-wizard:<project>`, 결정 변경 시 저장, 진입 시 복원(+stale 폐기), 반영 성공 시 삭제, 파싱 실패는 새 세션 폴백
+- [x] 2.3 App.tsx 교체 배선 — PrdApprovalPanel → PrdApprovalWizard, [결정 반영하기]=기존 applyInChunks 재사용(성공/부분실패 고지 경로 그대로), 기존 PrdApprovalPanel.tsx 삭제(죽은 코드 금지)
+- [x] 2.4 styles.css 위저드 스타일 — 진행바·점·카드 폭·요약. 기존 승인 패널 토큰(연두 보더·diff 배경) 재사용, 모바일(≤820px) 세로 스택 유지
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 

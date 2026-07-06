@@ -512,6 +512,52 @@ button:hover { border-color: var(--lime); }
 .prd-btn-approve, .prd-btn-approve-all { background: #1f883d; border: 1px solid #1a7f37; color: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; }
 .prd-btn-reject, .prd-btn-reject-all { background: transparent; border: 1px solid #d1242f; color: #f2807f; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; }
 .prd-btn-approve:disabled, .prd-btn-reject:disabled, .prd-btn-approve-all:disabled, .prd-btn-reject-all:disabled { opacity: .5; cursor: not-allowed; }
+/* 건너뛰기 버튼 — 중립(회색 보더). 승인/반려 버튼과 같은 크기·라운드. */
+.prd-btn-skip { background: transparent; border: 1px solid var(--border); color: #9aa0aa; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; }
+.prd-btn-skip:hover { border-color: #8a909a; color: var(--text); }
+.prd-btn-skip:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── PRD 승인 위저드 (approval-wizard-mode) — 6a 카드/버튼 토큰 재사용, 진행·요약만 신규 ── */
+/* 카드는 위저드에서 넓게: prd-approval 패널 안에서 폭 제한 + 중앙정렬 */
+.prd-wizard { max-width: 900px; }
+.prd-wizard-card { border-bottom: none; }
+/* 진행 표시 */
+.prd-wizard-progress { padding: 14px 14px 4px; }
+.prd-wizard-prog-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; color: #9aa0aa; }
+.prd-wizard-prog-count { color: var(--lime); font-weight: 700; font-size: 15px; }
+.prd-wizard-bar-track { height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+.prd-wizard-bar-fill { height: 100%; background: var(--lime); border-radius: 3px; transition: width .25s ease; }
+.prd-wizard-dots { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.prd-wizard-dot { width: 12px; height: 12px; border-radius: 50%; background: #21262d; border: 1px solid var(--border); }
+.prd-wizard-dot--current { border-color: var(--lime); box-shadow: 0 0 0 2px rgba(182,230,90,.35); }
+.prd-wizard-dot--approved { background: #1f883d; border-color: #1a7f37; }
+.prd-wizard-dot--rejected { background: #d1242f; border-color: #f85149; }
+.prd-wizard-dot--skipped { background: #484f58; border-color: #6e7681; }
+/* 결정 버튼 3개 중앙 정렬 */
+.prd-wizard-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding-top: 4px; }
+.prd-wizard-actions .prd-btn-approve, .prd-wizard-actions .prd-btn-reject, .prd-wizard-actions .prd-btn-skip { min-width: 110px; padding: 8px 16px; text-align: center; }
+/* 탈출구 링크 */
+.prd-wizard-escape { display: flex; gap: 18px; justify-content: center; padding: 14px; border-top: 1px solid var(--border); }
+.prd-wizard-escape-link { background: none; border: none; color: #9aa0aa; font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 2px 4px; }
+.prd-wizard-escape-link:hover { color: var(--text); }
+.prd-wizard-escape-link:disabled { opacity: .5; cursor: not-allowed; }
+/* 요약 화면 */
+.prd-wizard-summary { padding: 24px 18px; text-align: center; }
+.prd-wizard-summary-title { color: var(--lime); font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.prd-wizard-summary-counts { font-size: 20px; font-weight: 700; margin-bottom: 18px; }
+.prd-wizard-summary-counts .c-approve { color: #3fb950; }
+.prd-wizard-summary-counts .c-reject { color: #f85149; }
+.prd-wizard-summary-counts .c-skip { color: #9aa0aa; }
+.prd-wizard-summary-counts .sep { color: var(--border); margin: 0 8px; font-weight: 400; }
+.prd-wizard-summary-list { text-align: left; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; max-height: 50vh; overflow-y: auto; }
+.prd-wizard-summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #21262d; background: #1b1e24; }
+.prd-wizard-summary-row:last-child { border-bottom: none; }
+.prd-wizard-tag { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.prd-wizard-tag--approve { background: rgba(35,134,54,.25); color: #3fb950; }
+.prd-wizard-tag--reject { background: rgba(209,36,47,.25); color: #f85149; }
+.prd-wizard-tag--skip { background: rgba(110,118,129,.25); color: #9aa0aa; }
+.prd-wizard-summary-actions { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.prd-wizard-caption { color: #9aa0aa; font-size: 12px; }
 
 /* 기능명세 속성 승인 UI(6b) — 6a prd-approval 구조 미러, diff만 속성 before/after 뱃지 + 화살표. 버튼은 prd-btn-* 재사용. */
 .feature-approval { margin: 0 0 18px; border: 1px solid #7a5; border-radius: 10px; overflow: hidden; }
@@ -806,4 +852,6 @@ button:hover { border-color: var(--lime); }
 @media (max-width: 820px) {
   .prd-approval-diff, .feature-approval-diff { flex-direction: column; }
   .feature-approval-arrow { transform: rotate(90deg); align-self: flex-start; margin-left: 12px; }
+  /* 위저드: 좁은 화면에서 결정 버튼 3개를 가로로 균등 채움(min-width 해제) */
+  .prd-wizard-actions .prd-btn-approve, .prd-wizard-actions .prd-btn-reject, .prd-wizard-actions .prd-btn-skip { min-width: 0; flex: 1; }
 }
