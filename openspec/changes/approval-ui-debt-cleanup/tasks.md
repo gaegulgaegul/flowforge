@@ -26,4 +26,4 @@
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
-- [ ] 5.1 VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(기존 311 회귀 0 + 신규) → UI(3패널 상단 바/건수/캡 실픽셀 대칭 확인) 전부 PASS
+- [~] 5.1 VERIFY: 5단계 게이트 — 빌드 PASS(shared/server/web tsc+vite EXIT0) · 타입체크 PASS(strict tsc, 빌드에 포함) · 린트 PASS(워크스페이스 lint 스크립트 부재 → --if-present no-op EXIT0) · 테스트 PASS(server 28 suites 317, 기존 311 회귀 0 + 신규 6) · **UI 실픽셀 미실행(환경 제약: 헤드리스 브라우저 미설치 + curl 권한 차단)** → 대체로 소스 구조 검증: 3패널 JSX 대칭(feature-approval-bulk 상단+(N건)+feature-approval-list) 확인, CSS 번들 바이트 동일(index-Dy40K0Hk.css 34.47kB 무변경)로 신규 CSS 0 실증. **사람 실픽셀 확인 권장(러너/브라우저 있는 환경).**
