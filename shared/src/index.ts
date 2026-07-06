@@ -84,3 +84,21 @@ export type {
 } from './audit-capability-types.js';
 
 export { APPLY_BATCH_CAP } from "./prd-suggestion-types.js";
+
+export type {
+  WizardDecision,
+  WizardDecisionMap,
+  WizardCheckpoint,
+  WizardApplyPayload,
+  WizardSummaryCounts,
+} from './prd-wizard-state.js';
+export {
+  setDecision,
+  nextPendingId,
+  pendingIds,
+  allDecided,
+  fillPending,
+  summaryCounts,
+  applyPayload,
+  reconcileCheckpoint,
+} from './prd-wizard-state.js';

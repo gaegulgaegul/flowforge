@@ -4,8 +4,8 @@
 
 ### Sequential: 상태 모델 (선행 필수 — 검증 가능한 순수 로직 분리)
 
-- [ ] 1.1 위저드 상태 순수 모듈 신설 (shared 또는 web/src/lib): 결정 맵(`approve|reject|skip`)·cursor 전이·탈출구(미결정 일괄)·요약 카운트·**체크포인트 대조(현재 큐 ids와 차집합 → stale 결정 폐기)** — 프레임워크 무의존 순수 함수
-- [ ] 1.2 RED: 상태 모듈 단위 테스트 — 결정→다음 이동, 건너뛰기=반영 제외, 탈출구=미결정만 채움, 요약 카운트 일치, stale id 폐기, 반영 페이로드(approve/reject 분리·skip 제외) 생성
+- [x] 1.1 위저드 상태 순수 모듈 신설 (shared 또는 web/src/lib): 결정 맵(`approve|reject|skip`)·cursor 전이·탈출구(미결정 일괄)·요약 카운트·**체크포인트 대조(현재 큐 ids와 차집합 → stale 결정 폐기)** — 프레임워크 무의존 순수 함수
+- [x] 1.2 RED: 상태 모듈 단위 테스트 — 결정→다음 이동, 건너뛰기=반영 제외, 탈출구=미결정만 채움, 요약 카운트 일치, stale id 폐기, 반영 페이로드(approve/reject 분리·skip 제외) 생성
 
 ### Sequential: 위저드 UI (상태 모듈 위에)
 
