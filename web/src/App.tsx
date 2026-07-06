@@ -407,6 +407,9 @@ export function App(): JSX.Element {
     setDashProject(card);
     setDashCapability(null);
     setCapChanges([]);
+    // 프로젝트 전환 시 반영 tick 격리 — A에서 올라간 tick이 B 위저드 마운트에서
+    // 체크포인트를 지우는 cross-project 결정 소실(review C-2) 방지.
+    setPrdAppliedTick(0);
     // 기획 단계 PRD(docs/planning/prd.md) 로드 — 없으면(404) null로 비움(안내만, 에러 아님).
     setPlanningPrd(null);
     fetchDocsPlanningPrd(card.name)
@@ -551,6 +554,12 @@ export function App(): JSX.Element {
     (approve: string[], reject: string[]) => {
       const project = dashProject?.name;
       if (!project || prdApplyBusy) return;
+      // 반영 대상 0(전부 건너뛰기 등) = 서버 무접촉 — 유령 성공으로 tick을 올려
+      // 결정을 지우지 않는다(review M-1). 안내만 하고 종료.
+      if (approve.length === 0 && reject.length === 0) {
+        setStatus("반영할 승인/반려 결정이 없습니다 — 건너뛴 제안은 큐에 남습니다.");
+        return;
+      }
       const token = ++dashReqToken.current;
       setPrdApplyBusy(true);
       applyInChunks((r) => applyDocsPrdSuggestions(project, r), { approve, reject })
@@ -827,6 +836,7 @@ export function App(): JSX.Element {
                 <h3 className="dash-h">{dashProject?.displayName} — 기획 PRD</h3>
                 {/* 제안 큐가 있으면 승인 위저드(한 건씩+진행+요약 일괄 반영), 큐 비면 렌더 안 함(순수 읽기 뷰). */}
                 <PrdApprovalWizard
+                  key={dashProject?.name ?? ""}
                   project={dashProject?.name ?? ""}
                   prd={planningPrd}
                   suggestions={prdSuggestions}
