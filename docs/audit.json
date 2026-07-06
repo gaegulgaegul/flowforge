@@ -1,13 +1,13 @@
 {
-  "spec": "docs/spec.md",
+  "spec": "/home/gaegul/flowforge/docs/spec.md",
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
     "PASS": 89,
     "FAIL": 0,
-    "UNVERIFIABLE": 116
+    "UNVERIFIABLE": 127
   },
-  "reason": "미검증(UNVERIFIABLE) 116건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 127건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -1410,7 +1410,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:275"
+      "evidence": "server/src/lib/docs.ts:277"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1421,7 +1421,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:229"
+      "evidence": "server/src/lib/docs.ts:231"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1432,7 +1432,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/docs.ts:339"
+      "evidence": "server/src/lib/docs.ts:343"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1546,9 +1546,54 @@
       "evidence": null
     },
     {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 242,
+      "kind": "freetext",
+      "claim": "invariant: 큐 재작성(prune) write 실패는 500이 아니라 200 + `queuePruneFailed: true`로 표면화 — 문서 패치는 이미 성공했으므로 부분 상태를 은폐하지 않는다(문서 write 자체 실패는 기존대로 에러). 웹은 이 필드를 보고 \"문서 반영·큐 정리 실패\"를 고지.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 243,
+      "kind": "freetext",
+      "claim": "invariant: 큐 읽기는 중복 id를 첫 항목 승리로 제거 — 같은 id 2건 + 승인 1회가 이중 반영되지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 244,
+      "kind": "behavior",
+      "claim": "behavior: 승인 패널은 상단 일괄 바(모두 승인/반려에 건수 표기)+목록 스크롤 캡(feature-approval-list) 구조로 features/userflow 패널과 대칭",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (2토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/routes/__tests__/docsFeatureApproval.test.ts:54",
+      "llmHint": "승인 패널은 상단 일괄 바(모두 승인/반려에 건수 표기)+목록 스크롤 캡(feature-approval-list) 구조로 features/userflow 패널과 대칭"
+    },
+    {
+      "capability": "planning-prd-approval-apply",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 245,
+      "kind": "metric",
+      "claim": "metric: prune 실패 주입 테스트(200+queuePruneFailed)·중복 id dedup 테스트 PASS + 3패널 대칭 실픽셀 확인(2026-07-06)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 245,
+      "line": 251,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint GET /api/docs/:project/planning-prd-suggestions",
       "verdict": "PASS",
@@ -1559,7 +1604,7 @@
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 246,
+      "line": 252,
       "kind": "assert:symbol",
       "claim": "assert:symbol readDocsPrdSuggestions",
       "verdict": "PASS",
@@ -1570,7 +1615,7 @@
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 247,
+      "line": 253,
       "kind": "invariant",
       "claim": "invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 docs 루트 밖 파일 미접근",
       "verdict": "PASS",
@@ -1581,7 +1626,7 @@
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 248,
+      "line": 254,
       "kind": "invariant",
       "claim": "invariant:safe-4xx 경로 조작 project는 404, 큐 파일 부재는 빈 큐 200(읽기는 절대 500으로 죽지 않음)",
       "verdict": "PASS",
@@ -1592,7 +1637,7 @@
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 249,
+      "line": 255,
       "kind": "behavior",
       "claim": "behavior: prd.suggestions.json을 JSON.parse 후 isValidPrdSuggestion(section 5키·op=replace만)으로 필터해 유효 제안만 반환, 파일 없음·깨진 JSON은 빈 큐로 폴백",
       "verdict": "UNVERIFIABLE",
@@ -1604,7 +1649,7 @@
     {
       "capability": "planning-prd-approval-queue",
       "feature": "PRD 제안 큐 조회 (GET /api/docs/:project/planning-prd-suggestions)",
-      "line": 250,
+      "line": 256,
       "kind": "metric",
       "claim": "metric: 제안 큐 조회 응답 시간 목표 200ms",
       "verdict": "UNVERIFIABLE",
@@ -1615,7 +1660,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 257,
+      "line": 263,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint GET /api/docs/:project/audit-capabilities",
       "verdict": "PASS",
@@ -1626,7 +1671,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 258,
+      "line": 264,
       "kind": "assert:symbol",
       "claim": "assert:symbol aggregateAuditItems",
       "verdict": "PASS",
@@ -1637,7 +1682,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 259,
+      "line": 265,
       "kind": "assert:symbol",
       "claim": "assert:symbol readAuditCapabilities",
       "verdict": "PASS",
@@ -1648,7 +1693,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 260,
+      "line": 266,
       "kind": "freetext",
       "claim": "audit.json items[]를 capability 키별로 집계한다: FAIL≥1→fail / FAIL 0·PASS≥1→clean / 그 외(항목 없음·전부 UNVERIFIABLE)→unknown. UNVERIFIABLE은 판정을 깎지 않고 건수로만 노출한다.",
       "verdict": "UNVERIFIABLE",
@@ -1659,7 +1704,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 261,
+      "line": 267,
       "kind": "freetext",
       "claim": "invariant: audit.json 없음·깨진 JSON·items 비배열은 빈 맵 폴백(HTTP 200)이며 throw하지 않는다.",
       "verdict": "UNVERIFIABLE",
@@ -1670,7 +1715,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 262,
+      "line": 268,
       "kind": "freetext",
       "claim": "invariant: audit.json 내부 경로(scanRoot 등)는 신뢰하지 않는다 — 읽기 경로는 검증된 projDir 기준으로만 구성하고 items[]의 capability·verdict·kind·claim·reason만 소비한다.",
       "verdict": "UNVERIFIABLE",
@@ -1681,7 +1726,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 263,
+      "line": 269,
       "kind": "freetext",
       "claim": "invariant: 읽기전용 — audit.json 산출은 openspec-audit 소유, flowforge는 소비만 한다.",
       "verdict": "UNVERIFIABLE",
@@ -1692,7 +1737,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "audit capability 집계 API (`GET /api/docs/:project/audit-capabilities`)",
-      "line": 264,
+      "line": 270,
       "kind": "metric",
       "claim": "metric: auditSummary 단위(집계·폴백) + 라우트 통합 테스트 PASS(auditSummary.test.ts, docs.planning.test.ts) + 라이브 실픽셀(요구사항 노드 배지·패널 audit 섹션·콘솔 0).",
       "verdict": "UNVERIFIABLE",
@@ -1703,18 +1748,18 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
-      "line": 267,
+      "line": 273,
       "kind": "assert:symbol",
       "claim": "assert:symbol fetchAuditCapabilities",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:257"
+      "evidence": "web/src/api.ts:260"
     },
     {
       "capability": "planning-feature-audit-badge",
       "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
-      "line": 268,
+      "line": 274,
       "kind": "freetext",
       "claim": "요구사항 노드만 capability 키 동치로 배지(clean→정합/fail→불합 N/unknown→미감사)를 렌더하고, 기능·상세기능 노드는 배지를 렌더하지 않는다. audit fetch 실패는 배지 없음 강등(그래프 렌더 유지).",
       "verdict": "UNVERIFIABLE",
@@ -1725,7 +1770,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
-      "line": 269,
+      "line": 275,
       "kind": "freetext",
       "claim": "상세 패널 audit 섹션은 판정·PASS/FAIL/검증불가 건수를 표시하고, fail일 때만 FAIL claim(·reason)을 텍스트로 나열한다(HTML 주입 금지).",
       "verdict": "UNVERIFIABLE",
@@ -1736,7 +1781,7 @@
     {
       "capability": "planning-feature-audit-badge",
       "feature": "요구사항 노드 audit 배지 + 상세 패널 audit 섹션 (web)",
-      "line": 270,
+      "line": 276,
       "kind": "metric",
       "claim": "metric: 라이브 실픽셀 grounding — 배지 분포(정합/미감사)·패널 3케이스(정합 건수/미감사/비요구사항 생략)·콘솔 에러 0.",
       "verdict": "UNVERIFIABLE",
@@ -1747,7 +1792,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 277,
+      "line": 283,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint GET /api/docs/:project/planning-screens",
       "verdict": "PASS",
@@ -1758,18 +1803,18 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 278,
+      "line": 284,
       "kind": "assert:symbol",
       "claim": "assert:symbol fetchPlanningScreens",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:267"
+      "evidence": "web/src/api.ts:270"
     },
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 279,
+      "line": 285,
       "kind": "freetext",
       "claim": "파싱된 screen registry(`{ screens, links }`)를 그대로 반환한다. `## 화면목록` 섹션이 없으면 빈 registry 200.",
       "verdict": "UNVERIFIABLE",
@@ -1780,7 +1825,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 280,
+      "line": 286,
       "kind": "freetext",
       "claim": "invariant: 파서(screenRegistry.ts) 무수정 — 라우트는 buildScreenRegistry 결과 소비만 한다.",
       "verdict": "UNVERIFIABLE",
@@ -1791,7 +1836,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 281,
+      "line": 287,
       "kind": "invariant",
       "claim": "invariant:safe-4xx 존재하지 않는 프로젝트·경로조작(`..`)은 404, 화면목록 부재는 빈 registry 200(읽기는 500으로 죽지 않음).",
       "verdict": "PASS",
@@ -1802,7 +1847,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "screen registry 노출 API (`GET /api/docs/:project/planning-screens`)",
-      "line": 282,
+      "line": 288,
       "kind": "metric",
       "claim": "metric: 라우트 통합 테스트 PASS(docs.planning.test.ts — registry 반환·빈 registry·404) + 라이브 재조회.",
       "verdict": "UNVERIFIABLE",
@@ -1813,7 +1858,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "상세 패널 연결화면(N:M) 표시 (web)",
-      "line": 285,
+      "line": 291,
       "kind": "freetext",
       "claim": "상세기능 노드 라벨 ↔ `links[].detailLabel` 문자열 동치로 화면 목록(`{id,label}`)을 파생하고, 화면 label은 registry.screens에서 해석한다. dangling 화면 id는 label 대신 id로 강등 표시(숨기지 않음).",
       "verdict": "UNVERIFIABLE",
@@ -1824,7 +1869,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "상세 패널 연결화면(N:M) 표시 (web)",
-      "line": 286,
+      "line": 292,
       "kind": "freetext",
       "claim": "링크 없는 상세기능은 섹션을 생략한다(빈 섹션·placeholder 없음). registry fetch 실패는 필드 없음 강등(그래프·패널 렌더 유지).",
       "verdict": "UNVERIFIABLE",
@@ -1835,7 +1880,7 @@
     {
       "capability": "planning-panel-screen-links",
       "feature": "상세 패널 연결화면(N:M) 표시 (web)",
-      "line": 287,
+      "line": 293,
       "kind": "metric",
       "claim": "metric: 라이브 실픽셀 grounding — 링크 있는 상세기능 화면 나열·링크 없는 노드 섹션 생략·콘솔 에러 0.",
       "verdict": "UNVERIFIABLE",
@@ -1846,7 +1891,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 294,
+      "line": 300,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint GET /api/docs/:project/planning-user-flow-suggestions",
       "verdict": "PASS",
@@ -1857,7 +1902,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 295,
+      "line": 301,
       "kind": "assert:symbol",
       "claim": "assert:symbol readUserFlowSuggestions",
       "verdict": "PASS",
@@ -1868,7 +1913,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 296,
+      "line": 302,
       "kind": "freetext",
       "claim": "per-stem 큐를 반환한다. 파일 부재는 빈 큐 200, 깨진 JSON·무효 제안은 필터.",
       "verdict": "UNVERIFIABLE",
@@ -1879,7 +1924,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 297,
+      "line": 303,
       "kind": "invariant",
       "claim": "invariant:safe-4xx 존재하지 않는 프로젝트·경로조작·불안전 stem은 404, 읽기는 500으로 죽지 않는다.",
       "verdict": "PASS",
@@ -1890,7 +1935,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "제안 큐 조회 API (`GET /api/docs/:project/planning-user-flow-suggestions`)",
-      "line": 298,
+      "line": 304,
       "kind": "metric",
       "claim": "metric: userFlowDocs 단위 + 라우트 통합 테스트 PASS.",
       "verdict": "UNVERIFIABLE",
@@ -1901,7 +1946,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 301,
+      "line": 307,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint POST /api/docs/:project/planning-user-flow-suggestions/apply",
       "verdict": "PASS",
@@ -1912,29 +1957,29 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 302,
+      "line": 308,
       "kind": "assert:symbol",
       "claim": "assert:symbol applyUserFlowSuggestions",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:374"
+      "evidence": "web/src/api.ts:377"
     },
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 303,
+      "line": 309,
       "kind": "assert:symbol",
       "claim": "assert:symbol userFlowInvariantHolds",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/userFlowDocs.ts:137"
+      "evidence": "server/src/lib/userFlowDocs.ts:145"
     },
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 304,
+      "line": 310,
       "kind": "freetext",
       "claim": "승인분만 첫 mermaid 블록 닫는 펜스 직전에 에지 줄 append. 계약은 6a/6b의 PrdApplyRequest/PrdApplyResult 재사용.",
       "verdict": "UNVERIFIABLE",
@@ -1945,7 +1990,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 305,
+      "line": 311,
       "kind": "freetext",
       "claim": "invariant: 결정론 검증(from/to 존재·newNode id 충돌·라벨 금지문자·중복 에지 멱등) 위반은 해당 제안만 skipped로 사유와 함께 표면화 — 배치 전체를 죽이지 않는다(제안별 사전 roundtrip 포함).",
       "verdict": "UNVERIFIABLE",
@@ -1956,7 +2001,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 306,
+      "line": 312,
       "kind": "freetext",
       "claim": "invariant: self-roundtrip 방어 — append 후 재파싱해 기존 노드·에지 완전 보존 + 승인분 에지만 정확히 추가됐을 때만 write, 위반 시 422·원본 보존·큐 유지(무력화 프로브 테스트 존치).",
       "verdict": "UNVERIFIABLE",
@@ -1967,7 +2012,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 307,
+      "line": 313,
       "kind": "freetext",
       "claim": "invariant: 반려는 문서 바이트 불변, 큐에서만 제거.",
       "verdict": "UNVERIFIABLE",
@@ -1978,7 +2023,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply API (`POST .../planning-user-flow-suggestions/apply`)",
-      "line": 308,
+      "line": 314,
       "kind": "metric",
       "claim": "metric: 단위(검증·append·방어·무력화 프로브) + 통합 테스트 PASS + 실픽셀 grounding(개별 승인=1줄 append·반려=문서 불변).",
       "verdict": "UNVERIFIABLE",
@@ -1989,7 +2034,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 311,
+      "line": 317,
       "kind": "assert:symbol",
       "claim": "assert:symbol UserFlowApprovalPanel",
       "verdict": "PASS",
@@ -2000,18 +2045,18 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 312,
+      "line": 318,
       "kind": "assert:symbol",
       "claim": "assert:symbol fetchUserFlowSuggestions",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:359"
+      "evidence": "web/src/api.ts:362"
     },
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 313,
+      "line": 319,
       "kind": "freetext",
       "claim": "큐가 비어있지 않으면 그래프 위에 제안 카드(from→to·실선/점선·라벨·rationale·신규 화면 뱃지)와 개별/일괄 승인·반려를 렌더, 빈 큐면 패널 미렌더. apply 후 그래프·큐 재조회.",
       "verdict": "UNVERIFIABLE",
@@ -2022,7 +2067,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 314,
+      "line": 320,
       "kind": "freetext",
       "claim": "invariant: stem 전환·apply 재조회는 dashReqToken race 가드를 지킨다(stale 응답이 화면을 덮지 않는다).",
       "verdict": "UNVERIFIABLE",
@@ -2033,7 +2078,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "유저플로우 탭 승인 패널 (web)",
-      "line": 315,
+      "line": 321,
       "kind": "metric",
       "claim": "metric: 실픽셀 grounding — 카드 렌더·개별/일괄 승인·반려·빈 큐 패널 소멸·콘솔 에러 0.",
       "verdict": "UNVERIFIABLE",
@@ -2044,7 +2089,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
-      "line": 318,
+      "line": 324,
       "kind": "assert:symbol",
       "claim": "assert:symbol detectEol",
       "verdict": "PASS",
@@ -2055,7 +2100,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
-      "line": 319,
+      "line": 325,
       "kind": "assert:symbol",
       "claim": "assert:symbol restoreEol",
       "verdict": "PASS",
@@ -2066,7 +2111,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
-      "line": 320,
+      "line": 326,
       "kind": "freetext",
       "claim": "invariant: 원문 개행 스타일 보존 — CRLF 문서에 승인 반영해도 전 파일 EOL 전환이 일어나지 않는다(혼합 개행은 any-CRLF-wins 결정론).",
       "verdict": "UNVERIFIABLE",
@@ -2077,7 +2122,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
-      "line": 321,
+      "line": 327,
       "kind": "freetext",
       "claim": "invariant: 큐 재작성은 쓰기 직전 재독본에서 처리 id만 차집합 — apply 진행 중 추가된 신규 제안을 통삭제하지 않는다.",
       "verdict": "UNVERIFIABLE",
@@ -2088,7 +2133,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
-      "line": 322,
+      "line": 328,
       "kind": "freetext",
       "claim": "invariant: apply 배치 상한(APPLY_BATCH_CAP=200, shared 단일 정의) 초과는 400 batch_too_large, 문서·큐 무접촉. 웹은 청크 분할 전송으로 어떤 큐 크기에도 일괄 동작.",
       "verdict": "UNVERIFIABLE",
@@ -2099,7 +2144,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
-      "line": 323,
+      "line": 329,
       "kind": "metric",
       "claim": "metric: 상주 엣지 테스트(빈 문서·혼합 EOL·특수문자 id prune·non-string id 필터) + 라우트 상한 테스트 PASS.",
       "verdict": "UNVERIFIABLE",
@@ -2110,7 +2155,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
-      "line": 324,
+      "line": 330,
       "kind": "assert:symbol",
       "claim": "assert:symbol findFirstMermaidBlock",
       "verdict": "PASS",
@@ -2121,7 +2166,7 @@
     {
       "capability": "planning-userflow-approval-edit",
       "feature": "승인 apply 견고화 — userflow (approval-family-hardening)",
-      "line": 325,
+      "line": 331,
       "kind": "freetext",
       "claim": "invariant: append 위치와 재파싱이 같은 mermaid 블록을 본다(블록 판별을 파서 한 곳으로 단일화 — mermaid-example 선행 문서 오도 skipped 해소).",
       "verdict": "UNVERIFIABLE",
@@ -2130,9 +2175,54 @@
       "evidence": null
     },
     {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 334,
+      "kind": "freetext",
+      "claim": "invariant: 큐 재작성(prune) write 실패는 500이 아니라 200 + `queuePruneFailed: true`로 표면화 — 승인분이 큐에 고아로 남아 재승인이 duplicate-edge로 영문 없이 skipped되는 경로를 고지로 막는다(문서 write 자체 실패는 기존대로 에러).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 335,
+      "kind": "freetext",
+      "claim": "invariant: 큐 읽기는 중복 id를 첫 항목 승리로 제거 — 같은 id 2건 + 승인 1회에 에지가 2줄 append되지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 336,
+      "kind": "behavior",
+      "claim": "behavior: skip 사유 단언은 정확한 `\"<id>: <reason>\"` 문자열 매칭으로 테스트에 박제 — 사유 회귀가 조용히 통과하지 못한다",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (2토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/routes/__tests__/docsUserFlowApproval.test.ts:173",
+      "llmHint": "skip 사유 단언은 정확한 `\"<id>: <reason>\"` 문자열 매칭으로 테스트에 박제 — 사유 회귀가 조용히 통과하지 못한다"
+    },
+    {
+      "capability": "planning-userflow-approval-edit",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 337,
+      "kind": "metric",
+      "claim": "metric: prune 실패 주입(200+queuePruneFailed)·중복 id=에지 1줄·사유 정확 단언 테스트 PASS",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
       "capability": "planning-features-approval-apply",
       "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
-      "line": 332,
+      "line": 343,
       "kind": "assert:endpoint",
       "claim": "assert:endpoint POST /api/docs/:project/planning-features-suggestions/apply",
       "verdict": "PASS",
@@ -2143,29 +2233,29 @@
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
-      "line": 333,
+      "line": 344,
       "kind": "assert:symbol",
       "claim": "assert:symbol applyFeatureSuggestions",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/featureDocs.ts:199"
+      "evidence": "server/src/lib/featureDocs.ts:206"
     },
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
-      "line": 334,
+      "line": 345,
       "kind": "assert:symbol",
       "claim": "assert:symbol structureInvariantHolds",
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/featureDocs.ts:175"
+      "evidence": "server/src/lib/featureDocs.ts:182"
     },
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
-      "line": 335,
+      "line": 346,
       "kind": "invariant",
       "claim": "invariant:safe-4xx 잘못된 body 400, 경로조작 404, 구조 불변 위반은 422로 막고 파일 미작성(원본 보호 — 무력화 프로브 테스트 존치).",
       "verdict": "PASS",
@@ -2176,7 +2266,7 @@
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
-      "line": 336,
+      "line": 347,
       "kind": "freetext",
       "claim": "invariant: 동일 label 형제 모호성·미실재 id는 skipped로 표면화(silent drop 금지).",
       "verdict": "UNVERIFIABLE",
@@ -2187,19 +2277,19 @@
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
-      "line": 337,
+      "line": 348,
       "kind": "behavior",
       "claim": "behavior: 승인 노드의 속성 줄만 제자리 교체(라벨·본문·자식 불변), 반려는 큐에서만 제거.",
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (6토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/lib/__tests__/docsFeatureApproval.test.ts:153",
+      "evidence": "server/src/lib/__tests__/docsFeatureApproval.test.ts:154",
       "llmHint": "승인 노드의 속성 줄만 제자리 교체(라벨·본문·자식 불변), 반려는 큐에서만 제거."
     },
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인/반려 적용 (POST /api/docs/:project/planning-features-suggestions/apply)",
-      "line": 338,
+      "line": 349,
       "kind": "metric",
       "claim": "metric: featureDocs 단위 + 라우트 통합 테스트 PASS + 실픽셀 grounding(승인 반영·반려 불변).",
       "verdict": "UNVERIFIABLE",
@@ -2210,7 +2300,7 @@
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인 apply 견고화 — features (approval-family-hardening)",
-      "line": 341,
+      "line": 352,
       "kind": "assert:symbol",
       "claim": "assert:symbol detectEol",
       "verdict": "PASS",
@@ -2221,7 +2311,7 @@
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인 apply 견고화 — features (approval-family-hardening)",
-      "line": 342,
+      "line": 353,
       "kind": "assert:symbol",
       "claim": "assert:symbol restoreEol",
       "verdict": "PASS",
@@ -2232,7 +2322,7 @@
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인 apply 견고화 — features (approval-family-hardening)",
-      "line": 343,
+      "line": 354,
       "kind": "freetext",
       "claim": "invariant: 원문 개행 스타일 보존 — CRLF 문서에 승인 반영해도 전 파일 EOL 전환이 일어나지 않는다(혼합 개행은 any-CRLF-wins 결정론).",
       "verdict": "UNVERIFIABLE",
@@ -2243,7 +2333,7 @@
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인 apply 견고화 — features (approval-family-hardening)",
-      "line": 344,
+      "line": 355,
       "kind": "freetext",
       "claim": "invariant: 큐 재작성은 쓰기 직전 재독본에서 처리 id만 차집합 — apply 진행 중 추가된 신규 제안을 통삭제하지 않는다.",
       "verdict": "UNVERIFIABLE",
@@ -2254,7 +2344,7 @@
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인 apply 견고화 — features (approval-family-hardening)",
-      "line": 345,
+      "line": 356,
       "kind": "freetext",
       "claim": "invariant: apply 배치 상한(APPLY_BATCH_CAP=200, shared 단일 정의) 초과는 400 batch_too_large, 문서·큐 무접촉. 웹은 청크 분할 전송으로 어떤 큐 크기에도 일괄 동작.",
       "verdict": "UNVERIFIABLE",
@@ -2265,9 +2355,42 @@
     {
       "capability": "planning-features-approval-apply",
       "feature": "승인 apply 견고화 — features (approval-family-hardening)",
-      "line": 346,
+      "line": 357,
       "kind": "metric",
       "claim": "metric: 상주 엣지 테스트(빈 문서·혼합 EOL·특수문자 id prune·non-string id 필터) + 라우트 상한 테스트 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 360,
+      "kind": "freetext",
+      "claim": "invariant: 큐 재작성(prune) write 실패는 500이 아니라 200 + `queuePruneFailed: true`로 표면화 — 부분 상태(문서 반영·큐 정리 실패)를 은폐하지 않는다(문서 write 자체 실패는 기존대로 에러).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 361,
+      "kind": "freetext",
+      "claim": "invariant: 큐 읽기는 중복 id를 첫 항목 승리로 제거 — 같은 id 2건 + 승인 1회가 이중 반영되지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "planning-features-approval-apply",
+      "feature": "승인 UI/큐 위생 (approval-ui-debt-cleanup)",
+      "line": 362,
+      "kind": "metric",
+      "claim": "metric: prune 실패 주입(200+queuePruneFailed)·중복 id dedup 테스트 PASS",
       "verdict": "UNVERIFIABLE",
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
@@ -2318,7 +2441,7 @@
     {
       "type": "symbol",
       "what": "App",
-      "source": "web/src/App.tsx:85"
+      "source": "web/src/App.tsx:89"
     },
     {
       "type": "symbol",
@@ -2358,7 +2481,7 @@
     {
       "type": "symbol",
       "what": "PrdApprovalPanel",
-      "source": "web/src/PrdApprovalPanel.tsx:23"
+      "source": "web/src/PrdApprovalPanel.tsx:24"
     },
     {
       "type": "symbol",
@@ -2383,17 +2506,17 @@
     {
       "type": "symbol",
       "what": "applyDocsFeatureSuggestions",
-      "source": "web/src/api.ts:302"
+      "source": "web/src/api.ts:305"
     },
     {
       "type": "symbol",
       "what": "applyDocsPrdSuggestions",
-      "source": "web/src/api.ts:222"
+      "source": "web/src/api.ts:225"
     },
     {
       "type": "symbol",
       "what": "applyInChunks",
-      "source": "web/src/api.ts:197"
+      "source": "web/src/api.ts:195"
     },
     {
       "type": "symbol",
@@ -2473,97 +2596,97 @@
     {
       "type": "symbol",
       "what": "fetchCapabilities",
-      "source": "web/src/api.ts:79"
+      "source": "web/src/api.ts:81"
     },
     {
       "type": "symbol",
       "what": "fetchCapabilityDetail",
-      "source": "web/src/api.ts:99"
+      "source": "web/src/api.ts:101"
     },
     {
       "type": "symbol",
       "what": "fetchChanges",
-      "source": "web/src/api.ts:47"
+      "source": "web/src/api.ts:49"
     },
     {
       "type": "symbol",
       "what": "fetchDocsFeatureSuggestions",
-      "source": "web/src/api.ts:290"
+      "source": "web/src/api.ts:293"
     },
     {
       "type": "symbol",
       "what": "fetchDocsGraph",
-      "source": "web/src/api.ts:151"
+      "source": "web/src/api.ts:153"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningFeatures",
-      "source": "web/src/api.ts:248"
+      "source": "web/src/api.ts:251"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningIa",
-      "source": "web/src/api.ts:277"
+      "source": "web/src/api.ts:280"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningPrd",
-      "source": "web/src/api.ts:170"
+      "source": "web/src/api.ts:172"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningUserFlow",
-      "source": "web/src/api.ts:345"
+      "source": "web/src/api.ts:348"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrd",
-      "source": "web/src/api.ts:163"
+      "source": "web/src/api.ts:165"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrdSuggestions",
-      "source": "web/src/api.ts:177"
+      "source": "web/src/api.ts:179"
     },
     {
       "type": "symbol",
       "what": "fetchDocsProjects",
-      "source": "web/src/api.ts:144"
+      "source": "web/src/api.ts:146"
     },
     {
       "type": "symbol",
       "what": "fetchDocsWireframe",
-      "source": "web/src/api.ts:157"
+      "source": "web/src/api.ts:159"
     },
     {
       "type": "symbol",
       "what": "fetchGraph",
-      "source": "web/src/api.ts:110"
+      "source": "web/src/api.ts:112"
     },
     {
       "type": "symbol",
       "what": "fetchIA",
-      "source": "web/src/api.ts:116"
+      "source": "web/src/api.ts:118"
     },
     {
       "type": "symbol",
       "what": "fetchPrd",
-      "source": "web/src/api.ts:128"
+      "source": "web/src/api.ts:130"
     },
     {
       "type": "symbol",
       "what": "fetchProjects",
-      "source": "web/src/api.ts:71"
+      "source": "web/src/api.ts:73"
     },
     {
       "type": "symbol",
       "what": "fetchSpecTree",
-      "source": "web/src/api.ts:134"
+      "source": "web/src/api.ts:136"
     },
     {
       "type": "symbol",
       "what": "fetchWireframe",
-      "source": "web/src/api.ts:122"
+      "source": "web/src/api.ts:124"
     },
     {
       "type": "symbol",
@@ -2613,17 +2736,17 @@
     {
       "type": "symbol",
       "what": "pruneFeatureQueue",
-      "source": "server/src/lib/featureDocs.ts:275"
+      "source": "server/src/lib/featureDocs.ts:289"
     },
     {
       "type": "symbol",
       "what": "prunePrdQueue",
-      "source": "server/src/lib/docs.ts:331"
+      "source": "server/src/lib/docs.ts:335"
     },
     {
       "type": "symbol",
       "what": "pruneUserFlowQueue",
-      "source": "server/src/lib/userFlowDocs.ts:298"
+      "source": "server/src/lib/userFlowDocs.ts:314"
     },
     {
       "type": "symbol",
@@ -2663,12 +2786,12 @@
     {
       "type": "symbol",
       "what": "saveDocsPlanningUserFlowLayout",
-      "source": "web/src/api.ts:404"
+      "source": "web/src/api.ts:407"
     },
     {
       "type": "symbol",
       "what": "saveLayout",
-      "source": "web/src/api.ts:327"
+      "source": "web/src/api.ts:330"
     },
     {
       "type": "symbol",
@@ -2718,7 +2841,7 @@
     {
       "type": "symbol",
       "what": "treeFingerprint",
-      "source": "server/src/lib/featureDocs.ts:141"
+      "source": "server/src/lib/featureDocs.ts:148"
     },
     {
       "type": "symbol",
@@ -2734,6 +2857,6 @@
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-family-hardening-absorb-20260706.html",
-  "runId": "family-hardening-absorb-20260706"
+  "historyHtml": "audit-unknown.html",
+  "runId": "run-unknown"
 }
