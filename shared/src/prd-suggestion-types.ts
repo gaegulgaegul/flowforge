@@ -53,6 +53,12 @@ export interface PrdApplyResult {
    * 미실재 id(skipped)와 구분 — 이건 원본 손상 신호라 라우트가 422로 변환한다.
    */
   readonly writeFailed?: boolean;
+  /**
+   * 문서 패치 write는 성공했으나 이어지는 큐 prune write가 throw한 경우 true(부분반영).
+   * writeFailed(원본 손상, 422)와 구분 — 문서는 이미 반영됐으므로 라우트는 200으로 반환하고
+   * web이 "문서엔 반영됐지만 큐 정리 실패" 고지를 띄운다. features/userflow도 이 타입 재사용.
+   */
+  readonly queuePruneFailed?: true;
 }
 
 /**

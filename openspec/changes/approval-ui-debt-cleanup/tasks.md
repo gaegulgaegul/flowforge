@@ -4,7 +4,7 @@
 
 ### Sequential: shared 타입 (선행 필수)
 
-- [ ] 1.1 shared apply 결과 타입(prd/features/userflow)에 `queuePruneFailed?: true` 추가 — additive, 기존 소비자 무영향 확인(타입체크)
+- [x] 1.1 shared apply 결과 타입(prd/features/userflow)에 `queuePruneFailed?: true` 추가 — additive, 기존 소비자 무영향 확인(타입체크)
 
 ### Parallel Group 1 (server 3-lib RED — 서로 다른 테스트 파일, 독립 동시 실행 가능)
 
