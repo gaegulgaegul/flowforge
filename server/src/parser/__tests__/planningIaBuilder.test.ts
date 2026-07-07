@@ -19,17 +19,18 @@ const REGISTRY: ScreenRegistry = {
 describe("planningIaBuilder — screenId 딥링크 매칭 원천", () => {
   it("화면(capability) 노드에 원본 screenId를 세팅한다", () => {
     const { root } = buildPlanningIaTreeFromRegistry(REGISTRY);
-    const byLabel = Object.fromEntries(root.children.map((n) => [n.label, n]));
     // 화면 노드 id는 slug로 죽지만 screenId는 원본을 보존해야 web이 문자열 동치로 찾는다.
-    expect(byLabel["로그인 화면"].screenId).toBe("login");
-    expect(byLabel["홈 화면"].screenId).toBe("home");
+    const login = root.children.find((n) => n.label === "로그인 화면")!;
+    const home = root.children.find((n) => n.label === "홈 화면")!;
+    expect(login.screenId).toBe("login");
+    expect(home.screenId).toBe("home");
   });
 
   it("상세기능(requirement) 자식 노드엔 screenId가 없다", () => {
     const { root } = buildPlanningIaTreeFromRegistry(REGISTRY);
     const loginScreen = root.children.find((n) => n.label === "로그인 화면")!;
     expect(loginScreen.children).toHaveLength(1);
-    expect(loginScreen.children[0].screenId).toBeUndefined();
+    expect(loginScreen.children[0]!.screenId).toBeUndefined();
   });
 
   it("루트(change) 노드엔 screenId가 없다", () => {
