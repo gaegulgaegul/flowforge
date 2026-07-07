@@ -10,7 +10,7 @@
 ### Sequential: 라우트
 
 - [x] 2.1 RED: 라우트 통합 테스트 — `?project=` 200(픽스처 2프로젝트)·미지정 기존 동작 불변·조작/미지 프로젝트 404
-- [ ] 2.2 GREEN: graph.ts 6 GET+1 PUT에 optional project 처리(검증 실패 404, 부재=글로벌 루트)
+- [x] 2.2 GREEN: graph.ts 6 GET+1 PUT에 optional project 처리(검증 실패 404, 부재=글로벌 루트)
 
 ### Sequential: web 배선
 

@@ -11,7 +11,9 @@
  *
  * :id는 'archive/<name>' 형태도 허용하므로 와일드카드(*)로 받는다.
  */
+import { join } from "node:path";
 import { Router } from "express";
+import type { Request } from "express";
 import type { GraphNode, GraphEdge, SpecGraph, LayoutOverlay } from "@flowforge/shared";
 import { buildGraph } from "../parser/graphBuilder.js";
 import { buildIATree } from "../parser/iaBuilder.js";
@@ -19,9 +21,27 @@ import { buildWireframe } from "../parser/wireframeBuilder.js";
 import { buildPrd } from "../parser/prdBuilder.js";
 import { buildSpecTree } from "../parser/specTreeBuilder.js";
 import { listChanges, resolveChangeDir, readOverlay, writeOverlay, isLayoutOverlay } from "../lib/changes.js";
+import { resolveProjectDir } from "../lib/projects.js";
 import { safe } from "../lib/safe-error.js";
 
 export const graphRouter = Router();
+
+/**
+ * 요청에서 change 디렉토리를 해석한다 (선택적 크로스프로젝트).
+ * - ?project= 없음 → 현행 글로벌 루트(changesRoot) 기준 — 하위호환.
+ * - ?project= 있음+화이트리스트 통과 → 그 프로젝트의 openspec/changes 기준.
+ * - ?project= 있음+검증 실패(미지·조작·심링크) → null(라우트가 404, 루트 밖 접근 없음).
+ * 실패는 전부 null로 수렴 → 호출부가 404로 처리.
+ */
+function resolveChangeFromReq(req: Request): string | null {
+  const id = String(req.params.id ?? "");
+  const project = req.query.project;
+  if (project === undefined) return resolveChangeDir(id); // 글로벌 루트(현행)
+  if (typeof project !== "string") return null; // 배열 등 이상 쿼리는 차단
+  const projDir = resolveProjectDir(project);
+  if (projDir === null) return null; // 화이트리스트 실패 → 404
+  return resolveChangeDir(id, join(projDir, "openspec", "changes"));
+}
 
 /** graphBuilder 내부 형식 → shared SpecGraph 계약으로 변환 */
 function toSpecGraph(changeDir: string): SpecGraph {
@@ -56,7 +76,7 @@ graphRouter.get(
   "/api/changes/:id(*)/graph",
   safe(async (req, res) => {
     const id = String(req.params.id ?? "");
-    const dir = resolveChangeDir(id);
+    const dir = resolveChangeFromReq(req);
     if (!dir) {
       res.status(404).json({ error: "change_not_found" });
       return;
@@ -71,7 +91,7 @@ graphRouter.get(
   "/api/changes/:id(*)/ia",
   safe(async (req, res) => {
     const id = String(req.params.id ?? "");
-    const dir = resolveChangeDir(id);
+    const dir = resolveChangeFromReq(req);
     if (!dir) {
       res.status(404).json({ error: "change_not_found" });
       return;
@@ -84,7 +104,7 @@ graphRouter.get(
   "/api/changes/:id(*)/wireframe",
   safe(async (req, res) => {
     const id = String(req.params.id ?? "");
-    const dir = resolveChangeDir(id);
+    const dir = resolveChangeFromReq(req);
     if (!dir) {
       res.status(404).json({ error: "change_not_found" });
       return;
@@ -97,7 +117,7 @@ graphRouter.get(
   "/api/changes/:id(*)/prd",
   safe(async (req, res) => {
     const id = String(req.params.id ?? "");
-    const dir = resolveChangeDir(id);
+    const dir = resolveChangeFromReq(req);
     if (!dir) {
       res.status(404).json({ error: "change_not_found" });
       return;
@@ -110,7 +130,7 @@ graphRouter.get(
   "/api/changes/:id(*)/spec-tree",
   safe(async (req, res) => {
     const id = String(req.params.id ?? "");
-    const dir = resolveChangeDir(id);
+    const dir = resolveChangeFromReq(req);
     if (!dir) {
       res.status(404).json({ error: "change_not_found" });
       return;
@@ -122,8 +142,7 @@ graphRouter.get(
 graphRouter.put(
   "/api/changes/:id(*)/layout",
   safe(async (req, res) => {
-    const id = String(req.params.id ?? "");
-    const dir = resolveChangeDir(id);
+    const dir = resolveChangeFromReq(req);
     if (!dir) {
       res.status(404).json({ error: "change_not_found" });
       return;
