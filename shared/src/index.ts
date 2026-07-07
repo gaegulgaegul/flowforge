@@ -91,7 +91,7 @@ export type {
   WizardCheckpoint,
   WizardApplyPayload,
   WizardSummaryCounts,
-} from './prd-wizard-state.js';
+} from './wizard-state.js';
 export {
   setDecision,
   nextPendingId,
@@ -101,4 +101,4 @@ export {
   summaryCounts,
   applyPayload,
   reconcileCheckpoint,
-} from './prd-wizard-state.js';
+} from './wizard-state.js';

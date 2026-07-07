@@ -4,7 +4,7 @@
 
 ### Sequential: 구조 (동작 무변경 — 분리 커밋)
 
-- [ ] 1.1 shared `prd-wizard-state.ts` → `wizard-state.ts` rename + import 2곳 갱신 — 기존 단위 테스트 16건 GREEN 유지(내용 무변)
+- [x] 1.1 shared `prd-wizard-state.ts` → `wizard-state.ts` rename + import 2곳 갱신 — 기존 단위 테스트 16건 GREEN 유지(내용 무변)
 - [ ] 1.2 공용 셸 `ApprovalWizard` 추출 — PrdApprovalWizard의 골격(배너·진행바+결정 점·3버튼·탈출구·요약·localStorage 체크포인트 IO·appliedTick 리셋)을 render prop(카드 렌더러) 방식으로 일반화, PRD를 셸로 마이그레이션. **PRD 동작·픽셀 무변이 게이트**(체크포인트 키 `prd-wizard:<project>` 유지)
 
 ### Parallel Group 1 (패널별 위저드 — 서로 다른 파일, 동시 실행 가능)
