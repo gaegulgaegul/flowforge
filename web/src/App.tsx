@@ -343,6 +343,24 @@ export function App(): JSX.Element {
     [planningIaNodes, iaNodes],
   );
 
+  // 기능명세 상세 패널 화면 칩 클릭 → 기획 IA 뷰의 해당 화면 노드로 딥링크.
+  // 매칭은 server가 실어준 원본 screenId 문자열 동치만(slug 복제 금지 — 거짓 연결 0).
+  // 매칭 실패(레지스트리↔IA 불일치)는 무해: 탭 전환 없이 상태바 안내만(저작 오류를 숨기지 않되 화면은 안 깨짐).
+  const selectScreenInIa = useCallback(
+    (screenId: string) => {
+      const found = planningIaNodes.find((n) => (n.data as IANodeData).screenId === screenId);
+      if (!found) {
+        const chip = selectedFeature?.screens?.find((s) => s.id === screenId);
+        setStatus(`IA에서 화면을 찾지 못했습니다: ${chip?.label ?? screenId}`);
+        return;
+      }
+      setPlanTab("ia");
+      setSelectedIa(found.data as IANodeData);
+      setSelectedFeature(null); // 패널 상호배타 유지(기능명세 상세 패널 닫기)
+    },
+    [planningIaNodes, selectedFeature],
+  );
+
   // 기획 유저플로우 드래그: 위치 변경을 state에 반영(저장은 onNodeDragStop에서 한 번).
   const onPlanningFlowNodesChange = useCallback((changes: NodeChange[]) => {
     setPlanningFlowNodes((nds) => applyNodeChanges(changes, nds));
@@ -1068,6 +1086,7 @@ export function App(): JSX.Element {
         node={selectedFeature}
         onClose={() => setSelectedFeature(null)}
         onSelectById={selectFeatureById}
+        onSelectScreen={selectScreenInIa}
       />
       {/* 유저플로우 노드 상세 패널 — 같은 UX/CSS 재사용. incoming/outgoing 흐름 표시. */}
       <FlowDetailPanel
