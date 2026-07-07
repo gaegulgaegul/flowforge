@@ -11,7 +11,7 @@
 import { Router } from "express";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { listProjectCards, projectsRoot } from "../lib/projects.js";
+import { listProjectCards, resolveProjectDir as resolveProjectDirLib } from "../lib/projects.js";
 import {
   parseCharterCapabilities,
   buildCapabilityIndex,
@@ -50,9 +50,10 @@ export const projectsRouter = Router();
 
 /** 프로젝트명 → 절대 디렉토리(스캔 루트 밖 탈출 방지). 부정 시 null. */
 function resolveProjectDir(project: string): string | null {
-  if (project.includes("..") || !/^[A-Za-z0-9_-]+$/.test(project)) return null;
-  const dir = join(projectsRoot(), project);
-  if (!existsSync(join(dir, "openspec", "changes"))) return null;
+  // 검증은 lib 단일 구현으로 통합(review R-1 — 사본 drift가 C-1의 근원이었다).
+  // 이 라우터는 openspec 드릴다운 전용이라 openspec/changes 존재만 추가로 요구한다.
+  const dir = resolveProjectDirLib(project);
+  if (dir === null || !existsSync(join(dir, "openspec", "changes"))) return null;
   return dir;
 }
 

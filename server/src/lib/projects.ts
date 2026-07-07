@@ -31,8 +31,11 @@ export function projectsRoot(): string {
  * 그 외(부재·심링크·비디렉토리·조작)는 null. 화면 뷰/카드 스캔이 공용으로 재사용한다.
  */
 export function resolveProjectDir(name: string): string | null {
-  // 단일 세그먼트만 허용: 빈 값·'..'·슬래시/백슬래시 포함 거부.
-  if (!name || name.includes("..") || name.includes("/") || name.includes("\\")) return null;
+  // 화이트리스트 정규식(영숫자·하이픈·언더스코어) — routes 판과 동일 기준으로 통합.
+  // 블록리스트만으로는 dotfile(.ssh 등)·유니코드·공백 이름이 "프로젝트"로 해석되는
+  // 신뢰경계 결함이 남는다(review C-1: 프로덕션=홈 전체 RO 마운트+무인증이라 원격이
+  // 프로빙 대상을 직접 지정 가능). 카드 스캔도 이 게이트를 공유해 숨김 디렉토리 제외.
+  if (!name || !/^[A-Za-z0-9_-]+$/.test(name)) return null;
   const projDir = join(projectsRoot(), name);
   try {
     if (lstatSync(projDir).isSymbolicLink()) return null; // 심링크 탈출 방어

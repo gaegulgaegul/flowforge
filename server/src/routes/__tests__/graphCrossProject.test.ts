@@ -89,6 +89,18 @@ describe("graph API — 크로스프로젝트 ?project=", () => {
     expect(res.status).toBe(404);
   });
 
+  it("dotfile 프로젝트명(.ssh 등) → 404 (화이트리스트가 문 앞에서 차단, review C-1)", async () => {
+    // 픽스처에 실재하는 숨김 디렉토리(openspec 구조까지 갖춰도) 통과 금지.
+    makeProjectChange(projectsRoot, ".hidden", "sneaky-change");
+    const app = await loadApp();
+    const dot = await request(app).get("/api/changes/sneaky-change/graph?project=.hidden");
+    expect(dot.status).toBe(404);
+    const ssh = await request(app).get("/api/changes/x/graph?project=.ssh");
+    expect(ssh.status).toBe(404);
+    const space = await request(app).get(`/api/changes/x/graph?project=${encodeURIComponent("a b")}`);
+    expect(space.status).toBe(404);
+  });
+
   it("미지 프로젝트 → 404", async () => {
     const app = await loadApp();
     const res = await request(app).get("/api/changes/feature-a/graph?project=no-such-project");
