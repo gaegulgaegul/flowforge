@@ -321,10 +321,10 @@ flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 �
 - invariant: 반려는 문서 바이트 불변, 큐에서만 제거.
 - metric: 단위(검증·append·방어·무력화 프로브) + 통합 테스트 PASS + 실픽셀 grounding(개별 승인=1줄 append·반려=문서 불변).
 
-### 기능: 유저플로우 탭 승인 패널 (web)
-- assert:symbol UserFlowApprovalPanel
+### 기능: 유저플로우 탭 승인 위저드 (web — approval-wizard-extension이 목록형 패널 대체)
+- assert:symbol UserFlowApprovalWizard
 - assert:symbol fetchUserFlowSuggestions
-- 큐가 비어있지 않으면 그래프 위에 제안 카드(from→to·실선/점선·라벨·rationale·신규 화면 뱃지)와 개별/일괄 승인·반려를 렌더, 빈 큐면 패널 미렌더. apply 후 그래프·큐 재조회.
+- 큐가 비어있지 않으면 그래프 위에 위저드(에지 카드 from→to·실선/점선·라벨·rationale·신규 화면 뱃지 1건씩)를 렌더, 빈 큐면 미렌더. 반영 성공 후 그래프·큐 재조회.
 - invariant: stem 전환·apply 재조회는 dashReqToken race 가드를 지킨다(stale 응답이 화면을 덮지 않는다).
 - metric: 실픽셀 grounding — 카드 렌더·개별/일괄 승인·반려·빈 큐 패널 소멸·콘솔 에러 0.
 
@@ -343,6 +343,11 @@ flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 �
 - invariant: 큐 읽기는 중복 id를 첫 항목 승리로 제거 — 같은 id 2건 + 승인 1회에 에지가 2줄 append되지 않는다.
 - behavior: skip 사유 단언은 정확한 `"<id>: <reason>"` 문자열 매칭으로 테스트에 박제 — 사유 회귀가 조용히 통과하지 못한다
 - metric: prune 실패 주입(200+queuePruneFailed)·중복 id=에지 1줄·사유 정확 단언 테스트 PASS
+
+### 기능: 승인 위저드 (approval-wizard-extension — 목록형 패널을 대체, 공용 셸)
+- behavior: 큐가 비어있지 않으면 위저드로 1건씩 제시(진행 n/N·결정 점·승인/반려/건너뛰기·[남은 것 모두 승인/반려] 탈출구), 건너뛴 제안은 반영 제외·큐 잔존·다음 진입 때 재등장, 요약 [결정 반영하기] 1회로 기존 청크 apply 경로 호출
+- behavior: 결정은 localStorage 체크포인트(uflow-wizard:<project>:<stem>)로 이탈을 견디고, 현재 큐에 없는 id·비열거형 결정값은 폐기, 반영 실패=결정 보존·성공=리셋, 프로젝트·stem(버전) 간 격리
+- metric: verify 실픽셀 시나리오 + 공용 상태 모듈(wizard-state) 단위 테스트 16 PASS (2026-07-07)
 ## capability: planning-features-approval-apply — 기능명세 속성 제안 승인/반려 적용
 
 flowforge가 기능명세 제안 큐(features.suggestions.json) 항목을 개별/일괄로 승인·반려하고, 승인분만 docs/planning/features.md의 해당 노드 속성 줄(중요도·상태)을 제자리 교체 반영하는 능력(6b-features). 반려는 원본 불변. write 전 재파싱 fingerprint(노드 수·capability 키 집합) 비교로 구조 불변을 검증하고 위반 시 422로 원본을 보호한다.
@@ -368,3 +373,8 @@ flowforge가 기능명세 제안 큐(features.suggestions.json) 항목을 개별
 - invariant: 큐 재작성(prune) write 실패는 500이 아니라 200 + `queuePruneFailed: true`로 표면화 — 부분 상태(문서 반영·큐 정리 실패)를 은폐하지 않는다(문서 write 자체 실패는 기존대로 에러).
 - invariant: 큐 읽기는 중복 id를 첫 항목 승리로 제거 — 같은 id 2건 + 승인 1회가 이중 반영되지 않는다.
 - metric: prune 실패 주입(200+queuePruneFailed)·중복 id dedup 테스트 PASS
+
+### 기능: 승인 위저드 (approval-wizard-extension — 목록형 패널을 대체, 공용 셸)
+- behavior: 큐가 비어있지 않으면 위저드로 1건씩 제시(진행 n/N·결정 점·승인/반려/건너뛰기·[남은 것 모두 승인/반려] 탈출구), 건너뛴 제안은 반영 제외·큐 잔존·다음 진입 때 재등장, 요약 [결정 반영하기] 1회로 기존 청크 apply 경로 호출
+- behavior: 결정은 localStorage 체크포인트(features-wizard:<project>)로 이탈을 견디고, 현재 큐에 없는 id·비열거형 결정값은 폐기, 반영 실패=결정 보존·성공=리셋, 프로젝트 간 격리
+- metric: verify 실픽셀 시나리오 + 공용 상태 모듈(wizard-state) 단위 테스트 16 PASS (2026-07-07)
