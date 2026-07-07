@@ -54,6 +54,8 @@ export function buildPlanningIaTreeFromRegistry(registry: ScreenRegistry): IATre
     return {
       id: `screen-${slug(screen.id)}`,
       kind: "capability" as const, // 화면=부모 노드(capability 팔레트로 렌더)
+      // 원본 화면 id 보존(node id는 slug라 원본으로 못 되돌림) → web 칩 딥링크의 문자열 동치 매칭 원천.
+      screenId: screen.id,
       label: screen.label,
       detail: "",
       // 배지 = 이 화면에 연결된 상세기능 수(N:M 연결 카운트).

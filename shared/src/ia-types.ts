@@ -20,6 +20,11 @@ export interface IANode {
   readonly detail: string;
   /** 연결된 상세기능 수 = 이 노드 하위 시나리오(받아들임 기준) 개수. 자세히뷰 배지. */
   readonly scenarioCount: number;
+  /**
+   * 기획 IA 화면 노드에만 실리는 원본 화면 id(additive·옵션). node id는 slug로 죽지만 이건 원본이라
+   * web 상세 패널 화면 칩이 문자열 동치로 대상 노드를 찾는 딥링크 매칭 원천이 된다. change IA엔 없음.
+   */
+  readonly screenId?: string;
   readonly children: readonly IANode[];
 }
 

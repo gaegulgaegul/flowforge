@@ -24,6 +24,8 @@ export interface IANodeData extends Record<string, unknown> {
   parentLabel?: string;
   /** 상세 패널용 파생 필드 — 부모 노드 id(전환 이동용, 루트는 undefined). */
   parentId?: string;
+  /** 기획 IA 화면 노드의 원본 화면 id(server가 실어줌). 상세 패널 화면 칩 딥링크의 매칭 원천. */
+  screenId?: string;
 }
 
 const NODE_W = 220;
@@ -78,6 +80,8 @@ export function toIAFlow(root: IANode, verbose: boolean): { nodes: Node<IANodeDa
         // 상세 패널용 파생 필드(빌더/타입 무저촉 — web에서 트리 구조로만 계산).
         childRefs: n.children.map((c) => ({ id: c.id, label: c.label, kind: c.kind })),
         ...(parent ? { parentLabel: parent.label, parentId: parent.id } : {}),
+        // 화면 노드에만 실린 원본 screenId 통과(server IANode.screenId) — 칩 딥링크 문자열 동치 매칭용.
+        ...(n.screenId ? { screenId: n.screenId } : {}),
       },
       type: "ia",
     };
