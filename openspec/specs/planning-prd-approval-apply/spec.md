@@ -78,19 +78,48 @@ WHEN an apply request's approve+reject ids exceed the batch cap (200), the route
 - **WHEN** approve+reject 합계 201건으로 apply를 호출한다
 - **THEN** 응답은 400이고 문서·큐는 불변이다
 
-### Requirement: PRD 승인 패널은 대량 큐 UI 규약을 따른다
+### Requirement: PRD 승인 UI는 위저드 방식이다
 
-WHEN the PRD approval panel renders a suggestion queue, the panel SHALL place the bulk action bar above the card list, SHALL show the pending count in both bulk button labels, and SHALL wrap the card list in the shared capped scroll container (`feature-approval-list`) — matching the features/userflow panels.
+WHEN the PRD suggestion queue is non-empty, the panel SHALL present suggestions as a wizard — one suggestion at a time with its 현재↔제안 diff, a progress indicator (n / N with per-item decision dots), and [승인]/[반려]/[건너뛰기] actions — replacing the previous card-list-with-bulk-bar layout. Bulk capability SHALL survive as wizard escape actions ([남은 것 모두 승인]/[남은 것 모두 반려]).
 
-#### Scenario: 일괄 바 상단 + 건수 표기
+#### Scenario: 진입 즉시 한 건씩
 
-- **WHEN** PRD 제안 큐에 N건이 떠서 패널이 렌더된다
-- **THEN** [모두 승인 (N건)]·[모두 반려 (N건)] 바가 카드 목록 위에 있고, 목록은 스크롤 캡 컨테이너 안에 있다
+- **WHEN** 제안 N건이 있는 프로젝트의 PRD 뷰를 연다
+- **THEN** 첫 제안 1건이 diff와 함께 크게 표시되고, 진행 표시가 "1 / N"이며, 결정하면 자동으로 다음 건으로 넘어간다
 
-#### Scenario: 3패널 구조 대칭
+#### Scenario: 건너뛰기는 큐에 남는다
 
-- **WHEN** PRD·features·userflow 승인 패널을 같은 큐 건수로 렌더한다
-- **THEN** 세 패널 모두 동일한 상단 일괄 바/건수 표기/목록 캡 구조를 가진다 (신규 CSS 추가 없이 기존 클래스 재사용)
+- **WHEN** 한 제안을 [건너뛰기]한다
+- **THEN** 그 제안은 반영 대상에 포함되지 않고 큐에 남으며, 다음 위저드 진입 때 다시 나타난다
+
+#### Scenario: 탈출구 일괄 결정
+
+- **WHEN** 위저드 도중 [남은 것 모두 승인]을 누른다
+- **THEN** 미결정 제안 전부가 승인으로 표시되고 요약 화면으로 이동한다 (서버 반영은 아직 없음)
+
+### Requirement: 반영은 요약에서 한 번, 결정은 이탈을 견딘다
+
+Decisions accumulate client-side during the wizard; the server apply happens exactly once when the user confirms [결정 반영하기] on the summary screen (reusing the existing chunked apply route). Decisions SHALL be checkpointed to localStorage so that re-entering the wizard restores them; checkpointed decisions whose suggestion ids are no longer in the queue SHALL be discarded.
+
+#### Scenario: 요약 확인 후 1회 반영
+
+- **WHEN** 모든 제안을 결정하고 요약에서 [결정 반영하기]를 누른다
+- **THEN** 승인/반려 결정이 기존 apply 경로로 1회(청크) 전송되고, 성공하면 문서·큐·화면이 갱신된다
+
+#### Scenario: 이탈 후 재진입 시 결정 복원
+
+- **WHEN** 3건을 결정한 상태에서 화면을 떠났다가 같은 프로젝트 PRD 뷰로 돌아온다
+- **THEN** 이전 결정 3건이 복원돼 있고 4번째 제안부터 이어서 검토한다
+
+#### Scenario: 큐가 바뀌면 stale 결정은 폐기
+
+- **WHEN** 체크포인트에 있는 제안 id가 현재 큐에 더 이상 없다
+- **THEN** 그 id의 결정은 조용히 폐기되고 현재 큐 기준으로만 진행한다 (없는 id가 apply로 전송되지 않는다)
+
+#### Scenario: 반영 실패 시 결정 보존
+
+- **WHEN** [결정 반영하기]의 서버 호출이 실패한다
+- **THEN** 기존 실패 고지 경로가 동작하고 체크포인트는 남아 재시도할 수 있다
 
 ### Requirement: 큐 재작성 실패는 부분반영 상태로 고지한다
 

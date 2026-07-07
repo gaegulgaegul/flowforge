@@ -1,0 +1,189 @@
+{
+  "change": "approval-wizard-mode",
+  "verifiedAt": "2026-07-06T13:12:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 7,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "PRD 승인 UI는 위저드 방식이다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "순수 함수 입력은 TS strict로 컴파일 보장; loadCheckpoint의 typeof!=='object' 가드가 손상된 localStorage를 빈 세션으로 폴백(S6에서 임의 ghost 주입 후 reload 시 콘솔에러 0·정상 진입 실측)",
+          "동시성": "상태 함수는 무상태 순수 함수라 race 불가; UI apply 동시 클릭 race는 App의 prdApplyBusy 가드(App.tsx:554 정적 확인)가 담당. 픽스처 busy=true 중 apply 버튼 disabled 실측(S7 재활성 확인)",
+          "대량": "nextPendingId/fillPending/summaryCounts는 O(n) 배열 순회·무상태 — 대량 큐는 성능만 다르고 정확성 불변; 200건 상한·청크는 서버 apply 계약(직전 change 검증분)",
+          "특수문자": "제안 id는 서버 생성 안정 식별자(사용자 입력 아님)라 특수문자 유입 경로 없음; proposedBody는 React가 이스케이프해 pre로 렌더(dangerouslySetInnerHTML 전무)"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "진입 즉시 한 건씩 — 제안 N건 프로젝트 PRD 뷰를 열면 첫 제안 1건이 diff와 함께 크게 표시되고 진행이 '1/N', 결정하면 자동으로 다음 건으로 이동",
+          "layer": "web",
+          "means": "Playwright headless Chromium(v149) 실픽셀 fresh 재검증: localStorage.clear 후 진입 → 배너 '제안 3건'·진행 '1 / 3'·현재↔제안 두 컬럼 diff·[✕반려][건너뛰기][✓승인]+탈출구 2개. ✓승인(approve-s1) 클릭 → 진행 '2 / 3'로 자동 advance·체크포인트 {s1:approve} 저장. 콘솔 에러 0",
+          "basis": "web/verify-fixture/wizard-fixture.tsx (vite dev :5250), PrdApprovalWizard.tsx nextPendingId 재계산 자동 advance; shared prd-wizard-state nextPendingId (server jest 5건)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s1-entry.png",
+            "caption": "진입 화면 — 배너 '제안 3건', 진행 1/3, 현재↔제안 diff, 3버튼+탈출구 2개. approve 클릭 후 '2/3' 자동 advance·체크포인트 {s1:approve} 실측(콘솔에러 0)"
+          }
+        },
+        {
+          "scenario": "건너뛰기는 큐에 남는다 — [건너뛰기]한 제안은 반영 대상에서 빠지고 큐에 남아 다음 위저드 진입 때 다시 나타난다",
+          "layer": "web",
+          "means": "Playwright 실픽셀 fresh: s1 승인 → s2 건너뛰기 → 진행 '3 / 3'·체크포인트 {s1:approve,s2:skip}(skip은 결정이라 advance하되 큐 잔존). s3 승인 후 [결정 반영하기] → apply-log 'approve=[s1,s3]'로 s2가 payload approve/reject 어디에도 미포함 실증. 상태: applyPayload skip 제외(server jest)",
+          "basis": "PrdApprovalWizard decide('skip'); shared prd-wizard-state applyPayload/pendingIds; server jest 'skip은 applyPayload에 안 들어간다'",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s2-skip.png",
+            "caption": "s2 건너뛰기 후 — 진행 3/3, 체크포인트 {s1:approve,s2:skip}. 이후 apply-log 'approve=[s1,s3] reject=[]' s2 제외 실측(실픽셀+localStorage 덤프)"
+          }
+        },
+        {
+          "scenario": "탈출구 일괄 결정 — 위저드 도중 [남은 것 모두 승인]을 누르면 미결정 제안 전부가 승인으로 표시되고 요약 화면으로 이동(서버 반영 아직 없음)",
+          "layer": "web",
+          "means": "Playwright 실픽셀 fresh: s1을 건너뛴 상태에서 [남은 것 모두 승인](escape-approve-all) → 요약 진입, 카운트 '승인 2·반려 0·건너뜀 1'(미결정 s2,s3만 승인 채움·기존 s1 skip 불변), apply-log '(아직 반영 없음)'으로 서버 무접촉 실증. 상태: fillPending 미결정만 채움(server jest)",
+          "basis": "PrdApprovalWizard escape('approve'); shared prd-wizard-state fillPending; server jest '미결정만 채우고 기존 결정 불변'",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s3-summary.png",
+            "caption": "요약 화면 — 승인2·반려0·건너뜀1(s1 skip 불변), apply-log '(아직 반영 없음)' 서버 무접촉 실측(실픽셀)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "반영은 요약에서 한 번, 결정은 이탈을 견딘다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "applyPayload/reconcileCheckpoint 입력은 TS strict 보장; loadCheckpoint 파싱 가드가 손상 localStorage를 빈 세션 폴백(S6 ghost 주입 reload 실측 콘솔에러 0)",
+          "동시성": "reconcileCheckpoint/applyPayload는 무상태 순수 함수라 race 불가; apply 서버 호출 동시 클릭 race는 App applyPrd의 prdApplyBusy 가드(App.tsx:554). cross-project tick race(review C-2)는 openProject의 setPrdAppliedTick(0)+key remount로 격리 — C-2 시나리오 실픽셀 재현·통과",
+          "대량": "reconcileCheckpoint/applyPayload는 O(n) Set·배열 순회 — 대량 체크포인트도 정확성 불변; 청크 전송 상한은 서버 apply 계약(직전 change 검증분)",
+          "특수문자": "id는 서버 생성 식별자라 특수문자 없음; JSON.stringify/parse 안전 직렬화. 빈값(빈 큐)=allDecided true 폴백(server jest '빈 큐'); 반영 대상 0=short-circuit 안내(M-1 실픽셀 실측)"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "요약 확인 후 1회 반영 — 모든 제안 결정 후 요약에서 [결정 반영하기]를 누르면 승인/반려 결정이 기존 apply 경로로 1회(청크) 전송되고 성공하면 문서·큐·화면이 갱신된다",
+          "layer": "web",
+          "means": "Playwright 실픽셀 fresh: 요약(s1:skip,s2:approve,s3:reject)에서 [결정 반영하기] → apply-log 'approve=[s2] reject=[s3]'(skip s1 제외·approve/reject 분리·1회 전송), s2·s3가 큐에서 제거돼 큐 축소, 성공 후 체크포인트가 남은 큐 {ids:[s1],decisions:{s1:skip}}로 재조정. App 배선: onApply→applyPrd→applyInChunks(applyDocsPrdSuggestions) 정적 확인 App.tsx:565, prdApplyBusy로 1회 보장",
+          "basis": "PrdApprovalWizard apply()→onApply; App.tsx applyPrd→applyInChunks; shared applyPayload(server jest 'approve/reject 순서대로 분리')",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s4-applied.png",
+            "caption": "반영 후 — apply-log 'approve=[s2] reject=[s3]'(skip 제외·분리·1회), 큐가 s1 1건으로 축소, 체크포인트 {ids:[s1],decisions:{s1:skip}} 재조정 실측(실픽셀)"
+          }
+        },
+        {
+          "scenario": "이탈 후 재진입 시 결정 복원 — 여러 건 결정한 상태에서 화면을 떠났다 같은 프로젝트 PRD 뷰로 돌아오면 이전 결정이 복원돼 있고 미결정부터 이어서 검토한다",
+          "layer": "web",
+          "means": "Playwright 실픽셀 fresh: s1 approve·s2 skip 결정 후 reload(이탈→재진입) → localStorage prd-wizard:fixture-project에서 복원, 진행 '3 / 3'·체크포인트 {s1:approve,s2:skip} 유지·첫 미결정(s3)부터 이어서 검토. 콘솔 에러 0. 상태: reconcileCheckpoint 복원(server jest)",
+          "basis": "PrdApprovalWizard loadCheckpoint/복원 useEffect, localStorage 키 prd-wizard:fixture-project(실측); shared reconcileCheckpoint",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "reload 후 실측: progress '3 / 3', checkpoint {ids:[s1,s2,s3],decisions:{s1:approve,s2:skip}} — 이전 결정 복원·첫 미결정 s3부터 이어감, 콘솔 에러 0",
+            "caption": "재진입 복원 (reload 후 localStorage 실측 덤프)"
+          }
+        },
+        {
+          "scenario": "큐가 바뀌면 stale 결정은 폐기 — 체크포인트의 제안 id가 현재 큐에 더 이상 없으면 그 결정은 조용히 폐기되고 현재 큐 기준으로만 진행(없는 id가 apply로 전송되지 않음)",
+          "layer": "web",
+          "means": "Playwright 실픽셀 fresh: 체크포인트에 ghost1/ghost2(큐 밖 id)+s1:approve 주입 후 reload → 재진입 시 현재 큐(s1,s2,s3)와 대조해 ghost 조용히 폐기(checkpoint decisions={s1:approve}만), 이어서 전건 승인 후 [결정 반영하기] → apply-log 'approve=[s1,s2,s3]'에 ghost 미포함 실증(stale id apply 미전송). 콘솔 에러 0. 상태: reconcileCheckpoint 차집합 폐기(server jest '폐기 후 페이로드에 stale id 안 새어나감')",
+          "basis": "PrdApprovalWizard loadCheckpoint→reconcileCheckpoint; shared reconcileCheckpoint(server jest)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "ghost 주입 후 reload 실측: checkpoint decisions={s1:approve} (ghost1/ghost2 폐기), 이후 apply-log 'approve=[s1,s2,s3] reject=[]' — ghost 미전송, 콘솔 에러 0",
+            "caption": "stale 폐기 + apply 미유출 (localStorage 실측 덤프)"
+          }
+        },
+        {
+          "scenario": "반영 실패 시 결정 보존 — [결정 반영하기]의 서버 호출이 실패하면 기존 실패 고지 경로가 동작하고 체크포인트는 남아 재시도할 수 있다",
+          "layer": "web",
+          "means": "Playwright 실픽셀 fresh: 실패 픽스처(onApply가 큐 미축소=서버 실패 대역)로 전건 승인 후 [결정 반영하기] → apply-log '반영 실패 — 결정 보존됨(재시도 가능)', 요약 화면 유지, 체크포인트 3건 approve 잔존, [결정 반영하기] 재활성(disabled=false) 실측. App 배선 .catch는 tick 미증가로 결정 보존(정적 확인 App.tsx:581-593). 콘솔 에러 0",
+          "basis": "PrdApprovalWizard apply()(setDecisions 미호출로 보존); App.tsx applyPrd .catch(재조회+setStatus, tick 미증가)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s7-fail.png",
+            "caption": "반영 실패 후 — '반영 실패 결정 보존됨(재시도 가능)', 요약 유지, 체크포인트 3건 approve 잔존, [결정 반영하기] 재활성(재클릭 재시도 가능) 실측(실픽셀)"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 333,
+      "passed": 333,
+      "failed": 0,
+      "basis": "root npm test → server jest + shared 순수모듈 shared/src/prd-wizard-state.ts (테스트 server/src/lib/__tests__/prdWizardState.test.ts 16건)",
+      "reason": "빌드 EXIT=0(shared+server+web tsc, vite 216 modules) · 타입체크 EXIT=0(3워크스페이스 clean) · 린트 EXIT=0(--if-present, 하위 워크스페이스에 린터 미구성) · npm test jest 29 suites/333 tests 전부 PASS(리포터 카운트 이중확인·PIPESTATUS=0) — 기존 회귀 0 + 상태모듈 16(결정이동5·skip제외2·탈출구2·요약2·stale폐기3·페이로드분리2)"
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 10,
+      "passed": 10,
+      "failed": 0,
+      "basis": "web/verify-fixture/{wizard-fixture,wizard-fixture-fail,wizard-fixture-xproject}.tsx (vite dev :5250) + Playwright headless Chromium(v149) 실픽셀·localStorage 실측, 콘솔 에러 0. 신규 xproject 픽스처로 이전 verify가 놓친 C-2 cross-project 경로 커버",
+      "reason": "빌드(vite EXIT=0)·타입체크 EXIT=0. 격리 픽스처를 Playwright로 실제 구동 — apply 마커 신뢰 안 함(doubt-by-default) fresh 재검증. 8개 spec 시나리오 전부 PASS + 회귀검증 2건(C-2 cross-project 격리·M-1 반영대상0 short-circuit) PASS + 모바일 1건. 스크린샷 6장+text 2건, 콘솔 에러 0 전건. C-2/M-1은 최신 fix커밋 8e9e636 대응분으로 이전 verify.json(fix 이전)이 미커버했던 경로"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "프로젝트 루트에 android/·build.gradle·settings.gradle 부재(find 확인, node_modules 제외)",
+      "reason": "네이티브 Android 소스 없음 — 이 change는 web(React)+shared+server 워크스페이스만 다룸(적용 불가)"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "프로젝트 루트에 ios/·Podfile·*.xcodeproj 부재(find 확인) + 비-macOS 호스트(linux)",
+      "reason": "네이티브 iOS 소스 없음 + macOS 필요 — 적용 불가"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260706-1312.html"
+}

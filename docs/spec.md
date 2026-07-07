@@ -241,8 +241,16 @@ flowforge가 PRD 제안 큐 항목을 개별/일괄로 승인·반려하고 승�
 ### 기능: 승인 UI/큐 위생 (approval-ui-debt-cleanup)
 - invariant: 큐 재작성(prune) write 실패는 500이 아니라 200 + `queuePruneFailed: true`로 표면화 — 문서 패치는 이미 성공했으므로 부분 상태를 은폐하지 않는다(문서 write 자체 실패는 기존대로 에러). 웹은 이 필드를 보고 "문서 반영·큐 정리 실패"를 고지.
 - invariant: 큐 읽기는 중복 id를 첫 항목 승리로 제거 — 같은 id 2건 + 승인 1회가 이중 반영되지 않는다.
-- behavior: 승인 패널은 상단 일괄 바(모두 승인/반려에 건수 표기)+목록 스크롤 캡(feature-approval-list) 구조로 features/userflow 패널과 대칭
-- metric: prune 실패 주입 테스트(200+queuePruneFailed)·중복 id dedup 테스트 PASS + 3패널 대칭 실픽셀 확인(2026-07-06)
+- metric: prune 실패 주입 테스트(200+queuePruneFailed)·중복 id dedup 테스트 PASS
+
+### 기능: PRD 승인 위저드 (approval-wizard-mode — 목록형 패널을 대체)
+- assert:symbol nextPendingId
+- assert:symbol reconcileCheckpoint
+- assert:symbol applyPayload
+- behavior: 큐가 비어있지 않으면 위저드로 1건씩 제시(진행 n/N·결정 점·승인/반려/건너뛰기·하단 [남은 것 모두 승인/반려] 탈출구), 건너뛴 제안은 반영에서 제외되고 큐에 남아 다음 진입 때 재등장
+- behavior: 결정은 클라이언트에 쌓이고 요약의 [결정 반영하기] 1회로 기존 청크 apply 경로에 전송, localStorage 체크포인트(prd-wizard:<project>)로 이탈 후 재진입 시 복원, 현재 큐에 없는 id의 결정은 폐기(stale 안전)
+- invariant: 반영 실패 시 결정·체크포인트 보존(재시도 가능), 반영 성공 시에만 결정 리셋(skip 잔존 큐가 요약에 갇히지 않음) — cross-project tick 격리로 다른 프로젝트 결정 불침범
+- metric: 상태 모듈 단위 테스트 16건 + verify 실픽셀 7시나리오(진입 즉시 1건·건너뛰기 잔존·탈출구·요약 1회 반영·재진입 복원·stale 폐기·실패 보존) PASS (2026-07-06)
 ## capability: planning-prd-approval-queue — PRD 제안 큐 읽기
 
 flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 제안 큐)을 읽어 반환하는 읽기전용 능력. 큐가 없으면 빈 큐(version:1, suggestions:[])를 200으로 반환하고(404 아님), 깨진 JSON·미인식 항목은 안전 폴백(빈 큐/필터)한다. flowforge는 큐를 생성하지 않고 소비만 한다(제안 생성 주체=외부 스킬).
