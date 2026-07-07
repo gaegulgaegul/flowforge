@@ -14,4 +14,5 @@
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
-- [ ] 3.1 VERIFY: 5단계 게이트 — 빌드 → 타입체크 → 린트 → 테스트(기존 333 회귀 0) → UI 실픽셀(격리 픽스처: ①PRD 위저드 동작 무변(진입·skip 재등장·재진입 복원) ②features 위저드 전 경로 ③userflow 위저드 전 경로+stem 격리) 전부 PASS
+- [x] 3.1 VERIFY: 5단계 게이트 — 빌드 → 타입체크 → 린트 → 테스트(기존 333 회귀 0) → UI 실픽셀(격리 픽스처: ①PRD 위저드 동작 무변(진입·skip 재등장·재진입 복원) ②features 위저드 전 경로 ③userflow 위저드 전 경로+stem 격리) 전부 PASS
+  - 빌드: shared+web vite 프로덕션 빌드 PASS. 타입체크: web·server tsc clean. 린트: 프로젝트에 린터 미구성(`--if-present` 스킵, 이전 change 동일) → tsc strict 대체. 테스트: 333/333 PASS(회귀 0). UI 실픽셀: vite dev(5212)+캐시 chromium(playwright-core)으로 격리 픽스처 3종 구동, 13/13 시나리오 PASS, 콘솔 에러 0(favicon 404 잡음 제외). features 카드 현재→제안 속성 화살표·userflow stem 격리(main→v2 큐 m1→v1) 실증, 3패널 대칭 회복 스크린샷 확인.
