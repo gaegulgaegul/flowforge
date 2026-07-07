@@ -10,6 +10,10 @@
  * 결정은 반영 전까지 로컬(state + 체크포인트)에만 쌓이고, 요약의 [결정 반영하기] 1회로
  * 부모의 apply 경로를 호출한다. skip은 반영 대상이 아니라 큐에 남는다(다음 진입 때 재등장).
  * 상태 로직은 프레임워크 무의존 순수 모듈(@flowforge/shared wizard-state)에서 계산한다.
+ *
+ * ⚠️ className/data-testid의 `prd-` 접두어는 레거시다 — 셸은 제네릭이며 세 위저드가 같은
+ * 구조 클래스를 공유한다(CSS·픽셀 불변 위해 유지). E2E에서 `prd-wizard` testid로 패널을
+ * 구분하지 말 것 — 카드 testid(`cardTestId`)가 패널별 네임스페이스다. (리뷰 C-5)
  */
 import { useEffect, useMemo, useState } from "react";
 import type { WizardDecision, WizardDecisionMap } from "@flowforge/shared";
@@ -36,7 +40,12 @@ function loadCheckpoint(key: string, ids: readonly string[]): WizardDecisionMap 
     const parsed = JSON.parse(raw) as { decisions?: unknown };
     const decisions = parsed?.decisions;
     if (!decisions || typeof decisions !== "object") return {};
-    return reconcileCheckpoint(ids, decisions as WizardDecisionMap);
+    // 결정 *값*도 열거형 화이트리스트로 거른다 — 손상 체크포인트가 요약 렌더로 유입 방지(리뷰 C-4).
+    const clean: Record<string, WizardDecision> = {};
+    for (const [k, v] of Object.entries(decisions as Record<string, unknown>)) {
+      if (v === "approve" || v === "reject" || v === "skip") clean[k] = v;
+    }
+    return reconcileCheckpoint(ids, clean);
   } catch {
     return {}; // 체크포인트는 편의지 데이터가 아님 — 조용히 새 세션으로
   }
@@ -93,9 +102,10 @@ export function ApprovalWizard<TSuggestion extends WizardSuggestion>({
   }, [appliedTick]);
 
   // 결정 변경 시 체크포인트 저장(파싱 실패·용량 초과는 조용히 무시).
+  // 빈 큐인데 결정만 남은 상태도 정리 — 키가 프로젝트마다 무한 축적되는 누수 방지(리뷰 C-2).
   useEffect(() => {
     try {
-      if (Object.keys(decisions).length === 0) {
+      if (Object.keys(decisions).length === 0 || ids.length === 0) {
         window.localStorage.removeItem(checkpointKey);
       } else {
         window.localStorage.setItem(
@@ -123,6 +133,7 @@ export function ApprovalWizard<TSuggestion extends WizardSuggestion>({
     setDecisions({});
   };
   const apply = (): void => {
+    if (busy) return; // 더블클릭 이중 전송 창 차단 — 다른 세 핸들러와 대칭(리뷰 C-1)
     const { approve, reject } = applyPayload(ids, decisions);
     onApply([...approve], [...reject]);
   };
