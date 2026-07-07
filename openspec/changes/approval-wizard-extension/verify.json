@@ -1,0 +1,187 @@
+{
+  "change": "approval-wizard-extension",
+  "verifiedAt": "2026-07-07T05:41:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 7,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "features 승인 UI는 위저드 방식이다 (planning-features-approval-apply)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "제안 id는 shared 타입 경계에서 string으로 고정(TS strict) — 서버 생성 큐만 위저드에 도달, 잘못된 타입이 흘러들 런타임 입력면 없음",
+          "동시성": "1인 로컬 도구·단일 apply 버튼·busy 플래그로 재진입 차단 — 동시 apply 표면 없음",
+          "특수문자": "id는 불투명 문자열, nodePath/label은 React 기본 이스케이프(XSS 안전) — 특수문자 파싱 경로 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "진입 즉시 한 건씩 + 요약 1회 반영 (happy)",
+          "layer": "web",
+          "means": "격리 픽스처 features-fixture 실픽셀 구동(playwright 실클릭) — 1/3부터 1건씩 카드, 승인×3 → 요약 → wizard-apply 1회 → applyInChunks 경로",
+          "basis": "web 탐지: vite 앱(web/package.json build=tsc+vite) + web/verify-fixture 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/F1.png",
+            "caption": "요약 '검토 완료 · 승인 3·반려 0·건너뜀 0' 3행 + [결정 반영하기]; apply-log '반영됨 — approve=[f1,f2,f3] reject=[]', 반영 후 위저드 소멸"
+          }
+        },
+        {
+          "scenario": "건너뛰기는 큐에 남고 반영 후 다시 나타난다 (edge)",
+          "layer": "web",
+          "means": "격리 픽스처: f1 건너뛰기 → f2·f3 승인 → 반영 → 큐 재조회로 f1 카드 재등장",
+          "basis": "web 탐지 동일 + shared wizard-state 단위테스트(skip은 applyPayload 미포함)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/F2.png",
+            "caption": "apply-log approve=[f2,f3](f1 제외); 반영 후 위저드가 '1/1'로 f1(기록 자동화) 카드 재등장 — 현재→제안 속성 화살표(중요도 중간→높음) 표시, 요약에 갇히지 않음"
+          }
+        },
+        {
+          "scenario": "이탈 후 재진입 복원 + 반영 실패 결정 보존 (error path)",
+          "layer": "web",
+          "means": "재진입 복원=features-fixture(f1 승인 후 localStorage 유지 reload → 2/3 재개, 체크포인트 features-wizard:fixture-project 잔존); 반영 실패 보존=공용 셸 실패 픽스처(PRD-fail, appliedTick 0 고정 → 결정·요약 잔존, 재시도 가능)",
+          "basis": "web 탐지 동일 + shared wizard-state 단위테스트(stale id 폐기·복원)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/F3.png",
+            "caption": "재진입 복원: reload 후 2/3 재개, checkpoint {decisions:{f1:approve}}. 실패 경로는 공용 셸 PRD-fail 픽스처로 실증(PRD-fail.png: apply-log '반영 실패 — 결정 보존됨(재시도 가능)', 요약 승인 3 잔존·리셋 없음)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "유저플로우 탭의 승인 UI는 위저드 방식이다 (planning-userflow-approval-edit)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "제안 id는 shared 타입 경계에서 string 고정(TS strict) — 서버 생성 stem별 큐만 도달",
+          "동시성": "1인 로컬·단일 apply·busy 플래그; stem 격리(U4)가 cross-stem 간섭까지 차단 — 동시성 표면 없음",
+          "특수문자": "에지 label/rationale은 React 이스케이프 렌더 — 특수문자 파싱 경로 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "큐가 있으면 위저드가 뜨고 반영 후 그래프가 갱신된다 (happy)",
+          "layer": "web",
+          "means": "격리 픽스처 userflow-fixture(stem=main, m1·m2·m3): 위저드 1/3 표시 → 승인×3 → applyUserFlow(applyInChunks) 1회 → tick++·큐 비움",
+          "basis": "web 탐지 동일; 그래프 재조회는 App.tsx applyUserFlow 성공경로(fetchDocsPlanningUserFlow+fetchUserFlowSuggestions Promise.all, 정적확인)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/U1.png",
+            "caption": "1/3 → 요약 → 반영; apply-log '[main] 반영됨 — approve=[m1,m2,m3]', cur-tick:1, 위저드 소멸"
+          }
+        },
+        {
+          "scenario": "빈 큐면 위저드가 렌더되지 않는다 (edge)",
+          "layer": "web",
+          "means": "main 큐 비운 뒤: 셸 return null → 위저드 루트/배너/진행바 부재, stem-switch·log 크롬만 유지",
+          "basis": "web 탐지 동일 + 셸 ApprovalWizard.tsx:111 suggestions.length===0 → return null(정적확인)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/U2.png",
+            "caption": "빈 큐 상태: '제안 N건' 배너·진행바 없음, prd-wizard 루트 부재 — stem select·log만 남음"
+          }
+        },
+        {
+          "scenario": "건너뛰기는 큐에 남고 반영 후 다시 나타난다 (edge)",
+          "layer": "web",
+          "means": "격리 픽스처: stem=main에서 m1 건너뛰기 → m2·m3 승인 → 반영 → m1 카드 재등장",
+          "basis": "web 탐지 동일 + shared wizard-state 단위테스트(skip 미포함)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/U3.png",
+            "caption": "apply-log approve=[m2,m3](m1 제외); 반영 후 위저드 '1/1'로 m1(uflow-suggestion-m1) 에지 카드 재등장"
+          }
+        },
+        {
+          "scenario": "stem 전환은 결정을 침범하지 않는다 (edge — cross-stem 격리)",
+          "layer": "web",
+          "means": "격리 픽스처: main에서 m1 승인(미반영) → v2 전환(cur-tick 0 리셋·v1 신선 1/2·m1 누수 없음) → main 복귀 시 2/3 복원; 체크포인트 키 uflow-wizard:project:main 과 :v2 분리",
+          "basis": "web 탐지 동일 + App.tsx key=project:stem 리마운트·switchPlanningFlow tick 0 리셋(정적확인)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/U4.png",
+            "caption": "v2 전환 후 신선 1/2(v1), main의 m1 승인 누수 없음; main 복귀 시 2/3 복원. main 키 {m1:approve} ≠ v2 키 null(v2 무결정→빈맵 키 제거). 격리 실증"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 333,
+      "passed": 333,
+      "failed": 0,
+      "basis": "server/jest.config.js + src/**/__tests__/*.test.ts; 서버 무변경(spec Non-Goal)이나 회귀 기준선으로 재실행",
+      "reason": "npm run test --workspace server → 29 스위트/333 테스트 PASS(회귀 0). 그중 prdWizardState.test.ts 16건이 공용 상태 모듈(shared wizard-state) 계약(skip 제외·stale 폐기·요약 카운트)을 직접 검증"
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 9,
+      "passed": 9,
+      "failed": 0,
+      "basis": "vite 앱(web/package.json) + web/verify-fixture 격리 픽스처; web 전용 유닛 러너 부재 → 상태는 shared/jest, UI는 실픽셀 구동",
+      "reason": "빌드(shared+server+web vite prod)·타입체크(web·server tsc) exit 0. vite dev 5212 + playwright-core/chromium-1228 headless로 격리 픽스처 9시나리오 실클릭 구동 전부 PASS, 콘솔 실오류 0(favicon 404 노이즈 제외). 정적 구현확인: 7시나리오+셸계약+구패널 2종 삭제 모두 코드 존재"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "프로젝트 루트/하위 android 디렉토리·build.gradle 부재(find -name build.gradle* 무결과)",
+      "reason": "SKIPPED (적용 불가): 안드로이드 레이어 아님 — 이 change는 web/server/shared만 대상"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "*.xcodeproj 부재 + 비-macOS 호스트(Linux)",
+      "reason": "SKIPPED (macOS 필요 · 적용 불가): iOS 레이어 아님"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260707-0541.html"
+}
