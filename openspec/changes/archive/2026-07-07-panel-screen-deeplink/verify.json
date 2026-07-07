@@ -1,0 +1,117 @@
+{
+  "change": "panel-screen-deeplink",
+  "verifiedAt": "2026-07-07T09:20:56+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 3,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "화면 칩 클릭은 IA 뷰의 해당 화면으로 딥링크한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "칩 id·screenId는 TS상 string으로 고정(FeatureNodeData.screens[].id, IANode.screenId?: string). 비문자열 id가 매칭에 도달하는 런타임 경로가 없음.",
+          "동시성": "동시 쓰기 주체 없음(순수 조회 .find). 유일한 타이밍 케이스=IA 미로드 시 planningIaNodes 빈 배열→무매칭 안내로, '빈값' 클래스에서 이미 커버.",
+          "대량": "매칭은 planningIaNodes에 대한 단일 선형 find로 노드 수와 무관하게 정확성 불변(스케일 의존 동작 없음).",
+          "특수문자": "screen id는 파서 정규식 [A-Za-z0-9_-]로 제한(RE_SCREEN/RE_SCREENS)되어 특수문자·유니코드가 id 공간에 진입 불가."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "칩 클릭 → IA 탭 + 해당 노드 선택 (기능명세 패널 닫힘)",
+          "layer": "web",
+          "means": "실픽셀: 격리 픽스처(myproj)에서 상세기능 X 패널의 '홈 화면' 칩 클릭 → 정보구조(IA) 탭 전환·홈 화면 IA 노드 선택·상세 패널 오픈·기능명세 패널 닫힘 확인. 매칭 원천(screenId)은 server planningIaBuilder 단위테스트로 이중검증.",
+          "basis": "web: vite.config.ts(/api→8811 프록시)·App.tsx selectScreenInIa(setPlanTab('ia')+setSelectedIa+setSelectedFeature(null)). server: planningIaBuilder.test.ts 'screenId 딥링크 매칭 원천'(login/home 세팅) — 336 테스트 PASS 포함.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-assets/s1-ia-selected.png",
+            "caption": "홈 화면 칩 클릭 후: 정보구조(IA) 탭 활성·홈 화면 IA 노드 선택·IA 노드 상세(연결1, 상위 화면목록, 연결 상세기능 X) 오픈·기능명세 패널 닫힘. (before: verify-assets/s1-panel.png = 기능명세 탭 패널에 홈 화면·ghost 두 칩)"
+          }
+        },
+        {
+          "scenario": "매칭 실패는 무해 (IA 트리에 없는 화면 id 칩 클릭 → 탭 전환 없이 상태바 안내만)",
+          "layer": "web",
+          "means": "실픽셀: 상세기능 X 패널의 'ghost' 칩(IA 노드 없음) 클릭 → 탭 전환 없음(기능명세서 유지)·상태바 'IA에서 화면을 찾지 못했습니다: ghost' 표시·화면 정상. App.tsx selectScreenInIa의 !found 분기(setStatus+early return, setPlanTab 미도달) 실측.",
+          "basis": "web: App.tsx:352-355 !found 분기(setStatus 후 return; setPlanTab/setSelectedIa는 return 뒤라 무매칭 시 미실행). planning-ia 응답에 ghost screenId 노드 없음(curl JSON 확인).",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-assets/s2-nomatch.png",
+            "caption": "ghost 칩 클릭 후: 상태바 'IA에서 화면을 찾지 못했습니다: ghost', 탭은 기능명세서 유지(IA로 전환 안 됨), 패널·그래프 정상 렌더."
+          }
+        },
+        {
+          "scenario": "링크 없는 상세기능은 기존대로 (연결화면 없는 상세기능 패널 → 화면 섹션 생략, 회귀 없음)",
+          "layer": "web",
+          "means": "실픽셀: 연결화면 링크 없는 '상세기능 무링크' 패널 오픈 → '연결된 화면' 섹션 자체가 없음(빈/깨진 섹션 아님)·패널 정상. 딥링크 추가(칩 span→button)로 인한 무링크 경로 회귀 없음 확인.",
+          "basis": "web: FeatureDetailPanel.tsx 화면 섹션은 screens 존재 시에만 렌더(무링크 detail은 screens 없음). features.md '상세기능 무링크'에 <!-- screens --> 없음.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-assets/s3-nolink.png",
+            "caption": "상세기능 무링크 패널: 자식 노드·원본 위치만 표시, '연결된 화면' 섹션 완전 부재(생략), 정상 렌더."
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 3,
+      "passed": 3,
+      "failed": 0,
+      "basis": "Vite+React 감지(web/package.json dev=vite, vite.config.ts). 격리 픽스처 PROJECTS_ROOT/DOCS_ROOT=/tmp/panel-deeplink-fixture로 server(8811)+web(5183) 부팅, gstack 실픽셀 3시나리오 구동.",
+      "reason": "빌드·타입체크·린트 PASS(exit 0). 3개 UI 시나리오 실픽셀 스크린샷으로 본체 재확인(1a/1b/2/3)."
+    },
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 336,
+      "passed": 336,
+      "failed": 0,
+      "basis": "npm run test --workspace server(Jest, 30 suites). 매칭 원천 planningIaBuilder.test.ts가 화면 노드 screenId 세팅·detail/root 미세팅을 직접 검증.",
+      "reason": "336 passed/336 total, 회귀 0(기존 333+신규 3). 딥링크 매칭 원천(D-1/D-4) 서버측 근거 PASS."
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "package.json workspaces=[shared,server,web], 네이티브/RN 소스 없음.",
+      "reason": "적용 불가(안드로이드 레이어 부재)."
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "네이티브 iOS 소스 없음 + 비 macOS 호스트.",
+      "reason": "적용 불가(iOS 레이어 부재, macOS 필요)."
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260707-0920.html"
+}

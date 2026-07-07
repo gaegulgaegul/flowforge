@@ -1,0 +1,39 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — panel-screen-deeplink</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — panel-screen-deeplink</h1>
+<p class="muted">검증일: 2026-07-07T09:20:56+09:00 · 환경: web(적용: Vite+React, vite.config.ts /api 프록시·App.tsx 상태전이) 실행. server(적용: npm run test --workspace server, planningIaBuilder.ts) 실행. android/ios(적용 불가: RN/네이티브 소스 없음, package.json workspaces=shared·server·web). · run: run-20260707-0920</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 3 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>화면 칩 클릭은 IA 뷰의 해당 화면으로 딥링크한다</td><td>칩 클릭 → IA 탭 + 해당 노드 선택 (기능명세 패널 닫힘)</td><td>web</td><td>실픽셀: 격리 픽스처(myproj)에서 상세기능 X 패널의 &#x27;홈 화면&#x27; 칩 클릭 → 정보구조(IA) 탭 전환·홈 화면 IA 노드 선택·상세 패널 오픈·기능명세 패널 닫힘 확인. 매칭 원천(screenId)은 server planningIaBuilder 단위테스트로 이중검증.</td><td><code>web: vite.config.ts(/api→8811 프록시)·App.tsx selectScreenInIa(setPlanTab(&#x27;ia&#x27;)+setSelectedIa+setSelectedFeature(null)). server: planningIaBuilder.test.ts &#x27;screenId 딥링크 매칭 원천&#x27;(login/home 세팅) — 336 테스트 PASS 포함.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-assets/s1-ia-selected.png"><img src="verify-assets/s1-ia-selected.png" alt="홈 화면 칩 클릭 후: 정보구조(IA) 탭 활성·홈 화면 IA 노드 선택·IA 노드 상세(연결1, 상위 화면목록, 연결 상세기능 X) 오픈·기능명세 패널 닫힘. (before: verify-assets/s1-panel.png = 기능명세 탭 패널에 홈 화면·ghost 두 칩)" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>화면 칩 클릭은 IA 뷰의 해당 화면으로 딥링크한다</td><td>매칭 실패는 무해 (IA 트리에 없는 화면 id 칩 클릭 → 탭 전환 없이 상태바 안내만)</td><td>web</td><td>실픽셀: 상세기능 X 패널의 &#x27;ghost&#x27; 칩(IA 노드 없음) 클릭 → 탭 전환 없음(기능명세서 유지)·상태바 &#x27;IA에서 화면을 찾지 못했습니다: ghost&#x27; 표시·화면 정상. App.tsx selectScreenInIa의 !found 분기(setStatus+early return, setPlanTab 미도달) 실측.</td><td><code>web: App.tsx:352-355 !found 분기(setStatus 후 return; setPlanTab/setSelectedIa는 return 뒤라 무매칭 시 미실행). planning-ia 응답에 ghost screenId 노드 없음(curl JSON 확인).</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-assets/s2-nomatch.png"><img src="verify-assets/s2-nomatch.png" alt="ghost 칩 클릭 후: 상태바 &#x27;IA에서 화면을 찾지 못했습니다: ghost&#x27;, 탭은 기능명세서 유지(IA로 전환 안 됨), 패널·그래프 정상 렌더." style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>화면 칩 클릭은 IA 뷰의 해당 화면으로 딥링크한다</td><td>링크 없는 상세기능은 기존대로 (연결화면 없는 상세기능 패널 → 화면 섹션 생략, 회귀 없음)</td><td>web</td><td>실픽셀: 연결화면 링크 없는 &#x27;상세기능 무링크&#x27; 패널 오픈 → &#x27;연결된 화면&#x27; 섹션 자체가 없음(빈/깨진 섹션 아님)·패널 정상. 딥링크 추가(칩 span→button)로 인한 무링크 경로 회귀 없음 확인.</td><td><code>web: FeatureDetailPanel.tsx 화면 섹션은 screens 존재 시에만 렌더(무링크 detail은 screens 없음). features.md &#x27;상세기능 무링크&#x27;에 &lt;!-- screens --&gt; 없음.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-assets/s3-nolink.png"><img src="verify-assets/s3-nolink.png" alt="상세기능 무링크 패널: 자식 노드·원본 위치만 표시, &#x27;연결된 화면&#x27; 섹션 완전 부재(생략), 정상 렌더." style="max-width:240px;border:1px solid #ccc"></a></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>화면 칩 클릭은 IA 뷰의 해당 화면으로 딥링크한다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="칩 id·screenId는 TS상 string으로 고정(FeatureNodeData.screens[].id, IANode.screenId?: string). 비문자열 id가 매칭에 도달하는 런타임 경로가 없음.">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="동시 쓰기 주체 없음(순수 조회 .find). 유일한 타이밍 케이스=IA 미로드 시 planningIaNodes 빈 배열→무매칭 안내로, &#x27;빈값&#x27; 클래스에서 이미 커버.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="매칭은 planningIaNodes에 대한 단일 선형 find로 노드 수와 무관하게 정확성 불변(스케일 의존 동작 없음).">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="screen id는 파서 정규식 [A-Za-z0-9_-]로 제한(RE_SCREEN/RE_SCREENS)되어 특수문자·유니코드가 id 공간에 진입 불가.">N/A</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>3</td><td>3</td><td>0</td><td>빌드·타입체크·린트 PASS(exit 0). 3개 UI 시나리오 실픽셀 스크린샷으로 본체 재확인(1a/1b/2/3).</td></tr>
+<tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>336</td><td>336</td><td>0</td><td>336 passed/336 total, 회귀 0(기존 333+신규 3). 딥링크 매칭 원천(D-1/D-4) 서버측 근거 PASS.</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가(안드로이드 레이어 부재).</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가(iOS 레이어 부재, macOS 필요).</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>
