@@ -23,6 +23,26 @@ export function projectsRoot(): string {
   return process.env.PROJECTS_ROOT ?? join(process.cwd(), "..");
 }
 
+/**
+ * 프로젝트 이름 → 절대 디렉토리 경로 (화이트리스트 검증, 루트 밖 탈출 방지).
+ * name은 요청에서 올 수 있으므로 '..'·경로구분자·구분자 포함 이름을 거부한다
+ * (listProjectCards는 readdir로 얻은 단일 세그먼트만 다뤄 이 방어가 불필요했다).
+ * PROJECTS_ROOT 1단계 하위 실재 디렉토리이고 심링크가 아닐 때만 경로를 돌려주고,
+ * 그 외(부재·심링크·비디렉토리·조작)는 null. 화면 뷰/카드 스캔이 공용으로 재사용한다.
+ */
+export function resolveProjectDir(name: string): string | null {
+  // 단일 세그먼트만 허용: 빈 값·'..'·슬래시/백슬래시 포함 거부.
+  if (!name || name.includes("..") || name.includes("/") || name.includes("\\")) return null;
+  const projDir = join(projectsRoot(), name);
+  try {
+    if (lstatSync(projDir).isSymbolicLink()) return null; // 심링크 탈출 방어
+    if (!statSync(projDir).isDirectory()) return null; // 1단계 실재 디렉토리
+  } catch {
+    return null; // 부재·접근불가
+  }
+  return projDir;
+}
+
 /** <project>/docs/ 에 charter 상주 문서(user-flow.md|PRD.md)가 있으면 true. */
 function hasCharter(projectDir: string): boolean {
   const docsDir = join(projectDir, "docs");
@@ -100,19 +120,9 @@ export function listProjectCards(labelMap?: Map<string, string>): ProjectCard[] 
 
   const out: ProjectCard[] = [];
   for (const name of names) {
-    const projDir = join(root, name);
-    try {
-      if (lstatSync(projDir).isSymbolicLink()) continue;
-    } catch {
-      continue;
-    }
-    let st;
-    try {
-      st = statSync(projDir);
-    } catch {
-      continue;
-    }
-    if (!st.isDirectory()) continue;
+    // 심링크·비디렉토리 방어는 resolveProjectDir로 공용화(readdir 이름이라 조작 가드는 no-op).
+    const projDir = resolveProjectDir(name);
+    if (projDir === null) continue;
 
     const changeCount = countChanges(projDir);
     // change도 docs도 없으면 카드 아님. docs 인식 프로젝트는 활성 change가 전부

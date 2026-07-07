@@ -55,11 +55,15 @@ export function listChanges(): string[] {
   return out;
 }
 
-/** change id → 절대 디렉토리 경로 (스캔 루트 밖 탈출 방지) */
-export function resolveChangeDir(id: string): string | null {
+/**
+ * change id → 절대 디렉토리 경로 (스캔 루트 밖 탈출 방지).
+ * @param rootDir  changes 루트(예: 타 프로젝트의 openspec/changes). 기본=현행 changesRoot().
+ *                 호출부 무수정 하위호환 — 인자 없으면 글로벌 루트 그대로.
+ */
+export function resolveChangeDir(id: string, rootDir: string = changesRoot()): string | null {
   // 경로 조작 방지: '..' 금지, 영숫자/-/_/슬래시(archive/만)만
   if (id.includes("..") || !/^[A-Za-z0-9_\-/]+$/.test(id)) return null;
-  const dir = join(changesRoot(), id);
+  const dir = join(rootDir, id);
   if (!existsSync(dir) || !hasSpecs(dir)) return null;
   return dir;
 }

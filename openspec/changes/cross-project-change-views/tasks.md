@@ -5,7 +5,7 @@
 ### Sequential: server 해석 경로 (선행)
 
 - [x] 1.1 RED: resolveChangeDir(id, rootDir?) 단위 테스트 — 지정 루트 해석·기본값 현행·`..`/부재 차단
-- [ ] 1.2 GREEN: changes.ts 시그니처 확장(기본값=changesRoot(), 호출부 무수정) + 프로젝트 화이트리스트 검증 공용화(projects.ts resolveProjectDir 재사용 위치 정리 — 로직 이동만, 동작 무변)
+- [x] 1.2 GREEN: changes.ts 시그니처 확장(기본값=changesRoot(), 호출부 무수정) + 프로젝트 화이트리스트 검증 공용화(projects.ts resolveProjectDir 재사용 위치 정리 — 로직 이동만, 동작 무변)
 
 ### Sequential: 라우트
 
