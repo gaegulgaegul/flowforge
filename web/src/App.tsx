@@ -1010,13 +1010,16 @@ export function App(): JSX.Element {
                 </div>
               </section>
             )}
-            {/* 2026-07-03 사용자 결정: 뼈대(=기획문서)는 그래프로 이미 표시되므로 하단 capability→change 경로 비활성화.
-                복구 시 아래 {false && ...} 래퍼를 제거(주석 해제)하면 된다. 삭제 아님 — 코드 보존. */}
-            {false && (
+            {/* 2026-07-03 사용자 결정: 기획문서가 있는 프로젝트(flowforge 등)는 그래프가 뼈대라
+                하단 capability 목록을 숨긴다. 단 기획문서가 하나도 없는 프로젝트(wowa-app 등)는
+                이 목록이 change 5종 뷰로 가는 유일한 진입로라 조건부로 보여준다
+                (cross-project-change-views — 없으면 빈 화면 dead-end). 라벨도 "뼈대"가 아니라
+                실체(change 입구)대로 표기(2026-07-03 라벨오류 지적 반영). */}
+            {planTabsAvail.length === 0 && (
               <>
-                <h3 className="dash-h">{dashProject?.displayName} — 뼈대(capability)</h3>
+                <h3 className="dash-h">{dashProject?.displayName} — change 목록 (capability별)</h3>
                 {capabilities.length === 0 ? (
-                  <p className="dash-empty">표시할 capability가 없습니다(뼈대 없음).</p>
+                  <p className="dash-empty">표시할 capability가 없습니다.</p>
                 ) : (
                   <ul className="dash-cap-list">
                     {capabilities.map((cap) => (
