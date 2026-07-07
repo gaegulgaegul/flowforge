@@ -706,6 +706,7 @@ button:hover { border-color: var(--lime); }
 }
 .feature-detail-badges { display: flex; gap: 6px; flex-wrap: wrap; }
 .feature-detail-screen {
+  font-family: inherit;
   font-size: 11px;
   font-weight: 600;
   color: #3dd6c0;
@@ -714,6 +715,9 @@ button:hover { border-color: var(--lime); }
   padding: 2px 9px;
   border-radius: 999px;
 }
+.feature-detail-screen:not(:disabled) { cursor: pointer; }
+.feature-detail-screen:not(:disabled):hover { background: rgba(61, 214, 192, 0.22); border-color: #3dd6c0; }
+.feature-detail-screen:disabled { cursor: default; }
 .feature-detail-whenthen { display: flex; flex-direction: column; gap: 8px; }
 .feature-detail-wt-row { display: flex; gap: 10px; align-items: flex-start; }
 .feature-detail-wt-tag {

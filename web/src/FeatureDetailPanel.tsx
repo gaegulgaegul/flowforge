@@ -50,9 +50,11 @@ export interface FeatureDetailPanelProps {
   onClose: () => void;
   /** 자식/부모 노드 클릭 시 그 노드로 전환(있으면). id로 다른 노드 data를 찾아 연다. */
   onSelectById?: (id: string) => void;
+  /** 연결화면 칩 클릭 시 IA 뷰의 해당 화면 노드로 딥링크(있으면). 원본 screenId로 매칭. */
+  onSelectScreen?: (screenId: string) => void;
 }
 
-export function FeatureDetailPanel({ node, onClose, onSelectById }: FeatureDetailPanelProps): JSX.Element {
+export function FeatureDetailPanel({ node, onClose, onSelectById, onSelectScreen }: FeatureDetailPanelProps): JSX.Element {
   // Esc로 닫기(패널이 열려있을 때만).
   useEffect(() => {
     if (!node) return;
@@ -179,9 +181,15 @@ export function FeatureDetailPanel({ node, onClose, onSelectById }: FeatureDetai
                   <div className="feature-detail-label">🖥️ 연결된 화면 (N:M)</div>
                   <div className="feature-detail-badges">
                     {screens.map((s) => (
-                      <span key={s.id} className="feature-detail-screen">
+                      <button
+                        key={s.id}
+                        type="button"
+                        className="feature-detail-screen"
+                        onClick={() => onSelectScreen?.(s.id)}
+                        disabled={!onSelectScreen}
+                      >
                         {s.label}
-                      </span>
+                      </button>
                     ))}
                   </div>
                 </section>
