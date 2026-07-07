@@ -1,0 +1,164 @@
+{
+  "change": "cross-project-change-views",
+  "verifiedAt": "2026-07-07T23:32:16+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 5,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "change 5종 뷰는 프로젝트 컨텍스트로 해석된다 (server)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "change id/project는 문자열 화이트리스트 매칭 — 수치 경계값 개념이 없음(길이 무관)",
+          "동시성": "각 GET/PUT는 stateless 파일 읽기·단발 write, 요청 간 공유 가변 상태 없음 — race 대상 아님",
+          "대량": "프로젝트/change 개수와 무관한 단건 id 해석 경로 — 대량 입력 표면 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "타 프로젝트 change 뷰가 열린다: ?project=로 graph 요청 → 그 프로젝트 openspec/changes 해석 200",
+          "layer": "server",
+          "means": "라우트 통합 테스트(graphCrossProject.test.ts) + 실서버 API 실측(5종 뷰 + 다른 프로젝트 ssoksok 200)",
+          "basis": "npm test 346/346 PASS · node fetch /api/changes/impl-ios-app/{graph,ia,wireframe,prd,spec-tree}?project=wowa-app = 200×5, feature-b?project=ssoksok=200",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "200 S1 graph/ia/wireframe/prd/spec-tree ?project=wowa-app (전부 200); graph nodes:1 edges:1 · prd sections:5 · spec-tree root:impl-ios-app (빈 200 아님)",
+            "caption": "실서버 API 실측 — 5종 뷰 200 + 실산출물 파싱"
+          }
+        },
+        {
+          "scenario": "project 부재 = 기존 동작 불변: ?project= 없이 기존 URL → 현행 글로벌 루트 동작 그대로",
+          "layer": "server",
+          "means": "통합 테스트(글로벌 change 200 / 프로젝트-only change는 글로벌에 없어 404) + 실서버 실측",
+          "basis": "node fetch: impl-ios-app(글로벌 미존재)=404, cross-project-change-views(글로벌 존재)=200; 실브라우저 no-project global graph/prd=200",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "404 S2 no-project global-miss · 200 S2 global-hit · 실브라우저 no-project global: 200 (graph·prd)",
+            "caption": "project 부재 시 현행 글로벌 루트 동작 불변"
+          }
+        },
+        {
+          "scenario": "경로 조작은 차단된다: project=../.. 또는 미지 프로젝트 → 404, 루트 밖 접근 없음",
+          "layer": "server",
+          "means": "단위 테스트(resolveChangeDir '..' 차단·cross-root 누출 차단) + 통합 테스트 + 실서버 실측",
+          "basis": "changes.test.ts '..'→null · graphCrossProject.test.ts traversal 404 · 실측: ../.. =404, no-such-project=404, feature-b via wowa-app(누출)=404",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "404 S3 traversal ../.. · 404 S3 unknown project · 404 S3 leak feature-b via wowa-app (cross-root 누출 차단)",
+            "caption": "경로 조작·미지·cross-root 누출 전부 404"
+          }
+        }
+      ]
+    },
+    {
+      "title": "web은 change 진입 컨텍스트를 뷰 호출에 전달한다 (web)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "빈값": "project는 서버 capability 응답에서 세팅되는 단일 이름 — 빈 문자열 입력 경로가 UI에 없음",
+          "잘못된타입": "TS strict + project?:string 타입 — 잘못된 타입 주입 경로 없음(컴파일 게이트)",
+          "경계값": "이름 문자열, 수치 경계 개념 없음",
+          "대량": "단일 change 진입 컨텍스트 전달 — 대량 입력 표면 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "카드 경유 change 클릭 → 5종 뷰 로드: wowa-app 카드에서 change 클릭 → 5종 뷰가 404 없이 그 프로젝트 산출물로 렌더",
+          "layer": "web",
+          "means": "실브라우저(gstack) — 카드→capability→change 클릭, 네트워크 로그 + 렌더 스크린샷",
+          "basis": "gstack: wowa-app 카드→scr-capture→impl-ios-app 클릭 시 5종 fetch 모두 ?project=wowa-app 부착 200×5, /api/changes/* 4xx 0건; PRD·IA 뷰 실렌더(브레드크럼 wowa-app)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-assets/s4-ia-view.png",
+            "caption": "실브라우저: wowa-app › impl-ios-app IA 트리 뷰 렌더 (변경 impl-ios-app → 기능군 scr-capture → 요구사항 캡처 화면), 5종 fetch ?project=wowa-app 200"
+          }
+        },
+        {
+          "scenario": "읽기전용 프로젝트의 배치 저장은 무해 실패: RO 마운트에서 드래그 저장 실패 → 상태바 안내만, 뷰·문서·데이터 불변",
+          "layer": "web",
+          "means": "서버 RO PUT 실측(500) + overlay 데이터 불변 실측 + web catch→setStatus 배선 정적 확인",
+          "basis": "chmod 555 change dir 후 layout PUT=500(앱 컨텍스트 fetch 포함), overlay x:5,y:7 불변(99·777 반영 안 됨), 뷰 계속 200; App.tsx saveLayout(...).catch(e=>setStatus('읽기전용...')) 정적확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "RO PUT status: 500 · overlay 불변 {x:5,y:7} · view after RO fail graph: 200 · web 배선: saveLayout non-ok throw → catch setStatus. (react-flow 실드래그는 gstack 도구 제약으로 상태바 텍스트 실렌더는 미관찰 — API 실패·데이터 불변·배선은 실측/정적 확인)",
+            "caption": "RO 저장 500 무해 실패 + 데이터 불변, 뷰 계속 동작"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 346,
+      "passed": 346,
+      "failed": 0,
+      "basis": "npm test — 32 스위트 346/346 PASS(기존 336 회귀 0 + 크로스프로젝트 신규). graphCrossProject.test.ts·changes.test.ts 포함. 빌드 shared/server/web tsc EXIT 0",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 2,
+      "passed": 2,
+      "failed": 0,
+      "basis": "프로덕션 vite 빌드 dist를 Express 정적서빙 + gstack 실브라우저. 카드→capability→change→5종 뷰 렌더(?project= 200×5, /api/changes/* 4xx 0), RO 저장 500 무해+데이터 불변",
+      "reason": ""
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "android/·app/ 디렉토리 없음, gradle 없음",
+      "reason": "적용 불가: 이 change는 server+web 전용, 안드로이드 산출물 없음"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "ios/·*.xcodeproj 없음",
+      "reason": "macOS 필요 + iOS 산출물 없음(Linux 플랫폼)"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260707-2332.html"
+}

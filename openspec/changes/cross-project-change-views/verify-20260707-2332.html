@@ -1,0 +1,42 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — cross-project-change-views</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — cross-project-change-views</h1>
+<p class="muted">검증일: 2026-07-07T23:32:16+09:00 · 환경: server(적용: jest 통합/단위 실행), web(적용: 프로덕션 dist 정적서빙 + 실브라우저 gstack), android(SKIPPED 적용불가: android/·app/ 없음), ios(SKIPPED: macOS 필요 + ios/ 없음) · run: run-20260707-2332</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 5 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>change 5종 뷰는 프로젝트 컨텍스트로 해석된다 (server)</td><td>타 프로젝트 change 뷰가 열린다: ?project=로 graph 요청 → 그 프로젝트 openspec/changes 해석 200</td><td>server</td><td>라우트 통합 테스트(graphCrossProject.test.ts) + 실서버 API 실측(5종 뷰 + 다른 프로젝트 ssoksok 200)</td><td><code>npm test 346/346 PASS · node fetch /api/changes/impl-ios-app/{graph,ia,wireframe,prd,spec-tree}?project=wowa-app = 200×5, feature-b?project=ssoksok=200</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">200 S1 graph/ia/wireframe/prd/spec-tree ?project=wowa-app (전부 200); graph nodes:1 edges:1 · prd sections:5 · spec-tree root:impl-ios-app (빈 200 아님)</pre></td></tr>
+<tr><td>change 5종 뷰는 프로젝트 컨텍스트로 해석된다 (server)</td><td>project 부재 = 기존 동작 불변: ?project= 없이 기존 URL → 현행 글로벌 루트 동작 그대로</td><td>server</td><td>통합 테스트(글로벌 change 200 / 프로젝트-only change는 글로벌에 없어 404) + 실서버 실측</td><td><code>node fetch: impl-ios-app(글로벌 미존재)=404, cross-project-change-views(글로벌 존재)=200; 실브라우저 no-project global graph/prd=200</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">404 S2 no-project global-miss · 200 S2 global-hit · 실브라우저 no-project global: 200 (graph·prd)</pre></td></tr>
+<tr><td>change 5종 뷰는 프로젝트 컨텍스트로 해석된다 (server)</td><td>경로 조작은 차단된다: project=../.. 또는 미지 프로젝트 → 404, 루트 밖 접근 없음</td><td>server</td><td>단위 테스트(resolveChangeDir &#x27;..&#x27; 차단·cross-root 누출 차단) + 통합 테스트 + 실서버 실측</td><td><code>changes.test.ts &#x27;..&#x27;→null · graphCrossProject.test.ts traversal 404 · 실측: ../.. =404, no-such-project=404, feature-b via wowa-app(누출)=404</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">404 S3 traversal ../.. · 404 S3 unknown project · 404 S3 leak feature-b via wowa-app (cross-root 누출 차단)</pre></td></tr>
+<tr><td>web은 change 진입 컨텍스트를 뷰 호출에 전달한다 (web)</td><td>카드 경유 change 클릭 → 5종 뷰 로드: wowa-app 카드에서 change 클릭 → 5종 뷰가 404 없이 그 프로젝트 산출물로 렌더</td><td>web</td><td>실브라우저(gstack) — 카드→capability→change 클릭, 네트워크 로그 + 렌더 스크린샷</td><td><code>gstack: wowa-app 카드→scr-capture→impl-ios-app 클릭 시 5종 fetch 모두 ?project=wowa-app 부착 200×5, /api/changes/* 4xx 0건; PRD·IA 뷰 실렌더(브레드크럼 wowa-app)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-assets/s4-ia-view.png"><img src="verify-assets/s4-ia-view.png" alt="실브라우저: wowa-app › impl-ios-app IA 트리 뷰 렌더 (변경 impl-ios-app → 기능군 scr-capture → 요구사항 캡처 화면), 5종 fetch ?project=wowa-app 200" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>web은 change 진입 컨텍스트를 뷰 호출에 전달한다 (web)</td><td>읽기전용 프로젝트의 배치 저장은 무해 실패: RO 마운트에서 드래그 저장 실패 → 상태바 안내만, 뷰·문서·데이터 불변</td><td>web</td><td>서버 RO PUT 실측(500) + overlay 데이터 불변 실측 + web catch→setStatus 배선 정적 확인</td><td><code>chmod 555 change dir 후 layout PUT=500(앱 컨텍스트 fetch 포함), overlay x:5,y:7 불변(99·777 반영 안 됨), 뷰 계속 200; App.tsx saveLayout(...).catch(e=&gt;setStatus(&#x27;읽기전용...&#x27;)) 정적확인</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">RO PUT status: 500 · overlay 불변 {x:5,y:7} · view after RO fail graph: 200 · web 배선: saveLayout non-ok throw → catch setStatus. (react-flow 실드래그는 gstack 도구 제약으로 상태바 텍스트 실렌더는 미관찰 — API 실패·데이터 불변·배선은 실측/정적 확인)</pre></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>change 5종 뷰는 프로젝트 컨텍스트로 해석된다 (server)</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="change id/project는 문자열 화이트리스트 매칭 — 수치 경계값 개념이 없음(길이 무관)">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="각 GET/PUT는 stateless 파일 읽기·단발 write, 요청 간 공유 가변 상태 없음 — race 대상 아님">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="프로젝트/change 개수와 무관한 단건 id 해석 경로 — 대량 입력 표면 없음">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>web은 change 진입 컨텍스트를 뷰 호출에 전달한다 (web)</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="project는 서버 capability 응답에서 세팅되는 단일 이름 — 빈 문자열 입력 경로가 UI에 없음">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="TS strict + project?:string 타입 — 잘못된 타입 주입 경로 없음(컴파일 게이트)">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="이름 문자열, 수치 경계 개념 없음">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="단일 change 진입 컨텍스트 전달 — 대량 입력 표면 없음">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>346</td><td>346</td><td>0</td><td>npm test — 32 스위트 346/346 PASS(기존 336 회귀 0 + 크로스프로젝트 신규). graphCrossProject.test.ts·changes.test.ts 포함. 빌드 shared/server/web tsc EXIT 0</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>2</td><td>2</td><td>0</td><td>프로덕션 vite 빌드 dist를 Express 정적서빙 + gstack 실브라우저. 카드→capability→change→5종 뷰 렌더(?project= 200×5, /api/changes/* 4xx 0), RO 저장 500 무해+데이터 불변</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가: 이 change는 server+web 전용, 안드로이드 산출물 없음</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>macOS 필요 + iOS 산출물 없음(Linux 플랫폼)</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>
