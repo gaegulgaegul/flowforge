@@ -9,8 +9,8 @@
 
 ### Parallel Group 1 (패널별 위저드 — 서로 다른 파일, 동시 실행 가능)
 
-- [ ] 2.1 features 위저드: 카드 렌더러(nodePath 경로 + 속성 before/after 화살표 — 기존 FeatureApprovalPanel 카드 마크업 이식), App.tsx 배선(featAppliedTick·openProject 리셋·반영 0건 안내), 기존 FeatureApprovalPanel.tsx 삭제 [parallel]
-- [ ] 2.2 userflow 위저드: 카드 렌더러(에지 실선/점선·신규 화면 뱃지 이식), App.tsx 배선(uflowAppliedTick·stem별 key 리마운트·stem 전환 리셋·반영 0건 안내), 체크포인트 키 `uflow-wizard:<project>:<stem>`, 기존 UserFlowApprovalPanel.tsx 삭제 [parallel]
+- [x] 2.1 features 위저드: 카드 렌더러(nodePath 경로 + 속성 before/after 화살표 — 기존 FeatureApprovalPanel 카드 마크업 이식), App.tsx 배선(featAppliedTick·openProject 리셋·반영 0건 안내), 기존 FeatureApprovalPanel.tsx 삭제 [parallel]
+- [x] 2.2 userflow 위저드: 카드 렌더러(에지 실선/점선·신규 화면 뱃지 이식), App.tsx 배선(uflowAppliedTick·stem별 key 리마운트·stem 전환 리셋·반영 0건 안내), 체크포인트 키 `uflow-wizard:<project>:<stem>`, 기존 UserFlowApprovalPanel.tsx 삭제 [parallel]
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 

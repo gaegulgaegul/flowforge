@@ -1,12 +1,15 @@
 /**
- * 기능명세(features) 속성 승인/반려 편집 패널 (6b 예광탄) — manyfast 수정-승인 루프의 flowforge 측.
+ * 기능명세(features) 승인 위저드 (approval-wizard-extension — FeatureApprovalPanel 셸 마이그레이션).
  *
- * 6a PrdApprovalPanel의 features판. 제안 큐(FeatureSuggestionQueue)가 있으면 노드별 제안 카드를 렌더한다.
- * 6a와의 유일한 구조 차이: diff가 "섹션 body 대비"가 아니라 **노드 속성(중요도·상태) before/after 대비**다.
- * 현재값은 features 트리(nodePath로 노드를 찾아)에서 뽑고, 제안값은 큐에서 뽑아 [현재 → 제안]으로 보여준다.
- * 각 카드에 [승인]/[반려], 상단(배너 직후)에 [모두 승인]/[모두 반려]를 둔다(대량 큐에서도 즉시 도달, D-5). 실제 반영(POST apply)·재조회는
- * 부모(App)가 콜백으로 처리한다(이 패널은 표시 + 인터랙션만, LLM 호출 없음).
- * 큐가 비면 이 패널은 아무것도 렌더하지 않는다(순수 읽기 트리 뷰는 App의 ReactFlow가 담당).
+ * 골격(배너·진행바+결정 점·[반려]/[건너뛰기]/[승인]·탈출구·요약·체크포인트 IO·appliedTick
+ * 리셋)은 공용 셸 `ApprovalWizard`가 소유한다(D-1). 여기선 features-종속 조각만 주입한다:
+ * 카드 본문(노드 경로·근거·현재/제안 속성 diff)·요약 라벨(노드 경로)·체크포인트 키
+ * (`features-wizard:<project>`).
+ *
+ * 6a PRD와의 유일한 구조 차이: diff가 "섹션 body 대비"가 아니라 **노드 속성(중요도·상태)
+ * before/after 대비**다. 현재값은 features 트리(nodePath로 노드를 찾아)에서 뽑고, 제안값은
+ * 큐에서 뽑아 [현재 → 제안]으로 보여준다. 마이그레이션 게이트: 카드 픽셀 무변(클래스·
+ * data-testid 동일).
  */
 import type {
   FeatureSuggestion,
@@ -14,6 +17,7 @@ import type {
   FeaturePriority,
   FeatureStatus,
 } from "@flowforge/shared";
+import { ApprovalWizard } from "./ApprovalWizard";
 
 /** 한 노드의 현재 속성(대비 표시용). 트리에서 nodePath로 찾은 노드의 값, 못 찾으면 미표기(''). */
 interface NodeAttrs {
@@ -78,64 +82,43 @@ function AttrBadges({ attrs }: { attrs: NodeAttrs }): JSX.Element {
   );
 }
 
-export function FeatureApprovalPanel({
+/** localStorage 체크포인트 키. 프로젝트별로 분리(D-3 — `features-wizard:<project>`). */
+function checkpointKey(project: string): string {
+  return `features-wizard:${project}`;
+}
+
+export function FeatureApprovalWizard({
+  project,
   root,
   suggestions,
   busy,
-  onApprove,
-  onReject,
-  onApproveAll,
-  onRejectAll,
+  onApply,
+  appliedTick,
 }: {
+  project: string;
   /** features 트리 가상 루트(현재 속성값 조회용). 없으면 제안값만 표시. */
   root: FeatureTreeNode | null;
   suggestions: readonly FeatureSuggestion[];
   busy: boolean;
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
-  onApproveAll: () => void;
-  onRejectAll: () => void;
+  onApply: (approve: string[], reject: string[]) => void;
+  /** 반영 성공 카운터 — 증가하면 결정 맵을 리셋한다(실패 시엔 안 오름 = 결정 보존). */
+  appliedTick: number;
 }): JSX.Element | null {
-  if (suggestions.length === 0) return null;
-
   return (
-    <div className="feature-approval" data-testid="feature-approval">
-      <div className="feature-approval-banner" data-testid="feature-approval-banner">
-        <span className="feature-approval-badge">제안 {suggestions.length}건</span>
-        AI가 제안한 노드 속성 변경(중요도·상태)이 있습니다. 개별 또는 일괄로 승인·반려하세요.
-      </div>
-
-      <div className="feature-approval-bulk">
-        <button
-          type="button"
-          className="prd-btn-reject-all"
-          data-testid="feature-reject-all"
-          disabled={busy}
-          onClick={onRejectAll}
-        >
-          모두 반려 ({suggestions.length}건)
-        </button>
-        <button
-          type="button"
-          className="prd-btn-approve-all"
-          data-testid="feature-approve-all"
-          disabled={busy}
-          onClick={onApproveAll}
-        >
-          모두 승인 ({suggestions.length}건)
-        </button>
-      </div>
-
-      <div className="feature-approval-list" data-testid="feature-approval-list">
-      {suggestions.map((sug) => {
+    <ApprovalWizard<FeatureSuggestion>
+      suggestions={suggestions}
+      busy={busy}
+      onApply={onApply}
+      appliedTick={appliedTick}
+      checkpointKey={checkpointKey(project)}
+      banner="AI가 제안한 기능 명세 갱신이 있습니다. 한 건씩 검토하세요."
+      cardTestId={(s) => `feature-suggestion-${s.id}`}
+      summaryLabel={(s) => pathLabelOf(s.nodePath)}
+      renderCard={(sug) => {
         const cur = currentAttrsOf(root, sug.nodePath);
         const next = proposedAttrsOf(sug, cur);
         return (
-          <section
-            key={sug.id}
-            className="feature-approval-card"
-            data-testid={`feature-suggestion-${sug.id}`}
-          >
+          <>
             <h4 className="feature-approval-path">{pathLabelOf(sug.nodePath)}</h4>
             {sug.rationale && (
               <p className="feature-approval-rationale">{sug.rationale}</p>
@@ -153,30 +136,9 @@ export function FeatureApprovalPanel({
                 <AttrBadges attrs={next} />
               </div>
             </div>
-            <div className="feature-approval-btns">
-              <button
-                type="button"
-                className="prd-btn-approve"
-                data-testid={`feature-approve-${sug.id}`}
-                disabled={busy}
-                onClick={() => onApprove(sug.id)}
-              >
-                ✓ 승인
-              </button>
-              <button
-                type="button"
-                className="prd-btn-reject"
-                data-testid={`feature-reject-${sug.id}`}
-                disabled={busy}
-                onClick={() => onReject(sug.id)}
-              >
-                ✕ 반려
-              </button>
-            </div>
-          </section>
+          </>
         );
-      })}
-      </div>
-    </div>
+      }}
+    />
   );
 }

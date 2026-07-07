@@ -63,8 +63,8 @@ import { FeatureNode } from "./FeatureNode.js";
 import { WireframePanel } from "./WireframePanel.js";
 import { PrdPanel } from "./PrdPanel.js";
 import { PrdApprovalWizard } from "./PrdApprovalWizard.js";
-import { FeatureApprovalPanel } from "./FeatureApprovalPanel.js";
-import { UserFlowApprovalPanel } from "./UserFlowApprovalPanel.js";
+import { FeatureApprovalWizard } from "./FeatureApprovalWizard.js";
+import { UserFlowApprovalWizard } from "./UserFlowApprovalWizard.js";
 import { FeatureDetailPanel } from "./FeatureDetailPanel.js";
 import { FlowDetailPanel } from "./FlowDetailPanel.js";
 import { IADetailPanel } from "./IADetailPanel.js";
@@ -130,6 +130,8 @@ export function App(): JSX.Element {
   // 6a prdSuggestions와 대칭. 큐 비면 순수 읽기 트리 뷰.
   const [featureSuggestions, setFeatureSuggestions] = useState<readonly FeatureSuggestion[]>([]);
   const [featureApplyBusy, setFeatureApplyBusy] = useState(false);
+  // 기능명세 위저드 반영 성공 카운터 — PRD와 대칭(성공 시에만 증가 → 결정 맵 리셋, 실패=보존).
+  const [featAppliedTick, setFeatAppliedTick] = useState(0);
   // 기능명세 노드 클릭 → 상세 패널(데스크탑 우측 슬라이드 / 모바일 하단 시트). null이면 닫힘.
   // 노드 data(FeatureNodeData)를 그대로 보관 — 어댑터가 상세 필드(원본위치·자식)를 실어준다.
   const [selectedFeature, setSelectedFeature] = useState<FeatureNodeData | null>(null);
@@ -158,6 +160,8 @@ export function App(): JSX.Element {
   // 큐 fetch 실패는 빈 큐 강등(탭 렌더 유지, 순수 읽기 그래프 뷰).
   const [uflowSuggestions, setUflowSuggestions] = useState<readonly UserFlowSuggestion[]>([]);
   const [uflowApplyBusy, setUflowApplyBusy] = useState(false);
+  // 유저플로우 위저드 반영 성공 카운터 — PRD와 대칭. stem 전환 시에도 리셋(D-4).
+  const [uflowAppliedTick, setUflowAppliedTick] = useState(0);
 
   // 기능명세서 3단 트리 상태
   const [specRoot, setSpecRoot] = useState<SpecTreeNodeT | null>(null);
@@ -383,6 +387,8 @@ export function App(): JSX.Element {
           if (token !== dashReqToken.current) return;
           setStatus(`기획 유저플로우 로드 실패: ${String(e)}`);
         });
+      // stem 전환 시 반영 tick 리셋(D-4) — key 리마운트와 별개로 tick 격리(cross-stem 소실 방지).
+      setUflowAppliedTick(0);
       setUflowSuggestions([]);
       fetchUserFlowSuggestions(project, flow)
         .then((q) => {
@@ -408,8 +414,10 @@ export function App(): JSX.Element {
     setDashCapability(null);
     setCapChanges([]);
     // 프로젝트 전환 시 반영 tick 격리 — A에서 올라간 tick이 B 위저드 마운트에서
-    // 체크포인트를 지우는 cross-project 결정 소실(review C-2) 방지.
+    // 체크포인트를 지우는 cross-project 결정 소실(review C-2) 방지. 세 위저드 모두(D-4).
     setPrdAppliedTick(0);
+    setFeatAppliedTick(0);
+    setUflowAppliedTick(0);
     // 기획 단계 PRD(docs/planning/prd.md) 로드 — 없으면(404) null로 비움(안내만, 에러 아님).
     setPlanningPrd(null);
     fetchDocsPlanningPrd(card.name)
@@ -604,6 +612,12 @@ export function App(): JSX.Element {
     (approve: string[], reject: string[]) => {
       const project = dashProject?.name;
       if (!project || featureApplyBusy) return;
+      // 반영 대상 0(전부 건너뛰기 등) = 서버 무접촉 — 유령 성공으로 tick을 올려
+      // 결정을 지우지 않는다(M-1 계승). 안내만 하고 종료.
+      if (approve.length === 0 && reject.length === 0) {
+        setStatus("반영할 승인/반려 결정이 없습니다 — 건너뛴 제안은 큐에 남습니다.");
+        return;
+      }
       const token = ++dashReqToken.current;
       setFeatureApplyBusy(true);
       applyInChunks((r) => applyDocsFeatureSuggestions(project, r), { approve, reject })
@@ -625,6 +639,8 @@ export function App(): JSX.Element {
           setPlanningFeatures(featRes.tree.root);
           setFeatureSuggestions(sugRes.queue.suggestions);
           setPlanningScreens(screensRes);
+          // 반영 성공 신호 → 위저드 결정 리셋(skip 잔존 큐가 요약에 갇히지 않게).
+          setFeatAppliedTick((t) => t + 1);
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
@@ -652,6 +668,12 @@ export function App(): JSX.Element {
       const project = dashProject?.name;
       const flow = planningFlowName;
       if (!project || !flow || uflowApplyBusy) return;
+      // 반영 대상 0(전부 건너뛰기 등) = 서버 무접촉 — 유령 성공으로 tick을 올려
+      // 결정을 지우지 않는다(M-1 계승). 안내만 하고 종료.
+      if (approve.length === 0 && reject.length === 0) {
+        setStatus("반영할 승인/반려 결정이 없습니다 — 건너뛴 제안은 큐에 남습니다.");
+        return;
+      }
       const token = ++dashReqToken.current;
       setUflowApplyBusy(true);
       applyInChunks((r) => applyUserFlowSuggestions(project, flow, r), { approve, reject })
@@ -674,6 +696,8 @@ export function App(): JSX.Element {
           setPlanningFlowName(flowRes.flow);
           setPlanningFlowVersions(flowRes.versions);
           setUflowSuggestions(sugRes ? sugRes.queue.suggestions : []);
+          // 반영 성공 신호 → 위저드 결정 리셋(skip 잔존 큐가 요약에 갇히지 않게).
+          setUflowAppliedTick((t) => t + 1);
         })
         .catch((e: unknown) => {
           if (token !== dashReqToken.current) return;
@@ -851,15 +875,15 @@ export function App(): JSX.Element {
             {planningFeatures && activePlanTab === "features" && (
               <section className="dash-planning-features" data-testid="planning-features">
                 <h3 className="dash-h">{dashProject?.displayName} — 기획 기능명세서</h3>
-                {/* 제안 큐가 있으면 노드 속성 승인/반려 편집 UI(6b), 큐 비면 렌더 안 함(순수 읽기 트리 뷰). */}
-                <FeatureApprovalPanel
+                {/* 제안 큐가 있으면 노드 속성 승인/반려 위저드(6b), 큐 비면 렌더 안 함(순수 읽기 트리 뷰). */}
+                <FeatureApprovalWizard
+                  key={dashProject?.name ?? ""}
+                  project={dashProject?.name ?? ""}
                   root={planningFeatures}
                   suggestions={featureSuggestions}
                   busy={featureApplyBusy}
-                  onApprove={(id) => applyFeature([id], [])}
-                  onReject={(id) => applyFeature([], [id])}
-                  onApproveAll={() => applyFeature(featureSuggestions.map((s) => s.id), [])}
-                  onRejectAll={() => applyFeature([], featureSuggestions.map((s) => s.id))}
+                  onApply={(approve, reject) => applyFeature(approve, reject)}
+                  appliedTick={featAppliedTick}
                 />
                 <div className="dash-plan-flow">
                   <ReactFlow
@@ -918,14 +942,16 @@ export function App(): JSX.Element {
                     </select>
                   )}
                 </h3>
-                {/* 제안 큐가 있으면 에지 추가 승인/반려 편집 UI(6b-userflow), 큐 비면 렌더 안 함(순수 읽기 그래프 뷰). */}
-                <UserFlowApprovalPanel
+                {/* 제안 큐가 있으면 에지 추가 승인/반려 위저드(6b-userflow), 큐 비면 렌더 안 함(순수 읽기 그래프 뷰). */}
+                {/* stem별 key 리마운트(D-3) — cross-stem 결정 소실 방지. */}
+                <UserFlowApprovalWizard
+                  key={`${dashProject?.name ?? ""}:${planningFlowName}`}
+                  project={dashProject?.name ?? ""}
+                  stem={planningFlowName}
                   suggestions={uflowSuggestions}
                   busy={uflowApplyBusy}
-                  onApprove={(id) => applyUserFlow([id], [])}
-                  onReject={(id) => applyUserFlow([], [id])}
-                  onApproveAll={() => applyUserFlow(uflowSuggestions.map((s) => s.id), [])}
-                  onRejectAll={() => applyUserFlow([], uflowSuggestions.map((s) => s.id))}
+                  onApply={(approve, reject) => applyUserFlow(approve, reject)}
+                  appliedTick={uflowAppliedTick}
                 />
                 <div className="dash-plan-flow">
                   <ReactFlow
