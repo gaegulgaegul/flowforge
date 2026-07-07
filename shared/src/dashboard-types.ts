@@ -58,6 +58,12 @@ export interface CapabilityChangeRef {
   key: string;
   /** Korean display title (proposal H1), falls back to key. */
   displayName: string;
+  /**
+   * Project this change belongs to (PROJECTS_ROOT sub-name). Additive — the web
+   * carries it into the 5 view fetches + layout save so a change drilled from a
+   * project card resolves under that project's openspec/changes (not the global root).
+   */
+  project?: string;
 }
 
 /**

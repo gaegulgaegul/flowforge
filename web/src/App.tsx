@@ -37,6 +37,7 @@ import {
   fetchDocsPlanningIa,
   fetchDocsPlanningUserFlow,
   saveDocsPlanningUserFlowLayout,
+  saveLayout,
   fetchDocsPrdSuggestions,
   applyDocsPrdSuggestions,
   fetchDocsFeatureSuggestions,
@@ -89,6 +90,9 @@ type DashStage = "grid" | "skeleton" | "capChanges" | "views";
 export function App(): JSX.Element {
   // views 단계에서 선택된 change 키. 클릭으로 세팅되며 5종 산출물 로딩 effect의 트리거.
   const [selected, setSelected] = useState<string>("");
+  // 선택된 change가 속한 프로젝트(타 프로젝트 드릴다운이면 값, 전역 진입이면 undefined).
+  // 5종 뷰 fetch·배치 저장에 ?project=로 실려 해당 프로젝트 openspec 하위에서 해석된다.
+  const [selectedProject, setSelectedProject] = useState<string | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("prd");
   // skeleton(기획 뼈대) 단계 전용 탭. views 단계의 tab(5종)과 완전히 분리 — 충돌 방지.
   const [planTab, setPlanTab] = useState<"prd" | "features" | "ia" | "flow">("prd");
@@ -200,7 +204,7 @@ export function App(): JSX.Element {
     setSpecRoot(null);
     setSpecNodes([]);
     setSpecEdges([]);
-    fetchGraph(selected)
+    fetchGraph(selected, selectedProject)
       .then((r) => {
         setFlowNodes(toFlowNodes(r.graph, r.layout));
         setFlowEdges(toFlowEdges(r.graph));
@@ -208,19 +212,19 @@ export function App(): JSX.Element {
         setStatus("");
       })
       .catch((e: unknown) => setStatus(`그래프 로드 실패: ${String(e)}`));
-    fetchIA(selected)
+    fetchIA(selected, selectedProject)
       .then((r) => setIaRoot(r.tree))
       .catch((e: unknown) => setStatus(`IA 로드 실패: ${String(e)}`));
-    fetchWireframe(selected)
+    fetchWireframe(selected, selectedProject)
       .then((r) => setWireframe(r.wireframe))
       .catch((e: unknown) => setStatus(`와이어 로드 실패: ${String(e)}`));
-    fetchPrd(selected)
+    fetchPrd(selected, selectedProject)
       .then((r) => setPrd(r.prd))
       .catch((e: unknown) => setStatus(`PRD 로드 실패: ${String(e)}`));
-    fetchSpecTree(selected)
+    fetchSpecTree(selected, selectedProject)
       .then((r) => setSpecRoot(r.tree))
       .catch((e: unknown) => setStatus(`기능명세서 로드 실패: ${String(e)}`));
-  }, [selected]);
+  }, [selected, selectedProject]);
 
   // IA 트리/뷰모드 바뀌면 레이아웃 재계산
   useEffect(() => {
@@ -284,6 +288,21 @@ export function App(): JSX.Element {
   const onFlowNodesChange = useCallback((changes: NodeChange[]) => {
     setFlowNodes((nds) => applyNodeChanges(changes, nds));
   }, []);
+
+  // change 유저플로우 드래그 종료 → 현재 좌표를 LayoutOverlay로 저장(명세 .md는 안 건드림 — overlay JSON만).
+  // selectedProject가 있으면 ?project=로 실려 그 프로젝트 openspec 하위에 저장된다(전역이면 root).
+  // 읽기전용 프로젝트(화이트리스트 밖 등)면 서버가 거부 → 무해 실패로 상태바 안내만(화면은 안 깨짐).
+  const onFlowNodeDragStop = useCallback(() => {
+    if (!selected) return;
+    setFlowNodes((nds) => {
+      const layout: LayoutOverlay = {};
+      for (const n of nds) layout[n.id] = { x: n.position.x, y: n.position.y };
+      void saveLayout(selected, layout, selectedProject).catch((e: unknown) =>
+        setStatus(`이 프로젝트는 읽기전용이라 배치 저장이 안 됩니다: ${String(e)}`),
+      );
+      return nds; // 좌표 자체는 onNodesChange가 이미 반영 — 그대로 둔다.
+    });
+  }, [selected, selectedProject]);
 
   // 기능명세 노드 클릭 → 상세 패널 열기. featureTree 타입 노드만 대상(다른 뷰 노드는 무시).
   // 두 features ReactFlow(skeleton·capChanges)가 같은 핸들러를 공유한다.
@@ -768,8 +787,11 @@ export function App(): JSX.Element {
   }, [dashProject]);
 
   // change 클릭: 5종 뷰로 진입 — selected를 그 change로 세팅하면 로딩 effect가 동작.
+  // change.project(서버가 드릴다운에서 실어줌)를 함께 캡처 — 5종 fetch·배치 저장이 그 프로젝트
+  // openspec 하위에서 해석되게 한다. 전역 진입이면 undefined라 기존 동작(전역 root) 그대로.
   const openChangeViews = useCallback((change: ChangeSummary) => {
     setSelected(change.key);
+    setSelectedProject(change.project);
     setTab("prd");
     setDashStage("views");
     setStatus("");
@@ -1066,7 +1088,7 @@ export function App(): JSX.Element {
               </ReactFlow>
             )}
             {tab === "flow" && (
-              <ReactFlow key="d-flow" nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} onNodesChange={onFlowNodesChange} onNodeClick={onFlowNodeClick} fitView>
+              <ReactFlow key="d-flow" nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} onNodesChange={onFlowNodesChange} onNodeDragStop={onFlowNodeDragStop} onNodeClick={onFlowNodeClick} fitView>
                 <Background />
                 <Controls />
               </ReactFlow>

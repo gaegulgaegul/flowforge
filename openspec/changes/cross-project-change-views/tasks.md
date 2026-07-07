@@ -14,7 +14,7 @@
 
 ### Sequential: web 배선
 
-- [ ] 3.1 ChangeSummary.project?(additive, server capability detail 응답에 세팅) + api.ts 5 fetcher·saveLayout에 옵션 project 부착 + App.tsx openChangeViews가 dashProject 전달(뷰 로딩 effect·layout 저장 포함), RO 저장 실패 상태바 안내
+- [x] 3.1 ChangeSummary.project?(additive, server capability detail 응답에 세팅) + api.ts 5 fetcher·saveLayout에 옵션 project 부착 + App.tsx openChangeViews가 dashProject 전달(뷰 로딩 effect·layout 저장 포함), RO 저장 실패 상태바 안내
 - [ ] 3.2 기존 진입 경로(프로젝트 컨텍스트 없음) 회귀 없음 확인 — project 미부착 시 현행 URL 그대로
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)

@@ -176,6 +176,7 @@ projectsRouter.get(
       changes: detail.changes.map((key) => ({
         key, // 영문 change 디렉토리명 불변
         displayName: changeLabel(key, readProposalTitle(changesRoot, key)),
+        project, // 카드 진입 컨텍스트 — web이 5종 뷰·layout 저장에 ?project=로 부착
       })),
     });
   }),

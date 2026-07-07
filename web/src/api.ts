@@ -67,6 +67,13 @@ export interface CapabilitySummary {
 export interface ChangeSummary {
   key: string;
   displayName: string;
+  // 이 change가 속한 프로젝트(타 프로젝트 드릴다운에서 서버가 실어줌). 전역 진입이면 undefined.
+  project?: string;
+}
+
+// 선택적 ?project= 쿼리를 URL에 붙인다(없으면 원본 그대로 — 전역 root 하위호환).
+function withProject(url: string, project?: string): string {
+  return project ? `${url}?project=${encodeURIComponent(project)}` : url;
 }
 
 /** 홈 랜딩: change 있는 모든 프로젝트 카드(charter 유무 무관). */
@@ -109,32 +116,32 @@ export async function fetchCapabilityDetail(
   return (await res.json()) as CapabilityDetailResponse;
 }
 
-export async function fetchGraph(id: string): Promise<GraphResponse> {
-  const res = await fetch(`/api/changes/${id}/graph`);
+export async function fetchGraph(id: string, project?: string): Promise<GraphResponse> {
+  const res = await fetch(withProject(`/api/changes/${id}/graph`, project));
   if (!res.ok) throw new Error(`graph ${res.status}`);
   return (await res.json()) as GraphResponse;
 }
 
-export async function fetchIA(id: string): Promise<IAResponse> {
-  const res = await fetch(`/api/changes/${id}/ia`);
+export async function fetchIA(id: string, project?: string): Promise<IAResponse> {
+  const res = await fetch(withProject(`/api/changes/${id}/ia`, project));
   if (!res.ok) throw new Error(`ia ${res.status}`);
   return (await res.json()) as IAResponse;
 }
 
-export async function fetchWireframe(id: string): Promise<WireframeResponse> {
-  const res = await fetch(`/api/changes/${id}/wireframe`);
+export async function fetchWireframe(id: string, project?: string): Promise<WireframeResponse> {
+  const res = await fetch(withProject(`/api/changes/${id}/wireframe`, project));
   if (!res.ok) throw new Error(`wireframe ${res.status}`);
   return (await res.json()) as WireframeResponse;
 }
 
-export async function fetchPrd(id: string): Promise<PrdResponse> {
-  const res = await fetch(`/api/changes/${id}/prd`);
+export async function fetchPrd(id: string, project?: string): Promise<PrdResponse> {
+  const res = await fetch(withProject(`/api/changes/${id}/prd`, project));
   if (!res.ok) throw new Error(`prd ${res.status}`);
   return (await res.json()) as PrdResponse;
 }
 
-export async function fetchSpecTree(id: string): Promise<SpecTreeResponse> {
-  const res = await fetch(`/api/changes/${id}/spec-tree`);
+export async function fetchSpecTree(id: string, project?: string): Promise<SpecTreeResponse> {
+  const res = await fetch(withProject(`/api/changes/${id}/spec-tree`, project));
   if (!res.ok) throw new Error(`spec-tree ${res.status}`);
   return (await res.json()) as SpecTreeResponse;
 }
@@ -327,8 +334,8 @@ export async function applyDocsFeatureSuggestions(
   return (await res.json()) as PrdApplyResult;
 }
 
-export async function saveLayout(id: string, layout: LayoutOverlay): Promise<void> {
-  const res = await fetch(`/api/changes/${id}/layout`, {
+export async function saveLayout(id: string, layout: LayoutOverlay, project?: string): Promise<void> {
+  const res = await fetch(withProject(`/api/changes/${id}/layout`, project), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(layout),
