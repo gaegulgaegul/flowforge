@@ -383,3 +383,15 @@ flowforge가 기능명세 제안 큐(features.suggestions.json) 항목을 개별
 - behavior: 큐가 비어있지 않으면 위저드로 1건씩 제시(진행 n/N·결정 점·승인/반려/건너뛰기·[남은 것 모두 승인/반려] 탈출구), 건너뛴 제안은 반영 제외·큐 잔존·다음 진입 때 재등장, 요약 [결정 반영하기] 1회로 기존 청크 apply 경로 호출
 - behavior: 결정은 localStorage 체크포인트(features-wizard:<project>)로 이탈을 견디고, 현재 큐에 없는 id·비열거형 결정값은 폐기, 반영 실패=결정 보존·성공=리셋, 프로젝트 간 격리
 - metric: verify 실픽셀 시나리오 + 공용 상태 모듈(wizard-state) 단위 테스트 16 PASS (2026-07-07)
+
+## capability: cross-project-change-views — 타 프로젝트 change 5종 뷰 해석
+
+프로젝트 카드 드릴다운으로 진입한 change의 5종 뷰(graph·ia·wireframe·prd·spec-tree)와 layout 저장을 그 프로젝트의 openspec/changes 하위에서 해석하는 능력. `?project=` 부재 시 글로벌 루트(하위호환 100%). 기획문서 없는 프로젝트는 skeleton에 change 목록(capability별)을 조건부 노출해 진입로를 보장한다.
+
+### 기능: 프로젝트 컨텍스트 change 해석 (GET /api/changes/:id/* ?project=)
+- assert:symbol resolveChangeDir
+- assert:symbol resolveProjectDir
+- invariant:no-traversal project는 화이트리스트 정규식(영숫자·하이픈·언더스코어)만 통과 — dotfile(.ssh)·유니코드·공백·`..`은 404, 루트 밖 파일시스템 접근 없음
+- invariant:safe-4xx 미지·조작 프로젝트는 404(존재 오라클 최소화), change 부재도 404 — 5xx로 새지 않음
+- behavior: ?project= 있으면 그 프로젝트 openspec/changes에서 change를 해석하고, 없으면 기존 글로벌 루트 동작 그대로(하위호환). web은 카드 드릴다운의 project를 5종 fetch+layout 저장에 부착(withProject)
+- metric: 라우트 통합 테스트(2프로젝트 픽스처 200·미지정 불변·dotfile/조작 404) + 라이브 실측(wowa change 뷰 200·.ssh 프로빙 404, 2026-07-07) PASS

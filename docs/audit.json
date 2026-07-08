@@ -3,11 +3,11 @@
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
-    "PASS": 93,
+    "PASS": 97,
     "FAIL": 0,
-    "UNVERIFIABLE": 139
+    "UNVERIFIABLE": 141
   },
-  "reason": "미검증(UNVERIFIABLE) 139건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 141건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -18,7 +18,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:109"
+      "evidence": "server/src/routes/graph.ts:129"
     },
     {
       "capability": "spec-tree-view",
@@ -117,7 +117,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:96"
+      "evidence": "server/src/routes/graph.ts:116"
     },
     {
       "capability": "prd-view",
@@ -216,7 +216,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/projects.ts:107"
+      "evidence": "server/src/routes/projects.ts:108"
     },
     {
       "capability": "capability-change-navigation",
@@ -304,7 +304,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/projects.ts:126"
+      "evidence": "server/src/routes/projects.ts:127"
     },
     {
       "capability": "capability-change-navigation",
@@ -491,7 +491,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/projects.ts:100"
+      "evidence": "server/src/routes/projects.ts:101"
     },
     {
       "capability": "project-card-grid",
@@ -502,7 +502,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/projects.ts:90"
+      "evidence": "server/src/lib/projects.ts:113"
     },
     {
       "capability": "project-card-grid",
@@ -579,7 +579,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/projects.ts:70"
+      "evidence": "server/src/lib/projects.ts:93"
     },
     {
       "capability": "project-card-grid",
@@ -590,7 +590,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/projects.ts:58"
+      "evidence": "server/src/lib/projects.ts:81"
     },
     {
       "capability": "project-card-grid",
@@ -1321,7 +1321,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/projects.ts:150"
+      "evidence": "server/src/routes/projects.ts:151"
     },
     {
       "capability": "planning-capability-detail",
@@ -1821,7 +1821,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:260"
+      "evidence": "web/src/api.ts:267"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1876,7 +1876,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:270"
+      "evidence": "web/src/api.ts:277"
     },
     {
       "capability": "planning-panel-screen-links",
@@ -2075,7 +2075,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:377"
+      "evidence": "web/src/api.ts:384"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2163,7 +2163,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:362"
+      "evidence": "web/src/api.ts:369"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2577,33 +2577,100 @@
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
       "evidence": null
+    },
+    {
+      "capability": "cross-project-change-views",
+      "feature": "프로젝트 컨텍스트 change 해석 (GET /api/changes/:id/* ?project=)",
+      "line": 392,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol resolveChangeDir",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/changes.ts:63"
+    },
+    {
+      "capability": "cross-project-change-views",
+      "feature": "프로젝트 컨텍스트 change 해석 (GET /api/changes/:id/* ?project=)",
+      "line": 393,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol resolveProjectDir",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/projects.ts:33"
+    },
+    {
+      "capability": "cross-project-change-views",
+      "feature": "프로젝트 컨텍스트 change 해석 (GET /api/changes/:id/* ?project=)",
+      "line": 394,
+      "kind": "invariant",
+      "claim": "invariant:no-traversal project는 화이트리스트 정규식(영숫자·하이픈·언더스코어)만 통과 — dotfile(.ssh)·유니코드·공백·`..`은 404, 루트 밖 파일시스템 접근 없음",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+    },
+    {
+      "capability": "cross-project-change-views",
+      "feature": "프로젝트 컨텍스트 change 해석 (GET /api/changes/:id/* ?project=)",
+      "line": 395,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx 미지·조작 프로젝트는 404(존재 오라클 최소화), change 부재도 404 — 5xx로 새지 않음",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "cross-project-change-views",
+      "feature": "프로젝트 컨텍스트 change 해석 (GET /api/changes/:id/* ?project=)",
+      "line": 396,
+      "kind": "behavior",
+      "claim": "behavior: ?project= 있으면 그 프로젝트 openspec/changes에서 change를 해석하고, 없으면 기존 글로벌 루트 동작 그대로(하위호환). web은 카드 드릴다운의 project를 5종 fetch+layout 저장에 부착(withProject)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (5토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/routes/__tests__/graphCrossProject.test.ts:76",
+      "llmHint": "?project= 있으면 그 프로젝트 openspec/changes에서 change를 해석하고, 없으면 기존 글로벌 루트 동작 그대로(하위호환). web은 카드 드릴다운의 project를 5종 fetch+layout 저장에 부착(withProject)"
+    },
+    {
+      "capability": "cross-project-change-views",
+      "feature": "프로젝트 컨텍스트 change 해석 (GET /api/changes/:id/* ?project=)",
+      "line": 397,
+      "kind": "metric",
+      "claim": "metric: 라우트 통합 테스트(2프로젝트 픽스처 200·미지정 불변·dotfile/조작 404) + 라이브 실측(wowa change 뷰 200·.ssh 프로빙 404, 2026-07-07) PASS",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
     }
   ],
   "ghosts": [
     {
       "type": "endpoint",
       "what": "GET /api/changes",
-      "source": "server/src/routes/graph.ts:48"
+      "source": "server/src/routes/graph.ts:68"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/graph",
-      "source": "server/src/routes/graph.ts:55"
+      "source": "server/src/routes/graph.ts:75"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/ia",
-      "source": "server/src/routes/graph.ts:70"
+      "source": "server/src/routes/graph.ts:90"
     },
     {
       "type": "endpoint",
       "what": "PUT /api/changes/:id(*)/layout",
-      "source": "server/src/routes/graph.ts:122"
+      "source": "server/src/routes/graph.ts:142"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/wireframe",
-      "source": "server/src/routes/graph.ts:83"
+      "source": "server/src/routes/graph.ts:103"
     },
     {
       "type": "endpoint",
@@ -2623,7 +2690,7 @@
     {
       "type": "symbol",
       "what": "App",
-      "source": "web/src/App.tsx:89"
+      "source": "web/src/App.tsx:90"
     },
     {
       "type": "symbol",
@@ -2698,17 +2765,17 @@
     {
       "type": "symbol",
       "what": "applyDocsFeatureSuggestions",
-      "source": "web/src/api.ts:305"
+      "source": "web/src/api.ts:312"
     },
     {
       "type": "symbol",
       "what": "applyDocsPrdSuggestions",
-      "source": "web/src/api.ts:225"
+      "source": "web/src/api.ts:232"
     },
     {
       "type": "symbol",
       "what": "applyInChunks",
-      "source": "web/src/api.ts:195"
+      "source": "web/src/api.ts:202"
     },
     {
       "type": "symbol",
@@ -2783,12 +2850,12 @@
     {
       "type": "symbol",
       "what": "fetchCapabilities",
-      "source": "web/src/api.ts:81"
+      "source": "web/src/api.ts:88"
     },
     {
       "type": "symbol",
       "what": "fetchCapabilityDetail",
-      "source": "web/src/api.ts:101"
+      "source": "web/src/api.ts:108"
     },
     {
       "type": "symbol",
@@ -2798,82 +2865,82 @@
     {
       "type": "symbol",
       "what": "fetchDocsFeatureSuggestions",
-      "source": "web/src/api.ts:293"
+      "source": "web/src/api.ts:300"
     },
     {
       "type": "symbol",
       "what": "fetchDocsGraph",
-      "source": "web/src/api.ts:153"
+      "source": "web/src/api.ts:160"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningFeatures",
-      "source": "web/src/api.ts:251"
+      "source": "web/src/api.ts:258"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningIa",
-      "source": "web/src/api.ts:280"
+      "source": "web/src/api.ts:287"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningPrd",
-      "source": "web/src/api.ts:172"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchDocsPlanningUserFlow",
-      "source": "web/src/api.ts:348"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchDocsPrd",
-      "source": "web/src/api.ts:165"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchDocsPrdSuggestions",
       "source": "web/src/api.ts:179"
     },
     {
       "type": "symbol",
+      "what": "fetchDocsPlanningUserFlow",
+      "source": "web/src/api.ts:355"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsPrd",
+      "source": "web/src/api.ts:172"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsPrdSuggestions",
+      "source": "web/src/api.ts:186"
+    },
+    {
+      "type": "symbol",
       "what": "fetchDocsProjects",
-      "source": "web/src/api.ts:146"
+      "source": "web/src/api.ts:153"
     },
     {
       "type": "symbol",
       "what": "fetchDocsWireframe",
-      "source": "web/src/api.ts:159"
+      "source": "web/src/api.ts:166"
     },
     {
       "type": "symbol",
       "what": "fetchGraph",
-      "source": "web/src/api.ts:112"
+      "source": "web/src/api.ts:119"
     },
     {
       "type": "symbol",
       "what": "fetchIA",
-      "source": "web/src/api.ts:118"
+      "source": "web/src/api.ts:125"
     },
     {
       "type": "symbol",
       "what": "fetchPrd",
-      "source": "web/src/api.ts:130"
+      "source": "web/src/api.ts:137"
     },
     {
       "type": "symbol",
       "what": "fetchProjects",
-      "source": "web/src/api.ts:73"
+      "source": "web/src/api.ts:80"
     },
     {
       "type": "symbol",
       "what": "fetchSpecTree",
-      "source": "web/src/api.ts:136"
+      "source": "web/src/api.ts:143"
     },
     {
       "type": "symbol",
       "what": "fetchWireframe",
-      "source": "web/src/api.ts:124"
+      "source": "web/src/api.ts:131"
     },
     {
       "type": "symbol",
@@ -2893,7 +2960,7 @@
     {
       "type": "symbol",
       "what": "isLayoutOverlay",
-      "source": "server/src/lib/changes.ts:94"
+      "source": "server/src/lib/changes.ts:98"
     },
     {
       "type": "symbol",
@@ -2968,12 +3035,7 @@
     {
       "type": "symbol",
       "what": "readOverlay",
-      "source": "server/src/lib/changes.ts:73"
-    },
-    {
-      "type": "symbol",
-      "what": "resolveChangeDir",
-      "source": "server/src/lib/changes.ts:59"
+      "source": "server/src/lib/changes.ts:77"
     },
     {
       "type": "symbol",
@@ -2983,12 +3045,12 @@
     {
       "type": "symbol",
       "what": "saveDocsPlanningUserFlowLayout",
-      "source": "web/src/api.ts:407"
+      "source": "web/src/api.ts:414"
     },
     {
       "type": "symbol",
       "what": "saveLayout",
-      "source": "web/src/api.ts:330"
+      "source": "web/src/api.ts:337"
     },
     {
       "type": "symbol",
@@ -3053,7 +3115,7 @@
     {
       "type": "symbol",
       "what": "writeOverlay",
-      "source": "server/src/lib/changes.ts:84"
+      "source": "server/src/lib/changes.ts:88"
     }
   ],
   "scanSkipped": [
@@ -3064,6 +3126,6 @@
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-20260707-1140.html",
-  "runId": "run-20260707-1140"
+  "historyHtml": "audit-20260708-0300.html",
+  "runId": "run-20260708-0300"
 }
