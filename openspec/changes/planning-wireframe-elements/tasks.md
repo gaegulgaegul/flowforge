@@ -15,8 +15,8 @@
 ### Sequential: web + 도그푸딩
 
 - [x] 3.1 web: api fetchDocsPlanningWireframe + App.tsx 기획 와이어 탭 → 기존 WireframePanel 재사용(신규 컴포넌트·CSS 0), planTabsAvail에 와이어 추가
-- [ ] 3.2 docs/planning/features.md 화면 1~2개에 element 도그푸딩(원천 실증 — 예: login/grid 화면에 field·button 요소 + screen/detail 매핑)
+- [x] 3.2 docs/planning/features.md 화면 3개(grid/skeleton/features)에 element 도그푸딩 — header/list/button/field/empty 5종 실사용 + screen: 이동(grid→skeleton, skeleton→features) + detail: 매핑(features→"planning-features 라우트 조회"). flowforge 실제 화면 기준(지어내지 않음).
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
-- [ ] 4.1 VERIFY: 5단계 게이트 — 빌드 → 타입체크 → 린트 → 테스트(기존 390 회귀 0 + 신규, **golden 회귀 0 명시 확인**) → UI 실픽셀(격리 픽스처: element 저작 화면 → 와이어 탭에 박스 렌더·goto·빈 화면·detail 매핑, change 와이어 회귀 0) 전부 PASS
+- [x] 4.1 VERIFY: 5단계 게이트 — 빌드(shared/server/web EXIT 0) → 타입체크(strict tsc) → 린트(러너 미구성 --if-present) → 테스트(400/400, 기존 390+요소파싱/빌더 신규 10, 회귀 0, **golden.test.ts PASS 명시 확인**) → **UI 실픽셀(라이브 flowforge.gaegul.house)**: 기획 와이어 탭 뜸·3화면 프레임(grid 3박스·skeleton 2박스·features 3박스)·박스 5종 렌더(제목/목록/버튼/입력·표시/빈 상태)·goto 있는 박스에 ▶ 화살표·콘솔 에러 0. planning-wireframe API에 요소 실재+goto(screen-skeleton/screen-features) 해석 확인. change 경로 와이어·골든 무저촉.
