@@ -3,34 +3,45 @@
 > openspec-plan 2단계 도그푸딩 — flowforge가 자기 자신의 기획 단계 기능을 features.md로 기술한다.
 > 각 요구사항의 capability 키는 실제 openspec capability(docs/spec.md)와 일치시킨다(매핑 출발점).
 
-## 기획 산출물 생성
-<!-- capability: planning-authoring -->
-(중요도: 높음, 상태: 진행중)
-
-openspec-plan 스킬이 docs/planning/에 manyfast식 기획 산출물을 순차 게이트로 생성한다.
-
-### PRD 생성
+## 기획 PRD 생성
+<!-- capability: planning-prd-generation -->
 (중요도: 높음, 상태: 완료)
 
-#### 5섹션 PRD 작성
+openspec-plan 스킬이 docs/planning/prd.md를 manyfast식 5섹션 PRD로 생성한다(순차 게이트의 첫 단계).
+
+### 5섹션 PRD 작성
 (중요도: 높음, 상태: 완료)
 
-#### 빈 섹션 표면화
+### 빈 섹션 표면화
 (중요도: 중간, 상태: 완료)
 
-### 기능명세서 생성
+## 기획 기능명세서 생성
+<!-- capability: planning-features-generation -->
 (중요도: 높음, 상태: 진행중)
 
-#### 3단 트리 도출
+openspec-plan 스킬이 PRD 다음 단계로 docs/planning/features.md를 3단 트리 기능명세서로 생성한다(기획↔구현 매핑의 출발점).
+
+### 3단 트리 도출
 (중요도: 높음, 상태: 진행중)
 <!-- memo: TODO 화면(screen) 노드도 이 트리에 1급으로 편입할지 결정 필요 -->
 
-
-#### capability 키 부여
+### capability 키 부여
 (중요도: 높음, 상태: 진행중)
 
-#### 중요도·상태 속성
+### 중요도·상태 속성
 (중요도: 중간, 상태: 진행중)
+
+## 기획 유저플로우 생성
+<!-- capability: planning-userflow-generation -->
+(중요도: 높음, 상태: 완료)
+
+openspec-plan 스킬이 기능명세 다음 단계로 docs/planning/user-flow/<group>-vN.md를 Mermaid flowchart로 생성한다(화면 흐름을 그래프로).
+
+### Mermaid flowchart 명세
+(중요도: 높음, 상태: 완료)
+
+### 순차 게이트·버전 누적
+(중요도: 중간, 상태: 완료)
 
 ## 기획 PRD 뷰
 <!-- capability: planning-prd-view -->
