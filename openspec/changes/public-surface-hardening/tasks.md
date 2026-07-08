@@ -4,8 +4,8 @@
 
 ### Sequential: 검증 모듈 (선행)
 
-- [ ] 1.1 RED: cfAccess 단위 테스트 — 픽스처 RSA 키쌍(테스트 내 생성)으로 유효 JWT 통과 / 위조 서명·aud 불일치·만료·nbf 미래·email 부재(service token) 401 판정 / JWKS 캐시 + kid 미스 1회 재조회 (fetch 주입 seam, 실 네트워크 0)
-- [ ] 1.2 GREEN: `server/src/lib/cfAccess.ts` — node:crypto RS256 검증·JWKS fetch/10분 캐시·aud(배열 포함)/iss/exp/nbf·email claim 필수. 신규 npm 의존성 0
+- [x] 1.1 RED: cfAccess 단위 테스트 — 픽스처 RSA 키쌍(테스트 내 생성)으로 유효 JWT 통과 / 위조 서명·aud 불일치·만료·nbf 미래·email 부재(service token) 401 판정 / JWKS 캐시 + kid 미스 1회 재조회 (fetch 주입 seam, 실 네트워크 0)
+- [x] 1.2 GREEN: `server/src/lib/cfAccess.ts` — node:crypto RS256 검증·JWKS fetch/10분 캐시·aud(배열 포함)/iss/exp/nbf·email claim 필수. 신규 npm 의존성 0
 
 ### Sequential: 게이트 배선
 
