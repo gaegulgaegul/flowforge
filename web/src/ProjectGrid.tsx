@@ -38,7 +38,7 @@ export function ProjectGrid({ projects, onOpenProject }: Props): JSX.Element {
           <span className="pg-card-name">{p.displayName}</span>
           <span className="pg-card-badges">
             <span className={`pg-badge ${p.hasCharter ? "pg-badge--charter" : "pg-badge--nocharter"}`}>
-              {p.hasCharter ? "🦴 뼈대 있음" : "뼈대 없음"}
+              {p.hasCharter ? "📋 기획 있음" : "기획 없음"}
             </span>
             <span className="pg-badge">change {p.changeCount}개</span>
             <span className={`pg-badge pg-audit--${p.auditStatus}`}>{AUDIT_LABEL[p.auditStatus]}</span>

@@ -599,7 +599,7 @@ export function App(): JSX.Element {
       // capability 경유 경로를 grounding하므로 빈 capability 목록 + 안내로 단축한다.
       setCapabilities([]);
       setDashStage("skeleton");
-      setStatus("이 프로젝트는 뼈대(capability)가 없습니다(change는 capability 경유로만 표시).");
+      setStatus("이 프로젝트는 기획 문서가 없습니다(change는 capability 경유로만 표시).");
     }
   }, []);
 
