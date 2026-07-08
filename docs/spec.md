@@ -420,3 +420,45 @@ flowforge 쓰기 라우트(승인 apply 3종 + layout 저장 2종)에 origin측 
 - assert:symbol parseCorsOrigins
 - invariant: 와일드카드 CORS 미방출 — FLOWFORGE_CORS_ORIGIN 미설정 시 미들웨어 미부착(Access-Control-Allow-Origin 헤더 없음), `*` 입력조차 화이트리스트에서 제거
 - metric: 격리 서버 실측 — 임의 Origin에 CORS 헤더 부재 확인(2026-07-08)
+
+## capability: planning-features-approval-queue — 기능명세 속성 제안 큐 읽기
+
+flowforge가 `docs/planning/features.suggestions.json`(AI/스킬이 쓴 기능명세 노드 속성 변경 제안 큐)을 읽어 반환하는 읽기전용 능력. 큐가 없으면 빈 큐(version:1, suggestions:[])를 200으로 반환하고(404 아님), 깨진 JSON·미인식 항목은 안전 폴백(빈 큐/필터)한다. flowforge는 큐를 생성하지 않고 소비만 한다(제안 생성 주체=외부 스킬).
+
+### 기능: 기능명세 제안 큐 조회 (GET /api/docs/:project/planning-features-suggestions)
+- assert:endpoint GET /api/docs/:project/planning-features-suggestions
+- assert:symbol readDocsFeatureSuggestions
+- invariant:no-traversal resolveDocsDir이 `..` 및 비화이트리스트 project를 차단해 docs 루트 밖 파일 미접근
+- invariant:safe-4xx 경로 조작 project는 404, 큐 파일 부재는 빈 큐 200(읽기는 절대 500으로 죽지 않음)
+- behavior: features.suggestions.json을 JSON.parse 후 op="set-attrs"·nodePath=string[]·priority/status 어휘(낮음|중간|높음 / 시작전|진행중|완료|중단) 검증으로 필터해 유효 제안만 반환, priority·status 둘 다 없는 무의미 제안은 제외, id 중복은 first-occurrence-wins dedup, 파일 없음·깨진 JSON은 빈 큐로 폴백
+- metric: 제안 큐 조회 응답 시간 목표 200ms
+
+## capability: planning-prd-generation — 기획 PRD 생성 (openspec-plan 스킬)
+
+openspec-plan 스킬이 기획 단계 산출물 중 PRD를 사용자 입력으로부터 생성해 대상 프로젝트의 `docs/planning/prd.md`에 쓴다(예광탄 슬라이스 — PRD 생성만, 기능명세/유저플로우/와이어는 후속 change). 생성 주체는 flowforge가 아니라 스킬이므로 flowforge 코드엔 생성 라우트/심볼이 없다(flowforge는 생성된 산출물을 읽어 표시·승인만 한다). audit assert 대상 없음 — 요구사항을 behavior/metric으로만 기술한다.
+
+### 기능: PRD 5섹션 고정 스키마 생성
+- behavior: openspec-plan이 사용자 입력으로부터 PRD를 만들어 `docs/planning/prd.md`에 쓰고, manyfast 원형 5섹션(`## 개요`·`## 핵심가치`·`## 타겟·시나리오`·`## 성공지표`·`## 속성설정`)을 이 순서·이 제목 고정으로 둔다
+- behavior: 입력에 근거가 없는 섹션은 그럴듯하게 지어내지 않고 비어있음을 표면화한다(빈 섹션 또는 "(미정)" 표기)
+- behavior: PRD는 신규 디렉토리 `docs/planning/`에만 쓰고 기존 charter 상주문서(`docs/spec.md`·`docs/PRD.md`)를 수정·덮어쓰지 않는다
+- metric: 생성된 prd.md에 고정 5섹션이 지정 순서로 존재(flowforge planning-prd-view가 이 5섹션을 파싱해 렌더 가능)
+
+## capability: planning-features-generation — 기획 기능명세 생성 (openspec-plan 스킬)
+
+openspec-plan 스킬이 PRD 생성 다음 단계에서 `docs/planning/features.md`를 manyfast식 3단 트리 기능명세서로 생성한다(기획↔구현 매핑의 출발점 — 요구사항별 capability 키). 생성 주체는 flowforge가 아니라 스킬이므로 flowforge 코드엔 생성 라우트/심볼이 없다(flowforge는 생성된 features.md를 읽어 트리로 렌더·승인만 한다 — planning-features-view 참조). audit assert 대상 없음 — behavior/metric으로만 기술한다.
+
+### 기능: features.md를 의존성 순서로 3단 트리 스키마 생성
+- behavior: openspec-plan은 PRD(`docs/planning/prd.md`)가 있는 상태에서만 features.md를 생성하고, PRD 없이 features 단독 생성을 하지 않는다(manyfast 순차 게이트). PRD의 개요·핵심가치를 입력 맥락으로 요구사항을 도출한다
+- behavior: 생성된 features.md는 3단 위계(요구사항 `## ` → 기능 `### ` → 상세기능 `#### `)를 따르고, 각 요구사항 헤더 직후 줄에 capability 키 주석 `<!-- capability: <영문키> -->`를 둔다(kebab-case, change의 `specs/<키>/` 디렉토리명과 일치 가능)
+- behavior: 각 노드(요구사항/기능/상세기능)에 중요도(낮음|중간|높음)·상태(시작전|진행중|완료|중단) 속성을 헤더 끝 또는 직후 줄에 표기한다
+- metric: 생성된 features.md가 flowforge planning-features-view의 FeatureTree 파서로 3단 트리+capability 키+속성으로 파싱 가능
+
+## capability: planning-userflow-generation — 기획 유저플로우 생성 (openspec-plan 스킬)
+
+openspec-plan 스킬이 기능명세 다음 단계에서 `docs/planning/user-flow/<group>-vN.md`를 Mermaid flowchart 명세로 생성한다(화면 흐름을 그래프로 표현). 기능명세에 기능이 ≥1 있어야 진행하는 manyfast 순차 게이트의 다음 단계다. 생성 주체는 flowforge가 아니라 스킬이므로 flowforge 코드엔 생성 라우트/심볼이 없다(flowforge는 생성된 .md를 읽어 SpecGraph로 렌더·좌표 저장만 한다 — planning-userflow-view 참조). audit assert 대상 없음 — behavior/metric으로만 기술한다.
+
+### 기능: 유저플로우를 의존성 순서로 Mermaid flowchart 생성
+- behavior: openspec-plan은 기능명세(`docs/planning/features.md`)에 기능이 1개 이상 있는 상태에서만 유저플로우를 생성하고, 기능명세 없이 단독 생성을 하지 않는다(manyfast 순차 게이트). 새 목적(흐름)은 새 group, 수정은 같은 group의 새 버전(`-vN`)으로 폴더 누적한다
+- behavior: 생성된 `<group>-vN.md`는 mermaid 코드블록 안에 `flowchart TD`(또는 LR) 방향 선언과 노드·엣지를 담고, 노드는 흐름 4타입(시작=`([..])` stadium, 페이지=`["..."]` box, 행동=`{"..."}` diamond 등)을 Mermaid 노드 모양으로 구분한다
+- behavior: 엣지는 `A --> B`(이동) 또는 `A -->|라벨| B`(라벨 이동)로 흐름을 표현한다
+- metric: 생성된 user-flow .md가 flowforge planning-userflow-view의 정규식 파서로 SpecGraph(노드+엣지)로 변환 가능
