@@ -20,6 +20,14 @@ services:
       # docs-root와 동일한 호스트 홈 RO 마운트를 재사용 — <project>/openspec/changes/*/specs/
       # 가진 프로젝트를 카드로 노출(읽기전용 스캔이라 RW 불필요).
       PROJECTS_ROOT: /data/docs-root
+      # 쓰기 인증(public-surface-hardening). 값은 호스트 .env(git-ignored)에서 주입 —
+      # 실값을 이 파일에 커밋하지 않는다(30-security). 넷 다 미설정이면 현행 무인증 동작
+      # (개발 모드) — 프로덕션 강제는 CF Zero Trust 등록 + 아래 env 주입을 한 세트로.
+      # 절차: docs/EDGE_AUTH.md.
+      FLOWFORGE_CF_ACCESS_AUD: ${FLOWFORGE_CF_ACCESS_AUD:-}
+      FLOWFORGE_CF_ACCESS_TEAM_DOMAIN: ${FLOWFORGE_CF_ACCESS_TEAM_DOMAIN:-}
+      FLOWFORGE_WRITE_TOKEN: ${FLOWFORGE_WRITE_TOKEN:-}
+      FLOWFORGE_CORS_ORIGIN: ${FLOWFORGE_CORS_ORIGIN:-}
     volumes:
       # 시각화 대상 = wowa-app openspec(change 6개, 데모 풍부). spec.md=읽기, viz/graph-overlay.json=쓰기라 RW.
       # wowa .gitignore에 openspec/**/viz/ 추가해 시각화 산출물 git 오염 차단함.

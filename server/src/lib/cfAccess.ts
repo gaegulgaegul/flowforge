@@ -150,10 +150,10 @@ export async function verifyCfAccessJwt(
   }
 
   const parts = token.split(".");
-  if (parts.length !== 3) {
+  const [headerSeg, payloadSeg, sigSeg] = parts;
+  if (parts.length !== 3 || headerSeg === undefined || payloadSeg === undefined || sigSeg === undefined) {
     return null;
   }
-  const [headerSeg, payloadSeg, sigSeg] = parts;
 
   const header = parseSegment(headerSeg);
   const payload = parseSegment(payloadSeg) as CfAccessPayload | null;

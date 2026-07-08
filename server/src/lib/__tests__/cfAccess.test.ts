@@ -261,7 +261,9 @@ describe("cfAccess — verifyCfAccessJwt", () => {
     // 이 테스트는 서명이 실제로 표준 RS256이며 node:crypto로 재검증 가능함을 독립 확인
     const token = signJwt(keyPair.privateKey, validPayload(NOW));
     const [h, p, s] = token.split(".");
-    const pub = createPublicKey({ key: jwks.keys[0], format: "jwk" });
+    const jwk = jwks.keys[0];
+    if (!jwk || h === undefined || p === undefined || s === undefined) throw new Error("픽스처 불완전");
+    const pub = createPublicKey({ key: jwk, format: "jwk" });
     const { createVerify } = await import("node:crypto");
     const v = createVerify("RSA-SHA256");
     v.update(`${h}.${p}`);
