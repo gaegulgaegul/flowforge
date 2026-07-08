@@ -5,7 +5,7 @@
 ### Sequential: 요소 파싱 (선행 — screenRegistry additive)
 
 - [x] 1.1 RED: screenRegistry element 파싱 테스트 — `<!-- element: <kind> "<label>" [-> detail:] [-> screen:] -->` 여러 개·순서 보존·kind 5종·옵션 유무·요소 없음 / 기존 id·label·N:M 링크 무영향
-- [ ] 1.2 GREEN: shared `ScreenElement{kind,label,detail?,screen?}` + `ScreenNode.elements?`(additive) + screenRegistry RE_ELEMENT(화면 헤더 컨텍스트 아래, 라인 스캔). 금지: featureTreeBuilder·flowBinder·wireframeBuilder(change)·__golden__
+- [x] 1.2 GREEN: shared `ScreenElement{kind,label,detail?,screen?}` + `ScreenNode.elements?`(additive) + screenRegistry RE_ELEMENT(화면 헤더 컨텍스트 아래, 라인 스캔). 금지: featureTreeBuilder·flowBinder·wireframeBuilder(change)·__golden__
 
 ### Sequential: 와이어 빌더 + 라우트
 

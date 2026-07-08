@@ -8,12 +8,30 @@
  *   → 기획 IA 뷰. featureTreeBuilder(features 트리)는 건드리지 않는다(회귀 0).
  */
 
+/**
+ * 화면 요소(버튼·입력칸 등) 한 개 — 화면 헤더 아래 `<!-- element: <kind> "<label>" -->` 주석.
+ * kind는 기존 WireBoxKind 5종 재사용(새 종류 안 만듦 — WireframePanel 재사용). 선택으로 상세기능
+ * 라벨(detail, 문자열 동치)·이동화면 id(screen)를 매단다. planning 와이어 박스의 원천.
+ */
+export interface ScreenElement {
+  /** 박스 종류(WireBoxKind 5종: header|list|button|field|empty). */
+  readonly kind: string;
+  /** 표시 라벨(주석의 따옴표 안 텍스트, 한글 가능). */
+  readonly label: string;
+  /** 선택: 연결 상세기능 라벨(`-> detail:<라벨>`). N:M 링크와 같은 문자열 동치 규약. */
+  readonly detail?: string;
+  /** 선택: 이 요소가 이동시키는 화면 id(`-> screen:<id>`). 와이어 박스 goto의 원천. */
+  readonly screen?: string;
+}
+
 /** 화면 1급 노드. id는 명시 영문 식별자(features.md의 `<!-- screen: <id> -->`), label은 표시 이름. */
 export interface ScreenNode {
   /** 안정 식별자: features.md에 명시한 영문 id(한글 slug가 x로 죽는 버그 회피). */
   readonly id: string;
   /** 표시 이름(화면 헤더 텍스트, 한글 가능). */
   readonly label: string;
+  /** 선택(additive): 이 화면 아래 저작된 요소들(순서 보존). 없으면 undefined(빈 프레임). */
+  readonly elements?: readonly ScreenElement[];
 }
 
 /** 상세기능 ↔ 화면 N:M 링크 한 줄. detailLabel(상세기능 라벨) → 연결된 화면 id 목록. */

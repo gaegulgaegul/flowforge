@@ -72,6 +72,7 @@ export type {
 } from './dashboard-types.js';
 
 export type {
+  ScreenElement,
   ScreenNode,
   ScreenLink,
   ScreenRegistry,
