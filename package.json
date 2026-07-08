@@ -12,7 +12,7 @@
     "build": "npm run build --workspace shared && npm run build --workspace server && npm run build --workspace web",
     "test": "npm run test --workspace server",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present && npm run lint:linkage",
     "lint:linkage": "node scripts/lint-plan-spec-linkage.mjs",
     "dev:server": "npm run dev --workspace server",
     "dev:web": "npm run dev --workspace web"
