@@ -9,8 +9,8 @@
 
 ### Sequential: 게이트 배선
 
-- [ ] 2.1 RED: 라우트 통합 테스트 — env 설정 시 무자격 쓰기 5종 전부 401+대상 파일 불변 / Bearer 토큰(상수시간) 통과 / 유효 JWT 통과 / env 미설정 시 현행 동작(기존 쓰기 테스트 회귀 0)
-- [ ] 2.2 GREEN: `requireWriteAuth` 미들웨어 + 쓰기 5종(graph layout·docs layout·apply 3종) 명시 부착 + 401 응답(내부 사유 미노출)
+- [x] 2.1 RED: 라우트 통합 테스트 — env 설정 시 무자격 쓰기 5종 전부 401+대상 파일 불변 / Bearer 토큰(상수시간) 통과 / 유효 JWT 통과 / env 미설정 시 현행 동작(기존 쓰기 테스트 회귀 0)
+- [x] 2.2 GREEN: `requireWriteAuth` 미들웨어 + 쓰기 5종(graph layout·docs layout·apply 3종) 명시 부착 + 401 응답(내부 사유 미노출)
 - [ ] 2.3 cors 교체 — 와일드카드 제거, `FLOWFORGE_CORS_ORIGIN` 화이트리스트만(미설정=CORS 헤더 없음). same-origin SPA 무영향 확인
 
 ### Sequential: 배포 준비 (코드 밖 절차 문서)

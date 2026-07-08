@@ -23,6 +23,7 @@ import { buildSpecTree } from "../parser/specTreeBuilder.js";
 import { listChanges, resolveChangeDir, readOverlay, writeOverlay, isLayoutOverlay } from "../lib/changes.js";
 import { resolveProjectDir } from "../lib/projects.js";
 import { safe } from "../lib/safe-error.js";
+import { requireWriteAuth } from "../lib/requireWriteAuth.js";
 
 export const graphRouter = Router();
 
@@ -141,6 +142,7 @@ graphRouter.get(
 
 graphRouter.put(
   "/api/changes/:id(*)/layout",
+  requireWriteAuth,
   safe(async (req, res) => {
     const dir = resolveChangeFromReq(req);
     if (!dir) {

@@ -45,6 +45,7 @@ import { readUserFlowSuggestions, applyUserFlowSuggestions } from "../lib/userFl
 import { readAuditCapabilities } from "../lib/auditSummary.js";
 import { isLayoutOverlay } from "../lib/changes.js";
 import { safe } from "../lib/safe-error.js";
+import { requireWriteAuth } from "../lib/requireWriteAuth.js";
 import { APPLY_BATCH_CAP } from "@flowforge/shared";
 
 export const docsRouter = Router();
@@ -208,6 +209,7 @@ docsRouter.get(
 
 docsRouter.put(
   "/api/docs/:project(*)/planning-user-flow/layout",
+  requireWriteAuth,
   safe(async (req, res) => {
     const project = String(req.params.project ?? "");
     const dir = resolveDocsDir(project);
@@ -257,6 +259,7 @@ function rejectOversizedBatch(body: { approve: readonly string[]; reject: readon
 
 docsRouter.post(
   "/api/docs/:project(*)/planning-prd-suggestions/apply",
+  requireWriteAuth,
   safe(async (req, res) => {
     const project = String(req.params.project ?? "");
     const dir = resolveDocsDir(project);
@@ -296,6 +299,7 @@ docsRouter.get(
 
 docsRouter.post(
   "/api/docs/:project(*)/planning-features-suggestions/apply",
+  requireWriteAuth,
   safe(async (req, res) => {
     const project = String(req.params.project ?? "");
     const dir = resolveDocsDir(project);
@@ -342,6 +346,7 @@ docsRouter.get(
 
 docsRouter.post(
   "/api/docs/:project(*)/planning-user-flow-suggestions/apply",
+  requireWriteAuth,
   safe(async (req, res) => {
     const project = String(req.params.project ?? "");
     const dir = resolveDocsDir(project);
