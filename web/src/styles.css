@@ -331,8 +331,14 @@ button:hover { border-color: var(--lime); }
 }
 /* skeleton 단계의 기능명세서 플로우는 부모가 flex-fill이 아니므로 고정 높이를 준다. */
 .dash-feature-flow { height: 480px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; }
-/* skeleton(기획) 3뷰 탭 영역: border 제거(요청). 그래프가 한눈에 들어오도록 뷰포트 높이 채움(min 480 보장). */
-.dash-plan-flow { height: calc(100vh - 220px); min-height: 480px; border-radius: 8px; margin-bottom: 16px; }
+/* skeleton(기획) 3뷰 탭 영역: border 제거(요청). 그래프가 한눈에 들어오도록 부모 가용 공간을 flex로 채움(min 480 보장).
+   ⚠️ 100vh 절대값 금지 — dash-body 스크롤 영역과 어긋나 노드 클릭이 빗나감(2026-07-08 grounding 회귀). flex:1로 실제 남은 높이만 차지. */
+.dash-plan-flow { flex: 1 1 auto; min-height: 480px; border-radius: 8px; margin-bottom: 16px; }
+/* 그래프 탭일 때 dash-body를 세로 flex로 — 탭바 아래 남은 높이를 section→그래프가 채우게.
+   flex 체인: dash-body--wide(col) → 탭바(shrink0)+section(flex1,col) → h3/위저드(shrink0)+dash-plan-flow(flex1). */
+.dash-body--wide { max-width: none; display: flex; flex-direction: column; overflow: hidden; }
+.dash-body--wide > section { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.dash-body--wide > section > .dash-h { flex: 0 0 auto; }
 .dash-planning-features { margin-bottom: 8px; }
 
 /* === SEED(미검증) 배지 — 노드/와이어/타임라인 공통 === */
@@ -447,8 +453,7 @@ button:hover { border-color: var(--lime); }
 
 /* ── 계층 대시보드 (hierarchical-project-dashboard) ── */
 .dash-body { padding: 20px; max-width: 920px; margin: 0 auto; overflow-y: auto; height: 100%; box-sizing: border-box; }
-/* 그래프 탭(유저플로우·화면구조): 좁은 문서 칼럼 탈출 → 가로 전체 사용. 문서 탭(PRD 등)은 920 유지. */
-.dash-body--wide { max-width: none; }
+/* .dash-body--wide 정의는 위(그래프 탭 flex 레이아웃)에 있음 — 문서 탭(PRD 등)은 좁은 920 칼럼 유지. */
 .dash-h { font-size: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 0 0 16px; }
 .dash-empty, .pg-empty, .ccl-empty { color: #9aa0ad; font-size: 14px; padding: 8px 0; }
 
