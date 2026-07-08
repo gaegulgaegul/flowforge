@@ -4,6 +4,7 @@ import type {
   LayoutOverlay,
   IANode,
   Wireframe,
+  WireScreen2,
   Prd,
   SpecTreeNode,
   DecisionTimeline,
@@ -294,15 +295,15 @@ export async function fetchDocsPlanningIa(
 }
 
 /**
- * 기획 단계 화면목록 요소(docs/planning/features.md) → planning 와이어프레임(Wireframe).
- * 화면=WireScreen, 요소=WireBox. 기존 WireframePanel로 그대로 렌더(신규 컴포넌트 0).
+ * 기획 단계 planning 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]).
+ * 데스크탑/모바일 프레임 안에 영역별 배치. WireframeDeviceFrame이 렌더한다(세로 목록 아님).
  */
 export async function fetchDocsPlanningWireframe(
   project: string,
-): Promise<{ project: string; wireframe: Wireframe }> {
+): Promise<{ project: string; screens: WireScreen2[] }> {
   const res = await fetch(`/api/docs/${project}/planning-wireframe`);
   if (!res.ok) throw new Error(`docs planning-wireframe ${res.status}`);
-  return (await res.json()) as { project: string; wireframe: Wireframe };
+  return (await res.json()) as { project: string; screens: WireScreen2[] };
 }
 
 /**

@@ -873,3 +873,105 @@ button:hover { border-color: var(--lime); }
   /* 위저드: 좁은 화면에서 결정 버튼 3개를 가로로 균등 채움(min-width 해제) */
   .prd-wizard-actions .prd-btn-approve, .prd-wizard-actions .prd-btn-reject, .prd-wizard-actions .prd-btn-skip { min-width: 0; flex: 1; }
 }
+
+/* ===== WireframeDeviceFrame — 디바이스 프레임 안 화면 레이아웃(로우피델리티) ===== */
+/* 목업(wireframe-mockup-deploy)의 React 번역. 회색조 로우피델리티, 데스크탑/모바일 프레임 배치. */
+.wf-df-root {
+  --lofi-outline: #6e7681;
+  --lofi-fill: #21262d;
+  --lofi-fill2: #1c2128;
+  --lofi-muted: #8b949e;
+  display: flex; flex-direction: column; gap: 14px; align-items: center; padding: 8px 0 4px;
+}
+.wf-df-empty { color: var(--lofi-muted); padding: 24px; font-style: italic; }
+
+/* --- 컨트롤: 디바이스 토글 + 화면 탭 --- */
+.wf-df-controls { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.wf-df-device-toggle, .wf-df-screen-tabs { display: flex; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
+.wf-df-device-toggle button, .wf-df-screen-tabs button {
+  border: none; border-radius: 6px; background: transparent; color: var(--lofi-muted);
+  cursor: pointer; font-size: 12px; font-weight: 600; padding: 7px 12px;
+}
+.wf-df-device-toggle button:hover, .wf-df-screen-tabs button:hover { color: var(--text); border-color: transparent; }
+.wf-df-device-toggle button.on, .wf-df-screen-tabs button.on { background: var(--lime); color: #16181d; }
+
+/* --- 스테이지 + 프레임 --- */
+.wf-df-stage { width: 100%; display: flex; justify-content: center; overflow-x: auto; }
+.wf-df-frame {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.5); overflow: hidden; position: relative;
+}
+.wf-df-frame--desktop { width: 1000px; height: 640px; max-width: 100%; }
+.wf-df-frame--mobile { width: 340px; height: 660px; }
+
+.wf-df-chrome {
+  height: 30px; background: var(--panel, #1b1e24); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px; padding: 0 12px;
+}
+.wf-df-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--lofi-outline); opacity: .5; }
+.wf-df-url {
+  margin-left: 10px; flex: 1; height: 16px; border-radius: 4px; background: var(--lofi-fill);
+  color: var(--lofi-muted); font-size: 10px; display: flex; align-items: center; padding: 0 8px;
+}
+.wf-df-viewport { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.wf-df-frame--desktop .wf-df-viewport { top: 30px; }
+
+/* --- 데스크탑 상단바 --- */
+.wf-df-topbar {
+  height: 46px; flex: 0 0 auto; background: var(--panel, #1b1e24); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; padding: 0 16px;
+}
+.wf-df-dbody { flex: 1; display: flex; min-height: 0; }
+.wf-df-sidebar {
+  width: 176px; flex: 0 0 auto; background: var(--bg); border-right: 1px solid var(--border);
+  padding: 14px 10px; display: flex; flex-direction: column; gap: 5px; overflow-y: auto;
+}
+.wf-df-main { flex: 1; min-width: 0; overflow: auto; padding: 20px; }
+
+/* --- 본문 배치 --- */
+.wf-df-main--grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-content: start; }
+.wf-df-main--stack { display: flex; flex-direction: column; gap: 10px; }
+.wf-df-main--form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: start; }
+.wf-df-main--tree { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: start; }
+
+/* --- 요소(로우피델리티 프리미티브) --- */
+.wf-df-el {
+  border: 1.5px dashed var(--lofi-outline); background: var(--lofi-fill); color: var(--lofi-muted);
+  border-radius: 8px; padding: 10px 12px; font-size: 12px; display: flex; align-items: center;
+  gap: 6px; text-align: left; font-family: inherit; min-height: 34px;
+}
+.wf-df-el-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.wf-df-el-arrow { color: var(--lime); flex: 0 0 auto; font-size: 10px; }
+.wf-df-el--go { cursor: pointer; }
+.wf-df-el--go:hover { border-color: var(--lime); color: var(--text); }
+.wf-df-el--button { border-style: solid; font-weight: 600; }
+.wf-df-el--card { min-height: 96px; flex-direction: column; align-items: stretch; justify-content: flex-start; }
+.wf-df-el--nav-item { border-style: solid; border-color: transparent; background: transparent; padding: 8px 10px; min-height: 0; }
+.wf-df-el--nav-item.wf-df-el--go:hover { background: var(--lofi-fill); border-color: transparent; }
+.wf-df-el--tab { border: none; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; padding: 9px 12px; min-height: 0; }
+.wf-df-el--tab.wf-df-el--go:hover { border-bottom-color: var(--lime); }
+.wf-df-el--text { border-style: solid; border-color: transparent; background: transparent; padding: 6px 8px; min-height: 0; }
+.wf-df-el--input { background: var(--lofi-fill2); border-style: solid; }
+.wf-df-el--tree-node { flex-direction: column; align-items: stretch; border-style: solid; }
+.wf-df-el--placeholder { border-style: solid; }
+
+/* --- 모바일 --- */
+.wf-df-mtopbar {
+  height: 42px; flex: 0 0 auto; background: var(--panel, #1b1e24); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 12px;
+}
+.wf-df-mbody { flex: 1; overflow: auto; padding: 14px; }
+.wf-df-mbody.wf-df-main--grid, .wf-df-mbody.wf-df-main--form, .wf-df-mbody.wf-df-main--tree { grid-template-columns: 1fr; }
+.wf-df-bottombar {
+  height: 56px; flex: 0 0 auto; background: var(--panel, #1b1e24); border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-around; padding: 0 8px;
+}
+.wf-df-bottombar .wf-df-el { flex: 1; flex-direction: column; gap: 3px; border: none; background: transparent; font-size: 9.5px; min-height: 0; text-align: center; }
+.wf-df-bottombar .wf-df-el-label { flex: 0 0 auto; text-align: center; }
+.wf-df-bottombar .wf-df-el-arrow { display: none; }
+
+.wf-df-caption {
+  width: 100%; max-width: 1000px; text-align: center; font-size: 12px; color: var(--lofi-muted);
+  border-top: 1px dashed var(--border); padding-top: 12px; margin: 2px 0 0;
+}
+.wf-df-caption b { color: var(--lofi-muted); font-weight: 600; }

@@ -28,6 +28,7 @@ import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from ".
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
 import { buildDocsPlanningFeatures } from "../parser/featureTreeBuilder.js";
 import { buildPlanningIaTree } from "../parser/planningIaBuilder.js";
+import { buildDocsPlanningWireframe2 } from "../parser/planningWireframeFixture.js";
 import { buildScreenRegistry } from "../parser/screenRegistry.js";
 import { buildDocsPlanningUserFlow } from "../parser/planningUserFlowBuilder.js";
 import {
@@ -195,11 +196,11 @@ docsRouter.get(
       res.status(404).json({ error: "docs_not_found" });
       return;
     }
-    // planning 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]). 폐기된 element 세로박스 접근을
-    // 제거(planning-wireframe-device-frame). 레이아웃 데이터 원천(픽스처)은 Task 3.1에서 배선한다.
-    // 그전까지 화면 데이터가 없으므로 404(planning-ia와 동형).
-    void dir;
-    res.status(404).json({ error: "planning_wireframe_not_found" });
+    // planning 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]). 레이아웃 데이터 원천은 이 change에선
+    // 고정 픽스처(D-6) — resolveDocsDir로 프로젝트 정합만 확인하고 픽스처를 반환한다. AI 생성물이
+    // 나중에 이 자리에 들어온다(후속 change).
+    const screens = buildDocsPlanningWireframe2(dir);
+    res.json({ project, screens });
   }),
 );
 

@@ -13,8 +13,8 @@
 
 ### Sequential: 라우트 + 렌더러
 
-- [ ] 3.1 GREEN: planning-wireframe 라우트가 WireScreen2[] 반환(픽스처 로드, resolveDocsDir 재사용)
-- [ ] 3.2 web `WireframeDeviceFrame.tsx` 신설 — 데스크탑(브라우저 크롬+상단 메뉴+사이드+본문 grid/stack/tree/form)·모바일(폰 프레임+상단+본문+하단바) 렌더, 회색조 로우피델리티(목업 CSS 참조), 요소 goto 클릭 이동, 디바이스 토글. 기획 와이어 탭이 이걸 사용(기존 WireframePanel은 change 경로 유지)
+- [x] 3.1 GREEN: planning-wireframe 라우트가 WireScreen2[] 반환(픽스처 로드, resolveDocsDir 재사용)
+- [x] 3.2 web `WireframeDeviceFrame.tsx` 신설 — 데스크탑(브라우저 크롬+상단 메뉴+사이드+본문 grid/stack/tree/form)·모바일(폰 프레임+상단+본문+하단바) 렌더, 회색조 로우피델리티(목업 CSS 참조), 요소 goto 클릭 이동, 디바이스 토글. 기획 와이어 탭이 이걸 사용(기존 WireframePanel은 change 경로 유지)
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
