@@ -53,6 +53,12 @@ export interface FeatureTreeNode {
    * when 없이 then만 있어도 유효하다(상세 패널이 각각 있을 때만 렌더).
    */
   readonly then?: string;
+  /**
+   * 생성일(planning-created-date). 노드의 `<!-- created: YYYY-MM-DD -->` 주석에서 오거나,
+   * 주석이 없으면 features.md 파일 mtime(KST 일자)을 서버가 폴백으로 채운다(비파괴 옵셔널).
+   * 표시 전용 — 파서는 형식을 강제하지 않고 원문/폴백을 그대로 싣는다(지어내지 않음).
+   */
+  readonly createdAt?: string;
   readonly children: readonly FeatureTreeNode[];
 }
 

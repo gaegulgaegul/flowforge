@@ -352,4 +352,36 @@ describe("featureTreeBuilder", () => {
       }
     });
   });
+
+  describe("생성일(created)", () => {
+    it("`<!-- created: -->` 주석을 노드 createdAt으로 파싱한다(원문 그대로)", () => {
+      const md = [
+        "# 기능명세서",
+        "",
+        "## 사진 업로드",
+        "<!-- capability: photo-upload -->",
+        "<!-- created: 2026-07-08 -->",
+        "(중요도: 높음, 상태: 진행중)",
+      ].join("\n");
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const req = buildDocsPlanningFeatures(docsDir)!.root.children[0]!;
+        expect(req.createdAt).toBe("2026-07-08");
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("created 주석이 없는 노드는 features.md mtime(KST 일자)으로 폴백된다", () => {
+      const md = ["# 기능명세서", "", "## 사진 업로드", "(중요도: 중간, 상태: 시작전)"].join("\n");
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const req = buildDocsPlanningFeatures(docsDir)!.root.children[0]!;
+        // 방금 쓴 파일이라 폴백 날짜가 채워지고 YYYY-MM-DD 형식이어야 한다(지어냄이 아니라 mtime 기반).
+        expect(req.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      } finally {
+        cleanup();
+      }
+    });
+  });
 });

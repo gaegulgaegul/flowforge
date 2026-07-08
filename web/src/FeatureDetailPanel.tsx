@@ -75,6 +75,7 @@ export function FeatureDetailPanel({ node, onClose, onSelectById, onSelectScreen
 
   const childRefs: readonly FeatureChildRef[] = node?.childRefs ?? [];
   const parentRef = node?.parentRef;
+  const createdAt = (node as { createdAt?: string } | null)?.createdAt;
   const path: readonly string[] = node?.path ?? [];
 
   return (
@@ -117,6 +118,11 @@ export function FeatureDetailPanel({ node, onClose, onSelectById, onSelectScreen
                     style={{ borderColor: STATUS_COLOR[node.status], color: STATUS_COLOR[node.status] }}
                   >
                     {node.status}
+                  </span>
+                )}
+                {createdAt && (
+                  <span className="feature-detail-badge" style={{ borderColor: "#5b6270", color: "#9aa0ad" }}>
+                    🕒 {createdAt}
                   </span>
                 )}
               </div>

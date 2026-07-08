@@ -11,7 +11,7 @@
  *   #### 상세기능    (중요도: …, 상태: …)
  * capability는 요구사항에만, 속성은 모든 노드에 둘 수 있고(헤더 직후 줄), 없으면 빈 값.
  */
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { FeatureTree, FeatureTreeNode, FeaturePriority, FeatureStatus } from "@flowforge/shared";
 import { slug } from "./specParser.js";
@@ -27,6 +27,9 @@ const RE_MEMO = /<!--\s*memo:\s*(.*?)\s*-->/;
 // 분리, 한 노드에 각 최대 1개(뒤 매치가 덮어쓰지 않도록 아래에서 첫 매치만 채택, D-1).
 const RE_WHEN = /<!--\s*when:\s*(.*?)\s*-->/;
 const RE_THEN = /<!--\s*then:\s*(.*?)\s*-->/;
+// 노드 생성일(planning-created-date). when/then 동형 — 노드 헤더 아래 `<!-- created: YYYY-MM-DD -->`.
+// 형식은 파서가 강제하지 않고 원문 그대로 싣는다(표시 전용, 지어내지 않음). 없으면 문서 mtime 폴백(buildDocsPlanningFeatures).
+const RE_CREATED = /<!--\s*created:\s*(.*?)\s*-->/;
 // 속성은 줄 전체가 `(중요도:…, 상태:…)`인 속성 줄에서만 인식한다(^…$ 앵커). 본문 산문 중간에
 // 같은 패턴이 들어가도 오매칭하지 않도록 줄 시작·끝에 고정(review CONCERN 2026-06-28).
 const RE_ATTRS = /^\s*\(\s*중요도:\s*(낮음|중간|높음)?\s*,\s*상태:\s*(시작전|진행중|완료|중단)?\s*\)\s*$/;
@@ -46,6 +49,8 @@ interface MutableNode {
   /** 동작 시나리오 트리거/기대결과(없으면 undefined → freeze 시 생략, memo 동형). */
   when?: string;
   then?: string;
+  /** 생성일(없으면 undefined → freeze 시 생략, when/then 동형). 노드 주석이 없으면 문서 mtime 폴백을 위에서 주입. */
+  createdAt?: string;
   children: MutableNode[];
 }
 
@@ -62,7 +67,30 @@ export function buildDocsPlanningFeatures(docsDir: string): FeatureTree | null {
   if (!existsSync(path)) return null;
 
   const lines = readFileSync(path, "utf-8").split(/\r?\n/);
-  return buildFeatureTreeFromLines(lines);
+  const tree = buildFeatureTreeFromLines(lines);
+  // 노드에 `<!-- created: -->` 주석이 없으면 features.md 파일 mtime(KST 일자)을 폴백으로 채운다.
+  // 순수 파서(buildFeatureTreeFromLines)는 파일을 모르므로 폴백은 파일을 아는 이 래퍼에서만 주입.
+  let fileDate: string | undefined;
+  try {
+    fileDate = toKstDate(statSync(path).mtimeMs);
+  } catch {
+    fileDate = undefined; // mtime 실패 → 폴백 없음(주석 있는 노드만 createdAt).
+  }
+  return fileDate ? { root: withCreatedFallback(tree.root, fileDate) } : tree;
+}
+
+/** UTC epoch(ms) → KST(Asia/Seoul) YYYY-MM-DD. 시스템 UTC이므로 +9h 후 일자 절단(15-date-timezone). */
+function toKstDate(ms: number): string {
+  return new Date(ms + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+/** createdAt 미설정 노드에만 폴백 날짜를 채운다(주석으로 명시된 노드는 원문 유지). readonly 트리라 새 노드 생성. */
+function withCreatedFallback(n: FeatureTreeNode, fallback: string): FeatureTreeNode {
+  return {
+    ...n,
+    createdAt: n.createdAt ?? fallback,
+    children: n.children.map((c) => withCreatedFallback(c, fallback)),
+  };
 }
 
 /**
@@ -122,6 +150,8 @@ export function buildFeatureTreeFromLines(lines: readonly string[]): FeatureTree
     if (when && when[1] && current.when === undefined) current.when = when[1];
     const then = line.match(RE_THEN);
     if (then && then[1] && current.then === undefined) current.then = then[1];
+    const created = line.match(RE_CREATED);
+    if (created && created[1] && current.createdAt === undefined) current.createdAt = created[1];
   }
 
   return { root: freeze(root) };
@@ -141,6 +171,7 @@ function freeze(n: MutableNode): FeatureTreeNode {
     // when/then도 동일(옵셔널·비파괴 — 한쪽만 있어도 그쪽만 싣는다).
     ...(n.when !== undefined ? { when: n.when } : {}),
     ...(n.then !== undefined ? { then: n.then } : {}),
+    ...(n.createdAt !== undefined ? { createdAt: n.createdAt } : {}),
     children: n.children.map(freeze),
   };
 }
