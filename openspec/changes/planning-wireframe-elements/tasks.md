@@ -10,7 +10,7 @@
 ### Sequential: 와이어 빌더 + 라우트
 
 - [x] 2.1 RED: buildDocsPlanningWireframe 테스트 — 화면→WireScreen·element→WireBox(kind/label)·goto(screen: 해석·없으면 null)·빈 화면=박스 0 / golden 회귀 0
-- [ ] 2.2 GREEN: `server/src/parser/planningWireframeBuilder.ts`(planningIaBuilder 병렬 패턴) + `GET /api/docs/:project/planning-wireframe`(resolveDocsDir 재사용)
+- [x] 2.2 GREEN: `server/src/parser/planningWireframeBuilder.ts`(planningIaBuilder 병렬 패턴) + `GET /api/docs/:project/planning-wireframe`(resolveDocsDir 재사용)
 
 ### Sequential: web + 도그푸딩
 

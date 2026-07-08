@@ -8,6 +8,7 @@
  * GET /api/docs/:project/planning-prd       planning/prd.md → manyfast 5섹션 PRD (기획 단계 산출물)
  * GET /api/docs/:project/planning-features        planning/features.md → 기능명세 3단 트리(FeatureTree)
  * GET /api/docs/:project/audit-capabilities       docs/audit.json items[] → capability 단위 집계 맵(없으면 빈 맵 200)
+ * GET /api/docs/:project/planning-wireframe       planning/features.md 화면목록 요소 → Wireframe(화면=WireScreen, 요소=WireBox)
  * GET /api/docs/:project/planning-user-flow        planning/user-flow/<flow>.md(Mermaid) → SpecGraph + layout + versions
  * PUT /api/docs/:project/planning-user-flow/layout 드래그 좌표 저장(docs 첫 쓰기 — overlay JSON만)
  * GET /api/docs/:project/planning-prd-suggestions       PRD 제안 큐 읽기(없으면 빈 큐 200)
@@ -27,6 +28,7 @@ import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from ".
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
 import { buildDocsPlanningFeatures } from "../parser/featureTreeBuilder.js";
 import { buildPlanningIaTree } from "../parser/planningIaBuilder.js";
+import { buildDocsPlanningWireframe } from "../parser/planningWireframeBuilder.js";
 import { buildScreenRegistry } from "../parser/screenRegistry.js";
 import { buildDocsPlanningUserFlow } from "../parser/planningUserFlowBuilder.js";
 import {
@@ -182,6 +184,26 @@ docsRouter.get(
       return;
     }
     res.json({ project, tree });
+  }),
+);
+
+docsRouter.get(
+  "/api/docs/:project(*)/planning-wireframe",
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    // 화면목록 요소(features.md) → planning 와이어(화면=WireScreen, 요소=WireBox).
+    // features.md 자체가 없으면 null → 404(planning-ia와 동형). 화면 없으면 빈 screens(정상).
+    const wireframe = buildDocsPlanningWireframe(dir);
+    if (!wireframe) {
+      res.status(404).json({ error: "planning_wireframe_not_found" });
+      return;
+    }
+    res.json({ project, wireframe });
   }),
 );
 
