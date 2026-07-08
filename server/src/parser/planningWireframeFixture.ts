@@ -125,10 +125,11 @@ const SCREEN_GRID_MOBILE: WireScreen2 = {
     body: {
       layout: "stack",
       elements: [
-        { kind: "input", label: "🔍 프로젝트 검색", goto: "skeleton" },
-        { kind: "card", label: "쏙쏙 육아 앱", goto: "skeleton" },
-        { kind: "card", label: "wowa 크로스핏", goto: "skeleton" },
-        { kind: "card", label: "stock-brief", goto: "skeleton" },
+        // 모바일 요소는 모바일 대상 화면으로 이동해야 프레임이 데스크탑으로 튀지 않는다(review M-1).
+        { kind: "input", label: "🔍 프로젝트 검색", goto: "skeleton-m" },
+        { kind: "card", label: "쏙쏙 육아 앱", goto: "skeleton-m" },
+        { kind: "card", label: "wowa 크로스핏", goto: "skeleton-m" },
+        { kind: "card", label: "stock-brief", goto: "skeleton-m" },
       ],
     },
     bottombar: [
@@ -140,12 +141,42 @@ const SCREEN_GRID_MOBILE: WireScreen2 = {
   },
 };
 
-/** 픽스처 화면 4개(데스크탑 3 + 모바일 1) — 목업 대조 순서 유지. */
+/** 화면 5: 기획 뷰(모바일) — 상단 타이틀 + 탭 스택 + PRD 본문 + 하단 메뉴바. grid-m의 이동 대상(M-1 해소). */
+const SCREEN_SKELETON_MOBILE: WireScreen2 = {
+  id: "skeleton-m",
+  title: "기획 뷰",
+  device: "mobile",
+  regions: {
+    topbar: [{ kind: "text", label: "쏙쏙 육아 앱 — 기획" }],
+    body: {
+      layout: "stack",
+      elements: [
+        { kind: "tab", label: "PRD" },
+        { kind: "tab", label: "기능명세" },
+        { kind: "tab", label: "유저플로우" },
+        { kind: "text", label: "1. 개요" },
+        { kind: "placeholder", label: "" },
+        { kind: "text", label: "2. 핵심가치" },
+        { kind: "placeholder", label: "" },
+        { kind: "card", label: "← 프로젝트 목록", goto: "grid-m" },
+      ],
+    },
+    bottombar: [
+      { kind: "nav-item", label: "프로젝트" },
+      { kind: "nav-item", label: "템플릿" },
+      { kind: "nav-item", label: "팀" },
+      { kind: "nav-item", label: "설정" },
+    ],
+  },
+};
+
+/** 픽스처 화면 5개(데스크탑 3 + 모바일 2) — 목업 대조 순서 유지. */
 export const PLANNING_WIREFRAME_FIXTURE: readonly WireScreen2[] = [
   SCREEN_GRID,
   SCREEN_SKELETON,
   SCREEN_FEATURES,
   SCREEN_GRID_MOBILE,
+  SCREEN_SKELETON_MOBILE,
 ];
 
 /**

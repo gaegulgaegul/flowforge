@@ -14,7 +14,25 @@ describe("planningWireframeFixture — 디바이스 프레임 레이아웃 픽�
   it("빌더가 픽스처 WireScreen2[]를 반환한다(docsDir 무관)", () => {
     const screens = buildDocsPlanningWireframe2("/any/docs/dir");
     expect(screens).toBe(PLANNING_WIREFRAME_FIXTURE);
-    expect(screens.length).toBe(4);
+    expect(screens.length).toBe(5);
+  });
+
+  it("모바일 화면 요소의 goto는 모바일 화면을 가리킨다(프레임이 데스크탑으로 튀지 않음 — review M-1)", () => {
+    const byId = new Map(PLANNING_WIREFRAME_FIXTURE.map((s) => [s.id, s]));
+    for (const screen of PLANNING_WIREFRAME_FIXTURE) {
+      if (screen.device !== "mobile") continue;
+      const regions = [
+        ...(screen.regions.topbar ?? []),
+        ...screen.regions.body.elements,
+        ...(screen.regions.bottombar ?? []),
+      ];
+      for (const el of regions) {
+        if (!el.goto) continue;
+        const target = byId.get(el.goto);
+        expect(target).toBeDefined();
+        expect(target?.device).toBe("mobile"); // 모바일→모바일만(디바이스 흐름 유지)
+      }
+    }
   });
 
   it("데스크탑 화면은 상단·사이드·본문 영역을 가진다(세로 목록 아님)", () => {
@@ -36,7 +54,7 @@ describe("planningWireframeFixture — 디바이스 프레임 레이아웃 픽�
 
   it("본문 배치 힌트가 화면별로 다르다(grid/stack/tree)", () => {
     const layouts = PLANNING_WIREFRAME_FIXTURE.map((s) => s.regions.body.layout);
-    expect(layouts).toEqual(["grid", "stack", "tree", "stack"]);
+    expect(layouts).toEqual(["grid", "stack", "tree", "stack", "stack"]);
   });
 
   it("모든 goto는 정의된 화면 id를 가리킨다(끊긴 링크 없음)", () => {
@@ -57,12 +75,13 @@ describe("planningWireframeFixture — 디바이스 프레임 레이아웃 픽�
     }
   });
 
-  it("화면 id는 화면목록 규약과 공유된다(grid·skeleton·features + 모바일 grid-m)", () => {
+  it("화면 id는 화면목록 규약과 공유된다(grid·skeleton·features + 모바일 grid-m·skeleton-m)", () => {
     expect(PLANNING_WIREFRAME_FIXTURE.map((s) => s.id)).toEqual([
       "grid",
       "skeleton",
       "features",
       "grid-m",
+      "skeleton-m",
     ]);
   });
 });
