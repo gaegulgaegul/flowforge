@@ -23,10 +23,16 @@ export interface ProjectCard {
   displayName: string;
   /** Whether the project has a charter standing-docs layer (docs/). */
   hasCharter: boolean;
-  /** Number of openspec changes found in the project. */
+  /** Number of active (non-archived) openspec changes. */
   changeCount: number;
   /** Static audit status badge (not live-computed in the tracer bullet). */
   auditStatus: AuditStatus;
+  /** Number of archived changes (additive). */
+  archivedChangeCount?: number;
+  /** Active change display names, up to 2 (additive). */
+  activeChangeNames?: string[];
+  /** Most recent activity date, KST (Asia/Seoul) YYYY-MM-DD. additive. */
+  lastActivityAt?: string;
 }
 
 /** One capability node in the charter skeleton graph. */

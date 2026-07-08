@@ -458,12 +458,18 @@ button:hover { border-color: var(--lime); }
 .dash-empty, .pg-empty, .ccl-empty { color: #9aa0ad; font-size: 14px; padding: 8px 0; }
 
 /* 카드 그리드 */
-.pg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; padding: 20px; max-width: 920px; margin: 0 auto; }
-.pg-card { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; text-align: left;
+.pg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; padding: 20px; max-width: 920px; margin: 0 auto; }
+.pg-card { display: flex; flex-direction: column; align-items: stretch; gap: 10px; text-align: left;
   padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: #22262e; color: var(--text); cursor: pointer; }
 .pg-card:hover { border-color: var(--lime); }
+.pg-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .pg-card-name { font-size: 15px; font-weight: 600; }
+.pg-card-activity { font-size: 11px; color: #8a909a; white-space: nowrap; }
 .pg-card-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.pg-card-changes { display: flex; flex-wrap: wrap; gap: 4px; }
+.pg-card-change { font-size: 10.5px; padding: 1px 7px; border-radius: 6px; background: #1c2733; color: #8fb2e0;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pg-card-change--more { background: #2a2e38; color: #9aa0ad; }
 .pg-badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #2a2e38; color: #c5cbd6; }
 .pg-badge--charter { background: #2f3a1f; color: var(--lime); }
 .pg-badge--nocharter { background: #2a2e38; color: #9aa0ad; }

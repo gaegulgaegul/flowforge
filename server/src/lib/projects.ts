@@ -52,29 +52,65 @@ function hasCharter(projectDir: string): boolean {
   return existsSync(join(docsDir, "user-flow.md")) || existsSync(join(docsDir, "PRD.md"));
 }
 
-/** <project>/openspec/changes 하위 change 디렉토리 수(archive 제외, specs 보유분만). */
-function countChanges(projectDir: string): number {
+/** change 스캔 결과: 활성 change 이름 목록·아카이브 수·최근 활동 mtime(ms). */
+interface ChangeScan {
+  active: string[];
+  archivedCount: number;
+  lastMtimeMs: number;
+}
+
+/**
+ * <project>/openspec/changes 스캔. 활성(archive 제외, specs 보유) change 이름·mtime,
+ * archive 하위 change 수를 한 번의 순회로 수집. 카드 정보 확장용(active/archived 분리·최근활동).
+ */
+function scanChanges(projectDir: string): ChangeScan {
   const changesDir = join(projectDir, "openspec", "changes");
-  if (!existsSync(changesDir)) return 0;
-  let n = 0;
+  const empty: ChangeScan = { active: [], archivedCount: 0, lastMtimeMs: 0 };
+  if (!existsSync(changesDir)) return empty;
   let names: string[];
   try {
     names = readdirSync(changesDir);
   } catch {
-    return 0;
+    return empty;
   }
+  const active: string[] = [];
+  let archivedCount = 0;
+  let lastMtimeMs = 0;
   for (const name of names) {
-    if (name === "archive") continue;
-    const specsDir = join(changesDir, name, "specs");
+    const cdir = join(changesDir, name);
+    if (name === "archive") {
+      // archive 하위 = 완료된 change들. specs 보유분만 센다.
+      try {
+        for (const a of readdirSync(cdir)) {
+          if (existsSync(join(cdir, a, "specs"))) archivedCount += 1;
+        }
+      } catch {
+        // archive 읽기 실패는 무시(archivedCount 0 유지).
+      }
+      continue;
+    }
+    const specsDir = join(cdir, "specs");
     if (!existsSync(specsDir)) continue;
     try {
       const hasSpec = readdirSync(specsDir).some((c) => existsSync(join(specsDir, c, "spec.md")));
-      if (hasSpec) n += 1;
+      if (hasSpec) {
+        active.push(name);
+        try {
+          lastMtimeMs = Math.max(lastMtimeMs, statSync(cdir).mtimeMs);
+        } catch {
+          // mtime 실패는 무시(활동일 없음).
+        }
+      }
     } catch {
       // 읽기 실패는 무시(해당 change만 제외).
     }
   }
-  return n;
+  return { active, archivedCount, lastMtimeMs };
+}
+
+/** UTC epoch(ms) → KST(Asia/Seoul) YYYY-MM-DD. 시스템은 UTC이므로 +9h 후 일자 절단(15-date-timezone). */
+function toKstDate(ms: number): string {
+  return new Date(ms + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 /** audit finalJudgment → AuditStatus. 미인식·비문자열(UNVERIFIABLE 포함)은 unknown. */
@@ -127,7 +163,8 @@ export function listProjectCards(labelMap?: Map<string, string>): ProjectCard[] 
     const projDir = resolveProjectDir(name);
     if (projDir === null) continue;
 
-    const changeCount = countChanges(projDir);
+    const scan = scanChanges(projDir);
+    const changeCount = scan.active.length;
     // change도 docs도 없으면 카드 아님. docs 인식 프로젝트는 활성 change가 전부
     // archive돼도 카드 유지(기획 뷰 유일 진입로 — 도달성 회귀 방지, 2026-07-04).
     if (changeCount === 0 && !hasDocs(join(projDir, "docs"))) continue;
@@ -139,6 +176,9 @@ export function listProjectCards(labelMap?: Map<string, string>): ProjectCard[] 
       hasCharter: hasCharter(projDir),
       changeCount,
       auditStatus,
+      archivedChangeCount: scan.archivedCount,
+      activeChangeNames: scan.active.slice(0, 2),
+      ...(scan.lastMtimeMs > 0 ? { lastActivityAt: toKstDate(scan.lastMtimeMs) } : {}),
     });
   }
   return out;
