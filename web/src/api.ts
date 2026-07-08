@@ -294,6 +294,18 @@ export async function fetchDocsPlanningIa(
 }
 
 /**
+ * 기획 단계 화면목록 요소(docs/planning/features.md) → planning 와이어프레임(Wireframe).
+ * 화면=WireScreen, 요소=WireBox. 기존 WireframePanel로 그대로 렌더(신규 컴포넌트 0).
+ */
+export async function fetchDocsPlanningWireframe(
+  project: string,
+): Promise<{ project: string; wireframe: Wireframe }> {
+  const res = await fetch(`/api/docs/${project}/planning-wireframe`);
+  if (!res.ok) throw new Error(`docs planning-wireframe ${res.status}`);
+  return (await res.json()) as { project: string; wireframe: Wireframe };
+}
+
+/**
  * 기능명세(features) 속성 제안 큐 읽기(docs/planning/features.suggestions.json).
  * 큐 없으면 빈 큐(version:1, suggestions:[]). 6a fetchDocsPrdSuggestions의 features판.
  */

@@ -35,6 +35,7 @@ import {
   fetchDocsPlanningPrd,
   fetchDocsPlanningFeatures,
   fetchDocsPlanningIa,
+  fetchDocsPlanningWireframe,
   fetchDocsPlanningUserFlow,
   saveDocsPlanningUserFlowLayout,
   saveLayout,
@@ -95,7 +96,7 @@ export function App(): JSX.Element {
   const [selectedProject, setSelectedProject] = useState<string | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("prd");
   // skeleton(기획 뼈대) 단계 전용 탭. views 단계의 tab(5종)과 완전히 분리 — 충돌 방지.
-  const [planTab, setPlanTab] = useState<"prd" | "features" | "ia" | "flow">("prd");
+  const [planTab, setPlanTab] = useState<"prd" | "features" | "ia" | "wire" | "flow">("prd");
   const [iaVerbose, setIaVerbose] = useState(false);
   const [status, setStatus] = useState("");
 
@@ -151,6 +152,10 @@ export function App(): JSX.Element {
   const [planningIaRoot, setPlanningIaRoot] = useState<IANodeT | null>(null);
   const [planningIaNodes, setPlanningIaNodes] = useState<Node[]>([]);
   const [planningIaEdges, setPlanningIaEdges] = useState<Edge[]>([]);
+
+  // 기획 단계 와이어(docs/planning/features.md 화면목록 요소 → Wireframe) — 프로젝트 단위(skeleton에서 표시).
+  // change 와이어(wireframe)와 분리. 화면=WireScreen, 요소=WireBox. 기존 WireframePanel 재사용(신규 UI 0).
+  const [planningWireframe, setPlanningWireframe] = useState<Wireframe | null>(null);
 
   // 기획 단계 유저플로우(docs/planning/user-flow/<flow>.md → 공용 SpecGraph) — 프로젝트 단위(skeleton에서 표시).
   // change 유저플로우(flowNodes/flowEdges)와 분리. 드래그 좌표는 overlay로 저장(saveDocsPlanningUserFlowLayout).
@@ -522,6 +527,19 @@ export function App(): JSX.Element {
         if (token !== dashReqToken.current) return;
         setPlanningIaRoot(null); // 화면목록 미작성 — 정상(미표시)
       });
+    // 기획 단계 와이어(docs/planning/features.md 화면목록 요소) 로드 — 없으면(404) null로 비움(에러 아님).
+    setPlanningWireframe(null);
+    fetchDocsPlanningWireframe(card.name)
+      .then((r) => {
+        if (token !== dashReqToken.current) return;
+        // 요소가 하나도 없으면(모든 화면 boxes 0) 렌더할 게 없으니 탭에 안 띄운다(빈 프레임만 뜨는 것 방지).
+        const hasBoxes = r.wireframe.screens.some((s) => s.boxes.length > 0);
+        setPlanningWireframe(hasBoxes ? r.wireframe : null);
+      })
+      .catch(() => {
+        if (token !== dashReqToken.current) return;
+        setPlanningWireframe(null); // 요소 미작성 — 정상(미표시)
+      });
     // 기능명세 속성 제안 큐(docs/planning/features.suggestions.json) 로드 — 없으면 빈 큐(순수 읽기 트리 뷰).
     setFeatureSuggestions([]);
     fetchDocsFeatureSuggestions(card.name)
@@ -809,15 +827,16 @@ export function App(): JSX.Element {
   );
 
   // skeleton 뷰 탭: 있는 뷰만 노출, 활성 탭이 없는 뷰를 가리키면 첫 유효 탭으로 폴백.
-  const planTabsAvail: Array<"prd" | "features" | "ia" | "flow"> = [];
+  const planTabsAvail: Array<"prd" | "features" | "ia" | "wire" | "flow"> = [];
   if (planningPrd) planTabsAvail.push("prd");
   if (planningFeatures) planTabsAvail.push("features");
   if (planningIaRoot) planTabsAvail.push("ia");
+  if (planningWireframe) planTabsAvail.push("wire");
   if (planningUserFlow) planTabsAvail.push("flow");
-  const activePlanTab: "prd" | "features" | "ia" | "flow" = planTabsAvail.includes(planTab)
+  const activePlanTab: "prd" | "features" | "ia" | "wire" | "flow" = planTabsAvail.includes(planTab)
     ? planTab
     : (planTabsAvail[0] ?? "prd");
-  const planTabBtn = (key: "prd" | "features" | "ia" | "flow", label: string): JSX.Element => (
+  const planTabBtn = (key: "prd" | "features" | "ia" | "wire" | "flow", label: string): JSX.Element => (
     <button
       key={key}
       onClick={() => setPlanTab(key)}
@@ -891,6 +910,7 @@ export function App(): JSX.Element {
                 {planningPrd && planTabBtn("prd", "PRD")}
                 {planningFeatures && planTabBtn("features", "기능명세서")}
                 {planningIaRoot && planTabBtn("ia", "정보구조(IA)")}
+                {planningWireframe && planTabBtn("wire", "기획 와이어")}
                 {planningUserFlow && planTabBtn("flow", "유저플로우")}
               </div>
             )}
@@ -959,6 +979,13 @@ export function App(): JSX.Element {
                     <Controls />
                   </ReactFlow>
                 </div>
+              </section>
+            )}
+            {/* 기획 단계 와이어(docs/planning/features.md 화면목록 요소) — 있으면 기존 WireframePanel로 렌더(신규 UI 0) */}
+            {planningWireframe && activePlanTab === "wire" && (
+              <section className="dash-planning-wire" data-testid="planning-wireframe">
+                <h3 className="dash-h">{dashProject?.displayName} — 기획 와이어</h3>
+                <WireframePanel wireframe={planningWireframe} />
               </section>
             )}
             {/* 기획 단계 유저플로우(docs/planning/user-flow/<flow>.md) — 있으면 공용 SpecGraph 그래프로 렌더(드래그→좌표 저장) */}

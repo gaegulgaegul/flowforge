@@ -14,7 +14,7 @@
 
 ### Sequential: web + 도그푸딩
 
-- [ ] 3.1 web: api fetchDocsPlanningWireframe + App.tsx 기획 와이어 탭 → 기존 WireframePanel 재사용(신규 컴포넌트·CSS 0), planTabsAvail에 와이어 추가
+- [x] 3.1 web: api fetchDocsPlanningWireframe + App.tsx 기획 와이어 탭 → 기존 WireframePanel 재사용(신규 컴포넌트·CSS 0), planTabsAvail에 와이어 추가
 - [ ] 3.2 docs/planning/features.md 화면 1~2개에 element 도그푸딩(원천 실증 — 예: login/grid 화면에 field·button 요소 + screen/detail 매핑)
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
