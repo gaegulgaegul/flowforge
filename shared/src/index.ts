@@ -21,6 +21,16 @@ export type {
 } from './wireframe-types.js';
 
 export type {
+  WireDevice,
+  WireBodyLayout,
+  WireElementKind,
+  WireElement,
+  WireBody,
+  WireRegions,
+  WireScreen2,
+} from './wire-screen2-types.js';
+
+export type {
   PrdSectionKey,
   PrdSection,
   Prd,
