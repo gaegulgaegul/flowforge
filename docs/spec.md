@@ -462,3 +462,20 @@ openspec-plan 스킬이 기능명세 다음 단계에서 `docs/planning/user-flo
 - behavior: 생성된 `<group>-vN.md`는 mermaid 코드블록 안에 `flowchart TD`(또는 LR) 방향 선언과 노드·엣지를 담고, 노드는 흐름 4타입(시작=`([..])` stadium, 페이지=`["..."]` box, 행동=`{"..."}` diamond 등)을 Mermaid 노드 모양으로 구분한다
 - behavior: 엣지는 `A --> B`(이동) 또는 `A -->|라벨| B`(라벨 이동)로 흐름을 표현한다
 - metric: 생성된 user-flow .md가 flowforge planning-userflow-view의 정규식 파서로 SpecGraph(노드+엣지)로 변환 가능
+
+## capability: planning-wireframe-device — 디바이스 프레임 와이어 렌더
+
+flowforge 기획 와이어를 디바이스 프레임(데스크탑/모바일) 안에 화면 레이아웃을 배치 렌더하는 능력(manyfast식 로우피델리티). 요소를 세로 목록이 아니라 실제 화면처럼 배치한다. 이 단계 원천=픽스처(사람 저작 없음, AI 생성은 후속). 폐기된 element 세로박스 접근을 대체한다.
+
+### 기능: WireScreen2 레이아웃 제공 (GET /api/docs/:project/planning-wireframe)
+- assert:endpoint GET /api/docs/:project/planning-wireframe
+- assert:symbol buildDocsPlanningWireframe2
+- invariant:readonly 레이아웃은 고정 픽스처 반환(docsDir는 프로젝트 정합용, 데이터는 프로젝트 무관)·features.md 쓰기 없음
+- invariant:no-traversal resolveDocsDir이 `..`·비화이트리스트 project 차단
+- behavior: WireScreen2[]{id, title, device(desktop|mobile), regions(topbar/sidebar/bottombar/body), body.layout(grid|stack|tree|form), 요소 kind/label/goto} 반환. 모바일 요소 goto는 모바일 화면을 가리켜 디바이스 흐름 유지(프레임이 데스크탑으로 튀지 않음)
+- metric: 픽스처 단위 테스트(디바이스별 영역·모바일 goto 무결·layout 다양성) + 라이브 실픽셀(데스크탑 상단/사이드/본문 배치·모바일 하단바·요소 클릭 디바이스 흐름 유지, 목업 대조) PASS(2026-07-08)
+
+### 기능: 디바이스 프레임 렌더러 (web WireframeDeviceFrame)
+- assert:symbol WireframeDeviceFrame
+- behavior: 데스크탑=브라우저 크롬+상단 메뉴+사이드+본문(grid/stack/tree/form), 모바일=폰 프레임+상단 타이틀+본문+하단 메뉴바. 회색조 로우피델리티, 요소 goto 클릭 이동, 디바이스 토글·화면 목록. 기존 WireframePanel(change 경로)과 병존(golden·change 와이어 무저촉)
+- metric: 라이브 실픽셀 grounding — 목업(wireframe-mockup-deploy)과 시각 대조로 "세로 목록 아님·화면 배치 맞음" 확인
