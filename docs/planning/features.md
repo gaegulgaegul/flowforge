@@ -57,10 +57,14 @@ flowforge가 docs/planning/features.md를 읽어 전용 FeatureTree로 3단 트�
 #### planning-features 라우트 조회
 <!-- screens: features, skeleton -->
 (중요도: 높음, 상태: 완료)
+<!-- when: 기획 탭 클릭 -->
+<!-- then: 그 프로젝트 openspec에서 5종 뷰 로드 -->
 
 #### priority·status·capability 시각화
 <!-- screens: features -->
 (중요도: 중간, 상태: 진행중)
+<!-- when: 트리 노드에 priority/status/capability 속성이 존재 -->
+<!-- then: 노드 카드에 중요도·상태 칩과 capability 키를 표시 -->
 
 ## planning-only 프로젝트 인식
 <!-- capability: planning-only-recognition -->
