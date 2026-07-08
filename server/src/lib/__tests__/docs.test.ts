@@ -5,7 +5,7 @@
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { listDocsProjects, resolveDocsDir, readDocsFile, docsRoot } from "../docs.js";
+import { listDocsProjects, resolveDocsDir, readDocsFile, docsRoot, listDocsUserFlows } from "../docs.js";
 
 /** <root>/<project>/docs/<file> 픽스처 생성. */
 function makeProject(root: string, project: string, files: Record<string, string>): string {
@@ -121,5 +121,17 @@ describe("docs lib", () => {
     const docsDir = makeProject(root, "p", { "PRD.md": "hello" });
     expect(readDocsFile(docsDir, "PRD.md")).toBe("hello");
     expect(readDocsFile(docsDir, "missing.md")).toBeNull();
+  });
+
+  it("listDocsUserFlows는 vN을 숫자 내추럴 정렬한다(v10>v2, 마지막=최신)", () => {
+    const ufDir = join(root, "uf", "docs", "planning", "user-flow");
+    mkdirSync(ufDir, { recursive: true });
+    // 문자열 정렬이면 main-v10이 main-v2 앞에 오는 함정 케이스.
+    for (const v of ["main-v1", "main-v10", "main-v2", "main-v3"]) {
+      writeFileSync(join(ufDir, `${v}.md`), "flowchart TD\n");
+    }
+    const vs = listDocsUserFlows(join(root, "uf", "docs"));
+    expect(vs).toEqual(["main-v1", "main-v2", "main-v3", "main-v10"]);
+    expect(vs[vs.length - 1]).toBe("main-v10"); // 폴백=최신
   });
 });

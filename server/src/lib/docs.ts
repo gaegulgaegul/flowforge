@@ -112,7 +112,11 @@ function userFlowDir(docsDir: string): string {
   return join(docsDir, "planning", "user-flow");
 }
 
-/** `<group>-vN.md` 목록(확장자 뗀 stem). user-flow 디렉토리 없으면 빈 배열. 정렬. */
+/**
+ * `<group>-vN.md` 목록(확장자 뗀 stem). user-flow 디렉토리 없으면 빈 배열.
+ * vN 숫자 내추럴 정렬(오름차순) — 같은 group이면 버전 숫자 비교(v2 < v10, 문자열 정렬 함정 회피).
+ * 마지막 원소 = 최신 버전(호출부가 기본값으로 씀).
+ */
 export function listDocsUserFlows(docsDir: string): string[] {
   const dir = userFlowDir(docsDir);
   if (!existsSync(dir)) return [];
@@ -120,7 +124,12 @@ export function listDocsUserFlows(docsDir: string): string[] {
     return readdirSync(dir)
       .filter((f) => f.endsWith(".md"))
       .map((f) => f.slice(0, -3))
-      .sort();
+      .sort((a, b) => {
+        const ma = a.match(/^(.*?)-v(\d+)$/);
+        const mb = b.match(/^(.*?)-v(\d+)$/);
+        if (ma && mb && ma[1] === mb[1]) return Number(ma[2]) - Number(mb[2]);
+        return a.localeCompare(b);
+      });
   } catch {
     return [];
   }

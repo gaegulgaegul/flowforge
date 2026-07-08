@@ -217,8 +217,8 @@ docsRouter.get(
       return;
     }
     const versions = listDocsUserFlows(dir);
-    // flow 미지정이면 첫 버전. 버전 자체가 없으면 404.
-    const flow = String(req.query.flow ?? versions[0] ?? "");
+    // flow 미지정이면 최신 버전(정렬상 마지막). 버전 자체가 없으면 404.
+    const flow = String(req.query.flow ?? versions[versions.length - 1] ?? "");
     const graph = flow ? buildDocsPlanningUserFlow(dir, flow) : null;
     if (!graph) {
       res.status(404).json({ error: "planning_user_flow_not_found" });
@@ -355,8 +355,9 @@ docsRouter.get(
       res.status(404).json({ error: "docs_not_found" });
       return;
     }
-    // flow 미지정이면 첫 버전 폴백(planning-user-flow GET과 동형). 무효 stem·버전 없음 → 404.
-    const flow = String(req.query.flow ?? listDocsUserFlows(dir)[0] ?? "");
+    // flow 미지정이면 최신 버전 폴백(planning-user-flow GET과 동형). 무효 stem·버전 없음 → 404.
+    const vs = listDocsUserFlows(dir);
+    const flow = String(req.query.flow ?? vs[vs.length - 1] ?? "");
     if (!isSafeFlowToken(flow)) {
       res.status(404).json({ error: "planning_user_flow_not_found" });
       return;
