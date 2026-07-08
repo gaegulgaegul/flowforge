@@ -1,0 +1,151 @@
+{
+  "change": "planning-when-then-authoring",
+  "verifiedAt": "2026-07-08T22:15:05+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 6,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "features 노드는 WHEN/THEN 시나리오를 저작·표시한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "에러경로": "when/then 파싱은 이미 읽힌 텍스트에 대한 순수 정규식 매칭 — 네트워크/DB/IO 에러 경로 없음. features.md 파일 부재는 빌더 기존 계약(null 반환→라우트 404)으로 별도 커버(기존 스위트).",
+          "동시성": "동기 단일 패스 라인 스캔 파싱, 공유 가변 상태 없음(요청마다 독립 빌드) — race 표면 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "when/then 저작 → 상세 패널 표시",
+          "layer": "web",
+          "means": "격리 픽스처 실픽셀(gstack): det-both 노드('planning-features 라우트 조회') 클릭 → ⚡ 시나리오 섹션에 WHEN '기획 탭 클릭' + THEN '그 프로젝트 openspec에서 5종 뷰 로드' 표시 어서션(.feature-detail-whenthen/.wt-tag.when/.wt-tag.then 전부 visible). 콘솔 에러 0.",
+          "basis": "web/vite.config.ts + web/index.html; gstack daemon healthy; 픽스처 http://localhost:5299/verify-fixture/whenthen-fixture.html",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s1-both.png",
+            "caption": "det-both 클릭 → ⚡ 시나리오 WHEN+THEN 양쪽 표시"
+          }
+        },
+        {
+          "scenario": "when/then 저작 → 상세 패널 표시 — 실경로 E2E(docs 원문→파서→API)",
+          "layer": "server",
+          "means": "실서버 기동(PORT=8819 node dist/index.js) 후 GET /api/docs/flowforge/planning-features → HTTP 200, 응답 JSON에 도그푸딩된 docs/planning/features.md:60-61 주석이 파서를 거쳐 실림(mock 아님).",
+          "basis": "root=server/; scripts.test → jest; server/dist 빌드 tsc exit 0",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "GET http://localhost:8819/api/docs/flowforge/planning-features → 200\n... \"when\":\"기획 탭 클릭\",\"then\":\"그 프로젝트 openspec에서 5종 뷰 로드\",\"children\":[] ...\n(원문: docs/planning/features.md:60-61 <!-- when: 기획 탭 클릭 --> <!-- then: 그 프로젝트 openspec에서 5종 뷰 로드 -->)",
+            "caption": "실경로 E2E 응답 발췌"
+          }
+        },
+        {
+          "scenario": "한쪽만 있어도 렌더 — when만",
+          "layer": "web",
+          "means": "격리 픽스처 실픽셀: det-when-only 클릭 → WHEN '검색어 입력' 표시 + 부정 어서션 .feature-detail-wt-tag.then visible=false(빈 THEN 태그 없음). jest 'WHEN만 있는 노드는 when만 싣고 then 필드는 부재한다' passed.",
+          "basis": "web/vite.config.ts + gstack; jest featureTreeBuilder.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s2-when-only.png",
+            "caption": "when만 저작 → WHEN 행만 렌더"
+          }
+        },
+        {
+          "scenario": "한쪽만 있어도 렌더 — then만",
+          "layer": "web",
+          "means": "격리 픽스처 실픽셀: det-then-only 클릭 → THEN '결과 목록 갱신' 표시 + 부정 어서션 .feature-detail-wt-tag.when visible=false. jest 'THEN만 있는 노드는 then만 싣고 when 필드는 부재한다' passed.",
+          "basis": "web/vite.config.ts + gstack; jest featureTreeBuilder.test.ts",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s2-then-only.png",
+            "caption": "then만 저작 → THEN 행만 렌더"
+          }
+        },
+        {
+          "scenario": "주석 부재 = 현행 동작",
+          "layer": "web",
+          "means": "격리 픽스처 실픽셀: det-none(기존 노드, memo만) 클릭 → ⚡ 시나리오 섹션 부재(.feature-detail-whenthen/.wt-tag.* 전부 false), 기존 섹션(라벨·memo·경로) 온전. jest 'when/then이 없는 노드는 필드 자체가 부재한다' passed + 전체 스위트 390/390(회귀 0).",
+          "basis": "web/vite.config.ts + gstack; jest 전체 스위트 재실행 exit 0",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s3-none.png",
+            "caption": "부재 노드 → 섹션 미표시, 기존 렌더 온전(회귀 0)"
+          }
+        },
+        {
+          "scenario": "(3개 시나리오 공통) 파서 단위 재검증 — jest 6케이스 + 엣지 프로브 4케이스",
+          "layer": "server",
+          "means": "jest 재실행(JSON 리포터, 파이프 없는 exit): when/then 6케이스(양쪽·when만·then만·부재·공존·빈값) 전부 passed, 총 390/390. 추가 엣지 프로브(dist 대상 임시 노드 스크립트, 레포 무접촉): 경계값 5000자·특수문자(이모지·HTML꺾쇠·따옴표)·비정형(미닫힘 주석 무시)·대량 10000노드 4/4 PASS.",
+          "basis": "root=server/; scripts.test → jest(devDeps ^29.7.0); featureTreeBuilder.test.ts:241-337",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "EXIT=0  total: 390 passed: 390 failed: 0\npassed | ... `<!-- when: ... -->` `<!-- then: ... -->` 주석을 해당 노드 when/then 필드로 파싱한다(양쪽·모든 kind)\npassed | ... WHEN만 있는 노드는 when만 싣고 then 필드는 부재한다\npassed | ... THEN만 있는 노드는 then만 싣고 when 필드는 부재한다\npassed | ... when/then이 없는 노드는 필드 자체가 부재한다(비파괴 옵셔널)\npassed | ... capability/속성/memo 파싱과 공존하며 서로를 삼키지 않는다\npassed | ... 빈 when/then(`<!-- when:  -->`)은 무시한다\n--- 엣지 프로브(PROBE_EXIT=0) ---\nPASS 경계값: 매우 긴 when 텍스트(5000자)도 그대로 싣는다\nPASS 특수문자/유니코드: 이모지·HTML꺾쇠·따옴표 무손상\nPASS 비정형 입력: 닫히지 않은 주석은 무시되어 필드 부재\nPASS 대량 데이터: 10000개 상세 노드에서 when/then 정확 적재",
+            "caption": "jest+프로브 실측 출력"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 2,
+      "passed": 2,
+      "failed": 0,
+      "basis": "root=server/; scripts.test → jest(NODE_OPTIONS=--experimental-vm-modules); devDeps jest ^29.7.0; __tests__ 11파일",
+      "reason": "재실행 390/390 + when/then 6케이스 + 엣지 프로브 4/4 + 실경로 E2E, 전부 exit 0 실측(JSON 리포터 이중확인)"
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 4,
+      "passed": 4,
+      "failed": 0,
+      "basis": "web/vite.config.ts + web/index.html + react 워크스페이스; gstack daemon healthy",
+      "reason": "격리 픽스처 실픽셀 4케이스 전부 PASS, 콘솔 에러 0, 스크린샷 4장"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: android/ 디렉토리·gradle 설정 없음(Node 모노레포 shared/server/web)",
+      "reason": "적용 불가"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "macOS 필요(호스트 linux 6.8.0)",
+      "reason": "macOS 필요"
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260708-2215.html"
+}

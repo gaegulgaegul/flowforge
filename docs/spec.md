@@ -182,6 +182,11 @@ flowforge가 `docs/planning/features.md`(기획 단계 산출물)를 읽어 전�
 - behavior: features.md를 헤더 레벨(##/###/####)로 3단 위계 파싱, 요구사항에 capability 키(`<!-- capability: -->`)·노드에 중요도/상태 속성을 채운 FeatureTree로 반환
 - metric: planning features 조회 응답 시간 목표 200ms
 
+### 기능: 동작 시나리오 WHEN/THEN 저작·표시 (planning-when-then-authoring)
+- assert:symbol buildDocsPlanningFeatures
+- behavior: features.md 노드 헤더 아래 `<!-- when: -->` `<!-- then: -->` 인라인 주석을 RE_WHEN/RE_THEN(RE_MEMO 동형)으로 파싱해 FeatureNode.when?/then?(additive 옵셔널·첫 매치·빈 값 무시)에 싣고, 상세 패널이 (when||then)일 때만 ⚡ 시나리오 섹션 렌더(지어내지 않음). 주석 부재는 필드 없음·섹션 미표시(회귀 0)
+- invariant: capability/memo 주석과 네임스페이스 미충돌(접두어 명시 분리), featureTreeBuilder 내부만 수정(specParser/graphBuilder/screenRegistry 무저촉)
+- metric: featureTreeBuilder 단위(양쪽·단측·부재·빈값) + verify 실픽셀(상세 패널 표시·회귀) + 라이브 API grounding PASS(2026-07-08)
 ## capability: planning-userflow-view — 기획 유저플로우 뷰
 
 flowforge가 `docs/planning/user-flow/<group>-vN.md`의 Mermaid flowchart를 mermaid 라이브러리 없이 정규식으로 파싱해 공용 SpecGraph(노드+엣지)로 렌더하고, 드래그한 좌표를 `<group>-vN.overlay.json`에 저장한다(docs 첫 쓰기). SpecGraph 타입·web graphAdapter/SpecNode 4타입을 재사용한다(타입 분리 안 함). 명세 .md는 읽기만 하고, overlay JSON에만 쓴다.
