@@ -28,7 +28,6 @@ import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from ".
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
 import { buildDocsPlanningFeatures } from "../parser/featureTreeBuilder.js";
 import { buildPlanningIaTree } from "../parser/planningIaBuilder.js";
-import { buildDocsPlanningWireframe } from "../parser/planningWireframeBuilder.js";
 import { buildScreenRegistry } from "../parser/screenRegistry.js";
 import { buildDocsPlanningUserFlow } from "../parser/planningUserFlowBuilder.js";
 import {
@@ -196,14 +195,11 @@ docsRouter.get(
       res.status(404).json({ error: "docs_not_found" });
       return;
     }
-    // 화면목록 요소(features.md) → planning 와이어(화면=WireScreen, 요소=WireBox).
-    // features.md 자체가 없으면 null → 404(planning-ia와 동형). 화면 없으면 빈 screens(정상).
-    const wireframe = buildDocsPlanningWireframe(dir);
-    if (!wireframe) {
-      res.status(404).json({ error: "planning_wireframe_not_found" });
-      return;
-    }
-    res.json({ project, wireframe });
+    // planning 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]). 폐기된 element 세로박스 접근을
+    // 제거(planning-wireframe-device-frame). 레이아웃 데이터 원천(픽스처)은 Task 3.1에서 배선한다.
+    // 그전까지 화면 데이터가 없으므로 404(planning-ia와 동형).
+    void dir;
+    res.status(404).json({ error: "planning_wireframe_not_found" });
   }),
 );
 

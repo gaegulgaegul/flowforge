@@ -4,7 +4,7 @@
 
 ### Sequential: 폐기 코드 정리 (선행 — 구조)
 
-- [ ] 1.1 폐기된 element 접근 제거: screenRegistry `<!-- element: -->` 파싱·`RE_ELEMENT`·`ScreenElement`·`ScreenNode.elements?`·`planningWireframeBuilder.ts`·관련 테스트 삭제. features.md의 `<!-- element: -->` 주석 제거(도그푸딩분). 화면목록 `<!-- screen: id -->`·N:M 링크는 유지(다른 뷰가 씀). golden·featureTreeBuilder 무저촉 확인
+- [x] 1.1 폐기된 element 접근 제거: screenRegistry `<!-- element: -->` 파싱·`RE_ELEMENT`·`ScreenElement`·`ScreenNode.elements?`·`planningWireframeBuilder.ts`·관련 테스트 삭제. features.md의 `<!-- element: -->` 주석 제거(도그푸딩분). 화면목록 `<!-- screen: id -->`·N:M 링크는 유지(다른 뷰가 씀). golden·featureTreeBuilder 무저촉 확인
 
 ### Sequential: 데이터 모델 + 픽스처 (선행)
 

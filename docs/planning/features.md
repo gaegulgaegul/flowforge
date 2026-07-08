@@ -226,23 +226,15 @@ happy path는 실선, 자동 생성된 에지케이스 경로는 점선으로 �
 
 ### 프로젝트 카드 그리드
 <!-- screen: grid -->
-<!-- element: header "프로젝트" -->
-<!-- element: list "프로젝트 카드 목록" -> screen:skeleton -->
-<!-- element: empty "프로젝트 없음 안내" -->
 
 홈 랜딩에서 change 있는 모든 프로젝트를 카드 그리드로 보여주는 화면.
 
 ### 기획 뷰
 <!-- screen: skeleton -->
-<!-- element: header "프로젝트명 + 기획 PRD" -->
-<!-- element: button "PRD / 기능명세 / 유저플로우 / IA 탭" -> screen:features -->
 
 프로젝트 진입 후 기획 산출물(PRD·기능명세·유저플로우·IA)을 탭으로 전환하며 보는 화면.
 
 ### 기능명세 화면
 <!-- screen: features -->
-<!-- element: header "기획 기능명세서" -->
-<!-- element: list "3단 트리 노드 그래프" -> detail:planning-features 라우트 조회 -->
-<!-- element: field "노드 클릭 → 상세 패널" -->
 
 features.md의 3단 트리(요구사항→기능→상세기능)를 노드 그래프로 렌더하는 화면.
