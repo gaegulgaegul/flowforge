@@ -9,8 +9,8 @@
     "skipped": 1
   },
   "archiveGate": {
-    "open": false,
-    "reason": "검증 안 함 0건 / SKIPPED 1건"
+    "open": true,
+    "reason": "SKIPPED 1건(CF JWT 라이브)=인프라 후속, 사용자 승인 archive(2026-07-08)"
   },
   "requirements": [
     {
@@ -36,7 +36,7 @@
           "scenario": "유효 CF Access JWT → 쓰기 허용",
           "layer": "server",
           "means": "단위: cfAccess.test.ts '유효 JWT → payload 반환'(픽스처 RSA 키쌍) + 통합: writeAuth.test.ts (게이트 배선). 🔴 라이브 CF Access JWT(실 cloudflared 헤더)는 CF Zero Trust 대시보드 미등록으로 미실행.",
-          "basis": "root=server/; jest ts-jest ESM; cfAccess.test.ts:108 · writeAuth 게이트. 라이브 엣지 JWKS는 인프라 미프로비저닝.",
+          "basis": "root=server/; jest ts-jest ESM; cfAccess.test.ts:108 · writeAuth 게이트. 라이브 엣지 JWKS는 인프라 미프로비저닝. · [사용자 승인 2026-07-08] CF JWT 라이브 실증은 CF Zero Trust 대시보드 등록(인프라) 선행 필요 — 코드 결함 아님, EDGE_AUTH.md 절차로 인프라 후속 처리. 코드·토큰·CORS·dev모드는 격리 서버 실증 완료.",
           "result": "SKIPPED",
           "evidence": {
             "kind": "text",

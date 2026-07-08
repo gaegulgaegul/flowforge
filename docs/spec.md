@@ -395,3 +395,23 @@ flowforge가 기능명세 제안 큐(features.suggestions.json) 항목을 개별
 - invariant:safe-4xx 미지·조작 프로젝트는 404(존재 오라클 최소화), change 부재도 404 — 5xx로 새지 않음
 - behavior: ?project= 있으면 그 프로젝트 openspec/changes에서 change를 해석하고, 없으면 기존 글로벌 루트 동작 그대로(하위호환). web은 카드 드릴다운의 project를 5종 fetch+layout 저장에 부착(withProject)
 - metric: 라우트 통합 테스트(2프로젝트 픽스처 200·미지정 불변·dotfile/조작 404) + 라이브 실측(wowa change 뷰 200·.ssh 프로빙 404, 2026-07-07) PASS
+
+## capability: api-write-auth — 쓰기 라우트 2차 인증 게이트
+
+flowforge 쓰기 라우트(승인 apply 3종 + layout 저장 2종)에 origin측 2차 인증을 강제하는 능력. env 미설정 시 현행 개발 모드(무손상), 프로덕션 env 주입 시 강제. 엣지(CF Zero Trust) 1차 방어는 별도 인프라(docs/EDGE_AUTH.md).
+
+### 기능: 쓰기 게이트 미들웨어 (requireWriteAuth)
+- assert:symbol requireWriteAuth
+- assert:symbol verifyCfAccessJwt
+- assert:symbol cfAccessConfig
+- invariant:safe-4xx 게이트 활성 시 무자격 쓰기(layout PUT 2종·apply POST 3종)는 401 `{error:"unauthorized"}`(내부 사유 미노출), 미들웨어가 핸들러 앞이라 대상 파일·큐 불변
+- invariant: CF Access JWT는 RS256 서명(alg 핀=none/confusion 차단)·aud(배열 포함)·iss·exp/nbf(±60s skew)·email claim 필수(service token 거부)를 전부 검증, 실패는 fail-closed null. 서명 먼저 검증 후 claims(위조 서명이 claims 미도달)
+- invariant: 토큰 폴백은 timingSafeEqual 상수시간 비교(길이 불일치도 상수시간 경로 — 길이 오라클 차단)
+- behavior: 게이트 판정=(CF Access JWT 풀검증 통과) OR (Bearer가 FLOWFORGE_WRITE_TOKEN 상수시간 일치). 두 env(AUD+TEAM_DOMAIN, WRITE_TOKEN) 모두 부재면 통과(개발 모드). GET 라우트는 게이트 밖(엣지 소관). node:crypto만 사용(신규 npm 의존성 0)
+- metric: cfAccess 단위 테스트(RSA 픽스처: 유효·위조·만료·nbf·aud불일치·email부재·JWKS캐시/회전) + 게이트 통합 + 격리 서버 실동작(무자격 5종 401·토큰 200·GET 200·dev모드) PASS(2026-07-08). CF JWT 라이브 실증은 CF Zero Trust 등록 후 별도(인프라 후속)
+
+### 기능: CORS 화이트리스트 (corsMiddleware)
+- assert:symbol corsMiddleware
+- assert:symbol parseCorsOrigins
+- invariant: 와일드카드 CORS 미방출 — FLOWFORGE_CORS_ORIGIN 미설정 시 미들웨어 미부착(Access-Control-Allow-Origin 헤더 없음), `*` 입력조차 화이트리스트에서 제거
+- metric: 격리 서버 실측 — 임의 Origin에 CORS 헤더 부재 확인(2026-07-08)

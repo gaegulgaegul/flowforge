@@ -3,11 +3,11 @@
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
-    "PASS": 97,
+    "PASS": 103,
     "FAIL": 0,
-    "UNVERIFIABLE": 141
+    "UNVERIFIABLE": 147
   },
-  "reason": "미검증(UNVERIFIABLE) 141건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 147건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -18,7 +18,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:129"
+      "evidence": "server/src/routes/graph.ts:130"
     },
     {
       "capability": "spec-tree-view",
@@ -117,7 +117,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:116"
+      "evidence": "server/src/routes/graph.ts:117"
     },
     {
       "capability": "prd-view",
@@ -689,7 +689,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:52"
+      "evidence": "server/src/routes/docs.ts:53"
     },
     {
       "capability": "docs-ingest",
@@ -744,7 +744,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:59"
+      "evidence": "server/src/routes/docs.ts:60"
     },
     {
       "capability": "docs-ingest",
@@ -821,7 +821,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:72"
+      "evidence": "server/src/routes/docs.ts:73"
     },
     {
       "capability": "docs-ingest",
@@ -865,7 +865,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:85"
+      "evidence": "server/src/routes/docs.ts:86"
     },
     {
       "capability": "docs-ingest",
@@ -953,7 +953,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:98"
+      "evidence": "server/src/routes/docs.ts:99"
     },
     {
       "capability": "planning-prd-view",
@@ -1098,7 +1098,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:116"
+      "evidence": "server/src/routes/docs.ts:117"
     },
     {
       "capability": "planning-features-view",
@@ -1176,7 +1176,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:187"
+      "evidence": "server/src/routes/docs.ts:188"
     },
     {
       "capability": "planning-userflow-view",
@@ -1254,7 +1254,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:209"
+      "evidence": "server/src/routes/docs.ts:210"
     },
     {
       "capability": "planning-userflow-view",
@@ -1399,7 +1399,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:258"
+      "evidence": "server/src/routes/docs.ts:260"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1666,7 +1666,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:233"
+      "evidence": "server/src/routes/docs.ts:235"
     },
     {
       "capability": "planning-prd-approval-queue",
@@ -1733,7 +1733,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:134"
+      "evidence": "server/src/routes/docs.ts:135"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1865,7 +1865,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:148"
+      "evidence": "server/src/routes/docs.ts:149"
     },
     {
       "capability": "planning-panel-screen-links",
@@ -2009,7 +2009,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:323"
+      "evidence": "server/src/routes/docs.ts:327"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2064,7 +2064,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:343"
+      "evidence": "server/src/routes/docs.ts:347"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2375,7 +2375,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:297"
+      "evidence": "server/src/routes/docs.ts:300"
     },
     {
       "capability": "planning-features-approval-apply",
@@ -2644,48 +2644,181 @@
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
       "evidence": null
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "쓰기 게이트 미들웨어 (requireWriteAuth)",
+      "line": 404,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol requireWriteAuth",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/requireWriteAuth.ts:56"
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "쓰기 게이트 미들웨어 (requireWriteAuth)",
+      "line": 405,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol verifyCfAccessJwt",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/cfAccess.ts:143"
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "쓰기 게이트 미들웨어 (requireWriteAuth)",
+      "line": 406,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol cfAccessConfig",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/cfAccess.ts:57"
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "쓰기 게이트 미들웨어 (requireWriteAuth)",
+      "line": 407,
+      "kind": "invariant",
+      "claim": "invariant:safe-4xx 게이트 활성 시 무자격 쓰기(layout PUT 2종·apply POST 3종)는 401 `{error:\"unauthorized\"}`(내부 사유 미노출), 미들웨어가 핸들러 앞이라 대상 파일·큐 불변",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "쓰기 게이트 미들웨어 (requireWriteAuth)",
+      "line": 408,
+      "kind": "freetext",
+      "claim": "invariant: CF Access JWT는 RS256 서명(alg 핀=none/confusion 차단)·aud(배열 포함)·iss·exp/nbf(±60s skew)·email claim 필수(service token 거부)를 전부 검증, 실패는 fail-closed null. 서명 먼저 검증 후 claims(위조 서명이 claims 미도달)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "쓰기 게이트 미들웨어 (requireWriteAuth)",
+      "line": 409,
+      "kind": "freetext",
+      "claim": "invariant: 토큰 폴백은 timingSafeEqual 상수시간 비교(길이 불일치도 상수시간 경로 — 길이 오라클 차단)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "쓰기 게이트 미들웨어 (requireWriteAuth)",
+      "line": 410,
+      "kind": "behavior",
+      "claim": "behavior: 게이트 판정=(CF Access JWT 풀검증 통과) OR (Bearer가 FLOWFORGE_WRITE_TOKEN 상수시간 일치). 두 env(AUD+TEAM_DOMAIN, WRITE_TOKEN) 모두 부재면 통과(개발 모드). GET 라우트는 게이트 밖(엣지 소관). node:crypto만 사용(신규 npm 의존성 0)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/routes/__tests__/writeAuth.test.ts:110",
+      "llmHint": "게이트 판정=(CF Access JWT 풀검증 통과) OR (Bearer가 FLOWFORGE_WRITE_TOKEN 상수시간 일치). 두 env(AUD+TEAM_DOMAIN, WRITE_TOKEN) 모두 부재면 통과(개발 모드). GET 라우트는 게이트 밖(엣지 소관). node:crypto만 사용(신규 npm 의존성 0)"
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "쓰기 게이트 미들웨어 (requireWriteAuth)",
+      "line": 411,
+      "kind": "metric",
+      "claim": "metric: cfAccess 단위 테스트(RSA 픽스처: 유효·위조·만료·nbf·aud불일치·email부재·JWKS캐시/회전) + 게이트 통합 + 격리 서버 실동작(무자격 5종 401·토큰 200·GET 200·dev모드) PASS(2026-07-08). CF JWT 라이브 실증은 CF Zero Trust 등록 후 별도(인프라 후속)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "CORS 화이트리스트 (corsMiddleware)",
+      "line": 414,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol corsMiddleware",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/corsOptions.ts:25"
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "CORS 화이트리스트 (corsMiddleware)",
+      "line": 415,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol parseCorsOrigins",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/corsOptions.ts:13"
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "CORS 화이트리스트 (corsMiddleware)",
+      "line": 416,
+      "kind": "freetext",
+      "claim": "invariant: 와일드카드 CORS 미방출 — FLOWFORGE_CORS_ORIGIN 미설정 시 미들웨어 미부착(Access-Control-Allow-Origin 헤더 없음), `*` 입력조차 화이트리스트에서 제거",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "api-write-auth",
+      "feature": "CORS 화이트리스트 (corsMiddleware)",
+      "line": 417,
+      "kind": "metric",
+      "claim": "metric: 격리 서버 실측 — 임의 Origin에 CORS 헤더 부재 확인(2026-07-08)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
     }
   ],
   "ghosts": [
     {
       "type": "endpoint",
       "what": "GET /api/changes",
-      "source": "server/src/routes/graph.ts:68"
+      "source": "server/src/routes/graph.ts:69"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/graph",
-      "source": "server/src/routes/graph.ts:75"
+      "source": "server/src/routes/graph.ts:76"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/ia",
-      "source": "server/src/routes/graph.ts:90"
+      "source": "server/src/routes/graph.ts:91"
     },
     {
       "type": "endpoint",
       "what": "PUT /api/changes/:id(*)/layout",
-      "source": "server/src/routes/graph.ts:142"
+      "source": "server/src/routes/graph.ts:143"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/wireframe",
-      "source": "server/src/routes/graph.ts:103"
+      "source": "server/src/routes/graph.ts:104"
     },
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-features-suggestions",
-      "source": "server/src/routes/docs.ts:283"
+      "source": "server/src/routes/docs.ts:286"
     },
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-ia",
-      "source": "server/src/routes/docs.ts:167"
+      "source": "server/src/routes/docs.ts:168"
     },
     {
       "type": "endpoint",
       "what": "GET /api/health",
-      "source": "server/src/index.ts:15"
+      "source": "server/src/index.ts:30"
     },
     {
       "type": "symbol",
@@ -2756,6 +2889,11 @@
       "type": "symbol",
       "what": "WireframePanel",
       "source": "web/src/WireframePanel.tsx:21"
+    },
+    {
+      "type": "symbol",
+      "what": "__resetJwksCacheForTests",
+      "source": "server/src/lib/cfAccess.ts:74"
     },
     {
       "type": "symbol",
@@ -3122,10 +3260,10 @@
     {
       "what": "GET (regex route)",
       "reason": "정규식 라우트 — 정적 path 대조 불가",
-      "source": "server/src/index.ts:28"
+      "source": "server/src/index.ts:43"
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-20260708-0300.html",
-  "runId": "run-20260708-0300"
+  "historyHtml": "audit-20260708-0605.html",
+  "runId": "run-20260708-0605"
 }
