@@ -1,0 +1,42 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — planning-wireframe-device-frame</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — planning-wireframe-device-frame</h1>
+<p class="muted">검증일: 2026-07-08T15:10:00+09:00 · 환경: server(적용: server/ + jest) · web(적용: web/ + WireframeDeviceFrame.tsx, 라이브 8812 gstack 실픽셀) · shared(빌드/타입) · android/ios(적용 불가: 디렉터리 없음) · run: run-20260708-1510 · commit 15d4199f (dirty)</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 5 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>와이어는 디바이스 프레임 안에 화면 레이아웃을 배치 렌더한다</td><td>데스크탑 프레임에 배치 렌더 (상단 메뉴+사이드+본문 그리드가 실제 화면처럼 배치, 세로 목록 아님)</td><td>web</td><td>라이브 앱(8812) → flowforge → 기획 와이어 탭. gstack DOM/geometry 실측 + 목업 대조</td><td><code>web + WireframeDeviceFrame.tsx 라이브 렌더 (data-testid=wf-df-desktop/topbar/sidebar/body)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-evidence/01-desktop-grid.png"><img src="verify-evidence/01-desktop-grid.png" alt="데스크탑 프레임: 브라우저 크롬+상단 메뉴+좌측 사이드+본문 3열 카드 그리드. geometry 실측 display:grid 3열(211px×3), 카드 y=309 한 행 3장+y=419 랩(세로 목록 아님). 목업과 구조 일치" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>와이어는 디바이스 프레임 안에 화면 레이아웃을 배치 렌더한다</td><td>모바일 프레임에 배치 렌더 (폰 프레임 안 상단 타이틀바+본문+하단 메뉴바)</td><td>web</td><td>라이브 앱 → 모바일 토글. gstack 영역·수직순서 실측</td><td><code>web MobileScreen (data-testid=wf-df-mobile/topbar/body/bottombar)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-evidence/02-mobile.png"><img src="verify-evidence/02-mobile.png" alt="모바일 폰 프레임: 상단 타이틀(프로젝트)+본문(검색+카드 스택)+하단 메뉴바. 수직순서 실측 topbar(213)&lt;body(255)&lt;bottombar(815). sidebar 없음" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>와이어는 디바이스 프레임 안에 화면 레이아웃을 배치 렌더한다</td><td>요소 클릭 → 화면 이동 (goto 있는 요소 클릭 시 대상 화면 전환)</td><td>web</td><td>&#x27;쏙쏙 육아 앱&#x27; 카드(goto=skeleton) 클릭 → 기획 뷰 전환. 2차 홉 기능명세(goto=features) → 트리 전환</td><td><code>web 라이브 상호작용 (Element onClick→onGoto→setActiveId, data-goto 배선)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-evidence/03-after-click-skeleton.png"><img src="verify-evidence/03-after-click-skeleton.png" alt="카드(goto=skeleton) 클릭 후 프로젝트목록→기획뷰(stack, PRD 탭바+섹션) 전환. 2차 홉 기능명세(goto=features)→기능명세(tree, 회원관리 노드) 전환도 실측. no-goto 요소(템플릿/팀/설정)는 non-clickable div" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>와이어는 디바이스 프레임 안에 화면 레이아웃을 배치 렌더한다</td><td>change 경로 와이어·골든 무저촉 (새 렌더러 추가 시 change 경로 wireframeBuilder·WireframePanel·golden 무변경 통과)</td><td>server</td><td>npm test 재실행 — docsAdapter.test.ts(14)+golden.test.ts(3)+planningWireframeFixture.test.ts(6) 등 전체</td><td><code>server jest 리포터 카운트 (PIPESTATUS 실측 exit 0)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">npm test → Test Suites 37/37 passed / Tests 399/399 passed / 0 failed / 0 skipped. golden 3/3 PASS(회귀 0). docsAdapter(change 경로 Wireframe/WireBox) 14/14 PASS. 컴파일 에러 0. build/typecheck/lint 모두 exit 0</pre></td></tr>
+<tr><td>폐기된 element 세로박스 접근을 제거한다</td><td>element 파싱 잔재 제거 (screenRegistry element 파싱 없음, features.md에 element 주석 없음, 관련 테스트 새 모델로 대체)</td><td>server</td><td>독립 grep 재검증 — RE_ELEMENT·ScreenElement·planningWireframeBuilder(src)·element 주석(docs/서버/features.md)</td><td><code>server/src·docs 정적 grep (본체 재실행, apply 통과분 불신)</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">grep RE_ELEMENT server/src → 0(exit1). grep ScreenElement src+shared+web → 0. find planningWireframeBuilder*(src) → 없음(소스 삭제). grep element 주석 docs/+server/src+web/src → 0. features.md element 카운트 → 0. planningWireframeFixture.test.ts(6, 새 모델)로 대체. server/dist 잔재는 gitignore·untracked 스테일 빌드 산출물(소스 아님)</pre></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>와이어는 디바이스 프레임 안에 화면 레이아웃을 배치 렌더한다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="레이아웃=고정 픽스처(수치 경계 입력 없음). span은 1~2 소값, 사용자 수치 입력 경로 없음">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="순수 클라이언트 렌더 컴포넌트 — 공유 가변 상태/비동기 경쟁 없음(useState 로컬). 서버 라우트는 읽기전용 픽스처">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="픽스처 4화면 고정. AI 생성물(대량 가능)은 후속 change. 이 change는 렌더러+고정 데이터만">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="라벨=픽스처 고정 문자열(한글 렌더 확인). 사용자 입력 경로 없음(원천=AI, D-2)">N/A</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>폐기된 element 세로박스 접근을 제거한다</td><td style="background:#f0f1f2;color:#6e7781" title="순수 코드 제거(부재) 요구 — 런타임 입력 표면 없음. 검증=정적 grep 부재 확인">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="제거 요구는 입력이 아니라 코드 부재를 검증 — 입력 엣지 개념 없음">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="제거 요구 — 타입 입력 경로 없음">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="제거 요구 — 수치 경계 없음">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="제거 요구 — 실행 경로 없음(부재 확인)">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="제거 요구 — 실행 없음">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="제거 요구 — 데이터 없음">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="제거 요구 — 입력 없음">N/A</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>399</td><td>399</td><td>0</td><td>빌드·타입·린트·테스트 전부 PASS. golden 회귀 0, 컴파일 에러 0</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>3</td><td>3</td><td>0</td><td>3개 UI 시나리오 실픽셀 PASS. 콘솔 에러 0. 목업과 구조 일치(세로 목록 아님)</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가 — 웹 전용</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가 — 웹 전용, macOS 아님</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>
