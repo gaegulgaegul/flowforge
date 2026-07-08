@@ -273,7 +273,12 @@ export function App(): JSX.Element {
       setPlanningIaEdges([]);
       return;
     }
-    const { nodes, edges } = toIAFlow(planningIaRoot, false);
+    // 기획 IA는 화면 구조 어휘로 태그 오버라이드(change IA는 변경/기능군/요구사항 기본 유지).
+    const { nodes, edges } = toIAFlow(planningIaRoot, false, {
+      change: "화면목록",
+      capability: "화면",
+      requirement: "상세기능",
+    });
     setPlanningIaNodes(nodes);
     setPlanningIaEdges(edges);
   }, [planningIaRoot]);
@@ -904,12 +909,12 @@ export function App(): JSX.Element {
             <ProjectGrid projects={projects} onOpenProject={openProject} />
           </div>
         ) : dashStage === "skeleton" ? (
-          <div className="dash-body">
+          <div className={`dash-body${["features", "ia", "flow"].includes(activePlanTab) ? " dash-body--wide" : ""}`}>
             {planTabsAvail.length > 0 && (
               <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 12 }} data-testid="plan-tabs">
                 {planningPrd && planTabBtn("prd", "PRD")}
                 {planningFeatures && planTabBtn("features", "기능명세서")}
-                {planningIaRoot && planTabBtn("ia", "정보구조(IA)")}
+                {planningIaRoot && planTabBtn("ia", "화면 구조")}
                 {planningWireframe && planTabBtn("wire", "기획 와이어")}
                 {planningUserFlow && planTabBtn("flow", "유저플로우")}
               </div>
@@ -954,6 +959,7 @@ export function App(): JSX.Element {
                     nodesDraggable={false}
                     onNodeClick={onFeatureNodeClick}
                     fitView
+                    fitViewOptions={{ minZoom: 0.7, maxZoom: 1 }}
                   >
                     <Background />
                     <Controls />
@@ -964,7 +970,7 @@ export function App(): JSX.Element {
             {/* 기획 단계 IA(docs/planning/features.md 화면목록) — 있으면 화면 1급 노드 IA를 toIAFlow로 렌더 */}
             {planningIaRoot && activePlanTab === "ia" && (
               <section className="dash-planning-ia" data-testid="planning-ia">
-                <h3 className="dash-h">{dashProject?.displayName} — 정보구조(IA): 화면 1급 노드</h3>
+                <h3 className="dash-h">{dashProject?.displayName} — 화면 구조</h3>
                 <div className="dash-plan-flow">
                   <ReactFlow
                     key="d-planning-ia"
@@ -974,6 +980,7 @@ export function App(): JSX.Element {
                     nodesDraggable={false}
                     onNodeClick={onIaNodeClick}
                     fitView
+                    fitViewOptions={{ minZoom: 0.7, maxZoom: 1 }}
                   >
                     <Background />
                     <Controls />
@@ -1030,6 +1037,7 @@ export function App(): JSX.Element {
                     onNodeDragStop={onPlanningFlowNodeDragStop}
                     onNodeClick={onFlowNodeClick}
                     fitView
+                    fitViewOptions={{ minZoom: 0.7, maxZoom: 1 }}
                   >
                     <Background />
                     <Controls />

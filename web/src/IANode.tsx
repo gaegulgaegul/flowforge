@@ -11,7 +11,7 @@ const KIND_STYLE: Record<IANodeKind, { accent: string; bg: string; tag: string }
 };
 
 export function IANode({ data }: NodeProps): JSX.Element {
-  const { label, kind, detail, scenarioCount, verbose } = data as IANodeData;
+  const { label, kind, detail, scenarioCount, verbose, tag } = data as IANodeData;
   const s = KIND_STYLE[kind] ?? KIND_STYLE.requirement;
   return (
     <div
@@ -21,7 +21,7 @@ export function IANode({ data }: NodeProps): JSX.Element {
     >
       <Handle type="target" position={Position.Left} className="spec-handle" />
       <div className="ia-node-head">
-        <span className="ia-node-tag" style={{ color: s.accent }}>{s.tag}</span>
+        <span className="ia-node-tag" style={{ color: s.accent }}>{tag ?? s.tag}</span>
         {verbose && scenarioCount > 0 && (
           <span className="ia-node-badge" style={{ borderColor: s.accent, color: s.accent }}>
             기준 {scenarioCount}

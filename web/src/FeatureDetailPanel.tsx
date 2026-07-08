@@ -74,6 +74,7 @@ export function FeatureDetailPanel({ node, onClose, onSelectById, onSelectScreen
   const then = (node as { then?: string } | null)?.then;
 
   const childRefs: readonly FeatureChildRef[] = node?.childRefs ?? [];
+  const parentRef = node?.parentRef;
   const path: readonly string[] = node?.path ?? [];
 
   return (
@@ -225,6 +226,27 @@ export function FeatureDetailPanel({ node, onClose, onSelectById, onSelectScreen
                       📝
                     </span>
                     <span>{node.memo}</span>
+                  </div>
+                </section>
+              )}
+
+              {/* 상위 노드(있을 때만 — 요구사항 최상위는 부모 없음). 클릭 시 부모로 전환. */}
+              {parentRef && (
+                <section className="feature-detail-field">
+                  <div className="feature-detail-label">상위 노드</div>
+                  <div className="feature-detail-childlist">
+                    <button
+                      type="button"
+                      className="feature-detail-childitem"
+                      onClick={() => onSelectById?.(parentRef.id)}
+                      disabled={!onSelectById}
+                    >
+                      <span className="feature-detail-child-arrow" aria-hidden="true" style={{ order: -1 }}>
+                        ↑
+                      </span>
+                      <span className="feature-detail-child-label">{parentRef.label}</span>
+                      <span className="feature-detail-child-kind">· {KIND_META[parentRef.kind].tag}</span>
+                    </button>
                   </div>
                 </section>
               )}

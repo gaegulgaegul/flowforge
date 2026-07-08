@@ -40,6 +40,8 @@ export interface FeatureNodeData extends Record<string, unknown> {
   path: readonly string[];
   /** 자식 노드 요약 목록(상세 패널의 "자식 노드" 섹션용). 트리에서 파생. */
   childRefs: readonly FeatureChildRef[];
+  /** 부모 노드 요약(상세 패널의 "상위 노드" 섹션용). 트리에서 파생. 요구사항(최상위)은 undefined. */
+  parentRef?: FeatureChildRef;
   /**
    * capability별 audit 배지(planning-feature-audit-badge, D-6) — 요구사항 노드만 채워짐.
    * audit 맵 미제공/빈 맵(fetch 실패·미감사 프로젝트)이면 undefined(배지 없음). web에서 파생.
@@ -76,21 +78,24 @@ function flatten(start: FeatureTreeNode): {
   nodes: FeatureTreeNode[];
   edges: Array<{ from: string; to: string }>;
   paths: Map<string, string[]>;
+  parents: Map<string, FeatureTreeNode>;
 } {
   const nodes: FeatureTreeNode[] = [];
   const edges: Array<{ from: string; to: string }> = [];
   const paths = new Map<string, string[]>();
+  const parents = new Map<string, FeatureTreeNode>();
   const walk = (n: FeatureTreeNode, ancestors: readonly string[]) => {
     const here = [...ancestors, n.label];
     nodes.push(n);
     paths.set(n.id, here);
     for (const c of n.children) {
       edges.push({ from: n.id, to: c.id });
+      parents.set(c.id, n); // 각 요구사항을 독립 flatten하므로 요구사항(start) 자신은 부모 없음(정답).
       walk(c, here);
     }
   };
   walk(start, []);
-  return { nodes, edges, paths };
+  return { nodes, edges, paths, parents };
 }
 
 /** dagre 좌→우(LR) 트리 레이아웃 → RF nodes/edges.
@@ -123,11 +128,13 @@ export function toFeatureTreeFlow(
   const featnodes: FeatureTreeNode[] = [];
   const featedges: Array<{ from: string; to: string }> = [];
   const featpaths = new Map<string, string[]>();
+  const featparents = new Map<string, FeatureTreeNode>();
   for (const req of root.children) {
-    const { nodes, edges, paths } = flatten(req);
+    const { nodes, edges, paths, parents } = flatten(req);
     featnodes.push(...nodes);
     featedges.push(...edges);
     for (const [id, p] of paths) featpaths.set(id, p);
+    for (const [id, par] of parents) featparents.set(id, par);
   }
 
   const g = new dagre.graphlib.Graph();
@@ -164,6 +171,11 @@ export function toFeatureTreeFlow(
         // 상세 패널용 파생 필드(빌더/타입/골든 무저촉 — web에서 트리 구조로만 계산).
         path: featpaths.get(n.id) ?? [n.label],
         childRefs: n.children.map((c) => ({ id: c.id, label: c.label, kind: c.kind })),
+        // 부모 노드 요약 — 상위 노드로 전환용. 요구사항(최상위)은 부모 없음 → 섹션 생략.
+        ...((): { parentRef?: FeatureChildRef } => {
+          const p = featparents.get(n.id);
+          return p ? { parentRef: { id: p.id, label: p.label, kind: p.kind } } : {};
+        })(),
       },
       type: "featureTree",
     };

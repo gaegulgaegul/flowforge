@@ -26,6 +26,8 @@ export interface IANodeData extends Record<string, unknown> {
   parentId?: string;
   /** 기획 IA 화면 노드의 원본 화면 id(server가 실어줌). 상세 패널 화면 칩 딥링크의 매칭 원천. */
   screenId?: string;
+  /** kind 기본 태그(변경/기능군/요구사항) 오버라이드 — 기획 IA는 화면목록/화면/상세기능 어휘. 없으면 IANode가 KIND_STYLE 기본 사용. */
+  tag?: string;
 }
 
 const NODE_W = 220;
@@ -53,8 +55,15 @@ function flatten(root: IANode): {
   return { nodes, edges, parents };
 }
 
-/** dagre 좌→우(LR) 트리 레이아웃 → RF nodes/edges. verbose면 노드 높이↑ */
-export function toIAFlow(root: IANode, verbose: boolean): { nodes: Node<IANodeData>[]; edges: Edge[] } {
+/**
+ * dagre 좌→우(LR) 트리 레이아웃 → RF nodes/edges. verbose면 노드 높이↑
+ * tagByKind: kind 기본 태그(변경/기능군/요구사항) 오버라이드 — 기획 IA만 화면 어휘 주입. 미전달이면 change IA 기본 유지.
+ */
+export function toIAFlow(
+  root: IANode,
+  verbose: boolean,
+  tagByKind?: Partial<Record<IANodeKind, string>>,
+): { nodes: Node<IANodeData>[]; edges: Edge[] } {
   const { nodes: ianodes, edges: iaedges, parents } = flatten(root);
   const h = verbose ? NODE_H_VERBOSE : NODE_H_SIMPLE;
 
@@ -82,6 +91,8 @@ export function toIAFlow(root: IANode, verbose: boolean): { nodes: Node<IANodeDa
         ...(parent ? { parentLabel: parent.label, parentId: parent.id } : {}),
         // 화면 노드에만 실린 원본 screenId 통과(server IANode.screenId) — 칩 딥링크 문자열 동치 매칭용.
         ...(n.screenId ? { screenId: n.screenId } : {}),
+        // kind 태그 오버라이드(기획 IA 화면 어휘). 없으면 IANode가 KIND_STYLE 기본 사용.
+        ...(tagByKind?.[n.kind] ? { tag: tagByKind[n.kind] } : {}),
       },
       type: "ia",
     };
