@@ -1,0 +1,169 @@
+{
+  "change": "public-surface-hardening",
+  "verifiedAt": "2026-07-08T14:47:21+09:00",
+  "finalJudgment": "조건부",
+  "counts": {
+    "pass": 5,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 1
+  },
+  "archiveGate": {
+    "open": false,
+    "reason": "검증 안 함 0건 / SKIPPED 1건"
+  },
+  "requirements": [
+    {
+      "title": "쓰기 라우트는 2차 인증 게이트를 통과해야 한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "대량": "인증 판정은 단일 요청의 헤더/토큰 단위(요청당 1회 검증)라 '대량 데이터' 입력 클래스가 본질적으로 없음. 배치 상한은 apply 핸들러(별도 change)의 관심사이며 게이트 자체는 요청 단위."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "유효 CF Access JWT → 쓰기 허용",
+          "layer": "server",
+          "means": "단위: cfAccess.test.ts '유효 JWT → payload 반환'(픽스처 RSA 키쌍) + 통합: writeAuth.test.ts (게이트 배선). 🔴 라이브 CF Access JWT(실 cloudflared 헤더)는 CF Zero Trust 대시보드 미등록으로 미실행.",
+          "basis": "root=server/; jest ts-jest ESM; cfAccess.test.ts:108 · writeAuth 게이트. 라이브 엣지 JWKS는 인프라 미프로비저닝.",
+          "result": "SKIPPED",
+          "evidence": {
+            "kind": "text",
+            "caption": "코드+단위검증은 존재(RS256 서명·aud·iss·exp·nbf·email 전 단계 22 케이스 PASS)하나, 실 cloudflared가 붙이는 라이브 Cf-Access-Jwt-Assertion 경로는 CF Zero Trust Application 미등록으로 실환경 미실행 → SKIPPED(환경 미구성). EDGE_AUTH.md에 등록 절차·검증 curl 남김.",
+            "text": "cfAccess.test.ts: 22/22 PASS (유효 JWT payload 반환, aud 배열 포함 통과, kid 미스 1회 재조회 후 통과 등). 라이브 엣지 JWT 실증 = 미실행(인프라)."
+          }
+        },
+        {
+          "scenario": "서명·aud 불일치·만료·email 부재는 401",
+          "layer": "server",
+          "means": "실서버(8909, 토큰 게이트 활성) 무자격 쓰기 5종 전부 401 + 401 body={\"error\":\"unauthorized\"}(내부 사유 미노출) + writeAuth.test.ts '무자격 401 시 대상 파일 불변'(문서·overlay 불변 THEN 검증) + cfAccess.test.ts 위조서명/본문변조/aud불일치/iss불일치/exp만료/nbf미래/email부재/빈email/alg혼동 전부 null.",
+          "basis": "격리 서버 8909 실호출(node http) + cfAccess.test.ts:117~185 + writeAuth.test.ts:92.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "lang": "log",
+            "caption": "격리 서버 8909(FLOWFORGE_WRITE_TOKEN 활성) 실호출 — 무자격 쓰기 5종 전부 401, body 유출 없음",
+            "text": "1 PUT changes/wowa/layout       (no auth) -> HTTP 401\n2 PUT docs user-flow/layout      (no auth) -> HTTP 401\n3 POST prd apply                 (no auth) -> HTTP 401\n4 POST features apply            (no auth) -> HTTP 401\n5 POST user-flow apply           (no auth) -> HTTP 401\n401 body: {\"error\":\"unauthorized\"}\n[unit] cfAccess.test.ts 위조서명/본문변조/aud/iss/exp/nbf/email부재/빈email/alg혼동 → 전부 null; writeAuth.test.ts '무자격 401 시 대상 파일 불변' PASS"
+          }
+        },
+        {
+          "scenario": "토큰 폴백",
+          "layer": "server",
+          "means": "실서버(8909) 올바른 Bearer testtoken123 → 게이트 통과(HTTP 404 = 핸들러 도달, 401 아님) / 틀린 토큰 WRONGTOKEN → 401 / 상수시간 비교(crypto.timingSafeEqual, 길이 불일치도 상수시간 경로). writeAuth.test.ts 'Bearer 일치 통과'·'불일치 401'.",
+          "basis": "격리 서버 8909 실호출 + writeAuth.test.ts:110·125 + requireWriteAuth.ts constantTimeEqual(timingSafeEqual).",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "lang": "log",
+            "caption": "격리 서버 8909 — 올바른 토큰=게이트 통과(404≠401), 틀린 토큰=401",
+            "text": "PUT layout (wrong token)   -> HTTP 401   (거부)\nPUT layout (correct token) -> HTTP 404   (게이트 통과 후 핸들러 도달 — change 부재로 404, 401 아님 = 통과 확인)\n[unit] writeAuth.test.ts: Bearer 일치→통과 / 불일치→401 PASS · constantTimeEqual=timingSafeEqual"
+          }
+        },
+        {
+          "scenario": "미설정 = 현행 동작(개발 모드)",
+          "layer": "server",
+          "means": "실서버(8910, env 미설정) 기동 로그 '[flowforge] write auth disabled — dev mode' + 무자격 쓰기 5종 전부 401 아님(HTTP 404=게이트 우회 후 핸들러 도달) + writeAuth.test.ts '게이트 없음—무자격이 401 아님'·'prd apply 정상 반영(회귀 0)'.",
+          "basis": "격리 서버 8910 실호출 + 기동 로그 + writeAuth.test.ts:161·173.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "lang": "log",
+            "caption": "격리 서버 8910(env 미설정) — 기동 로그 dev 모드 + 무자격 쓰기 5종 전부 401 아님",
+            "text": "[flowforge] write auth disabled — dev mode (writes are public until env is set)\n1 PUT changes/wowa/layout  (no auth) -> HTTP 404  (not 401 = gate bypassed OK)\n2 PUT docs user-flow/layout(no auth) -> HTTP 404\n3 POST prd apply           (no auth) -> HTTP 404\n4 POST features apply      (no auth) -> HTTP 404\n5 POST user-flow apply     (no auth) -> HTTP 404\ndev-mode verdict: PASS — no write returned 401 (현행 동작 유지)\n[unit] writeAuth.test.ts: 게이트 없음 무자격 401 아님 / prd apply 정상 반영 회귀 0 PASS"
+          }
+        },
+        {
+          "scenario": "읽기 라우트는 이 게이트의 대상이 아니다",
+          "layer": "server",
+          "means": "실서버(8909, 게이트 활성) 무자격 GET /api/projects → HTTP 200(게이트 밖 정상 응답, 401 아님). requireWriteAuth는 쓰기 5종 라우트에만 명시 부착(전역 app.use 아님) — GET 라우트에 미부착 정적 확인.",
+          "basis": "격리 서버 8909 실호출(GET /api/projects=200) + 정적: graph.ts/docs.ts 라우트 부착은 PUT/POST 5종에만(GET 라우트에 requireWriteAuth 없음).",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "lang": "log",
+            "caption": "격리 서버 8909(게이트 활성) — 무자격 GET은 게이트 밖(200)",
+            "text": "GET /api/projects       (no auth) -> HTTP 200  (게이트 밖 정상)\nGET /api/changes/wowa    (no auth) -> HTTP 404  (change 부재 404, 401 아님 = 게이트 밖)\n[static] requireWriteAuth 부착 = PUT/POST 쓰기 5종에만; GET 라우트 미부착 확인"
+          }
+        }
+      ]
+    },
+    {
+      "title": "와일드카드 CORS를 제거한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "에러경로": "CORS origin 화이트리스트 판정은 순수 문자열 매칭(네트워크·I/O·DB 없음)이라 '네트워크/DB 실패' 에러 경로가 본질적으로 없음. 미설정=헤더 미부착이 fail-safe 기본값.",
+          "동시성": "corsMiddleware()는 기동 시 1회 env 파싱 후 불변 화이트리스트를 클로저로 고정 — 요청 간 공유 가변 상태가 없어 race condition 클래스가 없음.",
+          "대량": "화이트리스트는 소수 오리진 문자열의 콤마 구분 목록(운영상 한 자릿수)이라 '대량 데이터' 입력 클래스가 실질적으로 없음(콤마 다중·빈 항목 제거는 경계값에서 커버)."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "기본 = CORS 헤더 없음",
+          "layer": "server",
+          "means": "실서버(8910/8909, FLOWFORGE_CORS_ORIGIN 미설정) evil.com Origin 요청 → Access-Control-Allow-Origin 헤더 부재 + 화이트리스트 활성(8911, good.example.com) 시 good만 ACAO 반영·evil은 부재. corsOptions.test.ts(미설정→빈배열, 와일드카드 '*' 무시, corsMiddleware 미설정→null) + cors.test.ts(미설정→ACAO 없음).",
+          "basis": "격리 서버 8909/8910/8911 실호출 + corsOptions.test.ts(7) + cors.test.ts(1). index.ts app.use(cors()) 와일드카드 grep 0.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "lang": "log",
+            "caption": "격리 서버 — 미설정 시 ACAO 부재, 화이트리스트 시 허용 오리진만",
+            "text": "[8909/8910 미설정] evil.com Origin -> ACAO header ABSENT (expected)\n[8911 whitelist=good.example.com]\n  whitelisted Origin -> ACAO: \"https://good.example.com\" (PASS)\n  evil Origin        -> ACAO: ABSENT (PASS — not whitelisted)\n[static] index.ts: app.use(cors()) 와일드카드 제거(grep 0), corsMiddleware() 화이트리스트만\n[unit] corsOptions.test.ts 7/7 (와일드카드 '*' 무시 포함) + cors.test.ts 1/1 PASS"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 384,
+      "passed": 384,
+      "failed": 0,
+      "basis": "root=server/; scripts.test → jest(ts-jest ESM); 36 suites / 384 tests (cfAccess 22 · writeAuth 7 · corsOptions 7 · cors 1 신규 37, 기존 347). 올바른 워크스페이스 설정으로 실행 시 EXIT 0 · success:true.",
+      "reason": "빌드(shared/server tsc + web vite) EXIT 0 · 타입체크(strict tsc --noEmit 3워크스페이스) EXIT 0 · jest 384/384 PASS · 격리 서버 3종(토큰 게이트/dev 모드/CORS 화이트리스트)으로 쓰기 5종·CORS·게이트 밖 GET 실동작 재검증."
+    },
+    {
+      "layer": "web",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "이 change는 server-only(design: web 무변경 — same-origin fetch, CF Access 쿠키 자동 동반). 웹 UI로 재현할 acceptance scenario 없음.",
+      "reason": "적용 불가: 변경 표면이 server(인증 미들웨어·CORS)에 국한 — web 코드 무변경."
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "네이티브 레이어 없음(웹 SPA + node 서버 모노레포).",
+      "reason": "적용 불가: 네이티브 iOS 표면 없음."
+    }
+  ],
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260708-1447.html"
+}

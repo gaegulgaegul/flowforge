@@ -1,0 +1,64 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — public-surface-hardening</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#9a6700;background:#fff8e1;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — public-surface-hardening</h1>
+<p class="muted">검증일: 2026-07-08T14:47:21+09:00 · 환경: server: APPLICABLE (root=server/; scripts.test → jest(ts-jest ESM); test files: 36 suites / 384 tests). web/android/ios: SKIPPED (변경이 server-only — 쓰기 인증·CORS는 web 코드 무변경, 네이티브 없음). · run: run-20260708-1447</p>
+<p><span class="banner">~ 최종 판정: 조건부</span></p>
+<p class="muted">PASS 5 · FAIL 0 · 검증 안 함 0 · SKIPPED 1</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>쓰기 라우트는 2차 인증 게이트를 통과해야 한다</td><td>유효 CF Access JWT → 쓰기 허용</td><td>server</td><td>단위: cfAccess.test.ts &#x27;유효 JWT → payload 반환&#x27;(픽스처 RSA 키쌍) + 통합: writeAuth.test.ts (게이트 배선). 🔴 라이브 CF Access JWT(실 cloudflared 헤더)는 CF Zero Trust 대시보드 미등록으로 미실행.</td><td><code>root=server/; jest ts-jest ESM; cfAccess.test.ts:108 · writeAuth 게이트. 라이브 엣지 JWKS는 인프라 미프로비저닝.</code></td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">cfAccess.test.ts: 22/22 PASS (유효 JWT payload 반환, aud 배열 포함 통과, kid 미스 1회 재조회 후 통과 등). 라이브 엣지 JWT 실증 = 미실행(인프라).</pre></td></tr>
+<tr><td>쓰기 라우트는 2차 인증 게이트를 통과해야 한다</td><td>서명·aud 불일치·만료·email 부재는 401</td><td>server</td><td>실서버(8909, 토큰 게이트 활성) 무자격 쓰기 5종 전부 401 + 401 body={&quot;error&quot;:&quot;unauthorized&quot;}(내부 사유 미노출) + writeAuth.test.ts &#x27;무자격 401 시 대상 파일 불변&#x27;(문서·overlay 불변 THEN 검증) + cfAccess.test.ts 위조서명/본문변조/aud불일치/iss불일치/exp만료/nbf미래/email부재/빈email/alg혼동 전부 null.</td><td><code>격리 서버 8909 실호출(node http) + cfAccess.test.ts:117~185 + writeAuth.test.ts:92.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">1 PUT changes/wowa/layout       (no auth) -&gt; HTTP 401
+2 PUT docs user-flow/layout      (no auth) -&gt; HTTP 401
+3 POST prd apply                 (no auth) -&gt; HTTP 401
+4 POST features apply            (no auth) -&gt; HTTP 401
+5 POST user-flow apply           (no auth) -&gt; HTTP 401
+401 body: {&quot;error&quot;:&quot;unauthorized&quot;}
+[unit] cfAccess.test.ts 위조서명/본문변조/aud/iss/exp/nbf/email부재/빈email/alg혼동 → 전부 null; writeAuth.test.ts &#x27;무자격 401 시 대상 파일 불변&#x27; PASS</pre></td></tr>
+<tr><td>쓰기 라우트는 2차 인증 게이트를 통과해야 한다</td><td>토큰 폴백</td><td>server</td><td>실서버(8909) 올바른 Bearer testtoken123 → 게이트 통과(HTTP 404 = 핸들러 도달, 401 아님) / 틀린 토큰 WRONGTOKEN → 401 / 상수시간 비교(crypto.timingSafeEqual, 길이 불일치도 상수시간 경로). writeAuth.test.ts &#x27;Bearer 일치 통과&#x27;·&#x27;불일치 401&#x27;.</td><td><code>격리 서버 8909 실호출 + writeAuth.test.ts:110·125 + requireWriteAuth.ts constantTimeEqual(timingSafeEqual).</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">PUT layout (wrong token)   -&gt; HTTP 401   (거부)
+PUT layout (correct token) -&gt; HTTP 404   (게이트 통과 후 핸들러 도달 — change 부재로 404, 401 아님 = 통과 확인)
+[unit] writeAuth.test.ts: Bearer 일치→통과 / 불일치→401 PASS · constantTimeEqual=timingSafeEqual</pre></td></tr>
+<tr><td>쓰기 라우트는 2차 인증 게이트를 통과해야 한다</td><td>미설정 = 현행 동작(개발 모드)</td><td>server</td><td>실서버(8910, env 미설정) 기동 로그 &#x27;[flowforge] write auth disabled — dev mode&#x27; + 무자격 쓰기 5종 전부 401 아님(HTTP 404=게이트 우회 후 핸들러 도달) + writeAuth.test.ts &#x27;게이트 없음—무자격이 401 아님&#x27;·&#x27;prd apply 정상 반영(회귀 0)&#x27;.</td><td><code>격리 서버 8910 실호출 + 기동 로그 + writeAuth.test.ts:161·173.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">[flowforge] write auth disabled — dev mode (writes are public until env is set)
+1 PUT changes/wowa/layout  (no auth) -&gt; HTTP 404  (not 401 = gate bypassed OK)
+2 PUT docs user-flow/layout(no auth) -&gt; HTTP 404
+3 POST prd apply           (no auth) -&gt; HTTP 404
+4 POST features apply      (no auth) -&gt; HTTP 404
+5 POST user-flow apply     (no auth) -&gt; HTTP 404
+dev-mode verdict: PASS — no write returned 401 (현행 동작 유지)
+[unit] writeAuth.test.ts: 게이트 없음 무자격 401 아님 / prd apply 정상 반영 회귀 0 PASS</pre></td></tr>
+<tr><td>쓰기 라우트는 2차 인증 게이트를 통과해야 한다</td><td>읽기 라우트는 이 게이트의 대상이 아니다</td><td>server</td><td>실서버(8909, 게이트 활성) 무자격 GET /api/projects → HTTP 200(게이트 밖 정상 응답, 401 아님). requireWriteAuth는 쓰기 5종 라우트에만 명시 부착(전역 app.use 아님) — GET 라우트에 미부착 정적 확인.</td><td><code>격리 서버 8909 실호출(GET /api/projects=200) + 정적: graph.ts/docs.ts 라우트 부착은 PUT/POST 5종에만(GET 라우트에 requireWriteAuth 없음).</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">GET /api/projects       (no auth) -&gt; HTTP 200  (게이트 밖 정상)
+GET /api/changes/wowa    (no auth) -&gt; HTTP 404  (change 부재 404, 401 아님 = 게이트 밖)
+[static] requireWriteAuth 부착 = PUT/POST 쓰기 5종에만; GET 라우트 미부착 확인</pre></td></tr>
+<tr><td>와일드카드 CORS를 제거한다</td><td>기본 = CORS 헤더 없음</td><td>server</td><td>실서버(8910/8909, FLOWFORGE_CORS_ORIGIN 미설정) evil.com Origin 요청 → Access-Control-Allow-Origin 헤더 부재 + 화이트리스트 활성(8911, good.example.com) 시 good만 ACAO 반영·evil은 부재. corsOptions.test.ts(미설정→빈배열, 와일드카드 &#x27;*&#x27; 무시, corsMiddleware 미설정→null) + cors.test.ts(미설정→ACAO 없음).</td><td><code>격리 서버 8909/8910/8911 실호출 + corsOptions.test.ts(7) + cors.test.ts(1). index.ts app.use(cors()) 와일드카드 grep 0.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">[8909/8910 미설정] evil.com Origin -&gt; ACAO header ABSENT (expected)
+[8911 whitelist=good.example.com]
+  whitelisted Origin -&gt; ACAO: &quot;https://good.example.com&quot; (PASS)
+  evil Origin        -&gt; ACAO: ABSENT (PASS — not whitelisted)
+[static] index.ts: app.use(cors()) 와일드카드 제거(grep 0), corsMiddleware() 화이트리스트만
+[unit] corsOptions.test.ts 7/7 (와일드카드 &#x27;*&#x27; 무시 포함) + cors.test.ts 1/1 PASS</pre></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>쓰기 라우트는 2차 인증 게이트를 통과해야 한다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="인증 판정은 단일 요청의 헤더/토큰 단위(요청당 1회 검증)라 &#x27;대량 데이터&#x27; 입력 클래스가 본질적으로 없음. 배치 상한은 apply 핸들러(별도 change)의 관심사이며 게이트 자체는 요청 단위.">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>와일드카드 CORS를 제거한다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="CORS origin 화이트리스트 판정은 순수 문자열 매칭(네트워크·I/O·DB 없음)이라 &#x27;네트워크/DB 실패&#x27; 에러 경로가 본질적으로 없음. 미설정=헤더 미부착이 fail-safe 기본값.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="corsMiddleware()는 기동 시 1회 env 파싱 후 불변 화이트리스트를 클로저로 고정 — 요청 간 공유 가변 상태가 없어 race condition 클래스가 없음.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="화이트리스트는 소수 오리진 문자열의 콤마 구분 목록(운영상 한 자릿수)이라 &#x27;대량 데이터&#x27; 입력 클래스가 실질적으로 없음(콤마 다중·빈 항목 제거는 경계값에서 커버).">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>384</td><td>384</td><td>0</td><td>빌드(shared/server tsc + web vite) EXIT 0 · 타입체크(strict tsc --noEmit 3워크스페이스) EXIT 0 · jest 384/384 PASS · 격리 서버 3종(토큰 게이트/dev 모드/CORS 화이트리스트)으로 쓰기 5종·CORS·게이트 밖 GET 실동작 재검증.</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가: 변경 표면이 server(인증 미들웨어·CORS)에 국한 — web 코드 무변경.</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가: 네이티브 iOS 표면 없음.</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#9a6700;background:#fff8e1">~ 조건부</span> <strong>차단 (검증 안 함 0건 / SKIPPED 1건)</strong></p>
+<p class="muted">archiveGate.open = false (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>
