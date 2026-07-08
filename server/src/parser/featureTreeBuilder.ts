@@ -22,6 +22,11 @@ const RE_CAPABILITY = /<!--\s*capability:\s*([A-Za-z0-9_-]+)\s*-->/;
 // capability 주석과 네임스페이스가 겹치지 않도록 `memo:` 접두어를 명시적으로 요구하고,
 // 캡처는 `-->` 직전까지의 임의 한 줄 텍스트(trim은 아래에서). 모든 kind에 붙일 수 있다.
 const RE_MEMO = /<!--\s*memo:\s*(.*?)\s*-->/;
+// 동작 시나리오 WHEN/THEN(planning-when-then-authoring). RE_MEMO 동형 — 노드 헤더 아래
+// `<!-- when: 한 줄 -->` `<!-- then: 한 줄 -->`. 접두어 명시로 capability/memo와 네임스페이스
+// 분리, 한 노드에 각 최대 1개(뒤 매치가 덮어쓰지 않도록 아래에서 첫 매치만 채택, D-1).
+const RE_WHEN = /<!--\s*when:\s*(.*?)\s*-->/;
+const RE_THEN = /<!--\s*then:\s*(.*?)\s*-->/;
 // 속성은 줄 전체가 `(중요도:…, 상태:…)`인 속성 줄에서만 인식한다(^…$ 앵커). 본문 산문 중간에
 // 같은 패턴이 들어가도 오매칭하지 않도록 줄 시작·끝에 고정(review CONCERN 2026-06-28).
 const RE_ATTRS = /^\s*\(\s*중요도:\s*(낮음|중간|높음)?\s*,\s*상태:\s*(시작전|진행중|완료|중단)?\s*\)\s*$/;
@@ -38,6 +43,9 @@ interface MutableNode {
   status: FeatureStatus | "";
   /** 경량 아이템 메모(없으면 undefined → freeze 시 필드 자체 생략, 비파괴). */
   memo?: string;
+  /** 동작 시나리오 트리거/기대결과(없으면 undefined → freeze 시 생략, memo 동형). */
+  when?: string;
+  then?: string;
   children: MutableNode[];
 }
 
@@ -108,6 +116,12 @@ export function buildFeatureTreeFromLines(lines: readonly string[]): FeatureTree
     // 빈 메모(`<!-- memo:  -->`)는 무시해 빈 필드 노이즈를 막는다.
     const memo = line.match(RE_MEMO);
     if (memo && memo[1]) current.memo = memo[1];
+    // 동작 시나리오 WHEN/THEN: memo와 동일 귀속 규칙(직전 헤더 노드·모든 kind·빈 값 무시).
+    // 한 노드에 각 최대 1개 — 첫 매치만 채택하고 뒤 매치는 무시한다(D-1).
+    const when = line.match(RE_WHEN);
+    if (when && when[1] && current.when === undefined) current.when = when[1];
+    const then = line.match(RE_THEN);
+    if (then && then[1] && current.then === undefined) current.then = then[1];
   }
 
   return { root: freeze(root) };
@@ -124,6 +138,9 @@ function freeze(n: MutableNode): FeatureTreeNode {
     status: n.status,
     // memo는 있을 때만 실어 비메모 노드의 형태를 바꾸지 않는다(옵셔널·비파괴).
     ...(n.memo !== undefined ? { memo: n.memo } : {}),
+    // when/then도 동일(옵셔널·비파괴 — 한쪽만 있어도 그쪽만 싣는다).
+    ...(n.when !== undefined ? { when: n.when } : {}),
+    ...(n.then !== undefined ? { then: n.then } : {}),
     children: n.children.map(freeze),
   };
 }

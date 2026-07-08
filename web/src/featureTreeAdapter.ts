@@ -30,6 +30,9 @@ export interface FeatureNodeData extends Record<string, unknown> {
   status: FeatureStatus | "";
   /** 경량 아이템 메모(lightweight-item-memo). 부착된 노드만 채워짐(없으면 undefined). */
   memo?: string;
+  /** 동작 시나리오 WHEN/THEN(planning-when-then-authoring). 저작된 노드만 채워짐(없으면 undefined). */
+  when?: string;
+  then?: string;
   /**
    * 원본 위치(features.md 헤더 경로) — 조상 라벨들 `[## , ### , ####]`. 트리 구조에서 파생
    * (빌더/타입/골든 무저촉 — server를 안 건드리고 web adapter에서 조상을 수집). 루트(가상)는 제외.
@@ -149,6 +152,9 @@ export function toFeatureTreeFlow(
         status: n.status,
         // memo는 있을 때만 전달(비메모 노드는 undefined → 렌더 무영향).
         ...(n.memo !== undefined ? { memo: n.memo } : {}),
+        // when/then도 동일 — 상세 패널이 (when || then)일 때만 ⚡ 시나리오 섹션을 렌더.
+        ...(n.when !== undefined ? { when: n.when } : {}),
+        ...(n.then !== undefined ? { then: n.then } : {}),
         // audit 배지 — 요구사항 노드만, 빈 맵/미제공이면 전부 undefined(D-6). 기능/상세기능은 항상 없음.
         ...(hasAudit && n.kind === "requirement" && n.capability !== ""
           ? { audit: auditByCapability?.[n.capability] ?? UNAUDITED }

@@ -42,6 +42,17 @@ export interface FeatureTreeNode {
    * 협업 코멘트(스레드·멘션·답글) 아님 — 경량 개인 메모.
    */
   readonly memo?: string;
+  /**
+   * 동작 시나리오 트리거(planning-when-then-authoring). features.md에서 노드 헤더 아래
+   * `<!-- when: 한 줄 -->` 주석으로 부착하며, 없으면 필드 자체가 없다(비파괴 옵셔널, memo 동형).
+   * then 없이 when만 있어도 유효하다.
+   */
+  readonly when?: string;
+  /**
+   * 동작 시나리오 기대 결과(planning-when-then-authoring). `<!-- then: 한 줄 -->` 주석.
+   * when 없이 then만 있어도 유효하다(상세 패널이 각각 있을 때만 렌더).
+   */
+  readonly then?: string;
   readonly children: readonly FeatureTreeNode[];
 }
 
