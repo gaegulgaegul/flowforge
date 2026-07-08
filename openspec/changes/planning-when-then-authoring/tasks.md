@@ -4,7 +4,7 @@
 
 ### Sequential: 데이터 경로 (memo 선례 복제)
 
-- [ ] 1.1 RED: featureTreeBuilder 단위 테스트 — `<!-- when: -->` `<!-- then: -->` 파싱(양쪽·when만·then만·부재), capability/priority/memo·다른 노드 무영향 (memo 테스트 패턴 복제)
+- [x] 1.1 RED: featureTreeBuilder 단위 테스트 — `<!-- when: -->` `<!-- then: -->` 파싱(양쪽·when만·then만·부재), capability/priority/memo·다른 노드 무영향 (memo 테스트 패턴 복제)
 - [ ] 1.2 GREEN: shared `FeatureNode.when?: string`·`then?: string`(additive) + featureTreeBuilder RE_WHEN/RE_THEN(RE_MEMO 동형, featureTreeBuilder 내부만) + featureTreeAdapter가 노드 data로 when/then 전달(FeatureDetailPanel 무수정 — 이미 렌더)
 
 ### Sequential: 도그푸딩 + 검증 게이트 (마지막 필수 — dev-verify)

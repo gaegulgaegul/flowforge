@@ -237,4 +237,119 @@ describe("featureTreeBuilder", () => {
       }
     });
   });
+
+  describe("동작 시나리오 WHEN/THEN 저작(planning-when-then-authoring)", () => {
+    it("`<!-- when: ... -->` `<!-- then: ... -->` 주석을 해당 노드 when/then 필드로 파싱한다(양쪽·모든 kind)", () => {
+      const md = [
+        "# 기능명세서",
+        "## 사진 업로드",
+        "<!-- capability: photo-upload -->",
+        "(중요도: 높음, 상태: 진행중)",
+        "<!-- when: 업로드 버튼 클릭 -->",
+        "<!-- then: 파일 선택 다이얼로그 표시 -->",
+        "### 단일 업로드",
+        "<!-- when: 파일 1개 드롭 -->",
+        "<!-- then: 즉시 업로드 시작 -->",
+        "#### 파일 선택",
+        "<!-- when: 탭 클릭 -->",
+        "<!-- then: 그 프로젝트 5종 뷰 로드 -->",
+      ].join("\n");
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const tree = buildDocsPlanningFeatures(docsDir)!;
+        const req = tree.root.children[0]!;
+        expect(req.when).toBe("업로드 버튼 클릭");
+        expect(req.then).toBe("파일 선택 다이얼로그 표시");
+        expect(req.children[0]!.when).toBe("파일 1개 드롭");
+        expect(req.children[0]!.then).toBe("즉시 업로드 시작");
+        expect(req.children[0]!.children[0]!.when).toBe("탭 클릭");
+        expect(req.children[0]!.children[0]!.then).toBe("그 프로젝트 5종 뷰 로드");
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("WHEN만 있는 노드는 when만 싣고 then 필드는 부재한다", () => {
+      const md = ["# 기능명세서", "## 검색", "<!-- capability: search -->", "<!-- when: 검색어 입력 -->"].join("\n");
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const req = buildDocsPlanningFeatures(docsDir)!.root.children[0]!;
+        expect(req.when).toBe("검색어 입력");
+        expect("then" in req).toBe(false);
+        expect(req.then).toBeUndefined();
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("THEN만 있는 노드는 then만 싣고 when 필드는 부재한다", () => {
+      const md = ["# 기능명세서", "## 검색", "<!-- capability: search -->", "<!-- then: 결과 목록 갱신 -->"].join("\n");
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const req = buildDocsPlanningFeatures(docsDir)!.root.children[0]!;
+        expect(req.then).toBe("결과 목록 갱신");
+        expect("when" in req).toBe(false);
+        expect(req.when).toBeUndefined();
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("when/then이 없는 노드는 필드 자체가 부재한다(비파괴 옵셔널·기존 노드 무영향)", () => {
+      const { docsDir, cleanup } = makeFeatures(FEATURES);
+      try {
+        const tree = buildDocsPlanningFeatures(docsDir)!;
+        const req = tree.root.children[0]!;
+        expect("when" in req).toBe(false);
+        expect("then" in req).toBe(false);
+        // 하위 노드도 동일하게 무영향.
+        expect("when" in req.children[0]!).toBe(false);
+        expect("then" in req.children[0]!.children[0]!).toBe(false);
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("when/then 주석은 capability/속성/memo 파싱과 공존하며 서로를 삼키지 않는다", () => {
+      const md = [
+        "# 기능명세서",
+        "## 결제",
+        "<!-- capability: payment -->",
+        "(중요도: 높음, 상태: 진행중)",
+        "<!-- memo: 결제 실패 재시도 정책 미정 -->",
+        "<!-- when: 결제 버튼 클릭 -->",
+        "<!-- then: PG 결제창 호출 -->",
+      ].join("\n");
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const req = buildDocsPlanningFeatures(docsDir)!.root.children[0]!;
+        expect(req.capability).toBe("payment");
+        expect(req.priority).toBe("높음");
+        expect(req.status).toBe("진행중");
+        expect(req.memo).toBe("결제 실패 재시도 정책 미정");
+        expect(req.when).toBe("결제 버튼 클릭");
+        expect(req.then).toBe("PG 결제창 호출");
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("빈 when/then(`<!-- when:  -->`)은 무시한다(빈 필드 노이즈 방지)", () => {
+      const md = [
+        "# 기능명세서",
+        "## 검색",
+        "<!-- capability: search -->",
+        "<!-- when:  -->",
+        "<!-- then:  -->",
+      ].join("\n");
+      const { docsDir, cleanup } = makeFeatures(md);
+      try {
+        const req = buildDocsPlanningFeatures(docsDir)!.root.children[0]!;
+        expect("when" in req).toBe(false);
+        expect("then" in req).toBe(false);
+      } finally {
+        cleanup();
+      }
+    });
+  });
 });
