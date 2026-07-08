@@ -1,0 +1,68 @@
+/**
+ * planningWireframeFixture 단위 테스트 — 목업(wireframe-mockup-deploy) → WireScreen2 픽스처.
+ *
+ * 폐기된 element 세로박스가 아니라 디바이스 프레임 레이아웃임을 데이터 수준에서 검증한다:
+ * 데스크탑=상단/사이드/본문, 모바일=상단/본문/하단바, 본문 배치(grid/stack/tree), goto 무결성.
+ */
+import type { WireScreen2 } from "@flowforge/shared";
+import {
+  buildDocsPlanningWireframe2,
+  PLANNING_WIREFRAME_FIXTURE,
+} from "../planningWireframeFixture.js";
+
+describe("planningWireframeFixture — 디바이스 프레임 레이아웃 픽스처", () => {
+  it("빌더가 픽스처 WireScreen2[]를 반환한다(docsDir 무관)", () => {
+    const screens = buildDocsPlanningWireframe2("/any/docs/dir");
+    expect(screens).toBe(PLANNING_WIREFRAME_FIXTURE);
+    expect(screens.length).toBe(4);
+  });
+
+  it("데스크탑 화면은 상단·사이드·본문 영역을 가진다(세로 목록 아님)", () => {
+    const grid = PLANNING_WIREFRAME_FIXTURE.find((s) => s.id === "grid") as WireScreen2;
+    expect(grid.device).toBe("desktop");
+    expect(grid.regions.topbar?.length).toBeGreaterThan(0);
+    expect(grid.regions.sidebar?.length).toBeGreaterThan(0);
+    expect(grid.regions.body.layout).toBe("grid");
+    expect(grid.regions.body.elements.some((e) => e.kind === "card")).toBe(true);
+  });
+
+  it("모바일 화면은 상단·본문·하단바를 가진다(사이드 없음)", () => {
+    const mobile = PLANNING_WIREFRAME_FIXTURE.find((s) => s.id === "grid-m") as WireScreen2;
+    expect(mobile.device).toBe("mobile");
+    expect(mobile.regions.topbar?.length).toBeGreaterThan(0);
+    expect(mobile.regions.bottombar?.length).toBeGreaterThan(0);
+    expect(mobile.regions.sidebar).toBeUndefined();
+  });
+
+  it("본문 배치 힌트가 화면별로 다르다(grid/stack/tree)", () => {
+    const layouts = PLANNING_WIREFRAME_FIXTURE.map((s) => s.regions.body.layout);
+    expect(layouts).toEqual(["grid", "stack", "tree", "stack"]);
+  });
+
+  it("모든 goto는 정의된 화면 id를 가리킨다(끊긴 링크 없음)", () => {
+    const ids = new Set(PLANNING_WIREFRAME_FIXTURE.map((s) => s.id));
+    for (const screen of PLANNING_WIREFRAME_FIXTURE) {
+      const regions = screen.regions;
+      const all = [
+        ...(regions.topbar ?? []),
+        ...(regions.sidebar ?? []),
+        ...(regions.bottombar ?? []),
+        ...regions.body.elements,
+      ];
+      for (const el of all) {
+        if (el.goto !== undefined) {
+          expect(ids.has(el.goto)).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("화면 id는 화면목록 규약과 공유된다(grid·skeleton·features + 모바일 grid-m)", () => {
+    expect(PLANNING_WIREFRAME_FIXTURE.map((s) => s.id)).toEqual([
+      "grid",
+      "skeleton",
+      "features",
+      "grid-m",
+    ]);
+  });
+});

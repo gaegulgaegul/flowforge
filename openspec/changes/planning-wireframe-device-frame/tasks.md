@@ -9,7 +9,7 @@
 ### Sequential: 데이터 모델 + 픽스처 (선행)
 
 - [x] 2.1 shared `WireScreen2{id,title,device,regions}` + `WireRegion`(topbar/sidebar/bottombar/body) + `WireBody{layout,elements}` + `WireElement{kind,label,goto?,span?}` 타입. 기존 Wireframe/WireBox는 change 경로용 유지(비파괴)
-- [ ] 2.2 픽스처 레이아웃 데이터: 목업 화면 3개(프로젝트 그리드=desktop 상단+사이드+그리드 / 기획뷰=desktop 상단+탭바+본문 / 기능명세=desktop 상단+트리+상세, 모바일 변형 1개)를 WireScreen2 JSON으로. `docs/planning/wireframe/*.json` 또는 서버 내장 샘플. RED: 빌더가 이 픽스처를 WireScreen2로 반환하는 단위 테스트
+- [x] 2.2 픽스처 레이아웃 데이터: 목업 화면 3개(프로젝트 그리드=desktop 상단+사이드+그리드 / 기획뷰=desktop 상단+탭바+본문 / 기능명세=desktop 상단+트리+상세, 모바일 변형 1개)를 WireScreen2 JSON으로. `docs/planning/wireframe/*.json` 또는 서버 내장 샘플. RED: 빌더가 이 픽스처를 WireScreen2로 반환하는 단위 테스트
 
 ### Sequential: 라우트 + 렌더러
 
