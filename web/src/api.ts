@@ -15,6 +15,7 @@ import type {
   PrdApplyResult,
   FeatureSuggestionQueue,
   UserFlowSuggestionQueue,
+  WireSuggestionQueue,
   CapabilityAuditSummary,
   ScreenRegistry,
 } from "@flowforge/shared";
@@ -304,6 +305,70 @@ export async function fetchDocsPlanningWireframe(
   const res = await fetch(`/api/docs/${project}/planning-wireframe`);
   if (!res.ok) throw new Error(`docs planning-wireframe ${res.status}`);
   return (await res.json()) as { project: string; screens: WireScreen2[] };
+}
+
+/**
+ * 와이어 레이아웃 제안 큐 읽기(docs/planning/wireframe.suggestions.json).
+ * 큐 없으면 빈 큐(version:1, suggestions:[]). features 제안 큐의 와이어판(WireScreen2 레이아웃 교체 제안).
+ */
+export async function fetchDocsWireframeSuggestions(
+  project: string,
+): Promise<{ project: string; queue: WireSuggestionQueue }> {
+  const res = await fetch(`/api/docs/${project}/planning-wireframe-suggestions`);
+  if (!res.ok) throw new Error(`wireframe-suggestions ${res.status}`);
+  return (await res.json()) as { project: string; queue: WireSuggestionQueue };
+}
+
+/**
+ * 와이어 제안 승인/반려 적용. 승인분만 와이어 원천(화면 레이아웃) 반영, 반려는 큐에서만 제거.
+ * apply body/result는 6a와 동형(PrdApplyRequest/PrdApplyResult 재사용).
+ */
+export async function applyDocsWireframeSuggestions(
+  project: string,
+  req: PrdApplyRequest,
+): Promise<PrdApplyResult> {
+  const res = await fetch(`/api/docs/${project}/planning-wireframe-suggestions/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    // 422(wireframe_write_failed) = 화면 id 집합 위반/쓰기 실패로 반영 못 함(원본·큐 보존). 원인을 명확히 전달.
+    if (res.status === 422) {
+      throw new Error("와이어 원천에 반영하지 못했습니다(화면 구성이 예상과 달라 — 원본·큐는 보존됨).");
+    }
+    if (res.status === 400) {
+      const body: unknown = await res.json().catch(() => null);
+      if (typeof body === "object" && body !== null && (body as { error?: string }).error === "batch_too_large") {
+        throw new Error(BATCH_TOO_LARGE_MSG);
+      }
+    }
+    throw new Error(`wireframe-apply ${res.status}`);
+  }
+  return (await res.json()) as PrdApplyResult;
+}
+
+/**
+ * 화면별 자유 텍스트 피드백 write(사람→AI 역방향, D8 별도 경로 — 위저드 승인과 독립).
+ * flowforge는 feedback 사이드카에 append만 하고 AI를 호출하지 않는다(A안 파일 릴레이). 빈 텍스트는
+ * 서버가 400(empty_feedback)으로 거부 — 호출 전에 클라이언트도 막지만 서버가 최종 방어.
+ */
+export async function postWireframeFeedback(
+  project: string,
+  input: { screenId: string; text: string },
+): Promise<{ ok: true }> {
+  const res = await fetch(`/api/docs/${project}/planning-wireframe-feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    if (res.status === 400) {
+      throw new Error("피드백을 기록하지 못했습니다(빈 텍스트이거나 형식 오류).");
+    }
+    throw new Error(`wireframe-feedback ${res.status}`);
+  }
+  return (await res.json()) as { ok: true };
 }
 
 /**

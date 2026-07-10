@@ -123,8 +123,15 @@ function MobileScreen({
   );
 }
 
-export function WireframeDeviceFrame({ screens }: { screens: readonly WireScreen2[] }): JSX.Element {
-  const [device, setDevice] = useState<WireDevice>("desktop");
+export function WireframeDeviceFrame({
+  screens,
+  hideControls = false,
+}: {
+  screens: readonly WireScreen2[];
+  /** 위저드 카드 내 단일 미리보기용(D7) — 디바이스 토글·화면 탭·캡션 크롬을 숨긴다. 첫 화면만 그대로 렌더. */
+  hideControls?: boolean;
+}): JSX.Element {
+  const [device, setDevice] = useState<WireDevice>(screens[0]?.device ?? "desktop");
   const [activeId, setActiveId] = useState<string>(screens[0]?.id ?? "");
 
   // 현재 디바이스에 해당하는 화면들(desktop이면 desktop 화면, mobile이면 mobile 화면).
@@ -151,6 +158,21 @@ export function WireframeDeviceFrame({ screens }: { screens: readonly WireScreen
 
   if (!active) {
     return <div className="wf-df-empty">표시할 화면이 없습니다.</div>;
+  }
+
+  // 위저드 카드 미리보기(D7): 크롬(토글·탭·캡션) 없이 스테이지만 — 첫 화면 프레임 하나.
+  if (hideControls) {
+    return (
+      <div className="wf-df-root wf-df-root--preview">
+        <div className="wf-df-stage">
+          {active.device === "desktop" ? (
+            <DesktopScreen screen={active} onGoto={goto} />
+          ) : (
+            <MobileScreen screen={active} onGoto={goto} />
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (

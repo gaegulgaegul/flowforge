@@ -975,3 +975,41 @@ button:hover { border-color: var(--lime); }
   border-top: 1px dashed var(--border); padding-top: 12px; margin: 2px 0 0;
 }
 .wf-df-caption b { color: var(--lofi-muted); font-weight: 600; }
+
+/* --- 위저드 카드 내 단일 미리보기(hideControls, D7) --- */
+.wf-df-root--preview { gap: 0; padding: 0; }
+.wire-approval-preview { display: flex; justify-content: center; margin-top: 8px; }
+/* 카드 안에서는 프레임을 축소해 카드 레이아웃을 넘치지 않게. */
+.wire-approval-preview .wf-df-frame--desktop { width: 640px; height: 410px; }
+.wire-approval-preview .wf-df-frame--mobile { width: 260px; height: 500px; }
+.wire-approval-preview .wf-df-frame { box-shadow: 0 8px 26px rgba(0,0,0,0.4); }
+.wire-approval-screen-id { color: var(--lofi-muted, #8b949e); font-weight: 400; font-size: 12px; }
+
+/* --- 화면별 피드백 입력(D8 별도 경로) --- */
+.wire-feedback {
+  width: 100%; max-width: 1000px; margin: 16px auto 0; border-top: 1px dashed var(--border);
+  padding-top: 16px; display: flex; flex-direction: column; gap: 12px;
+}
+.wire-feedback-h { margin: 0; font-size: 15px; color: var(--text); }
+.wire-feedback-caption { margin: -4px 0 4px; font-size: 12px; color: var(--lofi-muted, #8b949e); }
+.wire-feedback-row {
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 8px; background: var(--panel, #1b1e24);
+}
+.wire-feedback-head { display: flex; align-items: baseline; gap: 8px; }
+.wire-feedback-title { font-weight: 600; font-size: 13px; color: var(--text); }
+.wire-feedback-id { font-size: 11px; color: var(--lofi-muted, #8b949e); }
+.wire-feedback-textarea {
+  width: 100%; min-height: 60px; resize: vertical; box-sizing: border-box;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 10px;
+}
+.wire-feedback-textarea:focus { outline: none; border-color: var(--lime); }
+.wire-feedback-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.wire-feedback-submit {
+  border: 1px solid var(--border); border-radius: 8px; background: var(--lime); color: #16181d;
+  cursor: pointer; font-size: 12px; font-weight: 600; padding: 7px 14px;
+}
+.wire-feedback-submit:disabled { opacity: .5; cursor: not-allowed; }
+.wire-feedback-ok { font-size: 12px; color: var(--lime); }
+.wire-feedback-err { font-size: 12px; color: #f0785a; }

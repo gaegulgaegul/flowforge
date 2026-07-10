@@ -23,9 +23,9 @@
 - [x] GREEN: 라우트 배선 — `GET/POST .../planning-wireframe-suggestions`(+/apply), `POST .../planning-wireframe-feedback` (`docs.ts`에 features/userflow 라우트 패턴 복제, apply body는 `isPrdApplyRequest` 재사용)
 
 ### Parallel Group 3 (웹 - 서버 API 완료 후, 서로 다른 컴포넌트, 동시 실행 가능)
-- [ ] GREEN: 화면별 피드백 입력 컴포넌트 — 각 화면에 자유텍스트 textarea + 제출→feedback write. 제출 후 "접수됨" 표시 [parallel] [frontend]
-- [ ] GREEN: 와이어 승인 위저드 — `ApprovalWizard` 셸 재사용, renderCard에 `WireframeDeviceFrame`으로 제안 화면 미리보기, 승인/반려→apply [parallel] [frontend]
-- [ ] GREEN: 와이어 탭 배선 — App.tsx에서 제안큐 fetch·승인 위저드·피드백 입력·재조회(그 화면만 갱신 반영) 연결 [parallel] [frontend]
+- [x] GREEN: 화면별 피드백 입력 컴포넌트 — 각 화면에 자유텍스트 textarea + 제출→feedback write. 제출 후 "접수됨" 표시 [parallel] [frontend]
+- [x] GREEN: 와이어 승인 위저드 — `ApprovalWizard` 셸 재사용, renderCard에 `WireframeDeviceFrame`으로 제안 화면 미리보기, 승인/반려→apply [parallel] [frontend]
+- [x] GREEN: 와이어 탭 배선 — App.tsx에서 제안큐 fetch·승인 위저드·피드백 입력·재조회(그 화면만 갱신 반영) 연결 [parallel] [frontend]
 
 ### Sequential: 정합 검증
 - [ ] GREEN: "그 화면만 재생성 반영" 격리 확인 — 재조회 시 피드백 남긴 화면만 갱신, 타 화면 승인분 불변 (재생성분은 큐 갱신 픽스처로 시뮬레이션)

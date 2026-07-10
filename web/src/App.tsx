@@ -21,6 +21,7 @@ import type {
   PrdSuggestion,
   FeatureSuggestion,
   UserFlowSuggestion,
+  WireSuggestion,
   CapabilityAuditSummary,
   ScreenRegistry,
 } from "@flowforge/shared";
@@ -46,6 +47,8 @@ import {
   applyDocsFeatureSuggestions,
   fetchUserFlowSuggestions,
   applyUserFlowSuggestions,
+  fetchDocsWireframeSuggestions,
+  applyDocsWireframeSuggestions,
   fetchAuditCapabilities,
   fetchPlanningScreens,
   type CapabilitySummary,
@@ -65,6 +68,8 @@ import { SpecTreeNode } from "./SpecTreeNode.js";
 import { FeatureNode } from "./FeatureNode.js";
 import { WireframePanel } from "./WireframePanel.js";
 import { WireframeDeviceFrame } from "./WireframeDeviceFrame.js";
+import { WireframeApprovalWizard } from "./WireframeApprovalWizard.js";
+import { WireframeFeedbackInput } from "./WireframeFeedbackInput.js";
 import { PrdPanel } from "./PrdPanel.js";
 import { PrdApprovalWizard } from "./PrdApprovalWizard.js";
 import { FeatureApprovalWizard } from "./FeatureApprovalWizard.js";
@@ -158,6 +163,12 @@ export function App(): JSX.Element {
   // 기획 단계 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]) — 프로젝트 단위(skeleton에서 표시).
   // change 와이어(wireframe)와 분리. 데스크탑/모바일 프레임 안 배치. WireframeDeviceFrame이 렌더(세로 목록 아님).
   const [planningWireScreens, setPlanningWireScreens] = useState<WireScreen2[] | null>(null);
+  // 와이어 레이아웃 제안 큐(docs/planning/wireframe.suggestions.json) — 승인/반려 위저드(Parallel Group 3).
+  // features 제안 큐와 대칭. 큐 비면 순수 읽기(디바이스 프레임 뷰만).
+  const [wireSuggestions, setWireSuggestions] = useState<readonly WireSuggestion[]>([]);
+  const [wireApplyBusy, setWireApplyBusy] = useState(false);
+  // 와이어 위저드 반영 성공 카운터 — features/PRD와 대칭(성공 시에만 증가 → 결정 맵 리셋, 실패=보존).
+  const [wireAppliedTick, setWireAppliedTick] = useState(0);
 
   // 기획 단계 유저플로우(docs/planning/user-flow/<flow>.md → 공용 SpecGraph) — 프로젝트 단위(skeleton에서 표시).
   // change 유저플로우(flowNodes/flowEdges)와 분리. 드래그 좌표는 overlay로 저장(saveDocsPlanningUserFlowLayout).
@@ -466,6 +477,7 @@ export function App(): JSX.Element {
     // 체크포인트를 지우는 cross-project 결정 소실(review C-2) 방지. 세 위저드 모두(D-4).
     setPrdAppliedTick(0);
     setFeatAppliedTick(0);
+    setWireAppliedTick(0);
     setUflowAppliedTick(0);
     // 기획 단계 PRD(docs/planning/prd.md) 로드 — 없으면(404) null로 비움(안내만, 에러 아님).
     setPlanningPrd(null);
@@ -545,6 +557,17 @@ export function App(): JSX.Element {
       .catch(() => {
         if (token !== dashReqToken.current) return;
         setPlanningWireScreens(null); // 화면 미작성 — 정상(미표시)
+      });
+    // 와이어 레이아웃 제안 큐(docs/planning/wireframe.suggestions.json) 로드 — 없으면 빈 큐(순수 읽기 뷰).
+    setWireSuggestions([]);
+    fetchDocsWireframeSuggestions(card.name)
+      .then((r) => {
+        if (token !== dashReqToken.current) return;
+        setWireSuggestions(r.queue.suggestions);
+      })
+      .catch(() => {
+        if (token !== dashReqToken.current) return;
+        setWireSuggestions([]); // 제안 큐 없음/오류 — 순수 읽기 뷰
       });
     // 기능명세 속성 제안 큐(docs/planning/features.suggestions.json) 로드 — 없으면 빈 큐(순수 읽기 트리 뷰).
     setFeatureSuggestions([]);
@@ -719,6 +742,60 @@ export function App(): JSX.Element {
         });
     },
     [dashProject, featureApplyBusy],
+  );
+
+  // 와이어 레이아웃 제안 승인/반려 적용 — POST apply 후 화면(디바이스 프레임)·제안 큐 재조회.
+  // applyFeature와 대칭. D6: 승인분만 원천 교체 → 화면 전체 재조회하면 승인된 화면만 갱신 반영,
+  // 나머지 승인분은 서버에서 불변(화면 id 집합 보존)이라 그대로 온다. race 가드: 그 사이 다른 카드로 이동했으면 폐기.
+  const applyWire = useCallback(
+    (approve: string[], reject: string[]) => {
+      const project = dashProject?.name;
+      if (!project || wireApplyBusy) return;
+      // 반영 대상 0(전부 건너뛰기 등) = 서버 무접촉 — 유령 성공으로 tick을 올려 결정을 지우지 않는다(M-1 계승).
+      if (approve.length === 0 && reject.length === 0) {
+        setStatus("반영할 승인/반려 결정이 없습니다 — 건너뛴 제안은 큐에 남습니다.");
+        return;
+      }
+      const token = ++dashReqToken.current;
+      setWireApplyBusy(true);
+      applyInChunks((r) => applyDocsWireframeSuggestions(project, r), { approve, reject })
+        .then((res) => {
+          if (res.queuePruneFailed) {
+            setStatus("문서에는 반영됐지만 큐 정리에 실패했습니다 — 같은 제안이 다시 보이면 반려로 정리하세요.");
+          } else if (res.skipped.length > 0) {
+            setStatus(`일부 제안을 처리하지 못했습니다(skipped: ${skippedSummary(res.skipped)}).`);
+          }
+          return Promise.all([
+            fetchDocsPlanningWireframe(project),
+            fetchDocsWireframeSuggestions(project),
+          ]);
+        })
+        .then(([wireRes, sugRes]) => {
+          if (token !== dashReqToken.current) return; // 그 사이 다른 클릭 → 폐기
+          setPlanningWireScreens(wireRes.screens.length > 0 ? wireRes.screens : null);
+          setWireSuggestions(sugRes.queue.suggestions);
+          // 반영 성공 신호 → 위저드 결정 리셋(skip 잔존 큐가 요약에 갇히지 않게).
+          setWireAppliedTick((t) => t + 1);
+        })
+        .catch((e: unknown) => {
+          if (token !== dashReqToken.current) return;
+          setStatus(`와이어 승인/반려 실패(일부는 반영됐을 수 있음 — 화면을 다시 불러옵니다): ${String(e)}`);
+          void Promise.all([
+            fetchDocsPlanningWireframe(project),
+            fetchDocsWireframeSuggestions(project),
+          ])
+            .then(([wireRes, sugRes]) => {
+              if (token !== dashReqToken.current) return;
+              setPlanningWireScreens(wireRes.screens.length > 0 ? wireRes.screens : null);
+              setWireSuggestions(sugRes.queue.suggestions);
+            })
+            .catch(() => undefined);
+        })
+        .finally(() => {
+          setWireApplyBusy(false);
+        });
+    },
+    [dashProject, wireApplyBusy],
   );
 
   // 유저플로우 에지 제안 승인/반려 적용 — POST apply 후 그래프·제안 큐 재조회(append 에지·큐 갱신을 화면에 반사).
@@ -993,7 +1070,21 @@ export function App(): JSX.Element {
             {planningWireScreens && activePlanTab === "wire" && (
               <section className="dash-planning-wire" data-testid="planning-wireframe">
                 <h3 className="dash-h">{dashProject?.displayName} — 기획 와이어</h3>
+                {/* 제안 큐가 있으면 레이아웃 승인/반려 위저드(Parallel Group 3), 큐 비면 렌더 안 함(순수 읽기 뷰). */}
+                <WireframeApprovalWizard
+                  key={dashProject?.name ?? ""}
+                  project={dashProject?.name ?? ""}
+                  suggestions={wireSuggestions}
+                  busy={wireApplyBusy}
+                  onApply={(approve, reject) => applyWire(approve, reject)}
+                  appliedTick={wireAppliedTick}
+                />
                 <WireframeDeviceFrame screens={planningWireScreens} />
+                {/* 화면별 자유 텍스트 피드백(D8 별도 경로 — 위저드 승인과 독립). 제출→feedback write. */}
+                <WireframeFeedbackInput
+                  project={dashProject?.name ?? ""}
+                  screens={planningWireScreens}
+                />
               </section>
             )}
             {/* 기획 단계 유저플로우(docs/planning/user-flow/<flow>.md) — 있으면 공용 SpecGraph 그래프로 렌더(드래그→좌표 저장) */}
