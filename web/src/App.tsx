@@ -76,6 +76,7 @@ import { UserFlowApprovalWizard } from "./UserFlowApprovalWizard.js";
 import { FeatureDetailPanel } from "./FeatureDetailPanel.js";
 import { FlowDetailPanel } from "./FlowDetailPanel.js";
 import { IADetailPanel } from "./IADetailPanel.js";
+import { parseDeepLink, serializeDeepLink, type Tab } from "./deeplink.js";
 
 // 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지.
 // featureTree는 기획 기능명세서 전용(specTree와 분리, 타입 전략 B).
@@ -85,8 +86,8 @@ const nodeTypes: NodeTypes = { spec: SpecNode, ia: IANode, specTree: SpecTreeNod
 // 매직 넘버 인라인 이중 정의를 상수 1곳으로 단일화(드리프트 방지).
 const SKIPPED_PREVIEW_CAP = 5;
 
+// Tab(5종 뷰 화이트리스트)은 deeplink.ts 단일 정의를 소비 — URL 스킴과 드리프트 방지.
 // manyfast 파이프라인 순서: PRD → 기능명세서 → 유저플로우 → IA → 와이어프레임
-type Tab = "prd" | "spec" | "flow" | "ia" | "wire";
 // 계층 대시보드 4단 드릴다운(hierarchical-project-dashboard):
 //   grid(카드) → skeleton(뼈대 capability) → capChanges(capability별 change) → views(5종 뷰)
 // charter 없는 프로젝트는 skeleton에서 빈 안내를 보여준다.
@@ -242,6 +243,36 @@ export function App(): JSX.Element {
       .then((r) => setSpecRoot(r.tree))
       .catch((e: unknown) => setStatus(`기능명세서 로드 실패: ${String(e)}`));
   }, [selected, selectedProject]);
+
+  // 마운트 복원(1회): URL에 딥링크 파라미터가 있으면 그 change의 5종 뷰로 복원한다.
+  // setSelected가 위 [selected, selectedProject] effect를 트리거해 5종 데이터가 로드된다(신규 fetch 없음).
+  // 파라미터가 없으면 그대로 반환 → 기존 grid 랜딩 유지(하위호환).
+  useEffect(() => {
+    const dl = parseDeepLink(window.location.search);
+    if (!dl) return;
+    setSelectedProject(dl.project);
+    setSelected(dl.change);
+    setTab(dl.tab);
+    setDashStage("views");
+  }, []);
+
+  // 뒤로/앞으로(popstate): URL을 다시 파싱해 상태를 재동기화한다.
+  // 딥링크 있으면 그 뷰로, 없으면(파라미터 비워진 URL) grid로 복귀. 복원 로직은 마운트와 동형.
+  useEffect(() => {
+    const onPop = (): void => {
+      const dl = parseDeepLink(window.location.search);
+      if (dl) {
+        setSelectedProject(dl.project);
+        setSelected(dl.change);
+        setTab(dl.tab);
+        setDashStage("views");
+      } else {
+        setDashStage("grid");
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   // IA 트리/뷰모드 바뀌면 레이아웃 재계산
   useEffect(() => {
@@ -895,17 +926,47 @@ export function App(): JSX.Element {
     setTab("prd");
     setDashStage("views");
     setStatus("");
+    // 딥링크 URL 기록. change.project가 있을 때만 — ?project= 없이는 왕복 복원이 안 되는
+    // 전역 진입 change는 URL을 남기지 않는다(마운트 복원이 project·change 둘 다 요구하는 것과 일관).
+    if (change.project) {
+      history.pushState(
+        null,
+        "",
+        serializeDeepLink({ project: change.project, change: change.key, tab: "prd" }),
+      );
+    }
   }, []);
 
   // 브레드크럼/뒤로가기: 지정 단계로 복귀(상위 선택은 유지).
   const goToStage = useCallback((stage: DashStage) => {
     setDashStage(stage);
     setStatus("");
+    // views를 떠나면(grid/skeleton/capChanges 복귀) URL의 딥링크 파라미터를 비운다 —
+    // URL이 "뷰를 벗어났다"를 반영하게. views로 가는 전환에는 손대지 않는다(그건 openChangeViews가 기록).
+    if (stage !== "views") {
+      history.pushState(null, "", window.location.pathname);
+    }
   }, []);
 
   const tabBtn = (key: Tab, label: string) => (
-    <button onClick={() => setTab(key)} aria-pressed={tab === key} data-testid={`tab-${key}`}
-      style={{ borderColor: tab === key ? "#b6e65a" : undefined }}>{label}</button>
+    <button
+      onClick={() => {
+        setTab(key);
+        // 탭 전환 시 URL의 tab만 갱신. project·change 둘 다 있을 때만(딥링크 왕복 가능한 경우).
+        if (selectedProject && selected) {
+          history.pushState(
+            null,
+            "",
+            serializeDeepLink({ project: selectedProject, change: selected, tab: key }),
+          );
+        }
+      }}
+      aria-pressed={tab === key}
+      data-testid={`tab-${key}`}
+      style={{ borderColor: tab === key ? "#b6e65a" : undefined }}
+    >
+      {label}
+    </button>
   );
 
   // skeleton 뷰 탭: 있는 뷰만 노출, 활성 탭이 없는 뷰를 가리키면 첫 유효 탭으로 폴백.
