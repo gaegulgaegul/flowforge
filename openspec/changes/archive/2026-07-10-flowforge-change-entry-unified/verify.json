@@ -1,6 +1,6 @@
 {
   "change": "flowforge-change-entry-unified",
-  "verifiedAt": "2026-07-10T15:45:00+09:00",
+  "verifiedAt": "2026-07-10T15:52:00+09:00",
   "finalJudgment": "PASS",
   "counts": {
     "pass": 6,
@@ -202,11 +202,11 @@
     }
   ],
   "codeState": {
-    "head": "45678b7051488a23fe875c016f64e6c3235c8372",
+    "head": "7dd2c8267172229a39042018977ff221db6e4981",
     "dirty": true,
     "branch": "feat/flowforge-feedback-changes",
     "gitUnavailable": false
   },
   "reportHtml": "verify.html",
-  "historyHtml": "verify-20260710-1545.html"
+  "historyHtml": "verify-20260710-1552.html"
 }
