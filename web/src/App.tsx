@@ -986,13 +986,13 @@ export function App(): JSX.Element {
             <ProjectGrid projects={projects} onOpenProject={openProject} />
           </div>
         ) : dashStage === "skeleton" ? (
-          <div className={`dash-body${["features", "ia", "flow"].includes(activePlanTab) ? " dash-body--wide" : ""}`}>
+          <div className={`dash-body${["features", "ia", "flow", "wire"].includes(activePlanTab) ? " dash-body--wide" : ""}`}>
             {planTabsAvail.length > 0 && (
               <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 12 }} data-testid="plan-tabs">
                 {planningPrd && planTabBtn("prd", "PRD")}
                 {planningFeatures && planTabBtn("features", "기능명세서")}
                 {planningIaRoot && planTabBtn("ia", "화면 구조")}
-                {planningWireScreens && planTabBtn("wire", "기획 와이어")}
+                {planningWireScreens && planTabBtn("wire", "와이어프레임")}
                 {planningUserFlow && planTabBtn("flow", "유저플로우")}
               </div>
             )}
@@ -1068,7 +1068,7 @@ export function App(): JSX.Element {
             {/* 기획 단계 와이어 — 디바이스 프레임 안에 화면 레이아웃 배치(WireframeDeviceFrame, 세로 목록 아님) */}
             {planningWireScreens && activePlanTab === "wire" && (
               <section className="dash-planning-wire" data-testid="planning-wireframe">
-                <h3 className="dash-h">{dashProject?.displayName} — 기획 와이어</h3>
+                <h3 className="dash-h">{dashProject?.displayName} — 와이어프레임</h3>
                 {/* 제안 큐가 있으면 레이아웃 승인/반려 위저드(Parallel Group 3), 큐 비면 렌더 안 함(순수 읽기 뷰). */}
                 <WireframeApprovalWizard
                   key={dashProject?.name ?? ""}

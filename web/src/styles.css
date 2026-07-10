@@ -336,9 +336,14 @@ button:hover { border-color: var(--lime); }
 .dash-plan-flow { flex: 1 1 auto; min-height: 480px; border-radius: 8px; margin-bottom: 16px; }
 /* 그래프 탭일 때 dash-body를 세로 flex로 — 탭바 아래 남은 높이를 section→그래프가 채우게.
    flex 체인: dash-body--wide(col) → 탭바(shrink0)+section(flex1,col) → h3/위저드(shrink0)+dash-plan-flow(flex1). */
-.dash-body--wide { max-width: none; display: flex; flex-direction: column; overflow: hidden; }
+/* .dash-body 규칙이 파일 뒤(라인 458)라 같은 특이도면 max-width:920px가 이김 →
+   .dash-body.dash-body--wide 로 특이도를 올려 순서와 무관하게 풀폭(max-width:none)이 이기게. */
+.dash-body.dash-body--wide { max-width: none; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
 .dash-body--wide > section { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
 .dash-body--wide > section > .dash-h { flex: 0 0 auto; }
+/* 와이어 탭은 캔버스(flex:1 단일자식)가 아니라 위저드+핀목록이 세로로 쌓이는 문서형 →
+   부모 --wide의 overflow:hidden에서 잘리지 않게 이 section만 세로 스크롤 허용(와이어 전용 클래스라 격리). */
+.dash-body--wide > .dash-planning-wire { overflow-y: auto; }
 .dash-planning-features { margin-bottom: 8px; }
 
 /* === SEED(미검증) 배지 — 노드/와이어/타임라인 공통 === */
