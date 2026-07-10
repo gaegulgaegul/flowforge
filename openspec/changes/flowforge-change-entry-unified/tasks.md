@@ -19,16 +19,18 @@
 
 ### Sequential Group C: 5종 뷰 진입 실동작
 
-- [ ] C.1 capability 클릭 → capChanges 단계 이동(`openCapability`, `:865`) 실동작 확인
-- [ ] C.2 change 클릭 → views 단계 + PRD 탭 활성(`openChangeViews`, `:892`) 실동작 확인
+> 실제 함수 라인: `openCapability` :896, `openChangeViews` :923(Context Scan 갱신). 라이브 gstack 실동작으로 검증.
+
+- [x] C.1 capability 클릭 → capChanges 단계 이동(`openCapability`, `:896`) 실동작 확인 — 라이브 gstack에서 flowforge·wowa-app 양쪽 capability 버튼 클릭 시 capChanges(기능명세/유저플로우/연결 change 3섹션)로 정상 이동 캡처(`ff-capchanges.png`)
+- [x] C.2 change 클릭 → views 단계 + PRD 탭 활성(`openChangeViews`, `:923`) 실동작 확인 — 라이브 gstack에서 wowa-app `server-foundation-auth` change 클릭 → `?project=&change=&tab=prd` 딥링크 진입, 5종 탭 바 표시, PRD 탭 `[pressed]` 활성, 본문 정상 렌더 캡처(`wowa-views-prd.png`). ※flowforge 자체는 in-progress change라 capability→changeKeys 매핑이 아직 비어(archive 시점 생성) C.2 대상 change가 없음 — 이는 게이트 제거와 무관한 별개 데이터 파이프라인 특성(archive 후 매핑). spec 시나리오(change 있는 capability 전제)는 wowa-app에서 실증 PASS
 
 ### Sequential Group D: 라이브 반영 + UI 검증
 
-- [ ] D.1 `docker compose up -d --build`로 flowforge 라이브 반영(커밋≠라이브)
-- [ ] D.2 Playwright(`~/.cache/ms-playwright`)로 flowforge를 열어 기획 탭 + change 목록 병존 실픽셀 캡처
-- [ ] D.3 Playwright로 capability→change→5종 뷰 진입 실동작 캡처
-- [ ] D.4 Playwright로 기획문서 없는 프로젝트 before/after 비교 — 픽셀 회귀 없음 확인
+- [x] D.1 `docker compose up -d --build`로 flowforge 라이브 반영(커밋≠라이브) — 재빌드+recreate 성공, HTTP 200 확인
+- [x] D.2 gstack(`~/.cache/ms-playwright`)으로 flowforge를 열어 기획 탭 + change 목록 병존 실픽셀 캡처(`ff-skeleton.png`, `ff-skeleton-changelist.png`) — 기획 탭 바(PRD 활성) + "flowforge — change 목록 (capability별)" h3 + 24개 dash-cap 버튼 병존 확인 PASS
+- [x] D.3 gstack으로 capability→change→5종 뷰 진입 실동작 캡처(`ff-capchanges.png`, `wowa-capchanges.png`, `wowa-views-prd.png`) — capChanges 이동·views+PRD 진입·크래시 없음 확인 PASS
+- [x] D.4 gstack으로 기획문서 없는 프로젝트 회귀 확인 — ※wowa-app은 실제 `hasCharter:true`(기획문서 있음)라, 진짜 기획문서 없는 `agentic-harness`(`hasCharter:false`)로 검증(`agentic-harness-skeleton.png`): 기획 탭 바 미노출 + "기획 문서가 없습니다" 안내 + change 목록만 렌더 = 기존 동작 동일(무회귀) PASS
 
 ## Verify
 
-- [ ] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트 → UI(프론트 변경 시) 전부 PASS
+- [x] VERIFY: 5단계 게이트 — 빌드(vite build 성공, 221 modules) → 타입체크(tsc --noEmit 에러 0) → 린트(별도 린터 미설정, tsc strict가 대체) → 테스트(web 러너 부재 — 선례대로 라이브 실픽셀로 대체) → UI(gstack 실픽셀 4항목 PASS: 병존·capChanges·views+PRD·무회귀) 전부 통과. 세부는 openspec-verify 단계에서 재실행·리포트 발행
