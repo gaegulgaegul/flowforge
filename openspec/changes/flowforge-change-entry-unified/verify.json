@@ -1,6 +1,6 @@
 {
   "change": "flowforge-change-entry-unified",
-  "verifiedAt": "2026-07-10T15:20:00+09:00",
+  "verifiedAt": "2026-07-10T15:45:00+09:00",
   "finalJudgment": "PASS",
   "counts": {
     "pass": 6,
@@ -38,15 +38,15 @@
       },
       "scenarios": [
         {
-          "scenario": "기획문서 있는 프로젝트(flowforge)에서 기획 탭과 change 목록이 병존한다",
+          "scenario": "기획문서 있는 프로젝트(flowforge)에서 기획 탭과 change 목록이 병존한다 (PRD 탭·그래프 탭 모두)",
           "layer": "web",
-          "means": "gstack 라이브 실픽셀 — flowforge skeleton 열어 기획 탭 바(data-testid=plan-tabs)와 그 아래 change 목록(h3 + 24개 dash-cap 버튼) 병존 육안 확인",
-          "basis": "web adapter: vite/React SPA, docker 라이브(HTTP 200), ~/.cache/ms-playwright chromium",
+          "means": "gstack 라이브 실픽셀 — flowforge skeleton 열어 기획 탭 바(data-testid=plan-tabs)와 그 아래 change 목록(h3 + 24개 dash-cap 버튼) 병존 육안 확인. PRD 탭(narrow)뿐 아니라 그래프 탭(기능명세/유저플로우, dash-body--wide)에서도 change 목록이 그래프에 덮이지 않고 별도 영역에 온전히 노출·스크롤 도달됨을 2차 재검증으로 확정(review 발견 클리핑 수정 후).",
+          "basis": "web adapter: vite/React SPA, docker 라이브(HTTP 200), ~/.cache/ms-playwright chromium. elementFromPoint로 change 영역이 그래프 노드에 안 덮임 확정.",
           "result": "PASS",
           "evidence": {
             "kind": "screenshot",
-            "path": "verify-shots/ff-skeleton.png",
-            "caption": "flowforge: 기획 탭 바 + change 목록(capability별) 병존"
+            "path": "verify-shots/ff-graphtab-fixed-v2.png",
+            "caption": "flowforge 그래프 탭: 그래프 + change 목록 병존, 오버레이 해소(수정 후)"
           }
         },
         {
@@ -202,11 +202,11 @@
     }
   ],
   "codeState": {
-    "head": "c01577d37a6954fb9fda3227621e69e4620c3f96",
+    "head": "45678b7051488a23fe875c016f64e6c3235c8372",
     "dirty": true,
     "branch": "feat/flowforge-feedback-changes",
     "gitUnavailable": false
   },
   "reportHtml": "verify.html",
-  "historyHtml": "verify-20260710-1520.html"
+  "historyHtml": "verify-20260710-1545.html"
 }
