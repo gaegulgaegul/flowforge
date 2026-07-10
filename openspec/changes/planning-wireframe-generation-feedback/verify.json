@@ -1,6 +1,6 @@
 {
   "change": "planning-wireframe-generation-feedback",
-  "verifiedAt": null,
+  "verifiedAt": "2026-07-10T07:53:50+00:00",
   "finalJudgment": "조건부",
   "counts": {
     "pass": 25,
@@ -496,11 +496,11 @@
     }
   ],
   "codeState": {
-    "head": "48bcd2a628ab477a95ff614c30c3d37fbcae912f",
+    "head": "619d18ede254528b2fd36b9bbc7078800fbe07aa",
     "dirty": true,
     "branch": "main",
     "gitUnavailable": false
   },
   "reportHtml": "verify.html",
-  "historyHtml": "verify-unknown.html"
+  "historyHtml": "verify-20260710-0753.html"
 }
