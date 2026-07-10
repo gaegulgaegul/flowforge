@@ -1203,22 +1203,26 @@ export function App(): JSX.Element {
                 이 목록만 렌더된다(기존 동작과 픽셀 동일 — 회귀 없음).
                 (2026-07-10 flowforge-change-entry-unified: 이전 planTabsAvail.length === 0 게이트가
                 기획문서 있는 프로젝트에서 change 5종 뷰 진입로를 통째로 숨기던 부작용을 제거.
-                이전 2026-07-03 결정의 "뼈대라 하단 목록 숨김"은 change 뷰 자체를 막는 역설이라 폐기.) */}
-            <h3 className="dash-h">{dashProject?.displayName} — change 목록 (capability별)</h3>
-            {capabilities.length === 0 ? (
-              <p className="dash-empty">표시할 capability가 없습니다.</p>
-            ) : (
-              <ul className="dash-cap-list">
-                {capabilities.map((cap) => (
-                  <li key={cap.key}>
-                    <button type="button" className="dash-cap" onClick={() => openCapability(cap)}>
-                      <span className="dash-cap-label">{cap.koreanLabel}</span>
-                      <span className="dash-cap-count">change {cap.changeKeys.length}개</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+                이전 2026-07-03 결정의 "뼈대라 하단 목록 숨김"은 change 뷰 자체를 막는 역설이라 폐기.)
+                <section>으로 감싸 그래프 탭(dash-body--wide, overflow:hidden)에서도 자체 세로
+                스크롤로 도달 가능하게 한다(와이어 탭의 .dash-planning-wire 격리 패턴과 동일). */}
+            <section className="dash-changes-section">
+              <h3 className="dash-h">{dashProject?.displayName} — change 목록 (capability별)</h3>
+              {capabilities.length === 0 ? (
+                <p className="dash-empty">표시할 capability가 없습니다.</p>
+              ) : (
+                <ul className="dash-cap-list">
+                  {capabilities.map((cap) => (
+                    <li key={cap.key}>
+                      <button type="button" className="dash-cap" onClick={() => openCapability(cap)}>
+                        <span className="dash-cap-label">{cap.koreanLabel}</span>
+                        <span className="dash-cap-count">change {cap.changeKeys.length}개</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           </div>
         ) : dashStage === "capChanges" ? (
           // capability 통합 drill-down: features 서브트리 + 연결 유저플로우 + change 목록을 한 화면에.
