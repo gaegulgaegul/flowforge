@@ -324,6 +324,10 @@ export function appendWireframeFeedback(
   if (text.length === 0) return { ok: false };
   // 좌표 유효성 방어(0~100 밖·NaN·Infinity 거부) — 지점 단위 피드백은 좌표가 곧 의미.
   if (!isValidPct(input.xPct) || !isValidPct(input.yPct)) return { ok: false };
+  // 미존재 화면 id 방어 — 현재 와이어(승인분/픽스처)에 없는 화면엔 피드백을 기록하지 않는다
+  // (쓰레기 피드백 방지, spec: "알 수 없는 화면 id는 기록하지 않거나 거부").
+  const known = new Set(buildDocsPlanningWireframe2(docsDir).map((s) => s.id));
+  if (!known.has(input.screenId)) return { ok: false };
   const item: WireFeedbackItem = {
     screenId: input.screenId,
     text,

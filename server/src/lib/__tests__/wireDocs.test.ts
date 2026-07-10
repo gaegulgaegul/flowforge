@@ -371,6 +371,15 @@ describe("appendWireframeFeedback (feedback 사이드카 append)", () => {
     expect(existsSync(join(feedbackRoot, "p.feedback.json"))).toBe(false);
   });
 
+  it("현재 와이어에 없는 화면 id면 거부한다(ok:false, 파일 미기록) — 쓰레기 피드백 방지", () => {
+    const dir = makePlanning(root, "p");
+    // grid/skeleton은 픽스처에 실재하는 화면 → 유효. ghost-screen은 없음 → 거부.
+    expect(appendWireframeFeedback(dir, "p", { screenId: "ghost-screen", text: "x", xPct: 5, yPct: 5 }).ok).toBe(false);
+    expect(existsSync(join(feedbackRoot, "p.feedback.json"))).toBe(false);
+    // 대조: 실재 화면은 통과.
+    expect(appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x", xPct: 5, yPct: 5 }, () => "2026-07-10T00:00:00.000Z").ok).toBe(true);
+  });
+
   it("피드백 파일은 docsDir(홈 RO)가 아니라 WIREFRAME_FEEDBACK_ROOT 하위에 쓴다(D5)", () => {
     const dir = makePlanning(root, "p");
     appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x", xPct: 5, yPct: 5 }, () => "2026-07-10T00:00:00.000Z");
