@@ -68,6 +68,12 @@ export type {
 } from './user-flow-suggestion-types.js';
 
 export type {
+  WireSuggestion,
+  WireSuggestionQueue,
+  WireFeedbackItem,
+} from './wire-suggestion-types.js';
+
+export type {
   DocsDecision,
   DecisionTimeline,
 } from './docs-decision-types.js';

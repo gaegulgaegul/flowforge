@@ -17,6 +17,9 @@
  * POST /api/docs/:project/planning-features-suggestions/apply 승인·반려 적용(승인분만 features.md 속성 반영)
  * GET /api/docs/:project/planning-user-flow-suggestions?flow=<stem>       유저플로우 에지 제안 큐 읽기(없으면 빈 큐 200)
  * POST /api/docs/:project/planning-user-flow-suggestions/apply?flow=<stem> 승인·반려 적용(승인분만 <stem>.md 에지 append)
+ * GET /api/docs/:project/planning-wireframe-suggestions       와이어 레이아웃 제안 큐 읽기(없으면 빈 큐 200)
+ * POST /api/docs/:project/planning-wireframe-suggestions/apply 승인·반려 적용(승인분만 와이어 원천 반영, RW 볼륨)
+ * POST /api/docs/:project/planning-wireframe-feedback         화면별 자유 텍스트 피드백 write(사람→AI 역방향, A안 릴레이)
  *
  * :project는 슬래시를 포함할 수 있어 와일드카드(*)로 받는다. docs는 SSOT(읽기전용)지만,
  * 예외로 유저플로우 좌표 overlay와 PRD 승인 반영(승인=사용자 의도)만 쓴다.
@@ -28,7 +31,6 @@ import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from ".
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
 import { buildDocsPlanningFeatures } from "../parser/featureTreeBuilder.js";
 import { buildPlanningIaTree } from "../parser/planningIaBuilder.js";
-import { buildDocsPlanningWireframe2 } from "../parser/planningWireframeFixture.js";
 import { buildScreenRegistry } from "../parser/screenRegistry.js";
 import { buildDocsPlanningUserFlow } from "../parser/planningUserFlowBuilder.js";
 import {
@@ -44,6 +46,12 @@ import {
 } from "../lib/docs.js";
 import { readDocsFeatureSuggestions, applyFeatureSuggestions } from "../lib/featureDocs.js";
 import { readUserFlowSuggestions, applyUserFlowSuggestions } from "../lib/userFlowDocs.js";
+import {
+  buildDocsPlanningWireframe2,
+  readDocsWireframeSuggestions,
+  applyWireframeSuggestions,
+  appendWireframeFeedback,
+} from "../lib/wireDocs.js";
 import { readAuditCapabilities } from "../lib/auditSummary.js";
 import { isLayoutOverlay } from "../lib/changes.js";
 import { safe } from "../lib/safe-error.js";
@@ -394,5 +402,79 @@ docsRouter.post(
       return;
     }
     res.json(result);
+  }),
+);
+
+docsRouter.get(
+  "/api/docs/:project(*)/planning-wireframe-suggestions",
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    // 큐 부재=빈 큐(404 아님). 읽기는 절대 throw하지 않는다(안전 폴백).
+    res.json({ project, queue: readDocsWireframeSuggestions(dir) });
+  }),
+);
+
+docsRouter.post(
+  "/api/docs/:project(*)/planning-wireframe-suggestions/apply",
+  requireWriteAuth,
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    // apply body는 6a와 동형(approve[]/reject[]) — isPrdApplyRequest 재사용.
+    const body: unknown = req.body;
+    if (!isPrdApplyRequest(body)) {
+      res.status(400).json({ error: "invalid_request" });
+      return;
+    }
+    if (rejectOversizedBatch(body, res)) return;
+    const result = applyWireframeSuggestions(dir, body);
+    // 화면 id 집합 위반·승인분 쓰기 실패(원본 보호) → 422. 미실재 id(skipped)와 구분된 신호.
+    if (result.writeFailed) {
+      res.status(422).json({ error: "wireframe_write_failed", ...result });
+      return;
+    }
+    res.json(result);
+  }),
+);
+
+/** 피드백 write body 런타임 검증: {screenId:string, text:string}. isPrdApplyRequest 패턴 복제. */
+function isWireframeFeedbackRequest(v: unknown): v is { screenId: string; text: string } {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  return typeof o["screenId"] === "string" && typeof o["text"] === "string";
+}
+
+docsRouter.post(
+  "/api/docs/:project(*)/planning-wireframe-feedback",
+  requireWriteAuth,
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    // 피드백 = 위저드 승인과 별도 경로(D8). body={screenId,text} — 자유 텍스트 write.
+    const body: unknown = req.body;
+    if (!isWireframeFeedbackRequest(body)) {
+      res.status(400).json({ error: "invalid_request" });
+      return;
+    }
+    // 빈 텍스트는 lib에서 거부(ok:false) → 400(쓰레기 피드백 방지). AI 호출 없음(A안 릴레이).
+    const result = appendWireframeFeedback(dir, project, { screenId: body.screenId, text: body.text });
+    if (!result.ok) {
+      res.status(400).json({ error: "empty_feedback" });
+      return;
+    }
+    res.json({ ok: true });
   }),
 );

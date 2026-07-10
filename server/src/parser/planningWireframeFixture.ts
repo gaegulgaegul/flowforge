@@ -170,7 +170,13 @@ const SCREEN_SKELETON_MOBILE: WireScreen2 = {
   },
 };
 
-/** 픽스처 화면 5개(데스크탑 3 + 모바일 2) — 목업 대조 순서 유지. */
+/**
+ * 픽스처 화면 5개(데스크탑 3 + 모바일 2) — 목업 대조 순서 유지.
+ *
+ * 이 픽스처는 승인분 원천(`<WIREFRAME_FEEDBACK_ROOT>/<project>.wireframe.json`)이 아직 없을 때의
+ * 폴백이다. planning-wireframe-generation-feedback change에서 `buildDocsPlanningWireframe2`가
+ * lib/wireDocs.ts로 이관되어 "승인분 있으면 그걸, 없으면 이 픽스처"를 반환한다.
+ */
 export const PLANNING_WIREFRAME_FIXTURE: readonly WireScreen2[] = [
   SCREEN_GRID,
   SCREEN_SKELETON,
@@ -178,15 +184,3 @@ export const PLANNING_WIREFRAME_FIXTURE: readonly WireScreen2[] = [
   SCREEN_GRID_MOBILE,
   SCREEN_SKELETON_MOBILE,
 ];
-
-/**
- * planning 와이어 레이아웃(WireScreen2[]) 제공.
- *
- * 이 change에선 픽스처를 그대로 반환한다(원천 = 픽스처, D-6). docsDir는 라우트 정합(존재하는
- * 프로젝트만 응답)을 위해 받되, 레이아웃 데이터 자체는 프로젝트 무관 고정 픽스처다. AI 생성물이
- * 나중에 이 함수를 대체한다(후속 change).
- */
-export function buildDocsPlanningWireframe2(docsDir: string): readonly WireScreen2[] {
-  void docsDir;
-  return PLANNING_WIREFRAME_FIXTURE;
-}

@@ -5,14 +5,13 @@
  * 데스크탑=상단/사이드/본문, 모바일=상단/본문/하단바, 본문 배치(grid/stack/tree), goto 무결성.
  */
 import type { WireScreen2 } from "@flowforge/shared";
-import {
-  buildDocsPlanningWireframe2,
-  PLANNING_WIREFRAME_FIXTURE,
-} from "../planningWireframeFixture.js";
+import { PLANNING_WIREFRAME_FIXTURE } from "../planningWireframeFixture.js";
+import { buildDocsPlanningWireframe2 } from "../../lib/wireDocs.js";
 
 describe("planningWireframeFixture — 디바이스 프레임 레이아웃 픽스처", () => {
-  it("빌더가 픽스처 WireScreen2[]를 반환한다(docsDir 무관)", () => {
-    const screens = buildDocsPlanningWireframe2("/any/docs/dir");
+  it("빌더는 승인분 원천이 없으면 픽스처 WireScreen2[]를 반환한다(폴백)", () => {
+    // 승인분(WIREFRAME_FEEDBACK_ROOT 하위)이 없는 경로 → 픽스처 폴백.
+    const screens = buildDocsPlanningWireframe2("/nonexistent/proj/docs");
     expect(screens).toBe(PLANNING_WIREFRAME_FIXTURE);
     expect(screens.length).toBe(5);
   });

@@ -5,22 +5,22 @@
 ## Tasks
 
 ### Sequential: 타입·스키마 기초 (선행 필수)
-- [ ] RED: 와이어 제안 아이템 타입 + 피드백 아이템 타입 스키마 가드 테스트 작성 (`WireScreen2` 유효성: device∈{desktop,mobile}, body layout∈{grid,stack,tree,form}, 요소 kind 8종)
-- [ ] GREEN: shared에 와이어 제안 아이템 타입(`wire-suggestion-types.ts`: id·screenId·layout:WireScreen2·rationale?) + 피드백 아이템 타입(screenId·text·ts) 정의 (기존 `feature-suggestion-types.ts` 패턴 재사용)
+- [x] RED: 와이어 제안 아이템 타입 + 피드백 아이템 타입 스키마 가드 테스트 작성 (`WireScreen2` 유효성: device∈{desktop,mobile}, body layout∈{grid,stack,tree,form}, 요소 kind 8종)
+- [x] GREEN: shared에 와이어 제안 아이템 타입(`wire-suggestion-types.ts`: id·screenId·layout:WireScreen2·rationale?) + 피드백 아이템 타입(screenId·text·ts) 정의 (기존 `feature-suggestion-types.ts` 패턴 재사용)
 
 ### Parallel Group 1 (독립 - 서로 다른 lib 파일, 동시 실행 가능)
-- [ ] RED: 큐 read 안전폴백 테스트 — 파일부재 빈큐 200·깨진JSON 필터·id dedup·스키마위반 필터 [parallel]
-- [ ] RED: apply 테스트 — 승인분만 반영·반려 큐제거·self-roundtrip 422·skipped 표면화·queuePruneFailed·배치상한200 [parallel]
-- [ ] RED: feedback write 테스트 — 화면 append(screenId·text·ts)·빈텍스트 거부·미존재 화면 방어 [parallel]
+- [x] RED: 큐 read 안전폴백 테스트 — 파일부재 빈큐 200·깨진JSON 필터·id dedup·스키마위반 필터 [parallel]
+- [x] RED: apply 테스트 — 승인분만 반영·반려 큐제거·self-roundtrip 422·skipped 표면화·queuePruneFailed·배치상한200 [parallel]
+- [x] RED: feedback write 테스트 — 화면 append(screenId·text·ts)·빈텍스트 거부·미존재 화면 방어 [parallel]
 
 ### Parallel Group 2 (서버 lib 구현 - 서로 다른 함수/파일, 동시 실행 가능)
-- [ ] GREEN: `readDocsWireframeSuggestions(docsDir)` — 큐 read, throw금지, dedup (`readDocsFeatureSuggestions` 원형 복제) [parallel]
-- [ ] GREEN: `applyWireframeSuggestions(docsDir, req)` + `wireframeInvariantHolds` — 승인분 반영·self-roundtrip 방어 (`applyFeatureSuggestions` 원형 복제) [parallel]
-- [ ] GREEN: `appendWireframeFeedback(docsDir, {screenId,text})` — feedback 사이드카 append (사람→파일 방향, 컨테이너 write 볼륨 확인) [parallel]
+- [x] GREEN: `readDocsWireframeSuggestions(docsDir)` — 큐 read, throw금지, dedup (`readDocsFeatureSuggestions` 원형 복제) [parallel]
+- [x] GREEN: `applyWireframeSuggestions(docsDir, req)` + `wireframeInvariantHolds` — 승인분 반영·self-roundtrip 방어 (`applyFeatureSuggestions` 원형 복제) [parallel]
+- [x] GREEN: `appendWireframeFeedback(docsDir, {screenId,text})` — feedback 사이드카 append (사람→파일 방향, 컨테이너 write 볼륨 확인) [parallel]
 
 ### Sequential: 원천 교체 (apply 산출물에 의존)
-- [ ] GREEN: `buildDocsPlanningWireframe2`를 고정 픽스처 반환에서 **승인분 반환**으로 교체 (1단계 렌더러·라우트·web 무변경, `WireScreen2[]` 계약 유지)
-- [ ] GREEN: 라우트 배선 — `GET/POST .../planning-wireframe-suggestions`(+/apply), `POST .../planning-wireframe-feedback` (`docs.ts`에 features/userflow 라우트 패턴 복제, apply body는 `isPrdApplyRequest` 재사용)
+- [x] GREEN: `buildDocsPlanningWireframe2`를 고정 픽스처 반환에서 **승인분 반환**으로 교체 (1단계 렌더러·라우트·web 무변경, `WireScreen2[]` 계약 유지)
+- [x] GREEN: 라우트 배선 — `GET/POST .../planning-wireframe-suggestions`(+/apply), `POST .../planning-wireframe-feedback` (`docs.ts`에 features/userflow 라우트 패턴 복제, apply body는 `isPrdApplyRequest` 재사용)
 
 ### Parallel Group 3 (웹 - 서버 API 완료 후, 서로 다른 컴포넌트, 동시 실행 가능)
 - [ ] GREEN: 화면별 피드백 입력 컴포넌트 — 각 화면에 자유텍스트 textarea + 제출→feedback write. 제출 후 "접수됨" 표시 [parallel] [frontend]

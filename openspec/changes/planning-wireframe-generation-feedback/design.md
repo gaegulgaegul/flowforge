@@ -59,12 +59,34 @@ flowforge = "읽기 거울". 3도메인(features/prd/userflow) 공통:
 - `planning-wireframe-approval-queue` + `planning-wireframe-approval-apply` — 제안 큐 read + 승인 반영(픽스처 자리를 승인분으로 대체, `buildDocsPlanningWireframe2` 교체 지점)
 - `planning-wireframe-feedback` — **신규**: 화면별 피드백 입력 → feedback 사이드카 write → 재조회로 재생성분 반영. (A안 파일 릴레이)
 
-## 열린 설계 세부 (propose에서 구체화)
-- feedback 사이드카 파일 경로/스키마 정확한 규약 (screenId·text·ts·상태)
-- 재생성분이 큐로 오는지 vs `.md`/JSON 직접인지 (generation은 직접write, approval은 큐 — 와이어는 어느 쪽?)
-- "그 화면만" 재생성의 화면 단위 격리 방법 (WireScreen2.id 기준)
-- flowforge 컨테이너 write 제약(홈 RO 마운트 여부 — audit-trigger 때 `/home/gaegul:...:ro`였음). feedback write가 어느 볼륨에 떨어지는지 확인 필요.
-- 폐기 잔재 없음(element 세로박스는 1단계에서 이미 제거 완료).
+## 확정 설계 세부 (apply Phase 0 grounding 후 확정, 2026-07-10)
+
+### D4. 저장 포맷 = JSON 사이드카 (라인패치 아님)
+- 와이어 원천은 `WireScreen2[]` **JSON 구조체**라 features(라인 제자리 교체)·userflow(mermaid append)의 라인패치 invariant를 복제할 수 없다.
+- **와이어 제안 큐 + 승인분 원천 = JSON 사이드카**. 큐=`<docsDir>/planning/wireframe.suggestions.json`, 승인분=`<docsDir>/planning/wireframe.json`(또는 동등). read/apply는 JSON parse/stringify, invariant는 `wireframeInvariantHolds`=**화면 id 집합 보존** 비교(라인 재파싱 아님 — spec이 이미 화면id 기준).
+- **주의**: 승인분 원천(`wireframe.json`) write도 docsDir(홈 RO)에 떨어지면 안 됨 → 아래 D5 볼륨 규약 적용 대상. 단 큐 read는 외부 스킬이 쓴 걸 읽기만 하므로 RO에서도 됨. **write 대상(승인분·feedback)만 RW 볼륨.**
+
+### D5. feedback write 볼륨 = B안 전용 RW 마운트 (명섭 님 확정 2026-07-10)
+🔴 flowforge 컨테이너는 홈(`/home/gaegul`→`/data/docs-root`)을 **`:ro`** 마운트라 docsDir 하위 write 불가(EROFS). 기존 userFlowOverlay·PRD write도 프로덕션 마운트에선 실패하는 잠재버그(테스트만 tmp라 통과).
+- **B안 규약**: feedback 전용 RW 볼륨 추가.
+  - docker-compose.yml: env `WIREFRAME_FEEDBACK_ROOT: /data/wireframe-feedback` + volume `/home/gaegul/flowforge/data/wireframe-feedback:/data/wireframe-feedback`(RW, `:ro` 없음).
+  - 호스트 폴더 `mkdir -p /home/gaegul/flowforge/data/wireframe-feedback` + flowforge `.gitignore`에 `data/wireframe-feedback/` 추가(피드백 git 오염 차단).
+  - flowforge write 경로: `<WIREFRAME_FEEDBACK_ROOT>/<project>.feedback.json`. env 미설정 시 폴백은 tmp 또는 로컬(테스트).
+- **승인분 원천(`wireframe.json`)도 같은 RW 볼륨에 두거나**, 승인 반영을 feedback과 같은 볼륨 규약으로. (홈 RO라 docsDir엔 못 씀.) → apply 때 승인분 저장 위치를 `WIREFRAME_FEEDBACK_ROOT` 하위(예: `<root>/<project>.wireframe.json`)로 통일.
+- 홈 전체는 RO 유지(보안 표면 안 키움). graph-overlay가 `/data/openspec`에 쓰는 것과 같은 전용 RW 볼륨 패턴.
+- **적용 시점**: apply 코드 완료 후 VERIFY의 `docker compose up -d --build` 때. 그전까지 컨테이너 무변경. 테스트는 tmp 픽스처라 마운트 무관하게 통과.
+
+### D6. 재생성 격리 = 화면 id 단위
+- 외부 스킬이 feedback을 읽어 그 `screenId` 화면만 재생성해 제안 큐 갱신. flowforge는 재조회로 그 화면만 갱신 반영, 타 화면 승인분 불변(`wireframeInvariantHolds` 화면id집합 보존이 이를 강제).
+
+### D7. WireframeDeviceFrame 재사용 마찰 (Phase 0 발견)
+- `WireframeDeviceFrame({screens})`는 항상 디바이스 토글+화면 탭 크롬을 렌더 → 위저드 renderCard 내 단일 미리보기로 쓰면 크롬이 딸려옴. 내부 `DesktopScreen`/`MobileScreen`은 미export.
+- **대응**: 위저드 미리보기는 전체 `WireframeDeviceFrame`을 그대로 쓰되(크롬 허용) 제안 화면만 넘기거나, controls 숨김 prop 1개 추가(최소 신설). 순수 프레임 export는 과함 — controls 숨김 prop이 게으름위계상 최소.
+
+### D8. 피드백 = 위저드 apply와 별도 경로 (Phase 0 확정)
+- 위저드 `onApply(approve, reject)` 시그니처는 자유 텍스트를 못 나름 → **feedback write는 위저드 승인과 독립된 별도 라우트/핸들러**. 이건 spec/design과 일치(피드백은 승인/반려가 아니라 재생성 지시).
+
+폐기 잔재 없음(element 세로박스는 1단계에서 이미 제거 완료).
 
 ## 화면 구성 / UI
 
