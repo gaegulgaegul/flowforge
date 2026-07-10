@@ -35,7 +35,10 @@ export interface WireSuggestionQueue {
   readonly suggestions: readonly WireSuggestion[];
 }
 
-/** 화면별 자유 텍스트 피드백 1건 — 사람→AI 역방향 write(A안 파일 릴레이). */
+/**
+ * 인플레이스 핀 피드백 1건 — 사람→AI 역방향 write(A안 파일 릴레이, D2 정정: Figma 코멘트식).
+ * 화면별 입력칸 나열이 아니라, 와이어 위 클릭한 그 좌표(xPct·yPct)에 묶인 지점 단위 피드백.
+ */
 export interface WireFeedbackItem {
   /** 피드백 대상 화면 id(WireScreen2.id). */
   readonly screenId: string;
@@ -43,4 +46,10 @@ export interface WireFeedbackItem {
   readonly text: string;
   /** ISO 타임스탬프(append 시각). */
   readonly ts: string;
+  /** 클릭 위치 가로 %(0~100, 와이어 컨테이너 기준). 지점 단위 피드백의 핵심 — "여기"가 의미를 가짐. */
+  readonly xPct: number;
+  /** 클릭 위치 세로 %(0~100, 와이어 컨테이너 기준). */
+  readonly yPct: number;
+  /** 좌표에서 자동 인식된 영역(본문/상단메뉴/사이드/하단바 등). 표시용(선택). */
+  readonly region?: string;
 }

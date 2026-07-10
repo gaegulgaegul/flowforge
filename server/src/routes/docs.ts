@@ -19,7 +19,7 @@
  * POST /api/docs/:project/planning-user-flow-suggestions/apply?flow=<stem> 승인·반려 적용(승인분만 <stem>.md 에지 append)
  * GET /api/docs/:project/planning-wireframe-suggestions       와이어 레이아웃 제안 큐 읽기(없으면 빈 큐 200)
  * POST /api/docs/:project/planning-wireframe-suggestions/apply 승인·반려 적용(승인분만 와이어 원천 반영, RW 볼륨)
- * POST /api/docs/:project/planning-wireframe-feedback         화면별 자유 텍스트 피드백 write(사람→AI 역방향, A안 릴레이)
+ * POST /api/docs/:project/planning-wireframe-feedback         인플레이스 핀 피드백 write(좌표 xPct·yPct, 사람→AI 역방향, A안 릴레이)
  *
  * :project는 슬래시를 포함할 수 있어 와일드카드(*)로 받는다. docs는 SSOT(읽기전용)지만,
  * 예외로 유저플로우 좌표 overlay와 PRD 승인 반영(승인=사용자 의도)만 쓴다.
@@ -446,11 +446,24 @@ docsRouter.post(
   }),
 );
 
-/** 피드백 write body 런타임 검증: {screenId:string, text:string}. isPrdApplyRequest 패턴 복제. */
-function isWireframeFeedbackRequest(v: unknown): v is { screenId: string; text: string } {
+/** 좌표 %가 0~100 범위의 유한 숫자인가(범위 밖·NaN·Infinity 거부). */
+function isPctInRange(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 100;
+}
+
+/**
+ * 피드백 write body 런타임 검증: {screenId, text, xPct, yPct, region?} — 인플레이스 핀(D2 정정).
+ * 좌표(xPct·yPct)는 0~100 범위 필수(지점 단위 피드백의 핵심). region은 선택 문자열.
+ */
+function isWireframeFeedbackRequest(
+  v: unknown,
+): v is { screenId: string; text: string; xPct: number; yPct: number; region?: string } {
   if (typeof v !== "object" || v === null) return false;
   const o = v as Record<string, unknown>;
-  return typeof o["screenId"] === "string" && typeof o["text"] === "string";
+  if (typeof o["screenId"] !== "string" || typeof o["text"] !== "string") return false;
+  if (!isPctInRange(o["xPct"]) || !isPctInRange(o["yPct"])) return false;
+  if (o["region"] !== undefined && typeof o["region"] !== "string") return false;
+  return true;
 }
 
 docsRouter.post(
@@ -463,14 +476,20 @@ docsRouter.post(
       res.status(404).json({ error: "docs_not_found" });
       return;
     }
-    // 피드백 = 위저드 승인과 별도 경로(D8). body={screenId,text} — 자유 텍스트 write.
+    // 피드백 = 위저드 승인과 별도 경로(D8). body={screenId,text,xPct,yPct,region?} — 인플레이스 핀(D2 정정).
     const body: unknown = req.body;
     if (!isWireframeFeedbackRequest(body)) {
       res.status(400).json({ error: "invalid_request" });
       return;
     }
-    // 빈 텍스트는 lib에서 거부(ok:false) → 400(쓰레기 피드백 방지). AI 호출 없음(A안 릴레이).
-    const result = appendWireframeFeedback(dir, project, { screenId: body.screenId, text: body.text });
+    // 빈 텍스트·범위 밖 좌표는 lib에서 거부(ok:false) → 400. AI 호출 없음(A안 릴레이).
+    const result = appendWireframeFeedback(dir, project, {
+      screenId: body.screenId,
+      text: body.text,
+      xPct: body.xPct,
+      yPct: body.yPct,
+      ...(body.region !== undefined ? { region: body.region } : {}),
+    });
     if (!result.ok) {
       res.status(400).json({ error: "empty_feedback" });
       return;

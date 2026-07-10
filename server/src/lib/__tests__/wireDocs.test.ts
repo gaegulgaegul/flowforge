@@ -8,7 +8,7 @@
  *  - applyWireframeSuggestions + wireframeInvariantHolds — 승인분만 반영(JSON merge)·반려 큐제거·
  *    화면id 집합 보존 위반 시 writeFailed·skipped 표면화·queuePruneFailed·id dedup
  *  - buildDocsPlanningWireframe2 — 승인분 JSON 있으면 그걸, 없으면 픽스처 폴백
- *  - appendWireframeFeedback — feedback 사이드카 append(screenId·text·ts)·빈텍스트 거부·ts 주입
+ *  - appendWireframeFeedback — 핀 피드백 append(screenId·text·ts·xPct·yPct·region)·빈텍스트/범위밖좌표 거부·ts 주입
  *
  * D4(JSON 사이드카)·D5(WIREFRAME_FEEDBACK_ROOT RW 볼륨)·D6(화면id 격리) 준수.
  * 파일 IO는 실제 tmp 픽스처(mkdtempSync)로 검증. featureDocs/userFlowDocs 원형을 JSON 저장에 맞게 조정.
@@ -309,20 +309,41 @@ describe("appendWireframeFeedback (feedback 사이드카 append)", () => {
     else process.env.WIREFRAME_FEEDBACK_ROOT = ORIG;
   });
 
-  it("화면에 피드백을 남기면 {screenId,text,ts}가 append 되고 ok:true", () => {
+  it("좌표를 찍어 피드백을 남기면 {screenId,text,ts,xPct,yPct,region}가 append 되고 ok:true", () => {
     const dir = makePlanning(root, "p");
-    const r = appendWireframeFeedback(dir, "p", { screenId: "grid", text: "하단을 탭바로 바꿔줘" }, () => "2026-07-10T00:00:00.000Z");
+    const r = appendWireframeFeedback(
+      dir,
+      "p",
+      { screenId: "grid", text: "하단을 탭바로 바꿔줘", xPct: 50, yPct: 90, region: "하단 메뉴바" },
+      () => "2026-07-10T00:00:00.000Z",
+    );
     expect(r.ok).toBe(true);
     const path = join(feedbackRoot, "p.feedback.json");
     const items = JSON.parse(readFileSync(path, "utf-8")) as unknown[];
     expect(items).toHaveLength(1);
-    expect(items[0]).toEqual({ screenId: "grid", text: "하단을 탭바로 바꿔줘", ts: "2026-07-10T00:00:00.000Z" });
+    expect(items[0]).toEqual({
+      screenId: "grid",
+      text: "하단을 탭바로 바꿔줘",
+      ts: "2026-07-10T00:00:00.000Z",
+      xPct: 50,
+      yPct: 90,
+      region: "하단 메뉴바",
+    });
+  });
+
+  it("region 없이도 좌표만으로 append 된다(region은 선택)", () => {
+    const dir = makePlanning(root, "p");
+    const r = appendWireframeFeedback(dir, "p", { screenId: "grid", text: "여기", xPct: 10, yPct: 20 }, () => "2026-07-10T00:00:00.000Z");
+    expect(r.ok).toBe(true);
+    const items = JSON.parse(readFileSync(join(feedbackRoot, "p.feedback.json"), "utf-8")) as Record<string, unknown>[];
+    expect(items[0]).toEqual({ screenId: "grid", text: "여기", ts: "2026-07-10T00:00:00.000Z", xPct: 10, yPct: 20 });
+    expect("region" in (items[0] ?? {})).toBe(false); // 빈 region은 저장 안 함
   });
 
   it("여러 번 append 되면 누적된다(기존 파일 보존)", () => {
     const dir = makePlanning(root, "p");
-    appendWireframeFeedback(dir, "p", { screenId: "grid", text: "첫번째" }, () => "2026-07-10T00:00:00.000Z");
-    appendWireframeFeedback(dir, "p", { screenId: "skeleton", text: "두번째" }, () => "2026-07-10T00:00:01.000Z");
+    appendWireframeFeedback(dir, "p", { screenId: "grid", text: "첫번째", xPct: 10, yPct: 10 }, () => "2026-07-10T00:00:00.000Z");
+    appendWireframeFeedback(dir, "p", { screenId: "skeleton", text: "두번째", xPct: 20, yPct: 20 }, () => "2026-07-10T00:00:01.000Z");
     const items = JSON.parse(readFileSync(join(feedbackRoot, "p.feedback.json"), "utf-8")) as unknown[];
     expect(items).toHaveLength(2);
     expect((items[1] as { text: string }).text).toBe("두번째");
@@ -330,21 +351,36 @@ describe("appendWireframeFeedback (feedback 사이드카 append)", () => {
 
   it("빈 텍스트(공백만)는 거부한다(ok:false, 파일 미기록)", () => {
     const dir = makePlanning(root, "p");
-    const r = appendWireframeFeedback(dir, "p", { screenId: "grid", text: "   " }, () => "2026-07-10T00:00:00.000Z");
+    const r = appendWireframeFeedback(dir, "p", { screenId: "grid", text: "   ", xPct: 50, yPct: 50 }, () => "2026-07-10T00:00:00.000Z");
     expect(r.ok).toBe(false);
+    expect(existsSync(join(feedbackRoot, "p.feedback.json"))).toBe(false);
+  });
+
+  it("좌표가 0~100 범위 밖이면 거부한다(ok:false, 파일 미기록)", () => {
+    const dir = makePlanning(root, "p");
+    expect(appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x", xPct: -1, yPct: 50 }).ok).toBe(false);
+    expect(appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x", xPct: 50, yPct: 101 }).ok).toBe(false);
+    expect(existsSync(join(feedbackRoot, "p.feedback.json"))).toBe(false);
+  });
+
+  it("좌표가 숫자가 아니거나 NaN/Infinity면 거부한다(ok:false)", () => {
+    const dir = makePlanning(root, "p");
+    expect(appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x", xPct: Number.NaN, yPct: 50 }).ok).toBe(false);
+    expect(appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x", xPct: 50, yPct: Number.POSITIVE_INFINITY }).ok).toBe(false);
+    expect(appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x", xPct: "50" as never, yPct: 50 }).ok).toBe(false);
     expect(existsSync(join(feedbackRoot, "p.feedback.json"))).toBe(false);
   });
 
   it("피드백 파일은 docsDir(홈 RO)가 아니라 WIREFRAME_FEEDBACK_ROOT 하위에 쓴다(D5)", () => {
     const dir = makePlanning(root, "p");
-    appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x" }, () => "2026-07-10T00:00:00.000Z");
+    appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x", xPct: 5, yPct: 5 }, () => "2026-07-10T00:00:00.000Z");
     expect(existsSync(join(dir, "planning", "p.feedback.json"))).toBe(false);
     expect(existsSync(join(feedbackRoot, "p.feedback.json"))).toBe(true);
   });
 
   it("ts는 주입한 시계(nowIso)를 쓴다(테스트 안정성 — Date.now 직접 사용 금지)", () => {
     const dir = makePlanning(root, "p");
-    appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x" }, () => "2000-01-01T00:00:00.000Z");
+    appendWireframeFeedback(dir, "p", { screenId: "grid", text: "x", xPct: 5, yPct: 5 }, () => "2000-01-01T00:00:00.000Z");
     const items = JSON.parse(readFileSync(join(feedbackRoot, "p.feedback.json"), "utf-8")) as { ts: string }[];
     expect(items[0]?.ts).toBe("2000-01-01T00:00:00.000Z");
   });

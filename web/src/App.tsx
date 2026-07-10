@@ -67,9 +67,8 @@ import { IANode } from "./IANode.js";
 import { SpecTreeNode } from "./SpecTreeNode.js";
 import { FeatureNode } from "./FeatureNode.js";
 import { WireframePanel } from "./WireframePanel.js";
-import { WireframeDeviceFrame } from "./WireframeDeviceFrame.js";
 import { WireframeApprovalWizard } from "./WireframeApprovalWizard.js";
-import { WireframeFeedbackInput } from "./WireframeFeedbackInput.js";
+import { WireframePinFeedback } from "./WireframePinFeedback.js";
 import { PrdPanel } from "./PrdPanel.js";
 import { PrdApprovalWizard } from "./PrdApprovalWizard.js";
 import { FeatureApprovalWizard } from "./FeatureApprovalWizard.js";
@@ -1079,9 +1078,9 @@ export function App(): JSX.Element {
                   onApply={(approve, reject) => applyWire(approve, reject)}
                   appliedTick={wireAppliedTick}
                 />
-                <WireframeDeviceFrame screens={planningWireScreens} />
-                {/* 화면별 자유 텍스트 피드백(D8 별도 경로 — 위저드 승인과 독립). 제출→feedback write. */}
-                <WireframeFeedbackInput
+                {/* 인플레이스 핀 피드백(D2 정정 — Figma 코멘트식). 디바이스 프레임 + 핀 레이어 + 목록.
+                    와이어 위 ⌘+클릭/핀모드 클릭 → 그 좌표에 팝오버 → 저장하면 핀. feedback write(D8 별도 경로). */}
+                <WireframePinFeedback
                   project={dashProject?.name ?? ""}
                   screens={planningWireScreens}
                 />

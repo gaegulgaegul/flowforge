@@ -349,13 +349,14 @@ export async function applyDocsWireframeSuggestions(
 }
 
 /**
- * 화면별 자유 텍스트 피드백 write(사람→AI 역방향, D8 별도 경로 — 위저드 승인과 독립).
- * flowforge는 feedback 사이드카에 append만 하고 AI를 호출하지 않는다(A안 파일 릴레이). 빈 텍스트는
- * 서버가 400(empty_feedback)으로 거부 — 호출 전에 클라이언트도 막지만 서버가 최종 방어.
+ * 인플레이스 핀 피드백 write(사람→AI 역방향, D8 별도 경로 — 위저드 승인과 독립, D2 정정).
+ * Figma 코멘트식: 와이어 위 클릭한 좌표(xPct·yPct 0~100)에 묶인 지점 단위 피드백. region은 좌표에서
+ * 자동 인식한 영역(선택). flowforge는 feedback 사이드카에 append만 하고 AI를 호출하지 않는다(A안 파일
+ * 릴레이). 빈 텍스트·범위 밖 좌표는 서버가 400으로 거부 — 클라이언트도 막지만 서버가 최종 방어.
  */
 export async function postWireframeFeedback(
   project: string,
-  input: { screenId: string; text: string },
+  input: { screenId: string; text: string; xPct: number; yPct: number; region?: string },
 ): Promise<{ ok: true }> {
   const res = await fetch(`/api/docs/${project}/planning-wireframe-feedback`, {
     method: "POST",
@@ -364,7 +365,7 @@ export async function postWireframeFeedback(
   });
   if (!res.ok) {
     if (res.status === 400) {
-      throw new Error("피드백을 기록하지 못했습니다(빈 텍스트이거나 형식 오류).");
+      throw new Error("피드백을 기록하지 못했습니다(빈 텍스트·범위 밖 좌표이거나 형식 오류).");
     }
     throw new Error(`wireframe-feedback ${res.status}`);
   }

@@ -303,20 +303,35 @@ function readFeedbackSidecar(path: string): WireFeedbackItem[] {
   }
 }
 
+/** 좌표 %가 0~100 범위의 유한 숫자인가(범위 밖·NaN·Infinity 거부). */
+function isValidPct(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 100;
+}
+
 /**
- * 화면별 자유 텍스트 피드백을 feedback 사이드카에 append(사람→AI 역방향, D2/D3 A안 파일 릴레이).
- * flowforge는 write만 하고 AI를 호출하지 않는다. 빈 텍스트(공백만)는 거부(쓰레기 방지). ts는
- * 주입 시계(nowIso)로 스탬프 — 테스트 안정성. write는 RW 볼륨(WIREFRAME_FEEDBACK_ROOT)에.
+ * 인플레이스 핀 피드백을 feedback 사이드카에 append(사람→AI 역방향, D2/D3 A안 파일 릴레이).
+ * flowforge는 write만 하고 AI를 호출하지 않는다. Figma 코멘트식: 클릭한 좌표(xPct·yPct 0~100)에
+ * 묶인 지점 단위 피드백. 빈 텍스트(공백만)·범위 밖 좌표는 거부(쓰레기 방지). ts는 주입 시계(nowIso)로
+ * 스탬프 — 테스트 안정성. write는 RW 볼륨(WIREFRAME_FEEDBACK_ROOT)에.
  */
 export function appendWireframeFeedback(
   docsDir: string,
   project: string,
-  input: { screenId: string; text: string },
+  input: { screenId: string; text: string; xPct: number; yPct: number; region?: string },
   nowIso: NowIso = defaultNowIso,
 ): { ok: boolean } {
   const text = (input.text ?? "").trim();
   if (text.length === 0) return { ok: false };
-  const item: WireFeedbackItem = { screenId: input.screenId, text, ts: nowIso() };
+  // 좌표 유효성 방어(0~100 밖·NaN·Infinity 거부) — 지점 단위 피드백은 좌표가 곧 의미.
+  if (!isValidPct(input.xPct) || !isValidPct(input.yPct)) return { ok: false };
+  const item: WireFeedbackItem = {
+    screenId: input.screenId,
+    text,
+    ts: nowIso(),
+    xPct: input.xPct,
+    yPct: input.yPct,
+    ...(typeof input.region === "string" && input.region.length > 0 ? { region: input.region } : {}),
+  };
   const path = feedbackSidecarPath(docsDir, project);
   const root = wireframeFeedbackRoot();
   if (!existsSync(root)) mkdirSync(root, { recursive: true });

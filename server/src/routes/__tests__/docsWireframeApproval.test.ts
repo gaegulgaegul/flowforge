@@ -149,24 +149,52 @@ describe("와이어 승인/반려 + 피드백 API", () => {
     expect(res.body.error).toBe("batch_too_large");
   });
 
-  // ── POST feedback ──
-  it("POST feedback — 화면에 피드백 남기면 200 + 사이드카 append", async () => {
+  // ── POST feedback (인플레이스 핀 — 좌표 포함, D2 정정) ──
+  it("POST feedback — 좌표를 찍어 핀 피드백 남기면 200 + 사이드카 append(좌표·region 포함)", async () => {
     makePlanning("p");
     const app = await loadApp();
-    const res = await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "하단을 탭바로 바꿔줘" });
+    const res = await request(app)
+      .post("/api/docs/p/planning-wireframe-feedback")
+      .send({ screenId: "grid", text: "하단을 탭바로 바꿔줘", xPct: 50, yPct: 90, region: "하단 메뉴바" });
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    const items = JSON.parse(readFileSync(join(FBROOT, "p.feedback.json"), "utf-8")) as { screenId: string; text: string; ts: string }[];
+    const items = JSON.parse(readFileSync(join(FBROOT, "p.feedback.json"), "utf-8")) as {
+      screenId: string;
+      text: string;
+      ts: string;
+      xPct: number;
+      yPct: number;
+      region?: string;
+    }[];
     expect(items).toHaveLength(1);
     expect(items[0]?.screenId).toBe("grid");
     expect(items[0]?.text).toBe("하단을 탭바로 바꿔줘");
+    expect(items[0]?.xPct).toBe(50);
+    expect(items[0]?.yPct).toBe(90);
+    expect(items[0]?.region).toBe("하단 메뉴바");
     expect(typeof items[0]?.ts).toBe("string");
   });
 
   it("POST feedback — 빈 텍스트는 400(쓰레기 방지), 파일 미기록", async () => {
     makePlanning("p");
     const app = await loadApp();
-    const res = await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "   " });
+    const res = await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "   ", xPct: 50, yPct: 50 });
+    expect(res.status).toBe(400);
+    expect(existsSync(join(FBROOT, "p.feedback.json"))).toBe(false);
+  });
+
+  it("POST feedback — 좌표 없으면 400(좌표는 필수 — 지점 단위 피드백)", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    const res = await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x" });
+    expect(res.status).toBe(400);
+    expect(existsSync(join(FBROOT, "p.feedback.json"))).toBe(false);
+  });
+
+  it("POST feedback — 좌표가 0~100 범위 밖이면 400, 파일 미기록", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    const res = await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 150, yPct: 50 });
     expect(res.status).toBe(400);
     expect(existsSync(join(FBROOT, "p.feedback.json"))).toBe(false);
   });
@@ -174,13 +202,13 @@ describe("와이어 승인/반려 + 피드백 API", () => {
   it("POST feedback — 잘못된 body(screenId 없음)는 400", async () => {
     makePlanning("p");
     const app = await loadApp();
-    const res = await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ text: "x" });
+    const res = await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ text: "x", xPct: 5, yPct: 5 });
     expect(res.status).toBe(400);
   });
 
   it("POST feedback — 경로 조작 차단(404)", async () => {
     const app = await loadApp();
-    const res = await request(app).post("/api/docs/..%2f..%2fetc/planning-wireframe-feedback").send({ screenId: "grid", text: "x" });
+    const res = await request(app).post("/api/docs/..%2f..%2fetc/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 5, yPct: 5 });
     expect(res.status).toBe(404);
   });
 
