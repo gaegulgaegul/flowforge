@@ -1,5 +1,5 @@
 {
-  "spec": "docs/spec.md",
+  "spec": "/home/gaegul/flowforge/docs/spec.md",
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
@@ -689,7 +689,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:55"
+      "evidence": "server/src/routes/docs.ts:63"
     },
     {
       "capability": "docs-ingest",
@@ -744,7 +744,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:62"
+      "evidence": "server/src/routes/docs.ts:70"
     },
     {
       "capability": "docs-ingest",
@@ -821,7 +821,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:75"
+      "evidence": "server/src/routes/docs.ts:83"
     },
     {
       "capability": "docs-ingest",
@@ -865,7 +865,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:88"
+      "evidence": "server/src/routes/docs.ts:96"
     },
     {
       "capability": "docs-ingest",
@@ -953,7 +953,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:101"
+      "evidence": "server/src/routes/docs.ts:109"
     },
     {
       "capability": "planning-prd-view",
@@ -1098,7 +1098,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:119"
+      "evidence": "server/src/routes/docs.ts:127"
     },
     {
       "capability": "planning-features-view",
@@ -1221,7 +1221,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:207"
+      "evidence": "server/src/routes/docs.ts:215"
     },
     {
       "capability": "planning-userflow-view",
@@ -1299,7 +1299,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:229"
+      "evidence": "server/src/routes/docs.ts:237"
     },
     {
       "capability": "planning-userflow-view",
@@ -1444,7 +1444,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:279"
+      "evidence": "server/src/routes/docs.ts:287"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1711,7 +1711,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:254"
+      "evidence": "server/src/routes/docs.ts:262"
     },
     {
       "capability": "planning-prd-approval-queue",
@@ -1778,7 +1778,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:137"
+      "evidence": "server/src/routes/docs.ts:145"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1866,7 +1866,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:268"
+      "evidence": "web/src/api.ts:269"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1910,7 +1910,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:151"
+      "evidence": "server/src/routes/docs.ts:159"
     },
     {
       "capability": "planning-panel-screen-links",
@@ -1921,7 +1921,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:278"
+      "evidence": "web/src/api.ts:279"
     },
     {
       "capability": "planning-panel-screen-links",
@@ -2054,7 +2054,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:346"
+      "evidence": "server/src/routes/docs.ts:354"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2109,7 +2109,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:367"
+      "evidence": "server/src/routes/docs.ts:375"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2120,7 +2120,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:397"
+      "evidence": "web/src/api.ts:463"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2208,7 +2208,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:382"
+      "evidence": "web/src/api.ts:448"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2420,7 +2420,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:319"
+      "evidence": "server/src/routes/docs.ts:327"
     },
     {
       "capability": "planning-features-approval-apply",
@@ -2832,7 +2832,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:305"
+      "evidence": "server/src/routes/docs.ts:313"
     },
     {
       "capability": "planning-features-approval-queue",
@@ -2876,7 +2876,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (5토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/lib/__tests__/docsFeatureApproval.test.ts:112",
+      "evidence": "server/src/lib/__tests__/wireDocs.test.ts:137",
       "llmHint": "features.suggestions.json을 JSON.parse 후 op=\"set-attrs\"·nodePath=string[]·priority/status 어휘(낮음|중간|높음 / 시작전|진행중|완료|중단) 검증으로 필터해 유효 제안만 반환, priority·status 둘 다 없는 무의미 제안은 제외, id 중복은 first-occurrence-wins dedup, 파일 없음·깨진 JSON은 빈 큐로 폴백"
     },
     {
@@ -3040,7 +3040,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:190"
+      "evidence": "server/src/routes/docs.ts:198"
     },
     {
       "capability": "planning-wireframe-device",
@@ -3051,7 +3051,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/parser/planningWireframeFixture.ts:189"
+      "evidence": "server/src/lib/wireDocs.ts:285"
     },
     {
       "capability": "planning-wireframe-device",
@@ -3084,7 +3084,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (7토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/parser/__tests__/planningWireframeFixture.test.ts:20",
+      "evidence": "server/src/parser/__tests__/planningWireframeFixture.test.ts:19",
       "llmHint": "WireScreen2[]{id, title, device(desktop|mobile), regions(topbar/sidebar/bottombar/body), body.layout(grid|stack|tree|form), 요소 kind/label/goto} 반환. 모바일 요소 goto는 모바일 화면을 가리켜 디바이스 흐름 유지(프레임이 데스크탑으로 튀지 않음)"
     },
     {
@@ -3107,7 +3107,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/WireframeDeviceFrame.tsx:126"
+      "evidence": "web/src/WireframeDeviceFrame.tsx:139"
     },
     {
       "capability": "planning-wireframe-device",
@@ -3118,7 +3118,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (5토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/parser/__tests__/planningWireframeFixture.test.ts:38",
+      "evidence": "server/src/parser/__tests__/planningWireframeFixture.test.ts:37",
       "llmHint": "데스크탑=브라우저 크롬+상단 메뉴+사이드+본문(grid/stack/tree/form), 모바일=폰 프레임+상단 타이틀+본문+하단 메뉴바. 회색조 로우피델리티, 요소 goto 클릭 이동, 디바이스 토글·화면 목록. 기존 WireframePanel(change 경로)과 병존(golden·change 와이어 무저촉)"
     },
     {
@@ -3162,7 +3162,22 @@
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-ia",
-      "source": "server/src/routes/docs.ts:170"
+      "source": "server/src/routes/docs.ts:178"
+    },
+    {
+      "type": "endpoint",
+      "what": "POST /api/docs/:project(*)/planning-wireframe-feedback",
+      "source": "server/src/routes/docs.ts:469"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/docs/:project(*)/planning-wireframe-suggestions",
+      "source": "server/src/routes/docs.ts:408"
+    },
+    {
+      "type": "endpoint",
+      "what": "POST /api/docs/:project(*)/planning-wireframe-suggestions/apply",
+      "source": "server/src/routes/docs.ts:422"
     },
     {
       "type": "endpoint",
@@ -3172,7 +3187,7 @@
     {
       "type": "symbol",
       "what": "App",
-      "source": "web/src/App.tsx:93"
+      "source": "web/src/App.tsx:97"
     },
     {
       "type": "symbol",
@@ -3236,8 +3251,18 @@
     },
     {
       "type": "symbol",
+      "what": "WireframeApprovalWizard",
+      "source": "web/src/WireframeApprovalWizard.tsx:28"
+    },
+    {
+      "type": "symbol",
       "what": "WireframePanel",
       "source": "web/src/WireframePanel.tsx:21"
+    },
+    {
+      "type": "symbol",
+      "what": "WireframePinFeedback",
+      "source": "web/src/WireframePinFeedback.tsx:253"
     },
     {
       "type": "symbol",
@@ -3251,18 +3276,38 @@
     },
     {
       "type": "symbol",
+      "what": "appendWireframeFeedback",
+      "source": "server/src/lib/wireDocs.ts:317"
+    },
+    {
+      "type": "symbol",
       "what": "applyDocsFeatureSuggestions",
-      "source": "web/src/api.ts:325"
+      "source": "web/src/api.ts:391"
     },
     {
       "type": "symbol",
       "what": "applyDocsPrdSuggestions",
-      "source": "web/src/api.ts:233"
+      "source": "web/src/api.ts:234"
+    },
+    {
+      "type": "symbol",
+      "what": "applyDocsWireframeSuggestions",
+      "source": "web/src/api.ts:326"
     },
     {
       "type": "symbol",
       "what": "applyInChunks",
-      "source": "web/src/api.ts:203"
+      "source": "web/src/api.ts:204"
+    },
+    {
+      "type": "symbol",
+      "what": "applyWireframeSuggestions",
+      "source": "server/src/lib/wireDocs.ts:218"
+    },
+    {
+      "type": "symbol",
+      "what": "approvedWireframePath",
+      "source": "server/src/lib/wireDocs.ts:70"
     },
     {
       "type": "symbol",
@@ -3336,103 +3381,113 @@
     },
     {
       "type": "symbol",
+      "what": "feedbackSidecarPath",
+      "source": "server/src/lib/wireDocs.ts:75"
+    },
+    {
+      "type": "symbol",
       "what": "fetchCapabilities",
-      "source": "web/src/api.ts:89"
+      "source": "web/src/api.ts:90"
     },
     {
       "type": "symbol",
       "what": "fetchCapabilityDetail",
-      "source": "web/src/api.ts:109"
+      "source": "web/src/api.ts:110"
     },
     {
       "type": "symbol",
       "what": "fetchChanges",
-      "source": "web/src/api.ts:50"
+      "source": "web/src/api.ts:51"
     },
     {
       "type": "symbol",
       "what": "fetchDocsFeatureSuggestions",
-      "source": "web/src/api.ts:313"
+      "source": "web/src/api.ts:379"
     },
     {
       "type": "symbol",
       "what": "fetchDocsGraph",
-      "source": "web/src/api.ts:161"
+      "source": "web/src/api.ts:162"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningFeatures",
-      "source": "web/src/api.ts:259"
+      "source": "web/src/api.ts:260"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningIa",
-      "source": "web/src/api.ts:288"
+      "source": "web/src/api.ts:289"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningPrd",
-      "source": "web/src/api.ts:180"
+      "source": "web/src/api.ts:181"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningUserFlow",
-      "source": "web/src/api.ts:368"
+      "source": "web/src/api.ts:434"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningWireframe",
-      "source": "web/src/api.ts:301"
+      "source": "web/src/api.ts:302"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrd",
-      "source": "web/src/api.ts:173"
+      "source": "web/src/api.ts:174"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrdSuggestions",
-      "source": "web/src/api.ts:187"
+      "source": "web/src/api.ts:188"
     },
     {
       "type": "symbol",
       "what": "fetchDocsProjects",
-      "source": "web/src/api.ts:154"
+      "source": "web/src/api.ts:155"
     },
     {
       "type": "symbol",
       "what": "fetchDocsWireframe",
-      "source": "web/src/api.ts:167"
+      "source": "web/src/api.ts:168"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsWireframeSuggestions",
+      "source": "web/src/api.ts:314"
     },
     {
       "type": "symbol",
       "what": "fetchGraph",
-      "source": "web/src/api.ts:120"
+      "source": "web/src/api.ts:121"
     },
     {
       "type": "symbol",
       "what": "fetchIA",
-      "source": "web/src/api.ts:126"
+      "source": "web/src/api.ts:127"
     },
     {
       "type": "symbol",
       "what": "fetchPrd",
-      "source": "web/src/api.ts:138"
+      "source": "web/src/api.ts:139"
     },
     {
       "type": "symbol",
       "what": "fetchProjects",
-      "source": "web/src/api.ts:81"
+      "source": "web/src/api.ts:82"
     },
     {
       "type": "symbol",
       "what": "fetchSpecTree",
-      "source": "web/src/api.ts:144"
+      "source": "web/src/api.ts:145"
     },
     {
       "type": "symbol",
       "what": "fetchWireframe",
-      "source": "web/src/api.ts:132"
+      "source": "web/src/api.ts:133"
     },
     {
       "type": "symbol",
@@ -3466,6 +3521,11 @@
     },
     {
       "type": "symbol",
+      "what": "isValidWireSuggestion",
+      "source": "server/src/lib/wireDocs.ts:120"
+    },
+    {
+      "type": "symbol",
       "what": "listChanges",
       "source": "server/src/lib/changes.ts:33"
     },
@@ -3483,6 +3543,11 @@
       "type": "symbol",
       "what": "pendingIds",
       "source": "shared/src/wizard-state.ts:66"
+    },
+    {
+      "type": "symbol",
+      "what": "postWireframeFeedback",
+      "source": "web/src/api.ts:357"
     },
     {
       "type": "symbol",
@@ -3506,6 +3571,11 @@
     },
     {
       "type": "symbol",
+      "what": "pruneWireframeQueue",
+      "source": "server/src/lib/wireDocs.ts:271"
+    },
+    {
+      "type": "symbol",
       "what": "readDocsFile",
       "source": "server/src/lib/docs.ts:92"
     },
@@ -3521,6 +3591,11 @@
     },
     {
       "type": "symbol",
+      "what": "readDocsWireframeSuggestions",
+      "source": "server/src/lib/wireDocs.ts:134"
+    },
+    {
+      "type": "symbol",
       "what": "readOverlay",
       "source": "server/src/lib/changes.ts:77"
     },
@@ -3532,12 +3607,12 @@
     {
       "type": "symbol",
       "what": "saveDocsPlanningUserFlowLayout",
-      "source": "web/src/api.ts:427"
+      "source": "web/src/api.ts:493"
     },
     {
       "type": "symbol",
       "what": "saveLayout",
-      "source": "web/src/api.ts:350"
+      "source": "web/src/api.ts:416"
     },
     {
       "type": "symbol",
@@ -3601,6 +3676,16 @@
     },
     {
       "type": "symbol",
+      "what": "wireframeFeedbackRoot",
+      "source": "server/src/lib/wireDocs.ts:60"
+    },
+    {
+      "type": "symbol",
+      "what": "wireframeInvariantHolds",
+      "source": "server/src/lib/wireDocs.ts:198"
+    },
+    {
+      "type": "symbol",
       "what": "writeOverlay",
       "source": "server/src/lib/changes.ts:88"
     }
@@ -3613,6 +3698,6 @@
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-20260708-1445.html",
-  "runId": "run-20260708-1445"
+  "historyHtml": "audit-20260710-0801.html",
+  "runId": "run-20260710-0801"
 }
