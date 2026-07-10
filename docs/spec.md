@@ -479,3 +479,29 @@ flowforge 기획 와이어를 디바이스 프레임(데스크탑/모바일) 안
 - assert:symbol WireframeDeviceFrame
 - behavior: 데스크탑=브라우저 크롬+상단 메뉴+사이드+본문(grid/stack/tree/form), 모바일=폰 프레임+상단 타이틀+본문+하단 메뉴바. 회색조 로우피델리티, 요소 goto 클릭 이동, 디바이스 토글·화면 목록. 기존 WireframePanel(change 경로)과 병존(golden·change 와이어 무저촉)
 - metric: 라이브 실픽셀 grounding — 목업(wireframe-mockup-deploy)과 시각 대조로 "세로 목록 아님·화면 배치 맞음" 확인
+
+## capability: flowforge-change-entry
+
+skeleton 단계에서 change 목록(capability별)을 프로젝트의 기획문서(docs/planning/) 유무와 무관하게 항상 노출한다. 이전 `planTabsAvail.length === 0` 게이트가 기획문서 있는 프로젝트에서 change 5종 뷰 진입로를 통째로 숨기던 부작용을 제거했다. change 목록에서 capability→change→5종 뷰로 내려가는 진입 경로는 기존 openCapability→openChangeViews 흐름을 재사용한다.
+
+### 기능: change 목록 무조건 렌더 (기획문서 유무 무관)
+- assert:symbol dash-changes-section
+- assert:symbol planTabsAvail
+- change 목록 블록(`<section class="dash-changes-section">` — h3 + capability별 `dash-cap` 버튼)은 skeleton 단계에서 게이트 없이 항상 렌더된다. `planTabsAvail`(기획문서 존재 배열)이 change 목록 노출을 막지 않는다.
+- invariant: 기획문서 있는 프로젝트는 기획 탭 바(`planTabsAvail.length > 0`)와 change 목록이 형제로 병존 렌더된다.
+- invariant: 기획문서 없는 프로젝트는 `planTabsAvail.length === 0`이라 기획 탭/섹션은 안 뜨고 change 목록만 렌더된다(게이트 제거 전과 픽셀 동일 — 회귀 없음).
+- invariant: 그래프 탭(dash-body--wide, overflow:hidden)에서도 change 목록 section이 `flex:0 0 auto`+`max-height:40vh`+`overflow-y:auto`로 그래프 캔버스(min-height:480px)에 덮이지 않고 독립 스크롤로 전 항목 도달된다. 그래프 section은 overflow:hidden으로 change 영역을 침범하지 않는다.
+- metric: gstack 라이브 실픽셀 — flowforge(기획문서 있음) PRD 탭·그래프 탭(기능명세/유저플로우) 모두 기획 탭+change 목록 병존 확인, agentic-harness(기획문서 없음) change 목록만 노출 무회귀 확인 PASS.
+
+### 기능: change 목록에서 5종 뷰 진입
+- assert:symbol openCapability
+- assert:symbol openChangeViews
+- change 목록의 capability 버튼 클릭 시 `openCapability`가 그 capability의 change 상세(capChanges)로 이동하고, change 클릭 시 `openChangeViews`가 5종 뷰(views) + PRD 탭 활성으로 진입한다.
+- invariant: 진입 경로는 신규 데이터·라우트 없이 기존 openCapability→capChanges→openChangeViews→views 흐름을 재사용한다.
+- metric: gstack 라이브 — capability 클릭→capChanges 이동, change 클릭→views+PRD 탭 활성(change 있는 capability는 wowa-app로 실증) PASS.
+
+### 기능: change·capability 부재의 안전 표면화
+- change나 capability가 없어도 빈 화면 대신 상태를 명시 표면화한다.
+- invariant: capability 0개 프로젝트는 "표시할 capability가 없습니다" 안내를 change 목록 자리에 노출한다.
+- invariant: change 0개 capability는 "change 0개"로 표기되고, 클릭 시 빈 상세로 진입하되 오류 없이 처리된다.
+- metric: gstack 라이브 — capability 0개(agentic-harness) 안내 노출, change 0개 capability 표기·빈 상세 안전 처리 확인 PASS.
