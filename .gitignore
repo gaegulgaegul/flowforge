@@ -31,3 +31,6 @@ coverage/
 tmp/
 *.tmp
 .gstack/
+
+# 와이어 피드백/승인분 RW 볼륨 산출물(런타임 생성, git 오염 차단)
+data/wireframe-feedback/

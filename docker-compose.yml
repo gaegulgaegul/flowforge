@@ -20,6 +20,10 @@ services:
       # docs-root와 동일한 호스트 홈 RO 마운트를 재사용 — <project>/openspec/changes/*/specs/
       # 가진 프로젝트를 카드로 노출(읽기전용 스캔이라 RW 불필요).
       PROJECTS_ROOT: /data/docs-root
+      # 와이어 피드백/승인분 전용 RW 볼륨(planning-wireframe-generation-feedback, B안).
+      # 홈은 RO라 docsDir 하위 write 불가(EROFS) → feedback.json·wireframe.json은 이 RW 볼륨에.
+      # flowforge write 경로: <WIREFRAME_FEEDBACK_ROOT>/<project>.feedback.json / .wireframe.json
+      WIREFRAME_FEEDBACK_ROOT: /data/wireframe-feedback
       # 쓰기 인증(public-surface-hardening). 값은 호스트 .env(git-ignored)에서 주입 —
       # 실값을 이 파일에 커밋하지 않는다(30-security). 넷 다 미설정이면 현행 무인증 동작
       # (개발 모드) — 프로덕션 강제는 CF Zero Trust 등록 + 아래 env 주입을 한 세트로.
@@ -35,6 +39,8 @@ services:
       - /home/gaegul/wowa-app/openspec:/data/openspec
       # 상주 docs 스캔용 — 호스트 홈 전체 RO(읽기전용). docs/ 가진 프로젝트만 1단계로 잡힌다(ssoksok 등).
       - /home/gaegul:/data/docs-root:ro
+      # 와이어 피드백/승인분 전용 RW(홈 RO 우회, B안). graph-overlay(/data/openspec)와 같은 전용 RW 볼륨 패턴.
+      - /home/gaegul/flowforge/data/wireframe-feedback:/data/wireframe-feedback
     # immich 가 RAM 빠듯한 서버 → 메모리 상한으로 영향 차단(메모리 교훈: RAM 압박)
     mem_limit: 256m
     networks:

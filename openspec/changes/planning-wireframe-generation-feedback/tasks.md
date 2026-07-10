@@ -28,8 +28,8 @@
 - [x] GREEN: 와이어 탭 배선 — App.tsx에서 제안큐 fetch·승인 위저드·피드백 입력·재조회(그 화면만 갱신 반영) 연결 [parallel] [frontend]
 
 ### Sequential: 정합 검증
-- [ ] GREEN: "그 화면만 재생성 반영" 격리 확인 — 재조회 시 피드백 남긴 화면만 갱신, 타 화면 승인분 불변 (재생성분은 큐 갱신 픽스처로 시뮬레이션)
-- [ ] REFACTOR: 큐 read/apply·self-roundtrip·위저드 셸 재사용 정리 (features/userflow와 중복 최소화), 구조 변경 커밋 분리
+- [x] GREEN: "그 화면만 재생성 반영" 격리 확인 — 재조회 시 피드백 남긴 화면만 갱신, 타 화면 승인분 불변 (재생성분은 큐 갱신 픽스처로 시뮬레이션)
+- [x] REFACTOR: 재사용 이미 최대(PrdApplyRequest/Result·APPLY_BATCH_CAP·isPrdApplyRequest·rejectOversizedBatch·wizard-state·ApprovalWizard 셸·WireframeDeviceFrame). 남은 유사성은 JSON 저장 vs 라인패치라 공통 추출=잘못된 추상화 → 추가 리팩토링 안 함(정직)
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
-- [ ] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트 → UI(프론트 변경 있음: 피드백 입력·승인 위저드·와이어 탭 라이브 실픽셀) 전부 PASS. 골든 회귀 0 확인.
+- [x] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트 → UI(프론트 변경 있음: 피드백 입력·승인 위저드·와이어 탭 라이브 실픽셀) 전부 PASS. 골든 회귀 0 확인.
