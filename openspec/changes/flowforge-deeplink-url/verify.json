@@ -1,0 +1,289 @@
+{
+  "change": "flowforge-deeplink-url",
+  "verifiedAt": "2026-07-10T23:39:38+09:00",
+  "finalJudgment": "조건부",
+  "counts": {
+    "pass": 10,
+    "fail": 0,
+    "검증안함": 1,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": false,
+    "reason": "검증 안 함 1건 / SKIPPED 0건"
+  },
+  "requirements": [
+    {
+      "title": "R1: change 뷰 상태를 URL에 기록한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "pushState는 change.project(진입) / selectedProject&&selected(탭전환)가 있을 때만 실행(App.tsx:931,956). null이면 기록 자체를 안 함 — 파싱측 null 방어는 R2/R4가 담당.",
+          "빈값": "serializeDeepLink는 화이트리스트 5종 tab만 직렬화(deeplink.ts:47-51). 빈 tab이 URL로 나갈 경로 없음.",
+          "잘못된타입": "tab 인자는 TS `Tab` 타입으로 컴파일타임 강제. 런타임 잘못된 타입 유입 경로 없음(deeplink.ts:14).",
+          "에러경로": "URL 조립은 순수함수 serializeDeepLink이고 history.pushState는 정상 URL에 throw 경로 없음 — 기록측에 에러 경로 부재.",
+          "대량": "URL은 project·change·tab 3파라미터 고정. 대량 입력 개념이 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "S1.1 change 뷰 진입 시 URL 기록 (pushState site 1, openChangeViews)",
+          "layer": "web",
+          "means": "gstack — grid→project→planning graph 경로로 openChangeViews UI 진입 시도",
+          "basis": "코드 존재 확인(App.tsx:931-936, tab=prd, serializeDeepLink+pushState). 단 이 라이브 배포에서 capChanges→CapabilityChangeList 진입점(.dash-cap)이 렌더되지 않아 UI 클릭으로 도달 불가 — WHEN(change 클릭 진입) 미실행.",
+          "result": "검증 안 함 (UI 진입 경로 미도달)",
+          "evidence": {
+            "kind": "text",
+            "text": "capChanges 진입은 openCapability(.dash-cap 버튼, App.tsx:1214)로만 도달하나 이 버튼은 planTabsAvail.length===0(기획문서 없는 프로젝트)에서만 렌더(App.tsx:1205). 라이브에서 capabilities>0인 프로젝트(flowforge 24개, wowa-app 11개)는 전부 기획문서를 가져 planning 그래프를 띄우므로 .dash-cap 미렌더. flowforge 기획 그래프의 feature 노드 클릭은 FeatureDetailPanel(App.tsx:1297, onOpenChange 프롭 없음)만 열려 change 뷰로 못 감. → openChangeViews의 pushState(site1)를 UI로 트리거 불가. 코드는 App.tsx:931-936에 존재하고, 동일 serialize+pushState 기계는 S1.2/S1.3(site3)로 라이브 입증됨."
+          }
+        },
+        {
+          "scenario": "S1.2 탭 전환 시 URL의 tab 갱신 (pushState site 3, tabBtn)",
+          "layer": "web",
+          "means": "gstack — 딥링크 prd 뷰에서 spec 탭 클릭, location.search·history.length 관찰",
+          "basis": "App.tsx:957-961 pushState(serializeDeepLink); history.length 17→18 증가 관찰",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s1-2-spec.png",
+            "caption": "spec 탭 클릭 후 URL=?project=flowforge&change=flowforge-deeplink-url&tab=spec, spec aria-pressed=true (project·change 유지)"
+          }
+        },
+        {
+          "scenario": "S1.3 5종 탭 각각이 서로 다른 URL을 갖는다",
+          "layer": "web",
+          "means": "gstack — prd→spec→flow→ia→wire 연속 클릭, 각 URL·history.length 관찰",
+          "basis": "각 클릭이 distinct tab= URL 생성 + history.length 17→18→19→20→21 (클릭당 +1 pushState)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s1-3-tabs.png",
+            "caption": "spec→?tab=spec, flow→?tab=flow, ia→?tab=ia, wire→?tab=wire 각각 distinct, 각 tab aria-pressed=true, history +1/클릭"
+          }
+        }
+      ]
+    },
+    {
+      "title": "R2: URL로 change 뷰를 복원한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "동시성": "마운트 복원은 1회 useEffect(App.tsx:250-257, deps []). 동시 복원 개념이 없음(단일 마운트 파싱).",
+          "대량": "복원은 project·change·tab 3파라미터 파싱. 대량 데이터 입력 개념 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "S2.1 딥링크 URL로 새로 접속하면 해당 탭이 복원된다",
+          "layer": "web",
+          "means": "gstack — ?project=flowforge&change=flowforge-deeplink-url&tab=spec 신규 접속, aria-pressed·content 관찰",
+          "basis": "마운트 복원 useEffect(App.tsx:250-257) → dashStage=views, spec tab aria-pressed=true, change 키 페이지 표시, 콘솔 에러 0",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s2-spec.png",
+            "caption": "fresh load tab=spec → spec aria-pressed=true, 5탭 버튼 렌더, change 'flowforge-deeplink-url' 페이지 표시, no console error"
+          }
+        },
+        {
+          "scenario": "S2.2 tab 파라미터별 복원 (prd/flow/ia/wire)",
+          "layer": "web",
+          "means": "gstack — tab=prd·flow·ia·wire 각각 신규 접속, 매칭 탭 aria-pressed 관찰",
+          "basis": "각 딥링크 fresh load에서 해당 tab aria-pressed=true, 5탭 모두 렌더, views 단계(grid 아님)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s2-prd.png",
+            "caption": "prd/flow/ia/wire 각 딥링크 fresh load → 각 탭 복원 활성(4개 tab별 스크린샷 verify-s2-{prd,flow,ia,wire}.png)"
+          }
+        },
+        {
+          "scenario": "S2.3 딥링크 파라미터가 없으면 기존 랜딩 유지",
+          "layer": "web",
+          "means": "gstack — 쿼리 없는 / 접속, location.search·grid 관찰",
+          "basis": "parseDeepLink→null(deeplink.ts:36) → 마운트 복원 early return(App.tsx:252) → grid 유지; tab 버튼 없음, .pg-card 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s2-3-landing.png",
+            "caption": "쿼리 없음 → location.search='', tab 버튼 미렌더(grid), 프로젝트 카드 표시(하위호환)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "R3: 뒤로가기로 이전 탭/화면으로 돌아간다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "빈값": "popstate 핸들러(App.tsx:262-271)는 현재 URL을 parseDeepLink에 통과 — 빈/파라미터부재 URL은 null 경로로 grid 폴백(S3.2가 그 경로를 커버).",
+          "잘못된타입": "popstate 재파싱도 parseDeepLink 동일 경로 — bogus tab 정규화는 R4(S4.1)가 담당. R3 고유의 잘못된타입 축 없음.",
+          "에러경로": "popstate 핸들러는 순수 상태동기화(setState 호출)만; throw 경로 없음.",
+          "동시성": "브라우저 히스토리 뒤로가기는 단일 popstate 이벤트로 직렬 처리 — 동시성 개념 없음.",
+          "대량": "히스토리 URL 파라미터 3개 고정 — 대량 입력 없음.",
+          "특수문자": "popstate가 파싱하는 URL 특수문자 처리는 R2 파싱 경로(URLSearchParams 디코드)와 동일 — R2 특수문자에서 covered."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "S3.1 탭 전환 뒤 뒤로가기",
+          "layer": "web",
+          "means": "gstack — prd→spec 전환 후 $B back, URL·aria-pressed 관찰",
+          "basis": "popstate 리스너(App.tsx:262-268) 재동기화 → back 후 URL tab=prd, prd aria-pressed=true, spec=false, views 유지",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s3-1-back.png",
+            "caption": "spec 전환 후 back → URL 복귀 tab=prd, prd aria-pressed=true / spec=false, 여전히 views"
+          }
+        },
+        {
+          "scenario": "S3.2 change 진입 뒤 뒤로가기",
+          "layer": "web",
+          "means": "gstack — 랜딩(no query)→딥링크 뷰 진입(history +1)→$B back, params·grid 관찰",
+          "basis": "popstate else 분기(App.tsx:269-270 setDashStage('grid')) → back 후 location.search='', tab 버튼 없음, .pg-card 존재",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s3-2-back-landing.png",
+            "caption": "랜딩→뷰 진입→back → 딥링크 params 소거(search=''), grid 랜딩 복귀(카드 표시). 주: WHEN의 진입은 goto 딥링크로 landing→views 히스토리 전이를 만듦(openChangeViews UI 미도달과 동일 이유) — THEN(popstate→grid)은 실증됨."
+          }
+        }
+      ]
+    },
+    {
+      "title": "R4: 잘못된 파라미터를 안전하게 방어한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "동시성": "방어는 단일 파싱/폴백 판정(parseDeepLink) — 동시성 축 없음.",
+          "대량": "파라미터 3개 고정 — 대량 방어 대상 없음.",
+          "특수문자": "특수문자 인코딩/디코딩은 R1/R2의 encodeURIComponent·URLSearchParams가 담당(R2 특수문자 covered). 방어측(R4)은 tab 화이트리스트 정규화·필수파라미터 유무만 판정하므로 특수문자 축은 여기 해당 안 됨."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "S4.1 알 수 없는 tab 값 (tab=bogus)",
+          "layer": "web",
+          "means": "gstack — ?...&tab=bogus 접속, 활성 탭·크래시 여부 관찰",
+          "basis": "isTab 실패→DEFAULT_TAB prd(deeplink.ts:38) → 활성 탭 tab-prd, views 정상, 크래시 없음(유효 prd 로드와 비교해 404 회귀 아님)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s4-1-bogus.png",
+            "caption": "tab=bogus → 활성 탭 tab-prd(폴백), 5탭 렌더, 앱 정상 동작(크래시 없음)"
+          }
+        },
+        {
+          "scenario": "S4.2 존재하지 않는 change/project",
+          "layer": "web",
+          "means": "gstack — ?change=__nonexistent-xyz__ 접속, 상태바·크래시 여부 관찰",
+          "basis": ".catch(setStatus) 경로 → 상태바 'PRD 로드 실패: Error: prd 404' 표시, 5탭 버튼 렌더, 화이트스크린 없음, 앱 responsive",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s4-2-nonexistent.png",
+            "caption": "존재하지 않는 change → 상태바 'PRD 로드 실패: Error: prd 404', 5탭 렌더, 크래시 없음(body 텍스트 존재, 버튼 존재)"
+          }
+        },
+        {
+          "scenario": "S4.3 파라미터 일부 누락 (?tab=spec만)",
+          "layer": "web",
+          "means": "gstack — ?tab=spec만 접속, views 진입 여부·grid 관찰",
+          "basis": "parseDeepLink: project||change 없으면 null(deeplink.ts:36) → 랜딩; tab 버튼 없음, .pg-card 존재(잘못된 뷰 안 엶)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-s4-3-partial.png",
+            "caption": "?tab=spec만 → views 미진입, grid 랜딩(카드 표시). 부분 파라미터로 잘못된 뷰 안 엶."
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 11,
+      "passed": 10,
+      "failed": 0,
+      "basis": "gstack live https://flowforge.gaegul.house — 11 시나리오 중 10 PASS, 1 검증 안 함(S1.1 UI 진입 경로 미도달)"
+    },
+    {
+      "layer": "server",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "이 change 서버 무변경",
+      "reason": "이 change 서버 무변경 (프론트 URL 라우팅만; 서버는 기존 ?project= 해석 재사용, api.ts:76-78)"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가",
+      "reason": "웹 SPA 전용 change — android 레이어 없음"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가",
+      "reason": "웹 SPA 전용 change — ios 레이어 없음"
+    }
+  ],
+  "codeState": {
+    "head": "7b79921ecef69f21f0d9b20c1165bf859574d74f",
+    "dirty": true,
+    "branch": "feat/flowforge-feedback-changes",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260710-233938.html"
+}
