@@ -1197,29 +1197,27 @@ export function App(): JSX.Element {
                 </div>
               </section>
             )}
-            {/* 2026-07-03 사용자 결정: 기획문서가 있는 프로젝트(flowforge 등)는 그래프가 뼈대라
-                하단 capability 목록을 숨긴다. 단 기획문서가 하나도 없는 프로젝트(wowa-app 등)는
-                이 목록이 change 5종 뷰로 가는 유일한 진입로라 조건부로 보여준다
-                (cross-project-change-views — 없으면 빈 화면 dead-end). 라벨도 "뼈대"가 아니라
-                실체(change 입구)대로 표기(2026-07-03 라벨오류 지적 반영). */}
-            {planTabsAvail.length === 0 && (
-              <>
-                <h3 className="dash-h">{dashProject?.displayName} — change 목록 (capability별)</h3>
-                {capabilities.length === 0 ? (
-                  <p className="dash-empty">표시할 capability가 없습니다.</p>
-                ) : (
-                  <ul className="dash-cap-list">
-                    {capabilities.map((cap) => (
-                      <li key={cap.key}>
-                        <button type="button" className="dash-cap" onClick={() => openCapability(cap)}>
-                          <span className="dash-cap-label">{cap.koreanLabel}</span>
-                          <span className="dash-cap-count">change {cap.changeKeys.length}개</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </>
+            {/* change 목록(capability별)은 기획문서 유무와 무관하게 항상 노출한다.
+                기획문서 있는 프로젝트: 위쪽 기획 탭/섹션과 형제로 병존해 이어서 렌더된다.
+                기획문서 없는 프로젝트: planTabsAvail.length === 0이라 기획 탭/섹션은 안 뜨고
+                이 목록만 렌더된다(기존 동작과 픽셀 동일 — 회귀 없음).
+                (2026-07-10 flowforge-change-entry-unified: 이전 planTabsAvail.length === 0 게이트가
+                기획문서 있는 프로젝트에서 change 5종 뷰 진입로를 통째로 숨기던 부작용을 제거.
+                이전 2026-07-03 결정의 "뼈대라 하단 목록 숨김"은 change 뷰 자체를 막는 역설이라 폐기.) */}
+            <h3 className="dash-h">{dashProject?.displayName} — change 목록 (capability별)</h3>
+            {capabilities.length === 0 ? (
+              <p className="dash-empty">표시할 capability가 없습니다.</p>
+            ) : (
+              <ul className="dash-cap-list">
+                {capabilities.map((cap) => (
+                  <li key={cap.key}>
+                    <button type="button" className="dash-cap" onClick={() => openCapability(cap)}>
+                      <span className="dash-cap-label">{cap.koreanLabel}</span>
+                      <span className="dash-cap-count">change {cap.changeKeys.length}개</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         ) : dashStage === "capChanges" ? (
