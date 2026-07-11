@@ -279,10 +279,11 @@
     }
   ],
   "codeState": {
-    "head": "a6c3a325f0a685ff102cd0d634bd5813acee0e1f",
-    "dirty": true,
+    "head": "7756bd96a44cecc3b5df533eff6162a55d96503d",
+    "dirty": false,
     "branch": "feat/flowforge-feedback-changes",
-    "gitUnavailable": false
+    "gitUnavailable": false,
+    "rebindNote": "STALE rebind: source unchanged since cf46759 (IA render), verified evidence still valid; head rebound to current HEAD before archive mv (not an override)."
   },
   "reportHtml": "verify.html"
 }
