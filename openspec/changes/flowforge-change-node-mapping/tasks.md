@@ -18,9 +18,9 @@
 
 ### Sequential Group C: 노드 렌더 in-place 표시 + 진입 (B 완료 후 — 같은 렌더 파일 순차)
 
-- [ ] C.1 (GREEN) 노드에 연관 change 배지/펼침 in-place 렌더 — `linkedChanges`가 있는 노드에만 change 개수 배지 + 클릭/호버 펼침. 연관 0개 노드엔 미표시(빈 배지·빈 블록 없음). 기존 `dash-cap`/배지 스타일 재사용. spec R1·R2·R3 THEN "in-place 표시"
-- [ ] C.2 (GREEN) change 항목 클릭 → 5종 뷰 진입 배선 — 노드에 표시된 change 항목 클릭 시 기존 `openChangeViews(change)` 호출 → views 단계 + PRD 탭 활성. spec R4 THEN "5종 뷰 진입"(액션 — 표시만으론 미완, 이동 배선 필수)
-- [ ] C.3 (GREEN) 전역 목록 제거 — skeleton 하단 `dash-changes-section`(change-entry-unified가 추가) 블록 제거. spec R1 "전역 통짜 나열 안 됨". CapabilityChangeList는 노드 펼침으로 재사용 또는 대체
+- [x] C.1 (GREEN) 노드에 연관 change 배지 in-place 렌더 — `FeatureNode.tsx` head에 `linkedChanges` 있으면 "change N" 배지(audit 배지 동형, `.feature-tree-change` CSS). 요구사항+상속받은 하위 노드 모두, 연관 0개면 미표시. spec R1·R2·R3 THEN "in-place 표시"
+- [x] C.2 (GREEN) change 항목 클릭 → 5종 뷰 진입 배선 — `FeatureDetailPanel`에 "연관 change" 섹션(screens 섹션 동형) 추가, 항목 클릭 시 `onOpenChange(changeKey)`. App.tsx가 `openChangeViews({key,displayName,project:dashProject.name})`로 배선(nodeTypes 외부상수 제약 우회 — 노드는 배지 신호, 진입은 상세 패널). spec R4 THEN "5종 뷰 진입" 액션 구현됨. `.feature-detail-change` CSS
+- [x] C.3 (GREEN) 전역 목록 제거 + 죽은 코드 정리 — `dash-changes-section` 블록 제거(spec R1 "전역 통짜 나열 안 됨"). 도달 불가능해진 죽은 코드 정리: `openCapability`·`capabilities` state·`capChanges` 단계 전체·`CapabilityChangeList.tsx`(삭제)·`fetchCapabilities`·관련 CSS(dash-cap/ccl). featureAudit·openChangeViews는 보존. 검증: web 타입체크 0 + build 성공 + server 테스트 459 passed(회귀 없음)
 
 ### Parallel Group D: 회귀·엣지 검증 (C 완료 후, 서로 독립)
 

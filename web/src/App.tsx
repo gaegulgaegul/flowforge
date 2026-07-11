@@ -32,8 +32,6 @@ import {
   fetchPrd,
   fetchSpecTree,
   fetchProjects,
-  fetchCapabilities,
-  fetchCapabilityDetail,
   fetchDocsPlanningPrd,
   fetchDocsPlanningFeatures,
   fetchDocsPlanningIa,
@@ -51,13 +49,11 @@ import {
   applyDocsWireframeSuggestions,
   fetchAuditCapabilities,
   fetchPlanningScreens,
-  type CapabilitySummary,
   type ChangeSummary,
   applyInChunks,
 } from "./api.js";
 import type { ProjectCard } from "@flowforge/shared";
 import { ProjectGrid } from "./ProjectGrid.js";
-import { CapabilityChangeList } from "./CapabilityChangeList.js";
 import { toFlowNodes, toFlowEdges, danglingCount, type SpecNodeData } from "./graphAdapter.js";
 import { toIAFlow, type IANodeData } from "./iaAdapter.js";
 import { toSpecTreeFlow } from "./specTreeAdapter.js";
@@ -88,12 +84,14 @@ const SKIPPED_PREVIEW_CAP = 5;
 
 // Tab(5종 뷰 화이트리스트)은 deeplink.ts 단일 정의를 소비 — URL 스킴과 드리프트 방지.
 // manyfast 파이프라인 순서: PRD → 기능명세서 → 유저플로우 → IA → 와이어프레임
-// 계층 대시보드 4단 드릴다운(hierarchical-project-dashboard):
-//   grid(카드) → skeleton(뼈대 capability) → capChanges(capability별 change) → views(5종 뷰)
+// 계층 대시보드 드릴다운(hierarchical-project-dashboard):
+//   grid(카드) → skeleton(뼈대) → views(5종 뷰)
 // charter 없는 프로젝트는 skeleton에서 빈 안내를 보여준다.
 // (2026-06-25) 진입로를 이 대시보드 단일로 통합. change/docs 직접 진입 토글은 제거됐고,
-// change 5종 산출물은 드릴다운(프로젝트→capability→change→views)으로만 도달한다.
-type DashStage = "grid" | "skeleton" | "capChanges" | "views";
+// change 5종 산출물은 드릴다운(프로젝트→skeleton→views)으로만 도달한다.
+// (flowforge-change-node-mapping) change 전역 목록(capChanges 단계)은 제거됨 — change는
+// 기능명세 노드/화면에 in-place로 매핑돼 표시된다.
+type DashStage = "grid" | "skeleton" | "views";
 
 export function App(): JSX.Element {
   // views 단계에서 선택된 change 키. 클릭으로 세팅되며 5종 산출물 로딩 effect의 트리거.
@@ -194,15 +192,6 @@ export function App(): JSX.Element {
   const [dashStage, setDashStage] = useState<DashStage>("grid");
   const [projects, setProjects] = useState<ProjectCard[]>([]);
   const [dashProject, setDashProject] = useState<ProjectCard | null>(null);
-  const [capabilities, setCapabilities] = useState<CapabilitySummary[]>([]);
-  const [dashCapability, setDashCapability] = useState<CapabilitySummary | null>(null);
-  const [capChanges, setCapChanges] = useState<ChangeSummary[]>([]);
-  // capability 단위 종합 상세(capChanges 단계에서 change 목록 옆에 co-locate).
-  // features 서브트리(이 capability 가지만) + 연결 유저플로우 stem 목록.
-  const [capFeatures, setCapFeatures] = useState<FeatureTreeNodeT | null>(null);
-  const [capFeatureNodes, setCapFeatureNodes] = useState<Node[]>([]);
-  const [capFeatureEdges, setCapFeatureEdges] = useState<Edge[]>([]);
-  const [capUserFlows, setCapUserFlows] = useState<string[]>([]);
   // 드릴다운 비동기 race 가드: 매 클릭마다 증가하는 토큰. 늦게 도착한 응답이
   // 다른 항목을 클릭한 뒤의 상태를 덮어쓰지 않도록, 응답 처리 전 토큰 일치를 확인한다.
   const dashReqToken = useRef(0);
@@ -331,18 +320,6 @@ export function App(): JSX.Element {
     setPlanningIaEdges(edges);
   }, [planningIaRoot, planningFeatures, planningScreens]);
 
-  // capability 단위 features 서브트리(capFeatures) 바뀌면 레이아웃 재계산. null이면 비운다.
-  useEffect(() => {
-    if (!capFeatures) {
-      setCapFeatureNodes([]);
-      setCapFeatureEdges([]);
-      return;
-    }
-    const { nodes, edges } = toFeatureTreeFlow(capFeatures);
-    setCapFeatureNodes(nodes);
-    setCapFeatureEdges(edges);
-  }, [capFeatures]);
-
   const onFlowNodesChange = useCallback((changes: NodeChange[]) => {
     setFlowNodes((nds) => applyNodeChanges(changes, nds));
   }, []);
@@ -363,7 +340,6 @@ export function App(): JSX.Element {
   }, [selected, selectedProject]);
 
   // 기능명세 노드 클릭 → 상세 패널 열기. featureTree 타입 노드만 대상(다른 뷰 노드는 무시).
-  // 두 features ReactFlow(skeleton·capChanges)가 같은 핸들러를 공유한다.
   const onFeatureNodeClick = useCallback((_e: ReactMouseEvent, node: Node) => {
     if (node.type !== "featureTree") return;
     setSelectedFeature(node.data as FeatureNodeData);
@@ -375,11 +351,10 @@ export function App(): JSX.Element {
   // 상세 패널 안 자식 노드 클릭 → 그 id의 노드 data로 전환. 현재 렌더 중인 features 노드 집합에서 찾는다.
   const selectFeatureById = useCallback(
     (id: string) => {
-      const pool = [...featureNodes, ...capFeatureNodes];
-      const found = pool.find((n) => n.id === id);
+      const found = featureNodes.find((n) => n.id === id);
       if (found) setSelectedFeature(found.data as FeatureNodeData);
     },
-    [featureNodes, capFeatureNodes],
+    [featureNodes],
   );
 
   // 유저플로우 노드 클릭 → 상세 패널 열기. spec 타입 노드만 대상(다른 뷰 노드는 무시).
@@ -506,8 +481,6 @@ export function App(): JSX.Element {
   const openProject = useCallback((card: ProjectCard) => {
     const token = ++dashReqToken.current; // 이 클릭의 요청 토큰
     setDashProject(card);
-    setDashCapability(null);
-    setCapChanges([]);
     // 프로젝트 전환 시 반영 tick 격리 — A에서 올라간 tick이 B 위저드 마운트에서
     // 체크포인트를 지우는 cross-project 결정 소실(review C-2) 방지. 세 위저드 모두(D-4).
     setPrdAppliedTick(0);
@@ -647,21 +620,9 @@ export function App(): JSX.Element {
         setPlanningUserFlow(null); // 기획 유저플로우 미작성 — 정상(미표시)
       });
     if (card.hasCharter) {
-      fetchCapabilities(card.name)
-        .then((caps) => {
-          if (token !== dashReqToken.current) return; // 더 최근 클릭이 있었으면 폐기
-          setCapabilities(caps);
-          setDashStage("skeleton");
-          setStatus("");
-        })
-        .catch((e: unknown) => {
-          if (token !== dashReqToken.current) return;
-          setStatus(`capability 로드 실패: ${String(e)}`);
-        });
+      setDashStage("skeleton");
+      setStatus("");
     } else {
-      // 뼈대 없는 프로젝트: 전체 change를 "미연결" 묶음처럼 보여줄 수 있으나, 예광탄은
-      // capability 경유 경로를 grounding하므로 빈 capability 목록 + 안내로 단축한다.
-      setCapabilities([]);
       setDashStage("skeleton");
       setStatus("이 프로젝트는 기획 문서가 없습니다(change는 capability 경유로만 표시).");
     }
@@ -896,32 +857,6 @@ export function App(): JSX.Element {
     [dashProject, planningFlowName, uflowApplyBusy],
   );
 
-  // capability 클릭: 그 capability 단위 종합 상세(capChanges)로 — features 서브트리 +
-  // 연결 유저플로우 stem + change 목록을 한 화면에 co-locate.
-  const openCapability = useCallback((cap: CapabilitySummary) => {
-    if (!dashProject) return;
-    const token = ++dashReqToken.current;
-    setDashCapability(cap);
-    // 이전 capability 잔류를 비워 stale 플래시 방지.
-    setCapFeatures(null);
-    setCapUserFlows([]);
-    setCapChanges([]);
-    fetchCapabilityDetail(dashProject.name, cap.key)
-      .then((d) => {
-        if (token !== dashReqToken.current) return; // race 가드
-        // 요구사항 가지가 0개면(필터 결과 빈 트리) "없음"으로 표면화 — 빈 ReactFlow 회피.
-        setCapFeatures(d.features && d.features.root.children.length > 0 ? d.features.root : null);
-        setCapUserFlows(d.userFlows);
-        setCapChanges(d.changes);
-        setDashStage("capChanges");
-        setStatus("");
-      })
-      .catch((e: unknown) => {
-        if (token !== dashReqToken.current) return;
-        setStatus(`capability 상세 로드 실패: ${String(e)}`);
-      });
-  }, [dashProject]);
-
   // change 클릭: 5종 뷰로 진입 — selected를 그 change로 세팅하면 로딩 effect가 동작.
   // change.project(서버가 드릴다운에서 실어줌)를 함께 캡처 — 5종 fetch·배치 저장이 그 프로젝트
   // openspec 하위에서 해석되게 한다. 전역 진입이면 undefined라 기존 동작(전역 root) 그대로.
@@ -946,7 +881,7 @@ export function App(): JSX.Element {
   const goToStage = useCallback((stage: DashStage) => {
     setDashStage(stage);
     setStatus("");
-    // views를 떠나면(grid/skeleton/capChanges 복귀) URL의 딥링크 파라미터를 비운다 —
+    // views를 떠나면(grid/skeleton 복귀) URL의 딥링크 파라미터를 비운다 —
     // URL이 "뷰를 벗어났다"를 반영하게. views로 가는 전환에는 손대지 않는다(그건 openChangeViews가 기록).
     if (stage !== "views") {
       history.pushState(null, "", window.location.pathname);
@@ -1019,13 +954,6 @@ export function App(): JSX.Element {
               <button type="button" className="dash-crumb" onClick={() => goToStage("skeleton")} disabled={!dashProject.hasCharter}>
                 {dashProject.displayName}
               </button>
-            </>
-          )}
-          {/* 2026-07-03 하단 뼈대(capability) 진입 비활성화에 따라 capability 브레드크럼도 함께 비활성화(도달 불가). 복구 시 false 제거(+ dashCapability의 ! 제거) */}
-          {false && dashCapability && (
-            <>
-              <span className="dash-sep" aria-hidden="true">›</span>
-              <button type="button" className="dash-crumb" onClick={() => goToStage("capChanges")}>{dashCapability!.koreanLabel}</button>
             </>
           )}
           {dashStage === "views" && selected && (
@@ -1202,77 +1130,10 @@ export function App(): JSX.Element {
                 </div>
               </section>
             )}
-            {/* change 목록(capability별)은 기획문서 유무와 무관하게 항상 노출한다.
-                기획문서 있는 프로젝트: 위쪽 기획 탭/섹션과 형제로 병존해 이어서 렌더된다.
-                기획문서 없는 프로젝트: planTabsAvail.length === 0이라 기획 탭/섹션은 안 뜨고
-                이 목록만 렌더된다(기존 동작과 픽셀 동일 — 회귀 없음).
-                (2026-07-10 flowforge-change-entry-unified: 이전 planTabsAvail.length === 0 게이트가
-                기획문서 있는 프로젝트에서 change 5종 뷰 진입로를 통째로 숨기던 부작용을 제거.
-                이전 2026-07-03 결정의 "뼈대라 하단 목록 숨김"은 change 뷰 자체를 막는 역설이라 폐기.)
-                <section>으로 감싸 그래프 탭(dash-body--wide, overflow:hidden)에서도 자체 세로
-                스크롤로 도달 가능하게 한다(와이어 탭의 .dash-planning-wire 격리 패턴과 동일). */}
-            <section className="dash-changes-section">
-              <h3 className="dash-h">{dashProject?.displayName} — change 목록 (capability별)</h3>
-              {capabilities.length === 0 ? (
-                <p className="dash-empty">표시할 capability가 없습니다.</p>
-              ) : (
-                <ul className="dash-cap-list">
-                  {capabilities.map((cap) => (
-                    <li key={cap.key}>
-                      <button type="button" className="dash-cap" onClick={() => openCapability(cap)}>
-                        <span className="dash-cap-label">{cap.koreanLabel}</span>
-                        <span className="dash-cap-count">change {cap.changeKeys.length}개</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          </div>
-        ) : dashStage === "capChanges" ? (
-          // capability 통합 drill-down: features 서브트리 + 연결 유저플로우 + change 목록을 한 화면에.
-          <div className="dash-body" data-testid="cap-detail">
-            {/* features 서브트리(이 capability 가지만) */}
-            <section className="dash-cap-features" data-testid="cap-detail-features">
-              <h3 className="dash-h">{dashCapability?.koreanLabel} — 기능명세(이 capability)</h3>
-              {capFeatures ? (
-                <div className="dash-feature-flow">
-                  <ReactFlow
-                    key="d-cap-features"
-                    nodes={capFeatureNodes}
-                    edges={capFeatureEdges}
-                    nodeTypes={nodeTypes}
-                    nodesDraggable={false}
-                    onNodeClick={onFeatureNodeClick}
-                    fitView
-                  >
-                    <Background />
-                    <Controls />
-                  </ReactFlow>
-                </div>
-              ) : (
-                <p className="dash-empty">연결된 기능명세 없음</p>
-              )}
-            </section>
-            {/* 연결된 유저플로우 stem 목록(`> capability:` 마커로 선언한 flow) */}
-            <section className="dash-cap-user-flows" data-testid="cap-detail-user-flows">
-              <h3 className="dash-h">{dashCapability?.koreanLabel} — 연결 유저플로우</h3>
-              {capUserFlows.length === 0 ? (
-                <p className="dash-empty">연결된 유저플로우 없음</p>
-              ) : (
-                <ul className="dash-flow-list">
-                  {capUserFlows.map((stem) => (
-                    <li key={stem} className="dash-flow-item">{stem}</li>
-                  ))}
-                </ul>
-              )}
-            </section>
-            {/* 이 capability를 건드리는 change 목록(기존 컴포넌트 재사용) */}
-            <CapabilityChangeList
-              capabilityLabel={dashCapability?.koreanLabel ?? ""}
-              changes={capChanges}
-              onOpenChange={openChangeViews}
-            />
+            {/* 전역 change 목록(capability별 통짜 나열)은 제거됨
+                (flowforge-change-node-mapping): change는 이제 기능명세 노드/화면에
+                연관된 것만 in-place로 매핑돼 표시된다(FeatureNode 배지 + 상세 패널 진입).
+                "모든 change를 한 번에" 나열하지 않고 "항상 연관된 것만" 보여준다. */}
           </div>
         ) : (
           // views: 5종 뷰. dashStage==="views"

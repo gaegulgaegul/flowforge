@@ -58,13 +58,6 @@ export async function fetchChanges(): Promise<string[]> {
 // ─── 계층형 대시보드 (hierarchical-project-dashboard) ───
 // 표시명은 한글(displayName/koreanLabel), 연결·라우팅 키는 영문(name/key) — 분리 유지.
 
-/** 한 capability 노드(뼈대 그래프용): 영문 key + 한글 koreanLabel + 연결된 change 키 목록. */
-export interface CapabilitySummary {
-  key: string;
-  koreanLabel: string;
-  changeKeys: string[];
-}
-
 /** capability에 속한 change 한 줄: 영문 key + 한글 displayName(proposal 제목 폴백=key). */
 export interface ChangeSummary {
   key: string;
@@ -84,38 +77,6 @@ export async function fetchProjects(): Promise<ProjectCard[]> {
   if (!res.ok) throw new Error(`projects ${res.status}`);
   const data = (await res.json()) as { projects: ProjectCard[] };
   return data.projects;
-}
-
-/** 한 프로젝트의 charter 뼈대 capability 목록(한글명 + 연결 change). */
-export async function fetchCapabilities(project: string): Promise<CapabilitySummary[]> {
-  const res = await fetch(`/api/projects/${encodeURIComponent(project)}/capabilities`);
-  if (!res.ok) throw new Error(`capabilities ${res.status}`);
-  const data = (await res.json()) as { capabilities: CapabilitySummary[] };
-  return data.capabilities;
-}
-
-/**
- * 한 capability 단위 종합 상세 — features 서브트리 + 연결 유저플로우 stem + 건드리는 change 목록.
- * 연결 0개여도 빈 구조로 200(404 아님). features는 features.md 없으면 null.
- */
-export interface CapabilityDetailResponse {
-  project: string;
-  key: string;
-  koreanLabel: string;
-  features: FeatureTree | null;
-  userFlows: string[];
-  changes: ChangeSummary[];
-}
-
-export async function fetchCapabilityDetail(
-  project: string,
-  capability: string,
-): Promise<CapabilityDetailResponse> {
-  const res = await fetch(
-    `/api/projects/${encodeURIComponent(project)}/capabilities/${encodeURIComponent(capability)}`,
-  );
-  if (!res.ok) throw new Error(`capability-detail ${res.status}`);
-  return (await res.json()) as CapabilityDetailResponse;
 }
 
 export async function fetchGraph(id: string, project?: string): Promise<GraphResponse> {

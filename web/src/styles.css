@@ -339,8 +339,6 @@ button:hover { border-color: var(--lime); }
   line-height: 1.4;
   white-space: normal;
 }
-/* skeleton 단계의 기능명세서 플로우는 부모가 flex-fill이 아니므로 고정 높이를 준다. */
-.dash-feature-flow { height: 480px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; }
 /* skeleton(기획) 3뷰 탭 영역: border 제거(요청). 그래프가 한눈에 들어오도록 부모 가용 공간을 flex로 채움(min 480 보장).
    ⚠️ 100vh 절대값 금지 — dash-body 스크롤 영역과 어긋나 노드 클릭이 빗나감(2026-07-08 grounding 회귀). flex:1로 실제 남은 높이만 차지. */
 .dash-plan-flow { flex: 1 1 auto; min-height: 480px; border-radius: 8px; margin-bottom: 16px; }
@@ -361,23 +359,6 @@ button:hover { border-color: var(--lime); }
 /* 와이어 탭은 캔버스(flex:1 단일자식)가 아니라 위저드+핀목록이 세로로 쌓이는 문서형 →
    부모 --wide의 overflow:hidden에서 잘리지 않게 이 section만 세로 스크롤 허용(와이어 전용 클래스라 격리). */
 .dash-body--wide > .dash-planning-wire { overflow-y: auto; }
-/* change 목록 section은 그래프 탭(--wide, overflow:hidden)에서 그래프 section과 병존한다.
-   그래프 section(.dash-planning-*)의 .dash-plan-flow 캔버스는 min-height:480px를 요구하므로,
-   change 목록이 flex 지분을 나눠 가지면 그래프 section이 480px 밑으로 줄어 캔버스가 넘쳐(overflow)
-   change 목록 상단을 덮는다(flowforge-change-entry-unified review 2차 발견).
-   그래서 change 목록은 flex 경쟁에서 완전히 빠져(flex:0 0 auto) 그래프가 필요한 세로를 먼저 갖게 하고,
-   자신은 화면 하단 고정 지분(최대 40vh)만 차지하며 길면 자체 세로 스크롤을 연다.
-   상단 border로 그래프 영역과 시각적으로 분리해 오버레이 오인을 막는다.
-   PRD 등 문서 탭(--wide 미부착)에서는 이 규칙이 적용되지 않아 기존 흐름 그대로다(회귀 없음). */
-.dash-body--wide > .dash-changes-section {
-  flex: 0 0 auto;
-  min-height: 0;
-  max-height: 40vh;
-  overflow-y: auto;
-  border-top: 1px solid var(--border);
-  padding-top: 8px;
-  background: var(--bg);
-}
 .dash-planning-features { margin-bottom: 8px; }
 
 /* === SEED(미검증) 배지 — 노드/와이어/타임라인 공통 === */
@@ -494,7 +475,7 @@ button:hover { border-color: var(--lime); }
 .dash-body { padding: 20px; max-width: 920px; margin: 0 auto; overflow-y: auto; height: 100%; box-sizing: border-box; }
 /* .dash-body--wide 정의는 위(그래프 탭 flex 레이아웃)에 있음 — 문서 탭(PRD 등)은 좁은 920 칼럼 유지. */
 .dash-h { font-size: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 0 0 16px; }
-.dash-empty, .pg-empty, .ccl-empty { color: #9aa0ad; font-size: 14px; padding: 8px 0; }
+.dash-empty, .pg-empty { color: #9aa0ad; font-size: 14px; padding: 8px 0; }
 
 /* 카드 그리드 */
 .pg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; padding: 20px; max-width: 920px; margin: 0 auto; }
@@ -515,23 +496,6 @@ button:hover { border-color: var(--lime); }
 .pg-audit--warn { color: #f0a05a; }
 .pg-audit--fail { color: #f06a6a; }
 .pg-audit--clean { color: var(--lime); }
-
-/* capability 목록(뼈대) */
-.dash-cap-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.dash-cap { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left;
-  padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: #22262e; color: var(--text); cursor: pointer; }
-.dash-cap:hover { border-color: var(--lime); }
-.dash-cap-label { font-size: 14px; }
-.dash-cap-count { font-size: 12px; color: #9aa0ad; }
-
-/* capability별 change 목록 */
-.ccl { padding: 4px; }
-.ccl-title { font-size: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 0 0 14px; }
-.ccl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.ccl-link { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left;
-  padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: #22262e; color: var(--text); cursor: pointer; }
-.ccl-link:hover { border-color: var(--lime); }
-.ccl-arrow { color: var(--lime); }
 
 /* 브레드크럼 */
 .dash-breadcrumb { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
