@@ -505,3 +505,36 @@ skeleton 단계에서 change 목록(capability별)을 프로젝트의 기획문�
 - invariant: capability 0개 프로젝트는 "표시할 capability가 없습니다" 안내를 change 목록 자리에 노출한다.
 - invariant: change 0개 capability는 "change 0개"로 표기되고, 클릭 시 빈 상세로 진입하되 오류 없이 처리된다.
 - metric: gstack 라이브 — capability 0개(agentic-harness) 안내 노출, change 0개 capability 표기·빈 상세 안전 처리 확인 PASS.
+
+## capability: flowforge-change-node-mapping — 노드에 연관 change in-place 매핑
+
+기획 기능명세·화면 구조(IA) 트리의 노드에 그 노드 capability와 연관된 change만 in-place로 매핑(배지)하고, 배지 항목 클릭 시 그 change의 5종 뷰로 진입시키는 능력. 매핑은 charter(docs/spec.md) capability ∩ change의 specs/<dir> 조인으로 파생하며, 요구사항 노드는 서버 파생, 하위 기능·상세기능은 상속, 화면 노드는 상세기능↔화면 링크 역경유로 파생한다. 표시·진입만 하는 읽기전용(노드에서 change 편집·추가·삭제 UI 없음).
+
+### 기능: 요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)
+- assert:endpoint GET /api/docs/:project/planning-features
+- assert:symbol attachLinkedChanges
+- assert:symbol buildCapabilityIndex
+- 요구사항 노드에 그 capability의 연관 change(byCapability 조회)를 linkedChanges로 부여한다. 연관 change 0개면 필드 미부착(빈 배열이 아니라 undefined — 비파괴 옵셔널).
+- 기능·빈 capability 노드·가상 루트엔 미부착한다(요구사항+capability 있고 연관 change>0일 때만).
+- invariant:readonly 표시·진입만 — 노드에서 change를 편집·추가·삭제하지 않는다(쓰기 라우트 없음).
+- invariant: null 트리·capability 없음·changesRoot 부재·readdirSync 실패는 크래시 없이 빈 처리한다(early return·try/catch).
+- behavior: capability→change 매핑을 노드 트리에 파생 부여한다(요구사항 부여·하위 상속·화면 역경유 합집합·연관 0개 빈 처리).
+- metric: server Jest 파생 테스트 4건 PASS(capabilityIndex.test.ts) + 라이브 실픽셀(요구사항 노드 change 배지·미표시 대비·콘솔 0).
+
+### 기능: 하위 노드 상속 + 화면 역경유 파생 (web adapter)
+- assert:symbol toIAFlow
+- featureTreeAdapter가 각 요구사항의 linkedChanges를 그 서브트리(자신·기능·상세기능) 전체에 상속한다(linkedChangesById 맵, 조건부 부착).
+- iaAdapter가 화면 id→연결 상세기능→상위 요구사항 linkedChanges를 역경유해 화면 노드에 합집합(중복 제거)으로 부착한다(toIAFlow의 changeMapping 옵션, 화면 노드에만).
+- behavior: 상세기능은 상위 capability change와 연결 화면 change의 합집합을 표시한다(중복 제거).
+- metric: 라이브 실픽셀 grounding — 서브트리 상속 4노드 배지(DOM .feature-tree-change=4, 클리핑 0) + IA 화면 노드 배지(기능명세 화면·기획 뷰) + 미연관 노드 미표시.
+
+### 기능: 노드 change 배지 + 상세 패널 진입 (web 렌더)
+- assert:symbol FeatureNode
+- assert:symbol IANode
+- assert:symbol FeatureDetailPanel
+- assert:symbol IADetailPanel
+- FeatureNode·IANode는 linkedChanges.length>0인 노드에만 "change N" 배지(span)를 렌더한다(클릭 액션 없음, 표시 신호만). 연관 0개면 미표시.
+- FeatureDetailPanel·IADetailPanel의 "연관 change" 섹션은 각 change를 button으로 렌더하고, 클릭 시 onOpenChange로 그 change의 5종 뷰(PRD 탭)에 진입한다(openChangeViews 재사용, 딥링크 URL 기록).
+- invariant:readonly 배지·섹션은 표시·진입만 — 편집·추가·삭제 UI 없음.
+- behavior: 전역 change 목록(dash-changes-section)은 렌더하지 않는다(연관 매핑으로 대체).
+- metric: 라이브 실픽셀 grounding — 배지 클릭 후 상세 패널→5종 뷰 PRD 탭 진입+딥링크 URL(?project=&change=&tab=prd)+패널 닫힘, 전역 목록 DOM 부재, 콘솔 에러 0.
