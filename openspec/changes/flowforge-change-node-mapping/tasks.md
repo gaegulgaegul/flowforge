@@ -13,8 +13,8 @@
 
 ### Parallel Group B: web 파생 — 상속·역경유 (A 완료 후, 서로 다른 파일)
 
-- [ ] B.1 [parallel] [frontend-agent] web adapter 상속 파생 — 기능(3단)·상세기능(4단) 노드가 상위 요구사항의 `linkedChanges`를 상속. 상세기능은 자신의 `screens` 링크가 가리키는 화면의 연관 change도 합집합(중복 제거). `web/src/featureTreeAdapter.ts`
-- [ ] B.2 [parallel] [frontend-agent] web 화면 역경유 파생 — 화면 노드(**IA 화면 우선**)가 그 화면 id를 `screens`로 가진 상세기능들의 상위 capability change 합집합을 파생. 화면→상세기능 역인덱스 1회 계산 후 캐시(맵)해 O(1) 조회. `web/src/iaAdapter.ts`(IANode.screenId 존재). ※Context Scan: 유저플로우 그래프 노드(`graphAdapter.ts SpecNodeData`)엔 화면 id가 없어 역경유 불가 → 유저플로우 화면 매핑은 후속 change로 분리(유저플로우 화면 식별 데이터 신설 필요). IA 화면 역인덱스는 `planningIaBuilder.ts:33-42 detailsByScreen` 패턴 재사용
+- [x] B.1 [frontend] web adapter 상속 파생 — `featureTreeAdapter.ts`에 `linkedChangesById` 맵으로 각 요구사항의 linkedChanges를 그 서브트리 전체(자신+기능+상세기능)에 상속(:143~151). 조건부 스프레드 부착, undefined면 미부착(:188~190). `FeatureNodeData.linkedChanges?` 필드 추가. 검증: web 타입체크 0 + build 성공
+- [x] B.2 [frontend] web IA 화면 역경유 파생 — `iaAdapter.ts`에 순수 함수 3개(`buildDetailLabelsByScreen`·`buildLinkedChangesByDetailLabel`·`buildLinkedChangesByScreenId`)로 화면 id→상세기능→상위 요구사항 linkedChanges 합집합(중복 제거) 파생. `toIAFlow`에 옵션 `changeMapping` 추가, 화면 노드(`n.screenId`)에만 부착. App.tsx 기획 IA effect(:311~331)에서 planningFeatures+planningScreens 전달. `IANodeData.linkedChanges?` 필드 추가. 검증: web 타입체크 0 + build 성공. ※유저플로우 그래프 노드는 화면 id 없어 제외(후속 change)
 
 ### Sequential Group C: 노드 렌더 in-place 표시 + 진입 (B 완료 후 — 같은 렌더 파일 순차)
 

@@ -310,6 +310,8 @@ export function App(): JSX.Element {
 
   // 기획 IA(planningIaRoot) 바뀌면 레이아웃 재계산. null이면 비운다. change IA와 동일한 toIAFlow 재사용
   // (화면 1급 노드 IA는 간단히뷰 고정 — verbose 토글은 change IA 전용).
+  // planningFeatures+planningScreens 둘 다 있으면 화면 노드에 연관 change 역경유 부착(B.2,
+  // flowforge-change-node-mapping). 둘 중 하나라도 null(미로드/실패)이면 매핑 생략(안전한 무영향).
   useEffect(() => {
     if (!planningIaRoot) {
       setPlanningIaNodes([]);
@@ -317,14 +319,17 @@ export function App(): JSX.Element {
       return;
     }
     // 기획 IA는 화면 구조 어휘로 태그 오버라이드(change IA는 변경/기능군/요구사항 기본 유지).
-    const { nodes, edges } = toIAFlow(planningIaRoot, false, {
-      change: "화면목록",
-      capability: "화면",
-      requirement: "상세기능",
-    });
+    const { nodes, edges } = toIAFlow(
+      planningIaRoot,
+      false,
+      { change: "화면목록", capability: "화면", requirement: "상세기능" },
+      planningFeatures && planningScreens
+        ? { featureTree: planningFeatures, screenRegistry: planningScreens }
+        : undefined,
+    );
     setPlanningIaNodes(nodes);
     setPlanningIaEdges(edges);
-  }, [planningIaRoot]);
+  }, [planningIaRoot, planningFeatures, planningScreens]);
 
   // capability 단위 features 서브트리(capFeatures) 바뀌면 레이아웃 재계산. null이면 비운다.
   useEffect(() => {

@@ -54,6 +54,12 @@ export interface FeatureNodeData extends Record<string, unknown> {
    * web에서 파생(레지스트리 링크의 detailLabel 문자열 일치, D-2). 링크 없으면 undefined(D-4).
    */
   screens?: readonly { id: string; label: string }[];
+  /**
+   * 연관 change 키 목록(flowforge-change-node-mapping, B.1). 서버는 요구사항 노드에만
+   * linkedChanges를 채운다 — web이 그 요구사항의 하위 기능/상세기능 전체로 상속시켜 파생한다
+   * (요구사항 자신 포함). 연관 change 없으면 필드 자체 없음(undefined, memo/screens와 동형).
+   */
+  linkedChanges?: readonly string[];
 }
 
 /** audit 맵에 키가 없는 요구사항 = 미감사(D-6). 배지 "미감사"로 렌더된다. */
@@ -131,12 +137,19 @@ export function toFeatureTreeFlow(
   const featedges: Array<{ from: string; to: string }> = [];
   const featpaths = new Map<string, string[]>();
   const featparents = new Map<string, FeatureTreeNode>();
+  // B.1: 요구사항의 linkedChanges를 그 서브트리 전체(자신+기능+상세기능)로 상속.
+  // flatten이 요구사항 단위로 호출되므로, 그 요구사항의 값을 클로저로 서브트리 모든 id에 매핑한다.
+  // linkedChanges 없는(undefined) 요구사항의 하위는 매핑 자체를 안 넣는다(상속받을 것 없음).
+  const linkedChangesById = new Map<string, readonly string[]>();
   for (const req of root.children) {
     const { nodes, edges, paths, parents } = flatten(req);
     featnodes.push(...nodes);
     featedges.push(...edges);
     for (const [id, p] of paths) featpaths.set(id, p);
     for (const [id, par] of parents) featparents.set(id, par);
+    if (req.linkedChanges !== undefined && req.linkedChanges.length > 0) {
+      for (const n of nodes) linkedChangesById.set(n.id, req.linkedChanges);
+    }
   }
 
   const g = new dagre.graphlib.Graph();
@@ -172,6 +185,11 @@ export function toFeatureTreeFlow(
           : {}),
         // 연결화면 — 상세기능 노드만, 링크 없으면 키 자체를 생략(D-4 — 패널이 섹션을 통째로 생략).
         ...(screens !== undefined ? { screens } : {}),
+        // 연관 change(B.1) — 요구사항의 linkedChanges를 서브트리 전체가 상속. 없으면 키 생략.
+        ...((): { linkedChanges?: readonly string[] } => {
+          const lc = linkedChangesById.get(n.id);
+          return lc ? { linkedChanges: lc } : {};
+        })(),
         // 상세 패널용 파생 필드(빌더/타입/골든 무저촉 — web에서 트리 구조로만 계산).
         path: featpaths.get(n.id) ?? [n.label],
         childRefs: n.children.map((c) => ({ id: c.id, label: c.label, kind: c.kind })),
