@@ -310,6 +310,16 @@ button:hover { border-color: var(--lime); }
 .feature-tree-audit--clean { color: var(--lime); border-color: var(--lime); }
 .feature-tree-audit--fail { color: #f06a6a; border-color: #f06a6a; }
 .feature-tree-audit--unknown { color: #7d828c; border-color: #4a4f59; }
+/* 연관 change 배지(flowforge-change-node-mapping) — 노드에 연관 change가 있을 때만. audit 배지 동형. */
+.feature-tree-change {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 0 5px;
+  border: 1px solid #9a7aff;
+  color: #b79dff;
+  border-radius: 999px;
+  line-height: 1.5;
+}
 .feature-tree-node-label { font-weight: 500; white-space: normal; }
 .feature-tree-cap {
   align-self: flex-start;
@@ -761,6 +771,25 @@ button:hover { border-color: var(--lime); }
 .feature-detail-screen:not(:disabled) { cursor: pointer; }
 .feature-detail-screen:not(:disabled):hover { background: rgba(61, 214, 192, 0.22); border-color: #3dd6c0; }
 .feature-detail-screen:disabled { cursor: default; }
+/* 연관 change 항목(flowforge-change-node-mapping) — 상세 패널. screen 칩 동형, change 색(보라).
+   클릭 시 그 change의 5종 뷰로 진입. */
+.feature-detail-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #b79dff;
+  background: rgba(154, 122, 255, 0.12);
+  border: 1px solid rgba(154, 122, 255, 0.4);
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.feature-detail-change:not(:disabled) { cursor: pointer; }
+.feature-detail-change:not(:disabled):hover { background: rgba(154, 122, 255, 0.22); border-color: #9a7aff; }
+.feature-detail-change:disabled { cursor: default; }
+.feature-detail-change-arrow { font-size: 9px; opacity: 0.8; }
 .feature-detail-whenthen { display: flex; flex-direction: column; gap: 8px; }
 .feature-detail-wt-row { display: flex; gap: 10px; align-items: flex-start; }
 .feature-detail-wt-tag {

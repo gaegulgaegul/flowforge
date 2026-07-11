@@ -42,8 +42,9 @@ const AUDIT_BADGE: Record<CapabilityAuditSummary["status"], { label: string; cls
 };
 
 export function FeatureNode({ data }: NodeProps): JSX.Element {
-  const { label, kind, capability, priority, status, memo, audit } = data as FeatureNodeData;
+  const { label, kind, capability, priority, status, memo, audit, linkedChanges } = data as FeatureNodeData;
   const s = KIND_STYLE[kind] ?? KIND_STYLE.detail;
+  const changeCount = linkedChanges?.length ?? 0;
   return (
     <div
       className="feature-tree-node"
@@ -69,6 +70,16 @@ export function FeatureNode({ data }: NodeProps): JSX.Element {
             title={`감사: 정합 ${audit.pass} / 불합 ${audit.fail} / 검증불가 ${audit.unverifiable}`}
           >
             {audit.status === "fail" ? `불합 ${audit.fail}` : AUDIT_BADGE[audit.status].label}
+          </span>
+        )}
+        {/* 연관 change 배지(flowforge-change-node-mapping) — 연관 change가 있는 노드에만.
+            요구사항 자신 + 상속받은 기능/상세기능 모두 표시. 진입은 상세 패널의 change 항목 클릭. */}
+        {changeCount > 0 && (
+          <span
+            className="feature-tree-change"
+            title={`연관 change ${changeCount}개 — 노드 클릭 후 상세 패널에서 열기`}
+          >
+            change {changeCount}
           </span>
         )}
       </div>

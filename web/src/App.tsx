@@ -1306,6 +1306,13 @@ export function App(): JSX.Element {
         onClose={() => setSelectedFeature(null)}
         onSelectById={selectFeatureById}
         onSelectScreen={selectScreenInIa}
+        onOpenChange={(changeKey) =>
+          openChangeViews({
+            key: changeKey,
+            displayName: changeKey,
+            ...(dashProject?.name ? { project: dashProject.name } : {}),
+          })
+        }
       />
       {/* 유저플로우 노드 상세 패널 — 같은 UX/CSS 재사용. incoming/outgoing 흐름 표시. */}
       <FlowDetailPanel

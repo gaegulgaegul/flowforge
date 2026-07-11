@@ -52,9 +52,11 @@ export interface FeatureDetailPanelProps {
   onSelectById?: (id: string) => void;
   /** 연결화면 칩 클릭 시 IA 뷰의 해당 화면 노드로 딥링크(있으면). 원본 screenId로 매칭. */
   onSelectScreen?: (screenId: string) => void;
+  /** 연관 change 항목 클릭 시 그 change의 5종 뷰로 진입(있으면). changeKey를 넘긴다. */
+  onOpenChange?: (changeKey: string) => void;
 }
 
-export function FeatureDetailPanel({ node, onClose, onSelectById, onSelectScreen }: FeatureDetailPanelProps): JSX.Element {
+export function FeatureDetailPanel({ node, onClose, onSelectById, onSelectScreen, onOpenChange }: FeatureDetailPanelProps): JSX.Element {
   // Esc로 닫기(패널이 열려있을 때만).
   useEffect(() => {
     if (!node) return;
@@ -70,6 +72,8 @@ export function FeatureDetailPanel({ node, onClose, onSelectById, onSelectScreen
 
   // 연결화면(N:M)은 어댑터가 파생한 정식 필드 — 링크 없는 노드는 undefined(섹션 생략). WHEN/THEN은 아직 없다 — 있을 때만 렌더(지어내지 않음).
   const screens = node?.screens;
+  // 연관 change(flowforge-change-node-mapping) — 요구사항 linkedChanges를 하위/화면이 상속·역경유. 없으면 섹션 생략.
+  const linkedChanges = node?.linkedChanges;
   const when = (node as { when?: string } | null)?.when;
   const then = (node as { then?: string } | null)?.then;
 
@@ -196,6 +200,29 @@ export function FeatureDetailPanel({ node, onClose, onSelectById, onSelectScreen
                         disabled={!onSelectScreen}
                       >
                         {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* 연관 change(flowforge-change-node-mapping) — 이 노드와 연관된 change만.
+                  항목 클릭 시 그 change의 5종 뷰로 진입(onOpenChange → openChangeViews). 없으면 섹션 생략. */}
+              {linkedChanges && linkedChanges.length > 0 && (
+                <section className="feature-detail-field" data-testid="feature-detail-changes">
+                  <div className="feature-detail-label">🔗 연관 change ({linkedChanges.length})</div>
+                  <div className="feature-detail-badges">
+                    {linkedChanges.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className="feature-detail-change"
+                        onClick={() => onOpenChange?.(c)}
+                        disabled={!onOpenChange}
+                        title={`${c} 5종 뷰 열기`}
+                      >
+                        {c}
+                        <span className="feature-detail-change-arrow" aria-hidden="true">▶</span>
                       </button>
                     ))}
                   </div>
