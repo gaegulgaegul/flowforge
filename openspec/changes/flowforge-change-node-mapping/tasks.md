@@ -30,11 +30,11 @@
 
 ### Sequential Group E: 라이브 반영 + UI 검증
 
-- [ ] E.1 `docker compose up -d --build`로 flowforge 라이브 반영(커밋≠라이브)
-- [ ] E.2 [frontend-agent] Playwright(`~/.cache/ms-playwright`)로 (1)연관 change 있는 노드에만 in-place 표시, (2)연관 없는 노드 미표시, (3)상세기능/화면 역경유 매핑 실픽셀 캡처
-- [ ] E.3 [frontend-agent] Playwright로 change 클릭→5종 뷰 진입 + 전역 목록 사라짐 실동작 캡처
-- [ ] E.4 [frontend-agent] Playwright로 skeleton·views 단계 탭 UI 불일치 점검(D5 — 통일 여부는 별도 판단). before/after 회귀 없음 확인
+- [x] E.1 `docker compose up -d --build`로 flowforge 라이브 반영(커밋≠라이브). 실측: openspec/changes는 호스트 RO 볼륨 실시간 읽기(`/home/gaegul:/data/docs-root:ro`)라 코드 미변경 시 재빌드 불필요 — 컨테이너가 최신 이미지(5e7681e) 서빙·web/dist에 feature-tree-change 마커 존재·health OK 확인. verify fixture(specs/planning-features-view)도 재빌드 없이 즉시 반영(API linkedChanges 1개 실측)
+- [x] E.2 [frontend-agent] gstack(내부 ~/.cache/ms-playwright chromium)로 실픽셀 캡처. (1)planning-features-view 요구사항 노드에만 change 1 배지(e2-badge-on)·미연관 2노드 미표시(e2-badge-off) (2)서브트리 상속 4노드 배지·클리핑 0(e2-inherit·e4-tree-tab, DOM .feature-tree-change=4) (3)IA 역경유는 fixture 화면 미연결→안전한 빈 처리 미표시(e2-ia-screen, spec "연결 상세기능 없으면 미표시" 부합). 본체 직접 관찰(e2-inherit)로 grounding
+- [x] E.3 [frontend-agent] gstack로 change 클릭→5종 뷰 진입 실동작. 상세패널 🔗연관 CHANGE(1)→항목 클릭→PRD 탭 활성+URL `?project=flowforge&change=flowforge-change-node-mapping&tab=prd` 정확 일치(e3-detail-panel·e3-open-views·e3-open-views-tabs). 전역 목록 .dash-changes-section DOM 0 매치(e3-no-global-list). 본체 직접 관찰(e3-open-views)로 grounding
+- [x] E.4 [frontend-agent] gstack로 탭 조합 회귀. 기획 기능명세 그래프 탭 배지 클리핑/오버레이 0(e4-graph-tab), change 5탭 전부 콘솔 에러 0(e4-change-features-tab), 유저플로우·와이어프레임 회귀 없음(e4-regression-userflow·e4-regression-wireframe). 승인 위저드는 suggestion 큐 비어 미노출(무관). skeleton·views 탭 바 정렬 통일은 D5대로 별도 판단(이 change 미착수)
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
-- [ ] VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(server Jest 파생 + web 라이브) → UI(프론트 변경 있음 — Playwright 실픽셀) 전부 PASS
+- [x] VERIFY: 5단계 게이트 전부 PASS — ①BUILD(shared·server·web tsc+vite build) ②TYPECHECK(3 워크스페이스 exit 0) ③LINT(lint:linkage 위반 0, 기획 cap 11 vs openspec 45 대조) ④TEST(server Jest 39스위트 459 passed, capabilityIndex 파생 포함·회귀 0) ⑤UI(gstack 13장 실픽셀 — 배지 표시/미표시/서브트리 상속 4노드/상세패널 진입/딥링크 URL 정확 일치/읽기전용/전역목록 제거/탭 회귀, 본체 직접 관찰 2장 grounding). ⚠️ UI 배지는 verify fixture(specs/planning-features-view)로 실증 — 실데이터 배지는 후속 change [[flowforge-mapping-basis-shift]]에서 실증(charter→features.md 조인·archive 제외 완화)

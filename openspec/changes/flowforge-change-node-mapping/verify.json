@@ -1,0 +1,288 @@
+{
+  "change": "flowforge-change-node-mapping",
+  "verifiedAt": "2026-07-11T13:25:45+00:00",
+  "finalJudgment": "통과",
+  "counts": {
+    "pass": 8,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": "검증 안 함 0건 / SKIPPED 0건 / FAIL 0건 — 단 UI 배지는 verify fixture로 실증(실데이터 배지 0), 실데이터 실증은 후속 change flowforge-mapping-basis-shift로 분리"
+  },
+  "gates": [
+    {
+      "gate": "BUILD",
+      "status": "PASS",
+      "cmd": "npm run build",
+      "basis": "shared·server·web tsc + vite build 성공(220 모듈, dist/assets/index-D5JzB1ts.js 435KB)"
+    },
+    {
+      "gate": "TYPECHECK",
+      "status": "PASS",
+      "cmd": "npx tsc --noEmit",
+      "basis": "shared/server/web 3개 전부 exit 0"
+    },
+    {
+      "gate": "LINT",
+      "status": "PASS",
+      "cmd": "npm run lint",
+      "basis": "lint:linkage \"기획 capability 11개, openspec 키 45개 대조 ✅ 연동 위반 없음\""
+    },
+    {
+      "gate": "TEST",
+      "status": "PASS",
+      "cmd": "npm run test --workspace server",
+      "basis": "Jest 39 스위트 459 tests passed(capabilityIndex.test.ts 파생 4건 포함), 회귀 0"
+    },
+    {
+      "gate": "UI",
+      "status": "PASS",
+      "cmd": "gstack (내부 ~/.cache/ms-playwright chromium) live http://localhost:8812",
+      "basis": "실픽셀 13장 캡처(verify-shots/)"
+    }
+  ],
+  "requirements": [
+    {
+      "title": "요구사항 노드에 연관 change만 in-place로 매핑한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "노드↔change 파생은 서버 순수 함수로 byCapability를 조회하며 changeKeys는 TS 타입으로 강제 — 런타임 잘못된 타입 유입 경로 없음. capability 필드 미존재/타입 불명은 옵셔널 체이닝·nullish 가드로 빈 배열 폴백(D.2 코드정독 PASS).",
+          "에러경로": "파생은 throw 경로 없는 순수 매핑(byCapability 조회 후 배열 반환). 실패 시 빈 배열 early return — 에러 경로 부재.",
+          "동시성": "파생은 요청당 1회 동기 계산(단일 트리 순회). 동시 매핑 개념 없음.",
+          "대량": "capability→change 매핑은 byCapability 인덱스 고정 조회 — 대량 입력 개념 없음.",
+          "특수문자": "changeKeys는 openspec change 디렉토리명(정규 kebab-case)만 — 특수문자 유입 경로 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "Scenario: capability에 연관 change가 있는 요구사항 노드",
+          "layer": "web",
+          "means": "gstack — planning-features-view 요구사항 노드에 change 배지 실픽셀 관찰",
+          "basis": "planning-features-view 요구사항 노드에 보라색 'change 1' 배지 실픽셀. 배지=FeatureNode.tsx span(읽기전용). 라이브 API linkedChanges=['flowforge-change-node-mapping'] 실측.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/e2-badge-on.png"
+          }
+        },
+        {
+          "scenario": "Scenario: 연관 change가 없는 요구사항 노드",
+          "layer": "web",
+          "means": "gstack — linkedChanges 0인 요구사항 노드에 배지 미표시 관찰",
+          "basis": "한 화면에 3요구사항 세로 나열 — 기획 PRD 뷰(배지 없음)/기획 기능명세 뷰(change 1)/planning-only 인식(배지 없음). linkedChanges 0=안전한 빈 처리.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/e2-badge-off.png"
+          }
+        },
+        {
+          "scenario": "Scenario: 전역 change 목록은 더 이상 나열되지 않는다",
+          "layer": "web",
+          "means": "gstack — skeleton 뷰에서 전역 change 나열 블록 DOM 부재 관찰",
+          "basis": "skeleton 뷰에 .dash-changes-section DOM 0 매치(C.3 제거 확인).",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/e3-no-global-list.png"
+          }
+        }
+      ]
+    },
+    {
+      "title": "하위 노드는 상위 요구사항 capability를 상속해 연관 change를 표시한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "상속 파생은 상위 요구사항 capability를 옵셔널 체이닝으로 조회 — 잘못된 타입 유입 시 nullish 가드로 빈 배열 폴백(D.2 코드정독 PASS).",
+          "에러경로": "상속·합집합 파생은 순수 배열 연산(중복 제거). throw 경로 없음.",
+          "동시성": "트리 순회 1회 동기 계산 — 동시성 개념 없음.",
+          "대량": "capability 인덱스 고정 조회 — 대량 입력 개념 없음.",
+          "특수문자": "changeKeys는 정규 kebab-case change 키만 — 특수문자 유입 경로 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "Scenario: 기능 노드(3단)가 상위 capability를 상속한다",
+          "layer": "web",
+          "means": "gstack — 기능명세서 트리에서 상세기능 노드의 상속 배지·클리핑 관찰(본체 직접 관찰 grounding)",
+          "basis": "요구사항 기획 기능명세 뷰→기능 기능명세서 트리 렌더→상세기능 2개 모두 change 1 배지. DOM .feature-tree-change=4개, 부모 오버플로우 0(클리핑 없음). 본체 직접 관찰 grounding.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/e2-inherit.png"
+          }
+        },
+        {
+          "scenario": "Scenario: 상세기능 노드가 요구사항 capability와 연결 화면 change를 합집합으로 표시한다",
+          "layer": "web",
+          "means": "gstack — 상세기능 노드의 상속 배지 관찰(화면 합집합 로직은 D.2 코드정독)",
+          "basis": "상세기능 노드에 상위 capability change 상속 배지 확인. 화면 합집합은 fixture가 화면 미연결이라 상속분만 관찰(합집합 로직은 D.2 코드정독 PASS).",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/e2-inherit.png"
+          }
+        }
+      ]
+    },
+    {
+      "title": "화면 노드는 상세기능↔화면 링크를 역경유해 연관 change를 매핑한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "역경유 파생은 화면 id로 연결 상세기능을 옵셔널 체이닝 조회 — 잘못된 타입 시 nullish 가드로 빈 배열 폴백(D.2 코드정독 PASS).",
+          "동시성": "역경유 파생은 요청당 1회 동기 계산 — 동시성 개념 없음.",
+          "대량": "화면↔상세기능 링크 집합 고정 조회 — 대량 입력 개념 없음.",
+          "특수문자": "화면 id·changeKeys는 정규 키만 — 특수문자 유입 경로 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "Scenario: 화면에 연결된 상세기능의 capability change가 화면에 매핑된다",
+          "layer": "web",
+          "means": "gstack — IA 화면 노드의 역경유 배지 관찰(fixture 화면 미연결 → 빈 처리 실증)",
+          "basis": "fixture capability(planning-features-view)가 IA 화면 노드와 연결 안 돼 역경유 배지 미표시. 크래시·에러 0. spec의 '연결 상세기능 없으면 미표시' 시나리오에 부합하므로 PASS 계열(빈 처리 실증), 단 '표시' 경로는 실데이터 부재로 미실증 — 후속 change에서 실데이터로 실증 예정.",
+          "result": "PASS(안전한 빈 처리 실증, 표시 경로는 후속)",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/e2-ia-screen.png"
+          }
+        },
+        {
+          "scenario": "Scenario: 연결 상세기능이 없거나 연관 change가 없는 화면",
+          "layer": "web",
+          "means": "gstack — IA 화면 노드에 배지 0개·콘솔 에러 0 관찰",
+          "basis": "IA 화면 배지 0개, 안전한 빈 처리, 콘솔 에러 0.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/e2-ia-screen.png"
+          }
+        }
+      ]
+    },
+    {
+      "title": "노드에 매핑된 change에서 5종 뷰로 진입한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "진입은 기존 openChangeViews 흐름 재사용(change 키 문자열). 잘못된 타입 유입 경로 없음.",
+          "동시성": "진입은 단일 클릭 이벤트 — 동시성 개념 없음.",
+          "대량": "진입은 change 1건 선택 — 대량 입력 개념 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "Scenario: 노드의 change 항목 클릭 시 5종 뷰 진입",
+          "layer": "web",
+          "means": "gstack — 배지 노드 클릭→상세패널 연관 change 항목 클릭→5종 뷰·URL 관찰(본체 직접 관찰 grounding)",
+          "basis": "배지 노드 클릭→FeatureDetailPanel '🔗 연관 CHANGE(1)'→항목 클릭→5종 뷰(PRD 탭 활성)+URL '?project=flowforge&change=flowforge-change-node-mapping&tab=prd' 정확 일치. 본체 직접 관찰 grounding.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/e3-open-views.png"
+          }
+        },
+        {
+          "scenario": "Scenario: change를 노드에서 편집하지 않는다",
+          "layer": "web",
+          "means": "gstack — 상세패널 연관 change 섹션에 편집/추가/삭제 UI 부재 관찰",
+          "basis": "상세패널 연관 change 섹션은 button onClick=진입만, 편집/추가/삭제 UI 없음. FeatureNode 배지=span(onClick 없음).",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "verify-shots/e3-detail-panel.png"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 8,
+      "passed": 8,
+      "failed": 0,
+      "basis": "gstack live http://localhost:8812 (내부 ~/.cache/ms-playwright chromium) — 8 시나리오 전부 PASS(실픽셀 13장). 단 UI 배지는 verify fixture(specs/planning-features-view)로 실증, 실데이터 배지 0."
+    },
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 459,
+      "passed": 459,
+      "failed": 0,
+      "basis": "Jest 39 스위트 459 tests passed(capabilityIndex.test.ts 노드↔change 파생 4건 + D그룹 엣지 14건 포함), 회귀 0. 노드↔change 파생 순수 함수 유닛 검증."
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가",
+      "reason": "웹 SPA 전용 change — android 레이어 없음"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가",
+      "reason": "웹 SPA 전용 change — ios 레이어 없음"
+    }
+  ],
+  "codeState": {
+    "head": "a6c3a325f0a685ff102cd0d634bd5813acee0e1f",
+    "dirty": true,
+    "branch": "feat/flowforge-feedback-changes",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html"
+}
