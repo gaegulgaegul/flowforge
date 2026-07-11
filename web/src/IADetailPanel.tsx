@@ -31,9 +31,11 @@ export interface IADetailPanelProps {
   onClose: () => void;
   /** 자식/부모 노드 클릭 시 그 노드로 전환(있으면). id로 다른 노드 data를 찾아 연다. */
   onSelectById?: (id: string) => void;
+  /** 연관 change 항목 클릭 시 그 change의 5종 뷰로 진입(FeatureDetailPanel과 동형, openChangeViews). */
+  onOpenChange?: (changeKey: string) => void;
 }
 
-export function IADetailPanel({ node, onClose, onSelectById }: IADetailPanelProps): JSX.Element {
+export function IADetailPanel({ node, onClose, onSelectById, onOpenChange }: IADetailPanelProps): JSX.Element {
   // Esc로 닫기(패널이 열려있을 때만).
   useEffect(() => {
     if (!node) return;
@@ -97,6 +99,30 @@ export function IADetailPanel({ node, onClose, onSelectById }: IADetailPanelProp
             </header>
 
             <div className="feature-detail-body">
+              {/* 연관 change(flowforge-change-node-mapping, B.2) — 화면 노드에 역경유 매핑된 change.
+                  항목 클릭 시 그 change의 5종 뷰로 진입(onOpenChange → openChangeViews).
+                  FeatureDetailPanel의 연관 change 섹션과 동형. 없으면 섹션 생략. */}
+              {node.linkedChanges && node.linkedChanges.length > 0 && (
+                <section className="feature-detail-field" data-testid="ia-detail-changes">
+                  <div className="feature-detail-label">🔗 연관 change ({node.linkedChanges.length})</div>
+                  <div className="feature-detail-badges">
+                    {node.linkedChanges.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className="feature-detail-change"
+                        onClick={() => onOpenChange?.(c)}
+                        disabled={!onOpenChange}
+                        title={`${c} 5종 뷰 열기`}
+                      >
+                        {c}
+                        <span className="feature-detail-change-arrow" aria-hidden="true">▶</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
               {/* 설명(detail) — 있을 때만(기획 IA엔 보통 빈 문자열 → 생략) */}
               {node.detail && (
                 <section className="feature-detail-field">

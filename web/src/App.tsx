@@ -866,6 +866,11 @@ export function App(): JSX.Element {
     setTab("prd");
     setDashStage("views");
     setStatus("");
+    // 진입 시 열려있던 노드 상세 패널(기능명세·IA·유저플로우)을 닫는다 — 안 닫으면 z-index 고정
+    // 패널이 방금 진입한 change 5종 뷰를 계속 가린다(다른 전환 경로의 패널 상호배타와 동일 규칙).
+    setSelectedFeature(null);
+    setSelectedIa(null);
+    setSelectedFlow(null);
     // 딥링크 URL 기록. change.project가 있을 때만 — ?project= 없이는 왕복 복원이 안 되는
     // 전역 진입 change는 URL을 남기지 않는다(마운트 복원이 project·change 둘 다 요구하는 것과 일관).
     if (change.project) {
@@ -1181,11 +1186,19 @@ export function App(): JSX.Element {
         onClose={() => setSelectedFlow(null)}
         onSelectById={selectFlowById}
       />
-      {/* IA 노드 상세 패널 — 같은 UX/CSS 재사용. 계층(부모/자식)·N:M 연결 상세기능 표시. */}
+      {/* IA 노드 상세 패널 — 같은 UX/CSS 재사용. 계층(부모/자식)·N:M 연결 상세기능·연관 change 표시. */}
       <IADetailPanel
         node={selectedIa}
         onClose={() => setSelectedIa(null)}
         onSelectById={selectIaById}
+        onOpenChange={(changeKey) =>
+          openChangeViews({
+            key: changeKey,
+            // displayName은 openChangeViews가 읽지 않음(진입은 key·project만 사용) — key로 채워도 무해.
+            displayName: changeKey,
+            ...(dashProject?.name ? { project: dashProject.name } : {}),
+          })
+        }
       />
     </div>
   );

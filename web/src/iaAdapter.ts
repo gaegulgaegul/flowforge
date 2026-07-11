@@ -60,6 +60,11 @@ function buildDetailLabelsByScreen(registry: ScreenRegistry): Map<string, string
  * 상세기능 라벨 → 상위 요구사항의 linkedChanges. featureTree(요구사항→기능→상세기능)를 순회해
  * 상세기능(kind='detail') 노드의 라벨로 조인 키를 만든다. 같은 라벨이 여러 요구사항 아래 있으면
  * change 목록을 합친다(featureTreeAdapter의 라벨 완전일치 조인 관례와 동형).
+ *
+ * ⚠️ 트레이드오프(review 지적): 조인 키가 라벨 문자열이라, 서로 다른 요구사항 아래 *완전히 동일한*
+ * 라벨의 상세기능이 있으면 두 요구사항의 change가 한 화면에 섞일 수 있다(false-positive 연결).
+ * 이는 screenRegistry가 상세기능을 라벨로 식별하는 기존 관례를 따른 결과이며, 정밀 조인(라벨→안정
+ * id)은 screenRegistry 스키마 변경이 필요해 후속 과제로 둔다. 현 기획 데이터에선 라벨 중복이 없어 무해.
  */
 function buildLinkedChangesByDetailLabel(root: FeatureTreeNode): Map<string, readonly string[]> {
   const byLabel = new Map<string, string[]>();

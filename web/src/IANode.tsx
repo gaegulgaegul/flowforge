@@ -11,8 +11,9 @@ const KIND_STYLE: Record<IANodeKind, { accent: string; bg: string; tag: string }
 };
 
 export function IANode({ data }: NodeProps): JSX.Element {
-  const { label, kind, detail, scenarioCount, verbose, tag } = data as IANodeData;
+  const { label, kind, detail, scenarioCount, verbose, tag, linkedChanges } = data as IANodeData;
   const s = KIND_STYLE[kind] ?? KIND_STYLE.requirement;
+  const changeCount = linkedChanges?.length ?? 0;
   return (
     <div
       className={`ia-node${verbose ? " ia-node--verbose" : ""}`}
@@ -25,6 +26,16 @@ export function IANode({ data }: NodeProps): JSX.Element {
         {verbose && scenarioCount > 0 && (
           <span className="ia-node-badge" style={{ borderColor: s.accent, color: s.accent }}>
             기준 {scenarioCount}
+          </span>
+        )}
+        {/* 연관 change 배지(flowforge-change-node-mapping, B.2) — 화면 노드 역경유 매핑.
+            FeatureNode의 feature-tree-change와 동형. 진입은 상세 패널의 change 항목 클릭. */}
+        {changeCount > 0 && (
+          <span
+            className="feature-tree-change"
+            title={`연관 change ${changeCount}개 — 노드 클릭 후 상세 패널에서 열기`}
+          >
+            change {changeCount}
           </span>
         )}
       </div>
