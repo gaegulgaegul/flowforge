@@ -12,16 +12,17 @@
  code{font-size:12px} .muted{color:#6e7781}
 </style></head><body>
 <h1>실증 검증 — flowforge-change-node-mapping</h1>
-<p class="muted">검증일: 2026-07-11T13:25:45+00:00 · 환경: web=gstack live http://localhost:8812 (내부 ~/.cache/ms-playwright chromium); server=Jest 459 tests; android/ios=SKIPPED(적용 불가) · commit a6c3a325 (dirty) · branch feat/flowforge-feedback-changes</p>
+<p class="muted">검증일: 2026-07-11T14:38:28+00:00 · 환경: web=gstack live http://localhost:8812 (내부 ~/.cache/ms-playwright chromium); server=Jest 459 tests; android/ios=SKIPPED(적용 불가) · commit a6c3a325 (dirty) · branch feat/flowforge-feedback-changes</p>
 <p><span class="banner">✓ 최종 판정: 통과</span></p>
-<p class="muted">PASS 8 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+<p class="muted">PASS 9 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
 
 <div class="notice">
-⚠️ <strong>정직 고지 — UI 배지 실증은 verify fixture 기반, 실데이터 배지 0</strong><br>
-이 검증의 UI 배지는 verify fixture(<code>specs/planning-features-view</code>)로 실증했다. 라이브 실데이터에서는 배지가 0개다 —
+⚠️ <strong>정직 고지 — IA 화면 역경유 표시 경로 PASS 승격(재검증) · 배지 실증은 fixture 기반</strong><br>
+IA 화면 역경유 표시 경로는 초기 verify에서 '후속'으로 유보됐다가 렌더 구현(<code>cf46759</code>) 후 재검증으로 PASS 승격됐다
+(<code>e5-*</code> 캡처: <code>e5-ia-badge-on.png</code>·<code>e5-ia-detail-panel.png</code>·<code>e5-ia-open-views.png</code>).
+배지 실증은 verify fixture(<code>specs/planning-features-view</code>) 기반이며, 라이브 실데이터에서는 배지가 0개다 —
 활성 change의 specs/dir capability가 <code>features.md</code> capability와 교집합 0이고, 대응되던 완료 change는 이미 archive됐기 때문이다.
-따라서 파생 로직·상속·읽기전용 진입·안전한 빈 처리는 fixture로 실증됐으나, <strong>실데이터로 배지가 실제로 뜨는 경로</strong>는
-후속 change <code>flowforge-mapping-basis-shift</code>에서 별도로 실증한다.
+따라서 <strong>실데이터로 배지가 실제로 뜨는 경로(매핑 기준 전환)</strong>는 후속 change <code>flowforge-mapping-basis-shift</code>에서 별도로 실증한다.
 </div>
 
 <h2>5단계 게이트 요약 (verifiedAt 시점 실행, 전부 PASS)</h2>
@@ -42,7 +43,7 @@
 <tr><td>요구사항 노드에 연관 change만 in-place로 매핑한다</td><td>Scenario: 전역 change 목록은 더 이상 나열되지 않는다</td><td>web</td><td>gstack — skeleton 뷰에서 전역 change 나열 블록 DOM 부재 관찰</td><td><code>skeleton 뷰에 .dash-changes-section DOM 0 매치(C.3 제거 확인).</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-shots/e3-no-global-list.png"><img src="verify-shots/e3-no-global-list.png" alt="전역 change 목록 제거 확인" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
 <tr><td>하위 노드는 상위 요구사항 capability를 상속해 연관 change를 표시한다</td><td>Scenario: 기능 노드(3단)가 상위 capability를 상속한다</td><td>web</td><td>gstack — 기능명세서 트리에서 상세기능 노드의 상속 배지·클리핑 관찰(본체 직접 관찰 grounding)</td><td><code>요구사항 기획 기능명세 뷰→기능 기능명세서 트리 렌더→상세기능 2개 모두 change 1 배지. DOM .feature-tree-change=4개, 부모 오버플로우 0(클리핑 없음). 본체 직접 관찰 grounding.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-shots/e2-inherit.png"><img src="verify-shots/e2-inherit.png" alt="하위 노드 상위 capability 상속 배지" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
 <tr><td>하위 노드는 상위 요구사항 capability를 상속해 연관 change를 표시한다</td><td>Scenario: 상세기능 노드가 요구사항 capability와 연결 화면 change를 합집합으로 표시한다</td><td>web</td><td>gstack — 상세기능 노드의 상속 배지 관찰(화면 합집합 로직은 D.2 코드정독)</td><td><code>상세기능 노드에 상위 capability change 상속 배지 확인. 화면 합집합은 fixture가 화면 미연결이라 상속분만 관찰(합집합 로직은 D.2 코드정독 PASS).</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-shots/e4-tree-tab.png"><img src="verify-shots/e4-tree-tab.png" alt="상세기능 상속 배지(합집합 상속분)" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
-<tr><td>화면 노드는 상세기능↔화면 링크를 역경유해 연관 change를 매핑한다</td><td>Scenario: 화면에 연결된 상세기능의 capability change가 화면에 매핑된다</td><td>web</td><td>gstack — IA 화면 노드의 역경유 배지 관찰(fixture 화면 미연결 → 빈 처리 실증)</td><td><code>fixture capability(planning-features-view)가 IA 화면 노드와 연결 안 돼 역경유 배지 미표시. 크래시·에러 0. spec의 '연결 상세기능 없으면 미표시' 시나리오에 부합하므로 PASS 계열(빈 처리 실증), 단 '표시' 경로는 실데이터 부재로 미실증 — 후속 change에서 실데이터로 실증 예정.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS(안전한 빈 처리 실증, 표시 경로는 후속)</span></td><td><a href="verify-shots/e2-ia-screen.png"><img src="verify-shots/e2-ia-screen.png" alt="IA 화면 노드 역경유(빈 처리)" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>화면 노드는 상세기능↔화면 링크를 역경유해 연관 change를 매핑한다</td><td>Scenario: 화면에 연결된 상세기능의 capability change가 화면에 매핑된다</td><td>web</td><td>gstack — IA 화면 노드의 역경유 change 배지·상세패널 진입 실렌더 관찰(본체 직접 관찰 grounding)</td><td><code>IANode.tsx에 change 배지 렌더 + IADetailPanel.tsx에 🔗 연관 change 섹션(onOpenChange) + App.tsx:1185 배선 추가(커밋 cf46759). fixture(planning-features-view, IA 화면 features·skeleton과 연결)로 재검증 — IA 화면 노드 2개(기능명세 화면·기획 뷰)에 'change 1' 배지 실렌더(e5-ia-badge-on.png), 클릭→상세패널 🔗 연관 change(1)(e5-ia-detail-panel.png)→5종 뷰(PRD 탭)+딥링크 URL 진입(e5-ia-open-views.png)+패널 닫힘 실증. 본체 직접 관찰.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-shots/e5-ia-badge-on.png"><img src="verify-shots/e5-ia-badge-on.png" alt="IA 화면 노드 역경유 change 1 배지 실렌더" style="max-width:240px;border:1px solid #ccc"></a> <a href="verify-shots/e5-ia-detail-panel.png"><img src="verify-shots/e5-ia-detail-panel.png" alt="IA 상세패널 연관 change 섹션" style="max-width:240px;border:1px solid #ccc"></a> <a href="verify-shots/e5-ia-open-views.png"><img src="verify-shots/e5-ia-open-views.png" alt="IA 역경유 change 5종 뷰 진입 PRD 탭" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
 <tr><td>화면 노드는 상세기능↔화면 링크를 역경유해 연관 change를 매핑한다</td><td>Scenario: 연결 상세기능이 없거나 연관 change가 없는 화면</td><td>web</td><td>gstack — IA 화면 노드에 배지 0개·콘솔 에러 0 관찰</td><td><code>IA 화면 배지 0개, 안전한 빈 처리, 콘솔 에러 0.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-shots/e2-ia-screen.png"><img src="verify-shots/e2-ia-screen.png" alt="IA 화면 배지 0개 안전한 빈 처리" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
 <tr><td>노드에 매핑된 change에서 5종 뷰로 진입한다</td><td>Scenario: 노드의 change 항목 클릭 시 5종 뷰 진입</td><td>web</td><td>gstack — 배지 노드 클릭→상세패널 연관 change 항목 클릭→5종 뷰·URL 관찰(본체 직접 관찰 grounding)</td><td><code>배지 노드 클릭→FeatureDetailPanel '🔗 연관 CHANGE(1)'→항목 클릭→5종 뷰(PRD 탭 활성)+URL '?project=flowforge&amp;change=flowforge-change-node-mapping&amp;tab=prd' 정확 일치. 본체 직접 관찰 grounding.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-shots/e3-open-views.png"><img src="verify-shots/e3-open-views.png" alt="change 클릭 5종 뷰 진입 PRD 탭" style="max-width:240px;border:1px solid #ccc"></a> <a href="verify-shots/e3-open-views-tabs.png"><img src="verify-shots/e3-open-views-tabs.png" alt="5종 뷰 탭" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
 <tr><td>노드에 매핑된 change에서 5종 뷰로 진입한다</td><td>Scenario: change를 노드에서 편집하지 않는다</td><td>web</td><td>gstack — 상세패널 연관 change 섹션에 편집/추가/삭제 UI 부재 관찰</td><td><code>상세패널 연관 change 섹션은 button onClick=진입만, 편집/추가/삭제 UI 없음. FeatureNode 배지=span(onClick 없음).</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="verify-shots/e3-detail-panel.png"><img src="verify-shots/e3-detail-panel.png" alt="상세패널 연관 change 읽기전용(진입만)" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
@@ -62,7 +63,7 @@
 <h2>레이어별 결과</h2>
 <table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
 <tbody>
-<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>8</td><td>8</td><td>0</td><td>gstack live http://localhost:8812 (내부 ~/.cache/ms-playwright chromium) — 8 시나리오 전부 PASS(실픽셀 13장). 단 UI 배지는 verify fixture(specs/planning-features-view)로 실증, 실데이터 배지 0.</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>9</td><td>9</td><td>0</td><td>gstack live http://localhost:8812 (내부 ~/.cache/ms-playwright chromium) — 9 시나리오 전부 PASS(실픽셀 13장 + IA 역경유 재검증 e5 4장). IA 화면 역경유 표시 경로는 렌더 구현(cf46759) 후 재검증으로 PASS 승격. 단 UI 배지는 verify fixture(specs/planning-features-view)로 실증, 실데이터 배지 0.</td></tr>
 <tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>459</td><td>459</td><td>0</td><td>Jest 39 스위트 459 tests passed(capabilityIndex.test.ts 노드↔change 파생 4건 + D그룹 엣지 14건 포함), 회귀 0. 노드↔change 파생 순수 함수 유닛 검증.</td></tr>
 <tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>웹 SPA 전용 change — android 레이어 없음</td></tr>
 <tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>웹 SPA 전용 change — ios 레이어 없음</td></tr>
@@ -78,6 +79,6 @@
 </tbody></table>
 
 <h2>Archive 게이트</h2>
-<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 통과</span> <strong>열림 (검증 안 함 0건 / SKIPPED 0건 / FAIL 0건)</strong></p>
-<p class="muted">단 UI 배지는 verify fixture로 실증(실데이터 배지 0), 실데이터 실증은 후속 change flowforge-mapping-basis-shift로 분리. archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 통과</span> <strong>열림 (전 시나리오 PASS 9/9 — IA 화면 역경유 렌더 구현·재검증 완료, review 치명 1 해소)</strong></p>
+<p class="muted">단 UI 배지 실증은 verify fixture(planning-features-view) 기반(실데이터 배지 0), 실데이터 배지 0의 매핑 기준 전환은 후속 change flowforge-mapping-basis-shift로 분리. archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
 </body></html>

@@ -1,16 +1,16 @@
 {
   "change": "flowforge-change-node-mapping",
-  "verifiedAt": "2026-07-11T13:25:45+00:00",
+  "verifiedAt": "2026-07-11T14:38:28+00:00",
   "finalJudgment": "통과",
   "counts": {
-    "pass": 8,
+    "pass": 9,
     "fail": 0,
     "검증안함": 0,
     "skipped": 0
   },
   "archiveGate": {
     "open": true,
-    "reason": "검증 안 함 0건 / SKIPPED 0건 / FAIL 0건 — 단 UI 배지는 verify fixture로 실증(실데이터 배지 0), 실데이터 실증은 후속 change flowforge-mapping-basis-shift로 분리"
+    "reason": "전 시나리오 PASS(9/9) — IA 화면 역경유 렌더 구현·재검증 완료(review 치명 1 해소). 단 UI 배지 실증은 verify fixture(planning-features-view) 기반, 실데이터 배지 0의 매핑 기준 전환은 후속 change flowforge-mapping-basis-shift로 분리"
   },
   "gates": [
     {
@@ -175,12 +175,12 @@
         {
           "scenario": "Scenario: 화면에 연결된 상세기능의 capability change가 화면에 매핑된다",
           "layer": "web",
-          "means": "gstack — IA 화면 노드의 역경유 배지 관찰(fixture 화면 미연결 → 빈 처리 실증)",
-          "basis": "fixture capability(planning-features-view)가 IA 화면 노드와 연결 안 돼 역경유 배지 미표시. 크래시·에러 0. spec의 '연결 상세기능 없으면 미표시' 시나리오에 부합하므로 PASS 계열(빈 처리 실증), 단 '표시' 경로는 실데이터 부재로 미실증 — 후속 change에서 실데이터로 실증 예정.",
-          "result": "PASS(안전한 빈 처리 실증, 표시 경로는 후속)",
+          "means": "gstack — IA 화면 노드의 역경유 change 배지·상세패널 진입 실렌더 관찰(본체 직접 관찰 grounding)",
+          "basis": "IANode.tsx에 change 배지 렌더 + IADetailPanel.tsx에 🔗 연관 change 섹션(onOpenChange) + App.tsx:1185 배선 추가(커밋 cf46759). fixture(planning-features-view, IA 화면 features·skeleton과 연결)로 재검증 — IA 화면 노드 2개(기능명세 화면·기획 뷰)에 'change 1' 배지 실렌더(e5-ia-badge-on.png), 클릭→상세패널 🔗 연관 change(1)(e5-ia-detail-panel.png)→5종 뷰(PRD 탭)+딥링크 URL 진입(e5-ia-open-views.png)+패널 닫힘 실증. 본체 직접 관찰.",
+          "result": "PASS",
           "evidence": {
-            "kind": "screenshot",
-            "path": "verify-shots/e2-ia-screen.png"
+            "kind": "image",
+            "path": "verify-shots/e5-ia-badge-on.png"
           }
         },
         {
@@ -246,10 +246,10 @@
     {
       "layer": "web",
       "status": "PASS",
-      "ran": 8,
-      "passed": 8,
+      "ran": 9,
+      "passed": 9,
       "failed": 0,
-      "basis": "gstack live http://localhost:8812 (내부 ~/.cache/ms-playwright chromium) — 8 시나리오 전부 PASS(실픽셀 13장). 단 UI 배지는 verify fixture(specs/planning-features-view)로 실증, 실데이터 배지 0."
+      "basis": "gstack live http://localhost:8812 (내부 ~/.cache/ms-playwright chromium) — 9 시나리오 전부 PASS(실픽셀 13장 + IA 역경유 재검증 e5 4장). IA 화면 역경유 표시 경로는 렌더 구현(cf46759) 후 재검증으로 PASS 승격. 단 UI 배지는 verify fixture(specs/planning-features-view)로 실증, 실데이터 배지 0."
     },
     {
       "layer": "server",

@@ -1,4 +1,17 @@
 # 배포 전 최종 검토 — flowforge-change-node-mapping
+
+## 재검토 (2026-07-11, 치명 1건 수정 후) — 판정: **배포 가능**
+치명 1건과 수정하면좋은 3건을 커밋 cf46759로 처리하고 IA 배지를 실픽셀 재verify했다.
+- **[해결됨] 치명 1: IA 화면 노드 역경유 렌더 갭** — IANode.tsx에 change 배지, IADetailPanel.tsx에 🔗 연관 change 섹션+onOpenChange, App.tsx:1185 배선 추가. spec Requirement 3 THEN 충족. 재verify: IA 화면 노드(기능명세 화면·기획 뷰)에 "change 1" 배지 실렌더 + 클릭→상세패널→5종 뷰 진입+딥링크 실증(본체 직접 관찰 `verify-shots/e5-ia-badge-on.png`·`e5-ia-open-views.png`).
+- **[해결됨] change 진입 시 상세패널 안 닫힘** — openChangeViews에 setSelectedFeature/Ia/Flow(null) 추가. 재verify에서 IA 진입 후 패널 CLOSED 확인.
+- **[해결됨] displayName 무주석 / iaAdapter 라벨 조인 false-positive** — 둘 다 주석 명시로 해소.
+- **[미해결·의도적 이월] 치명 2: 고아 서버 라우트 3종** — 별도 정리 change로 분리(이번 archive 비차단, 후속 티켓 강제). 원 소유주가 아카이브된 별개 change라 이번 스코프에서 삭제 시 회귀 위험.
+- **[미해결·fast-follow] 라우트 레벨 통합 테스트** — silent-regression 방어용, 후속.
+- 검증: 빌드·타입체크(3ws)·테스트(server Jest 459)·린트 전부 PASS.
+
+---
+
+## 1차 검토 (2026-07-11, 치명 1건 발견 시점 — 이력 보존)
 검토일: 2026-07-11 / 검토 범위: 이 change의 diff·직접 영향 파일만(전체 앱 아님)
 - backend: `server/src/lib/capabilityIndex.ts`, `server/src/routes/docs.ts`, `server/src/lib/__tests__/capabilityIndex.test.ts`, `shared/src/feature-tree-types.ts`
 - frontend: `web/src/{featureTreeAdapter.ts, iaAdapter.ts, FeatureNode.tsx, FeatureDetailPanel.tsx, App.tsx, styles.css}`, 삭제 `web/src/CapabilityChangeList.tsx`
