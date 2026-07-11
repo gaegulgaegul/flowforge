@@ -24,7 +24,7 @@
  * :project는 슬래시를 포함할 수 있어 와일드카드(*)로 받는다. docs는 SSOT(읽기전용)지만,
  * 예외로 유저플로우 좌표 overlay와 PRD 승인 반영(승인=사용자 의도)만 쓴다.
  */
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { Router } from "express";
 import type { Response } from "express";
 import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from "../parser/docsAdapter.js";
@@ -36,6 +36,7 @@ import { buildDocsPlanningUserFlow } from "../parser/planningUserFlowBuilder.js"
 import {
   listDocsProjects,
   resolveDocsDir,
+  readDocsFile,
   listDocsUserFlows,
   readDocsUserFlowOverlay,
   writeDocsUserFlowOverlay,
@@ -44,6 +45,11 @@ import {
   isPrdApplyRequest,
   isSafeFlowToken,
 } from "../lib/docs.js";
+import {
+  parseCharterCapabilities,
+  buildCapabilityIndex,
+  attachLinkedChanges,
+} from "../lib/capabilityIndex.js";
 import { readDocsFeatureSuggestions, applyFeatureSuggestions } from "../lib/featureDocs.js";
 import { readUserFlowSuggestions, applyUserFlowSuggestions } from "../lib/userFlowDocs.js";
 import {
@@ -138,7 +144,12 @@ docsRouter.get(
       res.status(404).json({ error: "planning_features_not_found" });
       return;
     }
-    res.json({ project, tree });
+    // flowforge-change-node-mapping: 요구사항 노드에 연관 change(linkedChanges)를 부여.
+    // dir=<projectRoot>/docs 이므로 charter=<dir>/spec.md, changesRoot=<projectRoot>/openspec/changes.
+    const charterCaps = parseCharterCapabilities(readDocsFile(dir, "spec.md") ?? "");
+    const index = buildCapabilityIndex(charterCaps, join(dirname(dir), "openspec", "changes"));
+    const linked = attachLinkedChanges(tree, index);
+    res.json({ project, tree: linked ?? tree });
   }),
 );
 

@@ -7,14 +7,14 @@
 
 ### Sequential Group A: 서버 파생 — 노드↔change 매핑 (선행 필수, 다른 그룹의 입력)
 
-- [ ] A.1 (RED) server Jest 테스트 작성 — `byCapability`(capabilityIndex) 재사용해 요구사항 노드에 연관 changeKeys를 부여하는 파생 함수 테스트: (a)capability 있고 연관 change 있으면 그 changeKeys, (b)연관 0개면 빈 배열, (c)capability 필드 없는 노드는 빈 배열 → 현재 미구현이라 실패 확인
-- [ ] A.2 (GREEN) 서버 파생 로직 신설 — `capabilityIndex.byCapability`를 읽어 FeatureTree 요구사항 노드에 `linkedChanges: string[]` 부여. `shared/src/feature-tree-types.ts`에 옵셔널 `linkedChanges?` 필드 추가(비파괴). 요구사항 노드에만 서버가 부여(하위 상속은 web에서)
-- [ ] A.3 (GREEN) A.1 테스트 통과 확인 — 요구사항 노드 linkedChanges 파생 PASS(server Jest)
+- [x] A.1 (RED→GREEN) server Jest 테스트 — `attachLinkedChanges` 파생 테스트 4건(capabilityIndex.test.ts): (a)연관 change 있으면 linkedChanges 부여, (b)연관 0개면 필드 미부착(비파괴 옵셔널 — 빈 배열이 아니라 undefined), (c)기능/빈 capability 노드·가상 루트엔 미부착, null 트리 안전. 전부 PASS
+- [x] A.2 (GREEN) 서버 파생 로직 신설 — `capabilityIndex.ts`에 `attachLinkedChanges(tree, index)` 순수 함수(byCapability 재사용, 요구사항 노드+capability 있고 연관 change>0일 때만 부여). `shared/src/feature-tree-types.ts`에 `linkedChanges?: readonly string[]` 옵셔널 필드 추가(비파괴). `docs.ts` planning-features 라우트에 배선(charter=<dir>/spec.md, changesRoot=<projectRoot>/openspec/changes)
+- [x] A.3 (GREEN) 검증 — shared 빌드 0 + server 타입체크 0 + server 테스트 459 passed(파생 4건 포함)
 
 ### Parallel Group B: web 파생 — 상속·역경유 (A 완료 후, 서로 다른 파일)
 
 - [ ] B.1 [parallel] [frontend-agent] web adapter 상속 파생 — 기능(3단)·상세기능(4단) 노드가 상위 요구사항의 `linkedChanges`를 상속. 상세기능은 자신의 `screens` 링크가 가리키는 화면의 연관 change도 합집합(중복 제거). `web/src/featureTreeAdapter.ts`
-- [ ] B.2 [parallel] [frontend-agent] web 화면 역경유 파생 — 화면 노드(IA/와이어/유저플로우 화면)가 그 화면 id를 `screens`로 가진 상세기능들의 상위 capability change 합집합을 파생. 화면→상세기능 역인덱스 1회 계산 후 캐시(맵)해 O(1) 조회. `web/src/iaAdapter.ts`/`graphAdapter.ts` 관련
+- [ ] B.2 [parallel] [frontend-agent] web 화면 역경유 파생 — 화면 노드(**IA 화면 우선**)가 그 화면 id를 `screens`로 가진 상세기능들의 상위 capability change 합집합을 파생. 화면→상세기능 역인덱스 1회 계산 후 캐시(맵)해 O(1) 조회. `web/src/iaAdapter.ts`(IANode.screenId 존재). ※Context Scan: 유저플로우 그래프 노드(`graphAdapter.ts SpecNodeData`)엔 화면 id가 없어 역경유 불가 → 유저플로우 화면 매핑은 후속 change로 분리(유저플로우 화면 식별 데이터 신설 필요). IA 화면 역인덱스는 `planningIaBuilder.ts:33-42 detailsByScreen` 패턴 재사용
 
 ### Sequential Group C: 노드 렌더 in-place 표시 + 진입 (B 완료 후 — 같은 렌더 파일 순차)
 

@@ -59,6 +59,13 @@ export interface FeatureTreeNode {
    * 표시 전용 — 파서는 형식을 강제하지 않고 원문/폴백을 그대로 싣는다(지어내지 않음).
    */
   readonly createdAt?: string;
+  /**
+   * 이 노드와 연관된 change 키 목록(flowforge-change-node-mapping). 요구사항 노드만 서버가
+   * 채운다 — node.capability로 capabilityIndex.byCapability를 조회한 결과(글자단위 일치).
+   * 연관 change가 0개거나 capability가 없으면 필드 자체가 없다(비파괴 옵셔널, memo 동형).
+   * 기능/상세기능·화면 노드로의 상속·역경유는 web adapter가 이 값을 기점으로 파생한다.
+   */
+  readonly linkedChanges?: readonly string[];
   readonly children: readonly FeatureTreeNode[];
 }
 

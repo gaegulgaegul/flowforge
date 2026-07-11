@@ -151,3 +151,31 @@ export function buildCapabilityDetail(
 
   return { features, userFlows, changes };
 }
+
+/**
+ * 기능명세 트리의 **요구사항 노드**에만 연관 change 키 목록(linkedChanges)을 부여한 새 트리를 돌려준다
+ * (flowforge-change-node-mapping). node.capability로 byCapability를 조회한 결과이며, 연관 change가
+ * 0개거나 capability가 빈 문자열이면 필드를 붙이지 않는다(비파괴 옵셔널). 기능/상세기능 노드는 자체
+ * capability가 없으므로 여기서 부여하지 않는다 — 상속·역경유는 web adapter가 이 값을 기점으로 파생한다.
+ *
+ * 순수 함수 — 파일 IO 없음. byCapability 재사용(재구현·유사도 매칭 없음, 글자단위 일치). null 트리는 null.
+ *
+ * @param tree   buildDocsPlanningFeatures 결과(없으면 null)
+ * @param index  buildCapabilityIndex 결과(byCapability 재사용)
+ */
+export function attachLinkedChanges(
+  tree: FeatureTree | null,
+  index: CapabilityIndex,
+): FeatureTree | null {
+  if (!tree) return null;
+  const withLinks = (node: FeatureTree["root"]): FeatureTree["root"] => {
+    const children = node.children.map(withLinks);
+    // 요구사항 노드 + capability 있을 때만 조회. 연관 change 0개면 필드 미부착(비파괴).
+    if (node.kind === "requirement" && node.capability) {
+      const changes = index.byCapability.get(node.capability) ?? [];
+      if (changes.length > 0) return { ...node, linkedChanges: changes, children };
+    }
+    return { ...node, children };
+  };
+  return { root: withLinks(tree.root) };
+}

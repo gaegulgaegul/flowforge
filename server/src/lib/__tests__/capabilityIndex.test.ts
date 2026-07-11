@@ -14,6 +14,7 @@ import {
   parseCharterCapabilities,
   buildCapabilityIndex,
   buildCapabilityDetail,
+  attachLinkedChanges,
 } from "../capabilityIndex.js";
 import type { FeatureTree } from "@flowforge/shared";
 
@@ -174,5 +175,51 @@ describe("buildCapabilityDetail — capability 단위 종합 집계", () => {
     const detail = buildCapabilityDetail("x", idx, null, [{ stem: "f-v1", caps: ["x"] }]);
     expect(detail.features).toBeNull();
     expect(detail.userFlows).toEqual(["f-v1"]);
+  });
+});
+
+describe("attachLinkedChanges — 요구사항 노드에 연관 change(linkedChanges) 부여", () => {
+  let root: string;
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "attach-"));
+  });
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it("(a) capability에 연관 change가 있으면 요구사항 노드에 linkedChanges를 붙인다", () => {
+    makeChange(root, "ch1", ["cap-a"]);
+    makeChange(root, "ch2", ["cap-a"]);
+    const idx = buildCapabilityIndex(new Set(["cap-a"]), root);
+    const tree = makeFeatureTree([{ label: "요구A", capability: "cap-a" }]);
+    const linked = attachLinkedChanges(tree, idx);
+    const reqNode = linked?.root.children[0];
+    expect(reqNode?.linkedChanges).toEqual(["ch1", "ch2"]);
+  });
+
+  it("(b) 연관 change가 0개면 linkedChanges 필드를 붙이지 않는다(비파괴 옵셔널)", () => {
+    const idx = buildCapabilityIndex(new Set(["cap-lonely"]), root); // change 없음
+    const tree = makeFeatureTree([{ label: "요구B", capability: "cap-lonely" }]);
+    const linked = attachLinkedChanges(tree, idx);
+    const reqNode = linked?.root.children[0];
+    expect(reqNode?.linkedChanges).toBeUndefined();
+  });
+
+  it("(c) capability 없는 노드(기능/상세기능·빈 capability)에는 부여하지 않는다", () => {
+    makeChange(root, "ch1", ["cap-a"]);
+    const idx = buildCapabilityIndex(new Set(["cap-a"]), root);
+    const tree = makeFeatureTree([{ label: "요구A", capability: "cap-a" }]);
+    const linked = attachLinkedChanges(tree, idx);
+    const reqNode = linked?.root.children[0];
+    const featureNode = reqNode?.children[0]; // makeFeatureTree가 만든 하위 기능 노드
+    expect(featureNode?.kind).toBe("feature");
+    expect(featureNode?.linkedChanges).toBeUndefined();
+    // 가상 루트(capability="")에도 안 붙음
+    expect(linked?.root.linkedChanges).toBeUndefined();
+  });
+
+  it("null 트리는 null로 안전 통과(throw 없음)", () => {
+    const idx = buildCapabilityIndex(new Set(["cap-a"]), root);
+    expect(attachLinkedChanges(null, idx)).toBeNull();
   });
 });
