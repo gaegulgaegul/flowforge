@@ -24,9 +24,9 @@
 
 ### Parallel Group D: 회귀·엣지 검증 (C 완료 후, 서로 독립)
 
-- [ ] D.1 [parallel] 회귀 — 전역 목록 제거 후에도 연관 change 있는 노드에서 5종 뷰 진입 가능(접근성 대체) 확인. planning 5종 뷰·유저플로우 좌표·승인 위저드·핀 피드백 diff 스코프 불변 검증
-- [ ] D.2 [parallel] 엣지 — capability 없는 프로젝트·change 0개 프로젝트·화면 연결 없는 상세기능·중복 화면 링크에서 크래시 없이 빈 처리 확인
-- [ ] D.3 [parallel] 읽기 전용 확인 — 노드에서 change 편집·추가·삭제 UI가 없는지(spec R4 THEN 읽기 전용) diff/코드 확인
+- [x] D.1 [parallel] 회귀 — 전역 목록 제거 후에도 연관 change 있는 노드에서 5종 뷰 진입 가능(접근성 대체) 확인. planning 5종 뷰·유저플로우 좌표·승인 위저드·핀 피드백 diff 스코프 불변 검증. 정적근거 4/4 PASS: 진입로 CapabilityChangeList→FeatureDetailPanel onOpenChange 대체(App.tsx:1170-1174, FeatureDetailPanel.tsx:209-231), openChangeViews 본문 불변(App.tsx:863-878); views 5종 렌더 블록 미변경(App.tsx:1141-1160); graphAdapter.ts 미변경(유저플로우 좌표 불변, iaAdapter는 IA 화면 노드 data만 추가); 승인위저드·핀피드백 소스 diff 0건. 3-레이어 타입체크 exit 0. 런타임 실동작은 E그룹으로 이월
+- [x] D.2 [parallel] 엣지 — capability 없는 프로젝트·change 0개 프로젝트·화면 연결 없는 상세기능·중복 화면 링크에서 크래시 없이 빈 처리 확인. 5/5 PASS, 크래시 지점 없음: capability falsy 가드(capabilityIndex.ts:174), byCapability nullish ??[](:175)·length>0(:176), changesRoot 부재 early return(:73)·catch(:78-79), iaAdapter union.size>0(:102)·3중 중복제거(:53,:67-73,:97-101 Set), null 트리 early return(:170). server jest 14 PASS(항목3·4는 web iaAdapter 단위테스트 부재→코드정독 근거)
+- [x] D.3 [parallel] 읽기 전용 확인 — 노드에서 change 편집·추가·삭제 UI가 없는지(spec R4 THEN 읽기 전용) diff/코드 확인. 4/4 PASS: FeatureNode 배지=span·onClick 없음(FeatureNode.tsx:77-84), FeatureDetailPanel 연관 change=button onClick→onOpenChange 진입만·screens 섹션 동형(FeatureDetailPanel.tsx:211-230), web diff에 POST/PUT/DELETE/PATCH/mutation/input/삭제핸들러 추가 0건(api.ts는 순삭제), openChangeViews=setState+history.pushState만(App.tsx:863-878), IA 화면 노드 linkedChanges는 data만·IANode 미렌더·IADetailPanel 편집핸들러 없음
 
 ### Sequential Group E: 라이브 반영 + UI 검증
 
