@@ -931,62 +931,15 @@ button:hover { border-color: var(--lime); }
   margin-left: 10px; flex: 1; height: 16px; border-radius: 4px; background: var(--lofi-fill);
   color: var(--lofi-muted); font-size: 10px; display: flex; align-items: center; padding: 0 8px;
 }
-.wf-df-viewport { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.wf-df-viewport { position: absolute; inset: 0; }
 .wf-df-frame--desktop .wf-df-viewport { top: 30px; }
 
-/* --- 데스크탑 상단바 --- */
-.wf-df-topbar {
-  height: 46px; flex: 0 0 auto; background: var(--panel, #1b1e24); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 12px; padding: 0 16px;
+/* --- 본문 = 화면별 HTML 문서 sandbox iframe(flowforge-wireframe-iframe) --- */
+/* 폐기: 좌표 없는 요소 박스(wf-df-el--*)·본문 배치(wf-df-main--*)·데스크탑/모바일 바 CSS는
+   iframe 렌더로 대체됐다. 프레임 크롬(frame/chrome/viewport)만 잔존(게으름 위계). */
+.wf-df-iframe {
+  width: 100%; height: 100%; border: 0; display: block; background: #fff;
 }
-.wf-df-dbody { flex: 1; display: flex; min-height: 0; }
-.wf-df-sidebar {
-  width: 176px; flex: 0 0 auto; background: var(--bg); border-right: 1px solid var(--border);
-  padding: 14px 10px; display: flex; flex-direction: column; gap: 5px; overflow-y: auto;
-}
-.wf-df-main { flex: 1; min-width: 0; overflow: auto; padding: 20px; }
-
-/* --- 본문 배치 --- */
-.wf-df-main--grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-content: start; }
-.wf-df-main--stack { display: flex; flex-direction: column; gap: 10px; }
-.wf-df-main--form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: start; }
-.wf-df-main--tree { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: start; }
-
-/* --- 요소(로우피델리티 프리미티브) --- */
-.wf-df-el {
-  border: 1.5px dashed var(--lofi-outline); background: var(--lofi-fill); color: var(--lofi-muted);
-  border-radius: 8px; padding: 10px 12px; font-size: 12px; display: flex; align-items: center;
-  gap: 6px; text-align: left; font-family: inherit; min-height: 34px;
-}
-.wf-df-el-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.wf-df-el-arrow { color: var(--lime); flex: 0 0 auto; font-size: 10px; }
-.wf-df-el--go { cursor: pointer; }
-.wf-df-el--go:hover { border-color: var(--lime); color: var(--text); }
-.wf-df-el--button { border-style: solid; font-weight: 600; }
-.wf-df-el--card { min-height: 96px; flex-direction: column; align-items: stretch; justify-content: flex-start; }
-.wf-df-el--nav-item { border-style: solid; border-color: transparent; background: transparent; padding: 8px 10px; min-height: 0; }
-.wf-df-el--nav-item.wf-df-el--go:hover { background: var(--lofi-fill); border-color: transparent; }
-.wf-df-el--tab { border: none; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; padding: 9px 12px; min-height: 0; }
-.wf-df-el--tab.wf-df-el--go:hover { border-bottom-color: var(--lime); }
-.wf-df-el--text { border-style: solid; border-color: transparent; background: transparent; padding: 6px 8px; min-height: 0; }
-.wf-df-el--input { background: var(--lofi-fill2); border-style: solid; }
-.wf-df-el--tree-node { flex-direction: column; align-items: stretch; border-style: solid; }
-.wf-df-el--placeholder { border-style: solid; }
-
-/* --- 모바일 --- */
-.wf-df-mtopbar {
-  height: 42px; flex: 0 0 auto; background: var(--panel, #1b1e24); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 12px;
-}
-.wf-df-mbody { flex: 1; overflow: auto; padding: 14px; }
-.wf-df-mbody.wf-df-main--grid, .wf-df-mbody.wf-df-main--form, .wf-df-mbody.wf-df-main--tree { grid-template-columns: 1fr; }
-.wf-df-bottombar {
-  height: 56px; flex: 0 0 auto; background: var(--panel, #1b1e24); border-top: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-around; padding: 0 8px;
-}
-.wf-df-bottombar .wf-df-el { flex: 1; flex-direction: column; gap: 3px; border: none; background: transparent; font-size: 9.5px; min-height: 0; text-align: center; }
-.wf-df-bottombar .wf-df-el-label { flex: 0 0 auto; text-align: center; }
-.wf-df-bottombar .wf-df-el-arrow { display: none; }
 
 .wf-df-caption {
   width: 100%; max-width: 1000px; text-align: center; font-size: 12px; color: var(--lofi-muted);
@@ -1021,9 +974,13 @@ button:hover { border-color: var(--lime); }
 .wf-pin-stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
 @media (max-width: 1000px) { .wf-pin-stage { grid-template-columns: 1fr; } }
 
-/* 핀 레이어 — 프레임(.wf-df-frame, position:relative) 위 전체를 덮는다. 클릭은 캡처, 요소 이동은 보존. */
-.wf-pin-layer { position: absolute; inset: 0; z-index: 6; }
-.wf-pin-layer--armed { cursor: crosshair; }
+/* 핀 레이어 — 프레임(.wf-df-frame, position:relative) 위 iframe 표면 전체를 덮는다.
+   보기 모드: pointer-events:none → iframe이 클릭을 받아 문서 동작(입력/버튼)이 살아난다.
+   핀 모드(armed): pointer-events:auto → 오버레이가 클릭을 캡처해 iframe 표면 좌표에 핀을 찍는다.
+   단, 이미 찍힌 핀 마커(button.wf-pin)는 항상 클릭 가능(보기 모드에서도 재열기 가능). */
+.wf-pin-layer { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+.wf-pin-layer--armed { cursor: crosshair; pointer-events: auto; }
+button.wf-pin { pointer-events: auto; }
 
 /* 핀 마커(번호) — 좌표 %에 하단 꼭지점이 닿게(translate). */
 button.wf-pin {
@@ -1044,6 +1001,8 @@ button.wf-pin--active .wf-pin-head { outline: 3px solid rgba(217,102,63,.4); }
   position: absolute; z-index: 20; width: 250px; transform: translate(12px, 8px);
   background: var(--panel, #1b1e24); border: 1px solid var(--border); border-radius: 12px;
   box-shadow: 0 12px 34px rgba(0,0,0,.5); padding: 12px;
+  /* 보기 모드(레이어 pointer-events:none)에서 핀 마커로 팝오버를 열어도 입력이 되도록 강제 auto. */
+  pointer-events: auto;
 }
 .wf-pin-pop-h { font-size: 11px; letter-spacing: .04em; color: var(--pin-ink); font-weight: 700; margin-bottom: 7px; }
 .wf-pin-pop-ta {
@@ -1072,19 +1031,39 @@ button.wf-pin--active .wf-pin-head { outline: 3px solid rgba(217,102,63,.4); }
 .wf-pin-empty { font-size: 13px; color: var(--lofi-muted, #8b949e); padding: 16px 4px; text-align: center; line-height: 1.6; }
 .wf-pin-list { display: flex; flex-direction: column; gap: 8px; }
 .wf-pin-row {
-  display: flex; gap: 10px; align-items: flex-start; text-align: left; width: 100%;
-  border: 1px solid var(--border); border-radius: 10px; background: var(--bg); cursor: pointer;
-  padding: 10px; transition: border-color .12s;
+  display: flex; gap: 8px; align-items: stretch; width: 100%;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  padding: 6px; transition: border-color .12s;
 }
 .wf-pin-row:hover { border-color: var(--pin); }
 .wf-pin-row--active { border-color: var(--pin); background: rgba(217,102,63,.12); }
+.wf-pin-row--resolved { opacity: .55; }
+.wf-pin-row--resolved .wf-pin-num { background: var(--lofi-muted, #8b949e); }
+/* 행 안의 열기 버튼(핀 번호+텍스트) — 클릭 시 그 핀 재열림. */
+.wf-pin-row-open {
+  flex: 1; min-width: 0; display: flex; gap: 10px; align-items: flex-start; text-align: left;
+  background: none; border: 0; cursor: pointer; padding: 4px; color: inherit;
+}
 .wf-pin-num {
   flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
   background: var(--pin); color: #fff; font-size: 11px; font-weight: 700;
 }
 .wf-pin-row-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .wf-pin-row-txt { font-size: 13px; color: var(--text); line-height: 1.4; word-break: break-word; }
+.wf-pin-row-resolved .wf-pin-row-txt { text-decoration: line-through; }
 .wf-pin-row-meta { font-size: 10px; color: var(--lofi-muted, #8b949e); }
+/* resolve 토글 버튼(행 우측). */
+.wf-pin-resolve {
+  flex: none; align-self: center; border: 1px solid var(--border); border-radius: 8px;
+  background: #22262e; color: var(--lofi-muted, #8b949e); cursor: pointer; font-size: 11px;
+  font-weight: 600; padding: 5px 9px; white-space: nowrap;
+}
+.wf-pin-resolve:hover:not(:disabled) { border-color: var(--pin); color: var(--text); }
+.wf-pin-resolve:disabled { opacity: .4; cursor: default; }
+.wf-pin-row--resolved .wf-pin-resolve { background: rgba(74,194,107,.14); border-color: rgba(74,194,107,.5); color: #6bd489; }
+/* resolved 핀 마커(오버레이) — 흐리게 + 초록 톤. */
+button.wf-pin--resolved { opacity: .5; }
+button.wf-pin--resolved .wf-pin-head { background: #4ac26b; }
 .wf-pin-relay {
   margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border);
   font-size: 11.5px; color: var(--lofi-muted, #8b949e); line-height: 1.5;

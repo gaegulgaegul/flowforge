@@ -6,8 +6,8 @@
  *
  * B.1 화면 id → 상세기능 라벨들: featureTreeAdapter는 정방향(상세기능→화면 목록)만 파생하므로
  *     ScreenRegistry.links를 화면 id 기준으로 역인덱싱한다.
- * B.2 화면 id → 와이어(WireScreen2): planningWireScreens를 id로 조회한다. */
-import type { ScreenRegistry, WireScreen2 } from "@flowforge/shared";
+ * B.2 화면 id → 와이어(WireDoc): planningWireScreens를 id로 조회한다. */
+import type { ScreenRegistry, WireDoc } from "@flowforge/shared";
 
 /**
  * B.1: 화면 id → 그 화면을 연결화면으로 가진 상세기능 라벨들의 역인덱스.
@@ -41,14 +41,14 @@ export function detailLabelsForScreen(
 }
 
 /**
- * B.2: 화면 id → WireScreen2 lookup Map. 같은 id가 여러 디바이스(desktop/mobile)로 있으면
+ * B.2: 화면 id → WireDoc lookup Map. 같은 id가 여러 디바이스(desktop/mobile)로 있으면
  * 마지막 것이 아니라 배열로 유지할 수도 있으나, 여기선 바레 id 정확 매칭 1개 대표만 필요하므로
  * 첫 등장(주로 desktop)을 유지한다(호출부가 프리뷰용 단일 화면을 원함).
  */
 export function buildWireById(
-  screens: readonly WireScreen2[] | null | undefined,
-): Map<string, WireScreen2> {
-  const map = new Map<string, WireScreen2>();
+  screens: readonly WireDoc[] | null | undefined,
+): Map<string, WireDoc> {
+  const map = new Map<string, WireDoc>();
   for (const s of screens ?? []) {
     if (!map.has(s.id)) map.set(s.id, s);
   }
@@ -59,9 +59,9 @@ export function buildWireById(
  * B.2 조회 헬퍼: 화면 id로 와이어를 조회(있음/없음/dangling → null).
  */
 export function wireForScreen(
-  map: Map<string, WireScreen2>,
+  map: Map<string, WireDoc>,
   screenId: string | undefined,
-): WireScreen2 | null {
+): WireDoc | null {
   if (screenId === undefined) return null;
   return map.get(screenId) ?? null;
 }

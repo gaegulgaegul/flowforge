@@ -9,23 +9,23 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import request from "supertest";
-import type { WireScreen2, WireSuggestion } from "@flowforge/shared";
+import type { WireDoc, WireSuggestion } from "@flowforge/shared";
 
 let ROOT: string;
 let FBROOT: string;
 
-/** 최소 유효 WireScreen2. */
-function screen(id: string, over: Partial<WireScreen2> = {}): WireScreen2 {
+/** 최소 유효 WireDoc(화면별 자족 HTML 문서). */
+function screen(id: string, over: Partial<WireDoc> = {}): WireDoc {
   return {
     id,
     title: `화면 ${id}`,
     device: "desktop",
-    regions: { body: { layout: "grid", elements: [{ kind: "card", label: "카드" }] } },
+    html: `<!DOCTYPE html><html><body><h1>화면 ${id}</h1></body></html>`,
     ...over,
   };
 }
-function sug(id: string, screenId: string, layout?: WireScreen2): WireSuggestion {
-  return { id, screenId, layout: layout ?? screen(screenId) };
+function sug(id: string, screenId: string, docOver?: WireDoc): WireSuggestion {
+  return { id, screenId, doc: docOver ?? screen(screenId) };
 }
 
 /** <ROOT>/<project>/docs/planning/{prd.md(docs 인식용), wireframe.suggestions.json} 픽스처. */
@@ -87,6 +87,23 @@ describe("와이어 승인/반려 + 피드백 API", () => {
     expect(res.status).toBe(404);
   });
 
+  // ── GET planning-wireframe (렌더 원천 = HTML 문서, flowforge-wireframe-iframe) ──
+  it("GET planning-wireframe — 각 화면이 좌표 없는 요소 배열이 아니라 id·title·device·html을 담는다", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/p/planning-wireframe");
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.screens)).toBe(true);
+    for (const s of res.body.screens as WireDoc[]) {
+      expect(typeof s.id).toBe("string");
+      expect(typeof s.title).toBe("string");
+      expect(["desktop", "mobile"]).toContain(s.device);
+      expect(typeof s.html).toBe("string");
+      // 폐기된 요소 배열 스키마(regions/elements)가 응답에 없다.
+      expect((s as unknown as Record<string, unknown>)["regions"]).toBeUndefined();
+    }
+  });
+
   // ── POST apply ──
   it("POST apply — 단일 승인 시 승인분 반영 + 결과 반환", async () => {
     makePlanning("p", [sug("s1", "grid", screen("grid", { title: "새 그리드" }))]);
@@ -97,7 +114,7 @@ describe("와이어 승인/반려 + 피드백 API", () => {
     expect(res.body.remaining).toBe(0);
     // 승인분이 RW 볼륨에 저장됨 → 이후 planning-wireframe GET이 그걸 반환.
     const wf = await request(app).get("/api/docs/p/planning-wireframe");
-    expect(wf.body.screens.find((s: WireScreen2) => s.id === "grid")?.title).toBe("새 그리드");
+    expect(wf.body.screens.find((s: WireDoc) => s.id === "grid")?.title).toBe("새 그리드");
   });
 
   it("POST apply — 반려 시 원천 불변(큐에서만 제거)", async () => {
@@ -108,7 +125,7 @@ describe("와이어 승인/반려 + 피드백 API", () => {
     expect(res.body.rejected).toBe(1);
     // 승인분 미기록 → planning-wireframe은 픽스처 원본(grid 제목).
     const wf = await request(app).get("/api/docs/p/planning-wireframe");
-    expect(wf.body.screens.find((s: WireScreen2) => s.id === "grid")?.title).toBe("프로젝트 목록");
+    expect(wf.body.screens.find((s: WireDoc) => s.id === "grid")?.title).toBe("프로젝트 목록");
   });
 
   it("POST apply — 미실재 id는 skipped로 표면화", async () => {
@@ -212,6 +229,94 @@ describe("와이어 승인/반려 + 피드백 API", () => {
     expect(res.status).toBe(404);
   });
 
+  // ── GET feedback + PATCH resolve/update (flowforge-pin-feedback-lifecycle) ──
+  it("GET feedback — 저장된 피드백 배열을 반환한다(id·status 포함)", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "남긴 것", xPct: 10, yPct: 20 });
+    const res = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.items)).toBe(true);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].text).toBe("남긴 것");
+    expect(res.body.items[0].status).toBe("open");
+    expect(typeof res.body.items[0].id).toBe("string");
+  });
+
+  it("GET feedback — 파일 없으면 빈 배열(404 아님)", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual([]);
+  });
+
+  it("GET feedback — 경로 조작 차단(404)", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/..%2f..%2fetc/planning-wireframe-feedback");
+    expect(res.status).toBe(404);
+  });
+
+  it("PATCH feedback/:id — resolve로 status 갱신 200", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 5, yPct: 5 });
+    const list = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    const id = list.body.items[0].id as string;
+    const res = await request(app).patch(`/api/docs/p/planning-wireframe-feedback/${id}`).send({ status: "resolved" });
+    expect(res.status).toBe(200);
+    const after = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    expect(after.body.items[0].status).toBe("resolved");
+  });
+
+  it("PATCH feedback/:id — text in-place 수정, 배열 길이 불변", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "원본", xPct: 5, yPct: 5 });
+    const list = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    const id = list.body.items[0].id as string;
+    const res = await request(app).patch(`/api/docs/p/planning-wireframe-feedback/${id}`).send({ text: "수정본" });
+    expect(res.status).toBe(200);
+    const after = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    expect(after.body.items).toHaveLength(1); // 중복 없음
+    expect(after.body.items[0].text).toBe("수정본");
+    expect(after.body.items[0].xPct).toBe(5); // 좌표 보존
+  });
+
+  it("PATCH feedback/:id — 존재하지 않는 id는 404", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 5, yPct: 5 });
+    const res = await request(app).patch("/api/docs/p/planning-wireframe-feedback/nope-id").send({ status: "resolved" });
+    expect(res.status).toBe(404);
+  });
+
+  it("PATCH feedback/:id — status 화이트리스트 밖 값은 400", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 5, yPct: 5 });
+    const list = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    const id = list.body.items[0].id as string;
+    const res = await request(app).patch(`/api/docs/p/planning-wireframe-feedback/${id}`).send({ status: "archived" });
+    expect(res.status).toBe(400);
+  });
+
+  it("PATCH feedback/:id — 빈 text는 400", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 5, yPct: 5 });
+    const list = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    const id = list.body.items[0].id as string;
+    const res = await request(app).patch(`/api/docs/p/planning-wireframe-feedback/${id}`).send({ text: "   " });
+    expect(res.status).toBe(400);
+  });
+
+  it("PATCH feedback/:id — 경로 조작 차단(404)", async () => {
+    const app = await loadApp();
+    const res = await request(app).patch("/api/docs/..%2f..%2fetc/planning-wireframe-feedback/x").send({ status: "resolved" });
+    expect(res.status).toBe(404);
+  });
+
   // ── 재생성 격리(D6): 그 화면만 갱신, 타 화면 승인분 불변 ──
   it("재생성 격리 — 큐 갱신 후 승인하면 그 화면만 바뀌고 타 화면은 불변(D6)", async () => {
     // 1) grid만 먼저 승인(승인분 원천 생성).
@@ -226,8 +331,8 @@ describe("와이어 승인/반려 + 피드백 API", () => {
     // 3) 재조회+승인 → skeleton만 갱신, grid는 v1 유지(타 화면 불변).
     await request(app).post("/api/docs/p/planning-wireframe-suggestions/apply").send({ approve: ["s2"], reject: [] });
     const wf = await request(app).get("/api/docs/p/planning-wireframe");
-    const byId = new Map(wf.body.screens.map((s: WireScreen2) => [s.id, s]));
-    expect((byId.get("skeleton") as WireScreen2)?.title).toBe("기획뷰 v2");
-    expect((byId.get("grid") as WireScreen2)?.title).toBe("그리드 v1"); // 이전 승인분 불변
+    const byId = new Map(wf.body.screens.map((s: WireDoc) => [s.id, s]));
+    expect((byId.get("skeleton") as WireDoc)?.title).toBe("기획뷰 v2");
+    expect((byId.get("grid") as WireDoc)?.title).toBe("그리드 v1"); // 이전 승인분 불변
   });
 });

@@ -3,7 +3,7 @@ import type {
   SpecGraph,
   LayoutOverlay,
   Wireframe,
-  WireScreen2,
+  WireDoc,
   Prd,
   SpecTreeNode,
   DecisionTimeline,
@@ -15,6 +15,8 @@ import type {
   FeatureSuggestionQueue,
   UserFlowSuggestionQueue,
   WireSuggestionQueue,
+  WireFeedbackItem,
+  WireFeedbackStatus,
   CapabilityAuditSummary,
   ScreenRegistry,
 } from "@flowforge/shared";
@@ -232,20 +234,20 @@ export async function fetchPlanningScreens(project: string): Promise<ScreenRegis
 }
 
 /**
- * 기획 단계 planning 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]).
- * 데스크탑/모바일 프레임 안에 영역별 배치. WireframeDeviceFrame이 렌더한다(세로 목록 아님).
+ * 기획 단계 planning 와이어 = 화면별 HTML 문서(WireDoc[], flowforge-wireframe-iframe).
+ * 각 화면은 id·title·device·html(자족 문서). WireframeDeviceFrame이 sandbox iframe에 렌더한다.
  */
 export async function fetchDocsPlanningWireframe(
   project: string,
-): Promise<{ project: string; screens: WireScreen2[] }> {
+): Promise<{ project: string; screens: WireDoc[] }> {
   const res = await fetch(`/api/docs/${project}/planning-wireframe`);
   if (!res.ok) throw new Error(`docs planning-wireframe ${res.status}`);
-  return (await res.json()) as { project: string; screens: WireScreen2[] };
+  return (await res.json()) as { project: string; screens: WireDoc[] };
 }
 
 /**
  * 와이어 레이아웃 제안 큐 읽기(docs/planning/wireframe.suggestions.json).
- * 큐 없으면 빈 큐(version:1, suggestions:[]). features 제안 큐의 와이어판(WireScreen2 레이아웃 교체 제안).
+ * 큐 없으면 빈 큐(version:1, suggestions:[]). features 제안 큐의 와이어판(화면별 HTML 문서 교체 제안).
  */
 export async function fetchDocsWireframeSuggestions(
   project: string,
@@ -304,6 +306,39 @@ export async function postWireframeFeedback(
       throw new Error("피드백을 기록하지 못했습니다(빈 텍스트·범위 밖 좌표이거나 형식 오류).");
     }
     throw new Error(`wireframe-feedback ${res.status}`);
+  }
+  return (await res.json()) as { ok: true };
+}
+
+/**
+ * 저장된 핀 피드백 재조회(flowforge-pin-feedback-lifecycle GET). 마운트 시 로컬 pins 시딩용 —
+ * 새로고침 후에도 핀이 유지된다. 빈 파일은 빈 배열. id/status는 서버가 하위호환 기본값까지 채워 반환.
+ */
+export async function fetchWireframeFeedback(project: string): Promise<WireFeedbackItem[]> {
+  const res = await fetch(`/api/docs/${project}/planning-wireframe-feedback`);
+  if (!res.ok) throw new Error(`wireframe-feedback GET ${res.status}`);
+  const body = (await res.json()) as { items: WireFeedbackItem[] };
+  return body.items;
+}
+
+/**
+ * 핀 피드백 in-place 갱신(flowforge-pin-feedback-lifecycle PATCH) — resolve 토글(status)·텍스트 수정(text).
+ * id로 대상 지정. 미존재 id는 서버 404 → 에러. 중복 append 없이 그 레코드만 바뀐다(좌표 보존).
+ */
+export async function updateWireframeFeedback(
+  project: string,
+  id: string,
+  patch: { status?: WireFeedbackStatus; text?: string },
+): Promise<{ ok: true }> {
+  const res = await fetch(`/api/docs/${project}/planning-wireframe-feedback/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    if (res.status === 404) throw new Error("피드백을 찾지 못했습니다(이미 삭제되었거나 잘못된 id).");
+    if (res.status === 400) throw new Error("피드백을 갱신하지 못했습니다(빈 텍스트·형식 오류).");
+    throw new Error(`wireframe-feedback PATCH ${res.status}`);
   }
   return (await res.json()) as { ok: true };
 }

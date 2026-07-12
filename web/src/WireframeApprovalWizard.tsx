@@ -22,7 +22,7 @@ function checkpointKey(project: string): string {
 
 /** 요약/카드 라벨 — 제안 화면의 제목(없으면 화면 id). */
 function screenLabelOf(sug: WireSuggestion): string {
-  return sug.layout.title || sug.screenId;
+  return sug.doc.title || sug.screenId;
 }
 
 export function WireframeApprovalWizard({
@@ -59,7 +59,7 @@ export function WireframeApprovalWizard({
             <p className="feature-approval-rationale">{sug.rationale}</p>
           )}
           <div className="wire-approval-preview" data-testid="wire-approval-preview">
-            <WireframeDeviceFrame screens={[sug.layout]} hideControls />
+            <WireframeDeviceFrame screens={[sug.doc]} hideControls />
           </div>
         </>
       )}

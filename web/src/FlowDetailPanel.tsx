@@ -7,15 +7,15 @@
  *   들어오는 흐름(incoming: 다른 노드 → 이 노드).
  * 데이터는 SpecNodeData(어댑터가 그래프에서 파생해 실어줌)만 사용 — 조인/서버 왕복 없음. */
 import { useEffect } from "react";
-import type { NodeKind, WireScreen2 } from "@flowforge/shared";
+import type { NodeKind, WireDoc } from "@flowforge/shared";
 import type { SpecNodeData, FlowEdgeRef } from "./graphAdapter.js";
 import { WireframeDeviceFrame } from "./WireframeDeviceFrame.js";
 
 /** 유저플로우 화면(page) 노드의 화면 허브 상호참조 데이터(flowforge-screen-crosslink).
  * App이 화면 id 조인으로 계산해 넘긴다 — 패널은 조인 안 함(FlowDetailPanel "조인/서버 왕복 없음" 원칙 유지). */
 export interface ScreenCrosslinkData {
-  /** 이 화면 id에 대응하는 와이어(WireScreen2). 없으면 null(빈 상태). */
-  readonly wire: WireScreen2 | null;
+  /** 이 화면 id에 대응하는 와이어(WireDoc). 없으면 null(빈 상태). */
+  readonly wire: WireDoc | null;
   /** 이 화면을 연결화면으로 가진 기능명세 상세기능 라벨들. 없으면 빈 배열(빈 상태). */
   readonly featureLabels: readonly string[];
 }

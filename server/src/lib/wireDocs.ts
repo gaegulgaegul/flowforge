@@ -16,35 +16,23 @@
  * apply body/result는 6a의 PrdApplyRequest/PrdApplyResult를 재사용한다(형태 동일).
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import type {
   PrdApplyRequest,
   PrdApplyResult,
-  WireBodyLayout,
-  WireDevice,
-  WireElement,
-  WireElementKind,
-  WireScreen2,
+  WireDocDevice,
+  WireDoc,
   WireSuggestion,
   WireSuggestionQueue,
   WireFeedbackItem,
+  WireFeedbackStatus,
 } from "@flowforge/shared";
 import { PLANNING_WIREFRAME_FIXTURE } from "../parser/planningWireframeFixture.js";
 
-// ── WireScreen2 스키마 어휘(shared 타입과 정합 필수) ──────────────────────────
-const DEVICES: ReadonlySet<string> = new Set<WireDevice>(["desktop", "mobile"]);
-const BODY_LAYOUTS: ReadonlySet<string> = new Set<WireBodyLayout>(["grid", "stack", "tree", "form"]);
-const ELEMENT_KINDS: ReadonlySet<string> = new Set<WireElementKind>([
-  "nav-item",
-  "tab",
-  "card",
-  "input",
-  "button",
-  "text",
-  "tree-node",
-  "placeholder",
-]);
+// ── WireDoc 스키마 어휘(shared 타입과 정합 필수) ──────────────────────────────
+const DEVICES: ReadonlySet<string> = new Set<WireDocDevice>(["desktop", "mobile"]);
 
 // ── 경로 규약 ────────────────────────────────────────────────────────────────
 
@@ -77,52 +65,29 @@ export function feedbackSidecarPath(docsDir: string, project: string): string {
   return join(wireframeFeedbackRoot(), `${project}.feedback.json`);
 }
 
-// ── 스키마 가드 ──────────────────────────────────────────────────────────────
+// ── 스키마 가드 (WireDoc — HTML 문서, flowforge-wireframe-iframe) ─────────────
 
-/** 요소 1개가 WireElement 스키마인가(kind 8종·label string·goto?·span?). */
-function isValidWireElement(v: unknown): v is WireElement {
-  if (typeof v !== "object" || v === null) return false;
-  const e = v as Record<string, unknown>;
-  if (!ELEMENT_KINDS.has(e["kind"] as string)) return false;
-  if (typeof e["label"] !== "string") return false;
-  if (e["goto"] !== undefined && typeof e["goto"] !== "string") return false;
-  if (e["span"] !== undefined && typeof e["span"] !== "number") return false;
-  return true;
-}
-
-/** 영역(topbar/sidebar/bottombar) 요소 배열이 유효한가(선택 필드 — undefined면 통과). */
-function isValidRegionArray(v: unknown): boolean {
-  if (v === undefined) return true;
-  return Array.isArray(v) && v.every(isValidWireElement);
-}
-
-/** layout이 WireScreen2 스키마를 만족하는가(id·title·device·regions.body layout·요소 kind). */
-function isValidWireScreen2(v: unknown): v is WireScreen2 {
+/**
+ * 화면 문서가 WireDoc 스키마를 만족하는가 — id·title·html string + device 어휘.
+ * html은 신뢰되지 않은 AI 생성물이라 flowforge는 렌더 시 sandbox iframe에만 넣는다(내용 검증 아님,
+ * 스키마 계약만). 외부 참조는 문서 CSP가 차단하므로 여기서 URL 검사는 하지 않는다(격리가 방어선).
+ */
+export function isValidWireDoc(v: unknown): v is WireDoc {
   if (typeof v !== "object" || v === null) return false;
   const s = v as Record<string, unknown>;
   if (typeof s["id"] !== "string" || typeof s["title"] !== "string") return false;
   if (!DEVICES.has(s["device"] as string)) return false;
-  const regions = s["regions"];
-  if (typeof regions !== "object" || regions === null) return false;
-  const r = regions as Record<string, unknown>;
-  const body = r["body"];
-  if (typeof body !== "object" || body === null) return false;
-  const b = body as Record<string, unknown>;
-  if (!BODY_LAYOUTS.has(b["layout"] as string)) return false;
-  if (!Array.isArray(b["elements"]) || !b["elements"].every(isValidWireElement)) return false;
-  if (!isValidRegionArray(r["topbar"])) return false;
-  if (!isValidRegionArray(r["sidebar"])) return false;
-  if (!isValidRegionArray(r["bottombar"])) return false;
+  if (typeof s["html"] !== "string") return false;
   return true;
 }
 
-/** 한 제안이 스키마에 맞는가 — id·screenId string + layout이 WireScreen2 스키마. */
+/** 한 제안이 스키마에 맞는가 — id·screenId string + doc이 WireDoc 스키마. */
 export function isValidWireSuggestion(v: unknown): v is WireSuggestion {
   if (typeof v !== "object" || v === null) return false;
   const s = v as Record<string, unknown>;
   if (typeof s["id"] !== "string" || typeof s["screenId"] !== "string") return false;
   if (s["rationale"] !== undefined && typeof s["rationale"] !== "string") return false;
-  return isValidWireScreen2(s["layout"]);
+  return isValidWireDoc(s["doc"]);
 }
 
 // ── 큐 read/write ────────────────────────────────────────────────────────────
@@ -162,12 +127,12 @@ function writeDocsWireframeSuggestions(docsDir: string, queue: WireSuggestionQue
 // ── 승인분 원천 read/write (RW 볼륨) ──────────────────────────────────────────
 
 /** 승인분 원천 JSON 읽기. 없거나 깨졌거나 스키마 위반이면 null(폴백=픽스처). throw 금지. */
-function readApprovedWireframe(docsDir: string): WireScreen2[] | null {
+function readApprovedWireframe(docsDir: string): WireDoc[] | null {
   const p = approvedWireframePath(docsDir);
   if (!existsSync(p)) return null;
   try {
     const parsed: unknown = JSON.parse(readFileSync(p, "utf-8"));
-    if (!Array.isArray(parsed) || !parsed.every(isValidWireScreen2)) return null;
+    if (!Array.isArray(parsed) || !parsed.every(isValidWireDoc)) return null;
     return parsed;
   } catch {
     return null;
@@ -175,16 +140,16 @@ function readApprovedWireframe(docsDir: string): WireScreen2[] | null {
 }
 
 /** 승인분 원천 JSON 쓰기(RW 볼륨). 루트 디렉토리 자동 생성. 실패는 호출부가 catch(writeFailed). */
-function writeApprovedWireframe(docsDir: string, screens: readonly WireScreen2[]): void {
+function writeApprovedWireframe(docsDir: string, docs: readonly WireDoc[]): void {
   const root = wireframeFeedbackRoot();
   if (!existsSync(root)) mkdirSync(root, { recursive: true });
-  writeFileSync(approvedWireframePath(docsDir), JSON.stringify(screens, null, 2), "utf-8");
+  writeFileSync(approvedWireframePath(docsDir), JSON.stringify(docs, null, 2), "utf-8");
 }
 
 /**
  * 현재 와이어 원천(승인분 있으면 그것, 없으면 픽스처). apply의 merge 기준(base)과 렌더 원천이 같다.
  */
-function currentWireframeBase(docsDir: string): WireScreen2[] {
+function currentWireframeBase(docsDir: string): WireDoc[] {
   return readApprovedWireframe(docsDir) ?? [...PLANNING_WIREFRAME_FIXTURE];
 }
 
@@ -196,8 +161,8 @@ function currentWireframeBase(docsDir: string): WireScreen2[] {
  * 라인패치의 노드개수/capability 지문 비교(featureDocs)와 동형의 JSON판 불변식.
  */
 export function wireframeInvariantHolds(
-  before: readonly WireScreen2[],
-  after: readonly WireScreen2[],
+  before: readonly WireDoc[],
+  after: readonly WireDoc[],
 ): boolean {
   const b = new Set(before.map((s) => s.id));
   const a = new Set(after.map((s) => s.id));
@@ -232,7 +197,7 @@ export function applyWireframeSuggestions(docsDir: string, req: PrdApplyRequest)
     const merged = new Map(base.map((s) => [s.id, s] as const));
     // 큐 배열 순서로 반영(같은 화면 여러 승인은 뒤가 최종 — 결정론).
     for (const s of willApply) {
-      merged.set(s.screenId, s.layout);
+      merged.set(s.screenId, s.doc);
       applied++;
       approvedIds.push(s.id);
     }
@@ -278,29 +243,63 @@ export function pruneWireframeQueue(docsDir: string, processedIds: ReadonlySet<s
 // ── 원천 교체: buildDocsPlanningWireframe2 ────────────────────────────────────
 
 /**
- * planning 와이어 레이아웃(WireScreen2[]) 제공 — 승인분 원천이 있으면 그걸, 없으면 픽스처 폴백.
- * 1단계 렌더러·라우트·web은 무변경(`readonly WireScreen2[]` 계약 유지, 동기). 승인분 JSON이
- * 없거나 깨졌으면 픽스처로 안전 폴백해 1단계 렌더가 안 깨지게 한다.
+ * planning 와이어(WireDoc[] — 화면별 HTML 문서) 제공 — 승인분 원천이 있으면 그걸, 없으면 픽스처 폴백.
+ * 렌더러·라우트·web은 화면별 HTML 문서를 sandbox iframe에 렌더한다. 승인분 JSON이 없거나 깨졌으면
+ * 픽스처로 안전 폴백해 렌더가 죽지 않게 한다(throw 금지).
  */
-export function buildDocsPlanningWireframe2(docsDir: string): readonly WireScreen2[] {
+export function buildDocsPlanningWireframe2(docsDir: string): readonly WireDoc[] {
   return readApprovedWireframe(docsDir) ?? PLANNING_WIREFRAME_FIXTURE;
 }
 
-// ── feedback write (사람→AI 역방향, A안 파일 릴레이) ──────────────────────────
+// ── feedback write/read (사람→AI 역방향, A안 파일 릴레이 + 생애주기) ───────────
 
 /** 주입 가능한 시계(테스트 안정성 — Date.now/new Date 직접 사용 금지). 기본=현재 ISO. */
 export type NowIso = () => string;
 const defaultNowIso: NowIso = () => new Date().toISOString();
 
-/** feedback 사이드카 읽기(누적 append용). 없거나 깨졌으면 빈 배열. throw 금지. */
-function readFeedbackSidecar(path: string): WireFeedbackItem[] {
+/** 주입 가능한 id 생성기(테스트 안정성 — randomUUID 직접 사용 금지). 기본=crypto.randomUUID. */
+export type GenId = () => string;
+const defaultGenId: GenId = () => randomUUID();
+
+/**
+ * feedback 사이드카 raw 읽기(내부 — 하위호환 기본값 주입 전 원본 배열). 없거나 깨졌으면 빈 배열. throw 금지.
+ * id/status가 없는 구버전 레코드도 그대로 반환한다(정규화는 normalizeFeedback가 담당).
+ */
+function readFeedbackSidecar(path: string): Record<string, unknown>[] {
   if (!existsSync(path)) return [];
   try {
     const parsed: unknown = JSON.parse(readFileSync(path, "utf-8"));
-    return Array.isArray(parsed) ? (parsed as WireFeedbackItem[]) : [];
+    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : [];
   } catch {
     return [];
   }
+}
+
+/**
+ * 구버전 레코드(id/status 없음)에 결정적 기본값을 주입해 WireFeedbackItem으로 정규화한다.
+ * - status 없으면 "open". id 없으면 **결정적 파생**(`legacy-<index>-<ts>-<xPct>-<yPct>`) — 같은 레코드가
+ *   read마다 같은 id를 얻어 resolve 대상 지정이 안정적이다(신규 난수 id를 매번 만들지 않음).
+ * 기존 필드(screenId/text/ts/xPct/yPct/region)는 보존한다.
+ */
+function normalizeFeedback(raw: Record<string, unknown>, index: number): WireFeedbackItem {
+  const status: WireFeedbackStatus = raw["status"] === "resolved" ? "resolved" : "open";
+  const id =
+    typeof raw["id"] === "string" && raw["id"].length > 0
+      ? (raw["id"] as string)
+      : `legacy-${index}-${String(raw["ts"] ?? "")}-${String(raw["xPct"] ?? "")}-${String(raw["yPct"] ?? "")}`;
+  const item: WireFeedbackItem = {
+    id,
+    status,
+    screenId: String(raw["screenId"] ?? ""),
+    text: String(raw["text"] ?? ""),
+    ts: String(raw["ts"] ?? ""),
+    xPct: typeof raw["xPct"] === "number" ? (raw["xPct"] as number) : 0,
+    yPct: typeof raw["yPct"] === "number" ? (raw["yPct"] as number) : 0,
+    ...(typeof raw["region"] === "string" && (raw["region"] as string).length > 0
+      ? { region: raw["region"] as string }
+      : {}),
+  };
+  return item;
 }
 
 /** 좌표 %가 0~100 범위의 유한 숫자인가(범위 밖·NaN·Infinity 거부). */
@@ -309,26 +308,38 @@ function isValidPct(v: unknown): v is number {
 }
 
 /**
- * 인플레이스 핀 피드백을 feedback 사이드카에 append(사람→AI 역방향, D2/D3 A안 파일 릴레이).
+ * 프로젝트의 핀 피드백 전체를 배열로 읽는다(flowforge-pin-feedback-lifecycle GET 원천).
+ * id/status 없는 구버전 레코드에 결정적 기본값을 **읽을 때(lazy)** 주입한다 — 파일은 재기록하지 않는다
+ * (부작용 최소; 첫 write가 일어날 때 정규화된 전체가 재기록되어 자연히 스키마 승격). throw 금지.
+ */
+export function readWireframeFeedback(docsDir: string, project: string): WireFeedbackItem[] {
+  const path = feedbackSidecarPath(docsDir, project);
+  return readFeedbackSidecar(path).map((raw, i) => normalizeFeedback(raw, i));
+}
+
+/**
+ * 인플레이스 핀 피드백을 feedback 사이드카에 append(사람→AI 역방향, A안 파일 릴레이).
  * flowforge는 write만 하고 AI를 호출하지 않는다. Figma 코멘트식: 클릭한 좌표(xPct·yPct 0~100)에
- * 묶인 지점 단위 피드백. 빈 텍스트(공백만)·범위 밖 좌표는 거부(쓰레기 방지). ts는 주입 시계(nowIso)로
- * 스탬프 — 테스트 안정성. write는 RW 볼륨(WIREFRAME_FEEDBACK_ROOT)에.
+ * 묶인 지점 단위 피드백. 저장 레코드에 **고유 id + status:"open"** 부여(flowforge-pin-feedback-lifecycle).
+ * 빈 텍스트(공백만)·범위 밖 좌표는 거부(쓰레기 방지). ts·id는 주입 가능(테스트 안정성). read-modify-write.
  */
 export function appendWireframeFeedback(
   docsDir: string,
   project: string,
   input: { screenId: string; text: string; xPct: number; yPct: number; region?: string },
   nowIso: NowIso = defaultNowIso,
+  genId: GenId = defaultGenId,
 ): { ok: boolean } {
   const text = (input.text ?? "").trim();
   if (text.length === 0) return { ok: false };
   // 좌표 유효성 방어(0~100 밖·NaN·Infinity 거부) — 지점 단위 피드백은 좌표가 곧 의미.
   if (!isValidPct(input.xPct) || !isValidPct(input.yPct)) return { ok: false };
-  // 미존재 화면 id 방어 — 현재 와이어(승인분/픽스처)에 없는 화면엔 피드백을 기록하지 않는다
-  // (쓰레기 피드백 방지, spec: "알 수 없는 화면 id는 기록하지 않거나 거부").
+  // 미존재 화면 id 방어 — 현재 와이어(승인분/픽스처)에 없는 화면엔 피드백을 기록하지 않는다.
   const known = new Set(buildDocsPlanningWireframe2(docsDir).map((s) => s.id));
   if (!known.has(input.screenId)) return { ok: false };
   const item: WireFeedbackItem = {
+    id: genId(),
+    status: "open",
     screenId: input.screenId,
     text,
     ts: nowIso(),
@@ -339,8 +350,39 @@ export function appendWireframeFeedback(
   const path = feedbackSidecarPath(docsDir, project);
   const root = wireframeFeedbackRoot();
   if (!existsSync(root)) mkdirSync(root, { recursive: true });
-  const items = readFeedbackSidecar(path);
+  // read-modify-write: 최신 파일을 정규화해 읽고 append 후 전체 재기록(구버전도 스키마 승격).
+  const items = readFeedbackSidecar(path).map((raw, i) => normalizeFeedback(raw, i));
   items.push(item);
+  writeFileSync(path, JSON.stringify(items, null, 2), "utf-8");
+  return { ok: true };
+}
+
+/**
+ * id로 지정한 피드백을 in-place 갱신한다(flowforge-pin-feedback-lifecycle — resolve 토글·텍스트 수정).
+ * read-modify-write: 최신 파일을 정규화해 읽고 → id 매칭 레코드의 status/text만 패치(id·screenId·좌표
+ * 보존) → 전체 재기록. 미매칭 id는 `{ok:false}`(라우트 404), 파일 불변. 빈 text 패치는 거부(쓰레기 방지).
+ * 삭제가 아닌 soft-close라 이력이 보존된다. 단일 프로세스 sync write라 파일 잠금 불필요(D5).
+ */
+export function updateWireframeFeedback(
+  docsDir: string,
+  project: string,
+  id: string,
+  patch: { status?: WireFeedbackStatus; text?: string },
+): { ok: boolean } {
+  const path = feedbackSidecarPath(docsDir, project);
+  if (!existsSync(path)) return { ok: false };
+  // 빈 text 패치는 거부(공백만) — status 없이 text만 바꾸는 요청의 쓰레기 방지.
+  if (patch.text !== undefined && patch.text.trim().length === 0) return { ok: false };
+  const items = readFeedbackSidecar(path).map((raw, i) => normalizeFeedback(raw, i));
+  const idx = items.findIndex((it) => it.id === id);
+  if (idx === -1) return { ok: false };
+  const current = items[idx] as WireFeedbackItem;
+  const next: WireFeedbackItem = {
+    ...current,
+    ...(patch.status !== undefined ? { status: patch.status } : {}),
+    ...(patch.text !== undefined ? { text: patch.text.trim() } : {}),
+  };
+  items[idx] = next;
   writeFileSync(path, JSON.stringify(items, null, 2), "utf-8");
   return { ok: true };
 }

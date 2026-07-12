@@ -5,7 +5,7 @@
  * 연결 0개 / dangling → 빈 상태 렌더, 크래시 없음. */
 import { describe, it, expect, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import type { WireScreen2 } from "@flowforge/shared";
+import type { WireDoc } from "@flowforge/shared";
 import { FlowDetailPanel, type ScreenCrosslinkData } from "../FlowDetailPanel.js";
 import type { SpecNodeData } from "../graphAdapter.js";
 
@@ -26,11 +26,11 @@ function actionNode(): SpecNodeData {
   return { label: "권한 확인", kind: "action", incoming: [], outgoing: [] };
 }
 
-const WIRE: WireScreen2 = {
+const WIRE: WireDoc = {
   id: "home",
   title: "홈",
   device: "desktop",
-  regions: { body: { layout: "stack", elements: [{ kind: "text", label: "본문" }] } },
+  html: "<!doctype html><title>홈</title><p>본문</p>",
 };
 
 describe("FlowDetailPanel 화면 허브 상호참조", () => {

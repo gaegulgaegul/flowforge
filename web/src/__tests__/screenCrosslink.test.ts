@@ -1,7 +1,7 @@
 /** 화면 id 조인 헬퍼 단위 테스트 — flowforge-screen-crosslink Group B.
  * 순수 함수(파일 IO·React 의존 0)라 node 환경에서 그대로 검증한다. */
 import { describe, it, expect } from "vitest";
-import type { ScreenRegistry, WireScreen2 } from "@flowforge/shared";
+import type { ScreenRegistry, WireDoc } from "@flowforge/shared";
 import {
   buildScreenToDetailLabels,
   detailLabelsForScreen,
@@ -20,12 +20,12 @@ const REGISTRY: ScreenRegistry = {
   ],
 };
 
-function wire(id: string, device: "desktop" | "mobile" = "desktop"): WireScreen2 {
+function wire(id: string, device: "desktop" | "mobile" = "desktop"): WireDoc {
   return {
     id,
     device,
     title: id,
-    regions: { body: { layout: "stack", elements: [] } },
+    html: `<!doctype html><title>${id}</title>`,
   };
 }
 

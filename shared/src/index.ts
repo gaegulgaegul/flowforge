@@ -25,6 +25,18 @@ export type {
 } from './wire-screen2-types.js';
 
 export type {
+  WireDocDevice,
+  WireDoc,
+} from './wire-doc-types.js';
+
+export {
+  WIRE_IFRAME_SANDBOX,
+  WIRE_DOC_CSP,
+  WIRE_APP_CSP,
+  injectWireDocCsp,
+} from './wire-security.js';
+
+export type {
   PrdSectionKey,
   PrdSection,
   Prd,
@@ -65,6 +77,7 @@ export type {
   WireSuggestion,
   WireSuggestionQueue,
   WireFeedbackItem,
+  WireFeedbackStatus,
 } from './wire-suggestion-types.js';
 
 export type {
