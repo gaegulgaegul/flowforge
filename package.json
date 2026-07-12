@@ -2,7 +2,7 @@
   "name": "flowforge",
   "version": "0.1.0",
   "private": true,
-  "description": "openspec spec을 유저플로우 그래프·IA 트리·와이어프레임으로 시각화하고 웹에서 편집하는 개인용 도구",
+  "description": "openspec spec을 유저플로우 그래프·기능명세 리스트·와이어프레임으로 시각화하고 웹에서 편집하는 개인용 도구",
   "workspaces": [
     "shared",
     "server",
@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspace shared && npm run build --workspace server && npm run build --workspace web",
-    "test": "npm run test --workspace server",
+    "test": "npm run test --workspace server && npm run test --workspace web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present && npm run lint:linkage",
     "lint:linkage": "node scripts/lint-plan-spec-linkage.mjs",

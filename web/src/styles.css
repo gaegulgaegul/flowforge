@@ -723,6 +723,14 @@ button:hover { border-color: var(--lime); }
 .feature-detail-screen:not(:disabled) { cursor: pointer; }
 .feature-detail-screen:not(:disabled):hover { background: rgba(61, 214, 192, 0.22); border-color: #3dd6c0; }
 .feature-detail-screen:disabled { cursor: default; }
+/* 유저플로우 화면 노드 상세 패널의 연관 와이어 프리뷰(flowforge-screen-crosslink) — 축소 스케일. */
+.flow-detail-wire-preview {
+  transform: scale(0.6);
+  transform-origin: top left;
+  width: 167%;
+  margin-bottom: -40%;
+  pointer-events: none;
+}
 /* 연관 change 항목(flowforge-change-node-mapping) — 상세 패널. screen 칩 동형, change 색(보라).
    클릭 시 그 change의 5종 뷰로 진입. */
 .feature-detail-change {

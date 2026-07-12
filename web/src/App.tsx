@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import {
   ReactFlow,
   Background,
@@ -65,7 +65,13 @@ import { PrdApprovalWizard } from "./PrdApprovalWizard.js";
 import { FeatureApprovalWizard } from "./FeatureApprovalWizard.js";
 import { UserFlowApprovalWizard } from "./UserFlowApprovalWizard.js";
 import { FeatureDetailPanel } from "./FeatureDetailPanel.js";
-import { FlowDetailPanel } from "./FlowDetailPanel.js";
+import { FlowDetailPanel, type ScreenCrosslinkData } from "./FlowDetailPanel.js";
+import {
+  buildScreenToDetailLabels,
+  detailLabelsForScreen,
+  buildWireById,
+  wireForScreen,
+} from "./screenCrosslink.js";
 import { parseDeepLink, serializeDeepLink, type Tab } from "./deeplink.js";
 
 // 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지.
@@ -840,6 +846,38 @@ export function App(): JSX.Element {
     </button>
   );
 
+  // 화면 id 조인 인덱스(flowforge-screen-crosslink) — 로드된 화면목록·와이어에서 파생.
+  // 데이터가 바뀔 때만 재계산(선택된 노드와 무관 — 인덱스는 프로젝트 단위).
+  const screenToDetails = useMemo(
+    () => buildScreenToDetailLabels(planningScreens),
+    [planningScreens],
+  );
+  const wireById = useMemo(() => buildWireById(planningWireScreens), [planningWireScreens]);
+
+  // 선택된 유저플로우 노드가 화면(page)이면 그 화면 id로 와이어·연관 기능을 조인해 패널에 넘긴다.
+  // 화면 아님/조인 데이터 없음이면 undefined(패널이 상호참조 섹션을 안 그림 — 기존 흐름 섹션만).
+  const flowCrosslink: ScreenCrosslinkData | undefined = useMemo(() => {
+    if (!selectedFlow || selectedFlow.kind !== "screen") return undefined;
+    const sid = selectedFlow.screenId;
+    return {
+      wire: wireForScreen(wireById, sid),
+      featureLabels: detailLabelsForScreen(screenToDetails, sid),
+    };
+  }, [selectedFlow, wireById, screenToDetails]);
+
+  // "와이어 탭에서 열기"(D.1) — 딥링크 유틸이 planning 탭엔 없으므로 인앱 탭 전환으로 폴백.
+  // planning skeleton 단계에선 planTab="wire"로 전환(화면 프레임 목록에서 해당 화면을 볼 수 있게).
+  const openWireForScreen = useCallback((_screenId: string) => {
+    setPlanTab("wire");
+    setSelectedFlow(null); // 패널 상호배타(탭 전환 시 상세 패널 닫기)
+  }, []);
+
+  // 연관 기능명세 상세기능 라벨 클릭(D.2) — 상태바 식별 표시(기획 기능명세 탭에서 찾을 수 있게 안내).
+  // features 노드 id는 feat-...라 라벨 문자열 딥링크가 취약하므로, 라벨 식별만 필수로 제공한다.
+  const selectFeatureLabelFromFlow = useCallback((label: string) => {
+    setStatus(`연관 기능명세 상세기능: ${label} (기획 기능명세 탭에서 확인)`);
+  }, []);
+
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <header style={{ padding: "10px 16px", borderBottom: "1px solid #2a2e38", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -1039,11 +1077,16 @@ export function App(): JSX.Element {
           })
         }
       />
-      {/* 유저플로우 노드 상세 패널 — 같은 UX/CSS 재사용. incoming/outgoing 흐름 표시. */}
+      {/* 유저플로우 노드 상세 패널 — 같은 UX/CSS 재사용. incoming/outgoing 흐름 표시.
+          화면(page) 노드면 화면 허브 상호참조(연관 와이어·연관 기능명세)를 추가로 표시
+          (flowforge-screen-crosslink). crosslink는 화면 노드일 때만 정의됨(그 외 undefined → 섹션 미노출). */}
       <FlowDetailPanel
         node={selectedFlow}
         onClose={() => setSelectedFlow(null)}
         onSelectById={selectFlowById}
+        {...(flowCrosslink ? { crosslink: flowCrosslink } : {})}
+        onOpenWire={openWireForScreen}
+        onSelectFeatureLabel={selectFeatureLabelFromFlow}
       />
     </div>
   );
