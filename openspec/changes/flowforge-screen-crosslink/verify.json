@@ -1,0 +1,216 @@
+{
+  "change": "flowforge-screen-crosslink",
+  "verifiedAt": "2026-07-12T15:15:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 7,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "유저플로우 화면 노드에서 연관 와이어프레임을 상호참조한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "screenId는 서버 파서가 mermaidId.toLowerCase()로 파생하는 string|undefined 뿐 — 타입 오염 경로 없음(TS strict, exactOptionalPropertyTypes). 헬퍼 wireForScreen은 undefined를 명시 처리(테스트 커버).",
+          "동시성": "읽기 전용 상호참조(순수 함수 lookup + React useMemo 파생). 쓰기·동시성 상태 없음.",
+          "대량": "화면 노드 수십 개 규모의 정적 그래프. Map 기반 O(1) lookup으로 규모 무관, 대량 스트레스 대상 아님(읽기 파생).",
+          "특수문자": "screenId는 mermaidId(영숫자 slug)에서만 파생 — 유니코드/특수문자 입력 경로 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "화면 노드 선택 시 연관 와이어 프리뷰 표시",
+          "layer": "web",
+          "means": "gstack browse 실픽셀 — flowforge 프로젝트 유저플로우 탭에서 화면 노드 'skeleton'(프로젝트 기획 뷰) 클릭 → 상세 패널에 '🖥️ 연관 와이어프레임' 섹션 + WireframeDeviceFrame 라이브 프리뷰(wf-df-desktop) 렌더 실관찰. DOM assert: wireSection=true, deviceFrame=true. jsdom C.1 테스트 병행(wf-df-desktop 존재).",
+          "basis": "라이브 https://flowforge.gaegul.house / DOM testid flow-detail-wire · wf-df-desktop. 스크린샷 vxl-06-skeleton-features.png",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vxl-06-skeleton-features.png",
+            "caption": "화면 노드 skeleton(프로젝트 기획 뷰) — 연관 와이어프레임 라이브 프리뷰 + '와이어 탭에서 열기 ▶' 딥링크 렌더"
+          }
+        },
+        {
+          "scenario": "흐름 섹션과 병존",
+          "layer": "web",
+          "means": "gstack browse 실픽셀 — 같은 skeleton/grid 화면 노드 패널에서 기존 '나가는 흐름'·'들어오는 흐름' 섹션이 상호참조 섹션 위에 그대로 유지됨을 실관찰(회귀 0). jsdom 테스트 '흐름 섹션은 화면 노드에서도 그대로 병존한다' 병행.",
+          "basis": "라이브 스크린샷 vxl-06-skeleton-features.png(나가는/들어오는 흐름 + 연관 와이어 + 연관 기능 동시 렌더) / vitest FlowDetailPanel.test.tsx",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vxl-06-skeleton-features.png",
+            "caption": "흐름 섹션(나가는/들어오는)과 상호참조 섹션(와이어/기능)이 한 패널에 병존 — 기존 흐름 뷰 회귀 0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "유저플로우 화면 노드에서 연관 기능명세 상세기능을 역조회한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "buildScreenToDetailLabels는 ScreenRegistry|null|undefined만 받고 links?.??[] 로 방어 — 타입 오염 경로 없음(테스트: null/undefined 레지스트리 → 빈 Map).",
+          "동시성": "읽기 전용 역인덱스(순수 함수 + useMemo). 쓰기·동시성 없음.",
+          "대량": "상세기능↔화면 N:M 링크 수십 개 규모. Map 역인덱싱 O(n)으로 규모 무관.",
+          "특수문자": "detailLabel은 features.md 파싱 라벨 그대로 렌더(React 텍스트 노드 — 자동 이스케이프). 특수문자 주입 벡터 없음, 라벨 문자열은 표시만."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "화면 노드 선택 시 연관 상세기능 목록 표시",
+          "layer": "web",
+          "means": "gstack browse 실픽셀 — skeleton 화면 노드 클릭 → '📋 연관 기능명세' 섹션에 상세기능 라벨 칩 2개('planning-prd 라우트 조회', 'planning-features 라우트 조회') 렌더 실관찰. 라이브 registry.links(skeleton→2건)와 정확 일치. DOM assert: badges=['planning-prd 라우트 조회','planning-features 라우트 조회']. screenCrosslink.test.ts B.1 역인덱스 8테스트 병행.",
+          "basis": "라이브 https://flowforge.gaegul.house · /api/docs/flowforge/planning-screens links 대조 / DOM testid flow-detail-features. 스크린샷 vxl-06-skeleton-features.png",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vxl-06-skeleton-features.png",
+            "caption": "skeleton 화면 노드 — 연관 기능명세 칩 2개(registry links 역조회 결과와 일치) 렌더"
+          }
+        },
+        {
+          "scenario": "상세기능 항목에서 기능명세로 딥링크(선택 시)",
+          "layer": "web",
+          "means": "gstack browse 실픽셀 — 연관 기능명세 칩이 enabled(disabled=false)이고 onSelectFeatureLabel 콜백이 배선되어 클릭 가능함을 실관찰(chipDisabled=false). spec은 '라벨 표시 필수, 딥링크 선택' — 라벨 식별(필수)이 명확히 충족됨. jsdom C.1에서 칩 라벨 렌더 확인 병행.",
+          "basis": "라이브 DOM — flow-detail-features button.disabled=false, 라벨 텍스트 표시 확인 / FlowDetailPanel.tsx:219-231 (onSelectFeatureLabel 배선). 스크린샷 vxl-06-skeleton-features.png",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vxl-06-skeleton-features.png",
+            "caption": "상세기능 라벨 칩이 클릭 가능(enabled)하게 렌더 — 라벨 식별 필수요건 충족, 딥링크 콜백 배선"
+          }
+        }
+      ]
+    },
+    {
+      "title": "연결이 없거나 화면 노드가 아니면 빈 상태로 안전 처리한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "동시성": "빈 상태 렌더는 순수 조건부 JSX(쓰기 없음). 동시성 무관.",
+          "대량": "빈 상태는 단일 노드 선택 시 파생 — 대량 대상 아님.",
+          "특수문자": "빈 상태 문구는 고정 상수('연결된 와이어 없음'/'연관 기능 없음') — 사용자 입력 미포함."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "화면 id 매칭 0개",
+          "layer": "web",
+          "means": "gstack browse 실픽셀 — 화면 노드 'back'(프로젝트로 복귀, 와이어·링크 어디에도 없는 screenId) 클릭 → '연결된 와이어 없음' + '연관 기능 없음' 빈 상태 렌더, 그래프 13노드 alive(무크래시) 실관찰. jsdom E.2 테스트 병행.",
+          "basis": "라이브 스크린샷 vxl-10-screen-0match-back.png · DOM wireText='연결된 와이어 없음' featText='연관 기능 없음' graphAlive=13 / console --errors: 앱 에러 0(Cloudflare beacon CSP만, 무관)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vxl-10-screen-0match-back.png",
+            "caption": "화면 노드 back(매칭 0개) — 두 섹션 빈 상태 안내, 흐름 섹션 유지, 무크래시"
+          }
+        },
+        {
+          "scenario": "화면 종류가 아닌 노드(시작/섹션/행동)",
+          "layer": "web",
+          "means": "gstack browse 실픽셀 — 행동(action) 노드 'save'(좌표 저장) 클릭 → 상호참조 섹션(와이어/기능) 미노출(wireSection=false, featuresSection=false), 흐름 섹션만 렌더(hasFlowSection=true) 실관찰. FlowDetailPanel.tsx:188 isScreen 가드로 보장. jsdom E.1 테스트 병행.",
+          "basis": "라이브 스크린샷 vxl-07-action-node.png · DOM wireSection=false featuresSection=false hasFlowSection=true / FlowDetailPanel.tsx:109,188 (isScreen 가드)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vxl-07-action-node.png",
+            "caption": "행동 노드 save(좌표 저장) — 상호참조 섹션 미노출, 흐름 섹션만 정상 표시"
+          }
+        },
+        {
+          "scenario": "dangling 화면 id",
+          "layer": "web",
+          "means": "gstack browse 실픽셀 — 화면 노드 'back'의 screenId가 screenRegistry·planningWireScreens 어디에도 없는 dangling 값인데도 id를 숨기지 않고 빈 상태로 크래시 없이 렌더 실관찰(0매칭 케이스와 동형 — back의 screenId=back이 wire ids[grid,features,skeleton]·links[skeleton,features]에 부재). jsdom E.3 테스트(screenId='ghost') 병행 — wireForScreen/detailLabelsForScreen이 dangling→null/[] 반환.",
+          "basis": "라이브 스크린샷 vxl-10-screen-0match-back.png · DOM 빈 상태 렌더 graphAlive=13 / screenCrosslink.test.ts 'dangling → null' + FlowDetailPanel.test.tsx E.3",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vxl-10-screen-0match-back.png",
+            "caption": "dangling screenId(back) — id 숨기지 않고 빈 상태로 안전 렌더, 크래시 없음"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 12,
+      "passed": 12,
+      "failed": 0,
+      "basis": "jest src/parser/__tests__/planningUserFlowBuilder.test.ts — screenId 파생 케이스(화면 노드=바레 screenId, 시작/행동=undefined) 포함 12 passed, exit 0. 라이브 /api/docs/flowforge/planning-user-flow 재조회로 screenId 파생 실측(screen 10노드 모두 screenId 있음, start/action 3노드 screenId=None)."
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 13,
+      "passed": 13,
+      "failed": 0,
+      "basis": "vitest — screenCrosslink.test.ts 8 passed(B.1/B.2 헬퍼: 역인덱스·와이어 lookup·매칭0·dangling·빈/미제공) + FlowDetailPanel.test.tsx 5 passed(C.1 happy·E.1 화면아님·E.2 0개·E.3 dangling·흐름 병존, jsdom). exit 0. 추가로 gstack browse 라이브 실픽셀 5시나리오 실관찰(vxl-06/07/10 스크린샷)."
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: flowforge는 web SPA(React/Vite) — 네이티브 android 레이어 없음(build.gradle/AndroidManifest 부재).",
+      "reason": "적용 불가(웹 SPA, 네이티브 레이어 없음)"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: 네이티브 ios 레이어 없음(web SPA).",
+      "reason": "적용 불가(웹 SPA, 네이티브 레이어 없음)"
+    }
+  ],
+  "codeState": {
+    "head": "6197da2757bbb18fdcd22f254ebd43280da6976b",
+    "dirty": true,
+    "branch": "feat/flowforge-feedback-changes",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260712-1515.html"
+}
