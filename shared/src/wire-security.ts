@@ -66,14 +66,20 @@ export const WIRE_APP_CSP =
  * 순진한 정규식은 HTML 주석 안 가짜 `<head>` 문자열(예: `<!-- <head> --><head>...`)에 먼저 매치해
  * CSP 메타를 **죽은 주석 안**에 넣고 실제 head는 CSP 없이 렌더된다(보안 리뷰 BLOCK 실측). 그래서 매치
  * 위치는 **주석을 마스킹한 스캔 사본**에서 찾고, 원본의 그 인덱스에 삽입한다(주석 속 가짜 태그 무시).
+ * 같은 이유로 `<template>...</template>`도 마스킹한다: template의 content는 inert DOM fragment라
+ * 그 안 `<head>`는 실제 문서 head가 아닌데(예: `<template><head></head></template><head>real</head>`),
+ * 마스킹하지 않으면 정규식이 inert template 안 가짜 head에 먼저 매치해 CSP를 죽은 fragment에 가둔다(BLOCK 실측).
  * 여러 CSP 메타가 공존해도 CSP 스펙상 정책은 restrictively 결합되므로 우리 메타를 앞세우면 완화 불가.
  *
  * 렌더러(web)·테스트가 같은 함수를 공유해 drift를 막는다(D8 — 보안은 단일 원천).
  */
 export function injectWireDocCsp(html: string): string {
   const meta = `<meta http-equiv="Content-Security-Policy" content="${WIRE_DOC_CSP}">`;
-  // 스캔 사본: HTML 주석을 같은 길이의 공백으로 마스킹(인덱스는 원본과 1:1 유지, 주석 속 태그 무시).
-  const scan = html.replace(/<!--[\s\S]*?-->/g, (c) => " ".repeat(c.length));
+  // 스캔 사본: HTML 주석 + inert <template> content를 같은 길이 공백으로 마스킹(인덱스 원본과 1:1 유지,
+  // 주석 속 가짜 태그와 template의 inert head를 무시 → 실제 문서 head에만 CSP 주입).
+  const scan = html
+    .replace(/<!--[\s\S]*?-->/g, (c) => " ".repeat(c.length))
+    .replace(/<template[^>]*>[\s\S]*?<\/template>/gi, (c) => " ".repeat(c.length));
 
   const headMatch = /<head[^>]*>/i.exec(scan);
   if (headMatch) {
