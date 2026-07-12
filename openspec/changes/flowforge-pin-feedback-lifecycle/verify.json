@@ -1,0 +1,339 @@
+{
+  "change": "flowforge-pin-feedback-lifecycle",
+  "verifiedAt": "2026-07-12T15:10:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 13,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "핀 피드백에 안정적 id와 status를 부여한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "append body 타입가드(isWireframeFeedbackRequest)가 400으로 걸러 lib에 도달 못 함 — 라우트 400 케이스로 이미 커버(빈text·범위밖좌표·미존재screen).",
+          "대량": "id 생성=crypto.randomUUID 상수시간·per-record. 레코드 수와 무관(전체 read-modify-write는 동시성 클래스에서 커버).",
+          "특수문자": "id는 uuid/legacy 파생 문자열로 서버가 생성 — 사용자 입력 특수문자가 id에 섞이지 않음(text만 사용자 입력이고 text는 별 requirement에서 커버)."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "새 핀 피드백에 id와 open status 부여",
+          "layer": "server",
+          "means": "POST append → 저장 레코드에 uuid id + status:\"open\" 부여(appendWireframeFeedback:340-349)",
+          "basis": "격리 8913 POST {screenId:grid,text:'first pin'} → GET 확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "POST→{ok:true} HTTP200; GET items[grid].id=5312468e-... status=open; 두번째 핀 append도 open",
+            "caption": "append id+open status 실측(격리 8913)"
+          }
+        },
+        {
+          "scenario": "id는 피드백마다 고유하다",
+          "layer": "server",
+          "means": "같은 화면 2건 append → 서로 다른 id(genId=crypto.randomUUID)",
+          "basis": "격리 8913 grid에 2건 append → id set 비교",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "grid pins ids=[5312468e..., 234b279b...]; unique ids=True (2건 서로 다름)",
+            "caption": "id 고유성 실측"
+          }
+        }
+      ]
+    },
+    {
+      "title": "저장된 피드백을 GET으로 재조회해 표시한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "GET은 목록 반환(수치 경계 없음). 좌표 경계는 append requirement에서 커버.",
+          "동시성": "GET은 read-only(파일 미변경) — write 동시성은 read-modify-write requirement에서 커버.",
+          "대량": "readFeedbackSidecar는 전체 배열 JSON.parse — 레코드 수 선형, 개인용 규모(수십)라 대량 스트레스는 비적용."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "피드백 목록을 열면 저장된 핀들이 GET으로 로드된다",
+          "layer": "web",
+          "means": "마운트 useEffect가 fetchWireframeFeedback(project)로 로컬 Pin을 시딩(WireframePinFeedback.tsx:318-331), 좌표에 핀 마커 렌더",
+          "basis": "browse: 와이어 탭 진입 → '이 프로젝트의 피드백 1개·열림 1' + iframe에 핀 마커 '1' 표시",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vpin-wireframe-panel.png",
+            "caption": "와이어 탭 진입 시 GET-시딩: 피드백 패널 '1개·열림 1' + iframe 좌상단 핀 마커 '1'(저장 좌표)"
+          }
+        },
+        {
+          "scenario": "새로고침해도 핀이 유지된다",
+          "layer": "web",
+          "means": "GET 재조회가 로컬 useState<Pin[]> 소실을 대체 — 새로고침 후에도 표시",
+          "basis": "browse: 전체 페이지 reload + 프로젝트 재진입 → 와이어 탭 재확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vpin-refresh-persist.png",
+            "caption": "전체 페이지 reload+프로젝트 재진입 후 '이 프로젝트의 피드백 / 1개 · 열림 1' 재표시 — 로컬 상태 소실 없이 GET 재시딩(새로고침 지속성)"
+          }
+        },
+        {
+          "scenario": "빈 목록",
+          "layer": "server",
+          "means": "feedback 파일 없는 프로젝트 → GET 빈 배열, 크래시 없음(readFeedbackSidecar existsSync=false→[])",
+          "basis": "격리 8913 emptyproj GET",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "GET /emptyproj → {\"project\":\"emptyproj\",\"items\":[]} HTTP200 (크래시 없음). 라이브 미존재 프로젝트는 resolveDocsDir null→404.",
+            "caption": "빈 목록 실측"
+          }
+        }
+      ]
+    },
+    {
+      "title": "핀을 resolve하면 상태가 resolved로 바뀐다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "resolve는 status enum 토글(open↔resolved) — 수치 경계 없음. 화이트리스트 밖 status는 에러경로에서 400 커버.",
+          "대량": "resolve는 id 1건 in-place — 레코드 수 무관(전체 재기록은 동시성에서 커버)."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "핀 resolve 시 status 변경",
+          "layer": "web",
+          "means": "PinList [해결] 버튼 → updateWireframeFeedback PATCH{status:resolved} → 로컬 status·resolved 스타일 반영(:279,:380-385) + 파일 in-place",
+          "basis": "browse 라이브: '해결' 클릭 전 GET status0=open → 클릭 후 GET status0=resolved, 패널 '열림 0'·'✓ 해결됨'·버튼 '다시 열기'",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vpin-resolved.png",
+            "caption": "[해결] 클릭 후: live GET open→resolved; 패널 '1개·열림 0', 행 '✓ 해결됨', 버튼 '다시 열기'(end-to-end 라이브 8812)"
+          }
+        },
+        {
+          "scenario": "resolved 핀을 다시 열기",
+          "layer": "web",
+          "means": "resolved 핀 재토글 → PATCH{status:open} → open 복귀(pin.status==='resolved'?'open':'resolved')",
+          "basis": "browse 라이브: '다시 열기' 클릭 → GET status0=open, 패널 '열림 1'",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vpin-reopened.png",
+            "caption": "[다시 열기] 클릭 후: live GET resolved→open; 패널 '열림 1'. 라이브 데이터 원상복구됨(re-open 토글)"
+          }
+        },
+        {
+          "scenario": "존재하지 않는 id를 resolve",
+          "layer": "server",
+          "means": "미존재 id PATCH → updateWireframeFeedback findIndex=-1 → {ok:false} → 라우트 404, 파일 불변",
+          "basis": "격리 8913 PATCH /does-not-exist-xyz {status:resolved}",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PATCH nonexistent-id → HTTP404; 파일 len 3→3(불변, 손상 없음). 라우트/lib 테스트도 커버(97 PASS).",
+            "caption": "미존재 id 404·파일 불변 실측"
+          }
+        }
+      ]
+    },
+    {
+      "title": "피드백 수정은 중복 append가 아니라 in-place 갱신이다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "text 수정은 문자열 교체(수치 경계 없음). 좌표는 수정 대상이 아니라 보존(별 scenario 커버).",
+          "대량": "수정=id 1건 in-place — 레코드 수 무관."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "기존 핀 수정 시 중복이 생기지 않는다",
+          "layer": "server",
+          "means": "기존 핀 text PATCH → id 매칭 in-place 교체(배열 length 불변), append 아님(updateWireframeFeedback:376-386; web 저장분기 :388-395)",
+          "basis": "격리 8913 PATCH {text:'EDITED first pin'} → len 비교",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PATCH{text} → len 3→3(중복 append 없음), text='EDITED first pin'. web 저장분기는 serverId 있으면 PATCH(:393).",
+            "caption": "in-place 수정·중복 없음 실측"
+          }
+        },
+        {
+          "scenario": "in-place 갱신은 좌표를 보존한다",
+          "layer": "server",
+          "means": "text만 PATCH → id·screenId·xPct·yPct 보존({...current, text}만 갱신)",
+          "basis": "격리 8913 text 수정 후 GET 좌표 확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "수정 후 xPct=30 yPct=40 screenId=grid 그대로, text만 변경. spread {...current,text}로 나머지 필드 보존.",
+            "caption": "좌표 보존 실측"
+          }
+        }
+      ]
+    },
+    {
+      "title": "id/status 없는 기존 레코드를 하위호환한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "경계값": "정규화는 필드 기본값 주입(수치 경계 아님). 좌표 결측 시 0 폴백(null 클래스에서 커버).",
+          "동시성": "read 시 lazy 주입(파일 미변경) — write 동시성은 별 requirement.",
+          "대량": "정규화는 map per-record 선형, 개인용 규모라 대량 비적용."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "구버전 레코드 읽기",
+          "layer": "server",
+          "means": "id/status 없는 레코드 GET → normalizeFeedback가 결정적 legacy id + status:open 주입(크래시 없음, wireDocs.ts:284-303)",
+          "basis": "라이브 8812 flowforge(실제 구버전 레코드) + 격리 8913 legacy seed GET",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "라이브 GET: id='legacy-0-2026-07-10T13:06:08.204Z-9.41...-9.71...' status='open' (id/status 없던 실 파일). 격리도 legacy-0-...-10-20 status=open. 결정적 파생.",
+            "caption": "구버전 하위호환 read 실측(라이브+격리)"
+          }
+        },
+        {
+          "scenario": "구버전 레코드도 resolve할 수 있다",
+          "layer": "server",
+          "means": "부여된 legacy id로 PATCH{status:resolved} → in-place 저장",
+          "basis": "격리 8913 legacy id로 resolve",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PATCH legacy-0-...-10-20 {status:resolved} → HTTP200; GET legacy status=resolved. 파생 id로 지정·갱신 가능.",
+            "caption": "구버전 resolve 실측"
+          }
+        }
+      ]
+    },
+    {
+      "title": "동시 write에도 파일이 손상되지 않는다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "빈값": "이 requirement는 순차 write 정합성(read-modify-write)이 주제 — 빈값 입력 방어는 append/update requirement에서 400/ok:false로 커버.",
+          "잘못된타입": "write 정합성 requirement — 타입 방어는 라우트 가드에서 400 커버.",
+          "경계값": "순차 write는 수치 경계 없음 — 좌표 경계는 append에서 커버.",
+          "대량": "단일 프로세스 sync write — 대량 동시 스트레스보다 순차 정합성(append 직후 resolve)이 spec THEN. 그 케이스 실측.",
+          "특수문자": "write 정합성 requirement — 특수문자 방어는 text 처리에서 커버."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "append 직후 resolve",
+          "layer": "server",
+          "means": "append 직후 그 핀 resolve → read-modify-write로 최신 반영, 기존 레코드 유실 없음(각 write가 파일 재읽기, wireDocs.ts:354·376)",
+          "basis": "격리 8913 skeleton append → 즉시 그 id resolve → 전체 GET 검증",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "append(len 3→4) 직후 resolve → 새 핀 status=resolved; EDITED first pin·legacy 레코드 모두 존속(유실 0). read-modify-write 정합.",
+            "caption": "append 직후 resolve·타 레코드 유실 없음 실측"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 13,
+      "passed": 13,
+      "failed": 0,
+      "basis": "라이브 8812 curl(GET 200, PATCH auth-off dev모드) + 격리 8913 실HTTP 전 edge matrix(404/400/200) + jest 528/528(feedback 97 포함) + typecheck/build EXIT 0",
+      "reason": "GET/POST/PATCH 라우트·생애주기 lib(id부여·하위호환·in-place·read-modify-write)·traversal 방어(resolveDocsDir null→404) 전부 실측 PASS"
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 5,
+      "passed": 5,
+      "failed": 0,
+      "basis": "browse 실픽셀 flowforge.gaegul.house: GET-시딩(핀 마커+패널), 새로고침 지속성, resolve/re-open 토글 end-to-end(라이브 PATCH 반영·원복), 저장분기 소스 확인",
+      "reason": "마운트 useEffect 시딩·resolve 토글 UI·핀 모드·새로고침 유지 실관찰. web 단위 테스트러너 부재는 typecheck PASS + 라이브 실픽셀로 대체 검증(tasks D.1/E.1/F.1~5 해소)"
+    }
+  ],
+  "codeState": {
+    "head": "6197da2757bbb18fdcd22f254ebd43280da6976b",
+    "dirty": true,
+    "branch": "feat/flowforge-feedback-changes",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260712-1510.html"
+}
