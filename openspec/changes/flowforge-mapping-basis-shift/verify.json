@@ -1,0 +1,159 @@
+{
+  "change": "flowforge-mapping-basis-shift",
+  "verifiedAt": "2026-07-12T15:05:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 4,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "capability↔change 매핑의 조인 원천을 features.md로 전환한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "동시성": "parseFeatureCapabilities/buildCapabilityIndex는 파일 IO 없는(또는 읽기전용) 순수 스캔 — 공유 가변상태 없음, race condition 표면 없음.",
+          "대량": "features.md capability 11개 · 활성/archive change 선형 스캔. 성능 계약 없음(배지 파생, 밀리초 단위). 대량 임계 무관."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "features.md capability로 실배지가 뜬다",
+          "layer": "server",
+          "means": "라이브 API GET /api/docs/flowforge/planning-features 의 linkedChanges + parseFeatureCapabilities 단위/통합 테스트(픽스처 불필요, 실데이터)",
+          "basis": "curl 실응답 6개 capability에 linkedChanges 부착 · Jest parseFeatureCapabilities 4케이스 PASS · docs.ts:150 parseFeatureCapabilities 배선 grep 확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "caption": "라이브 API linkedChanges (features.md capability로 조인)",
+            "text": "GET /api/docs/flowforge/planning-features → linkedChanges:\n  planning-prd-generation: [2026-06-28-planning-stage-tracer]\n  planning-features-generation: [2026-06-28-planning-features-generation]\n  planning-userflow-generation: [2026-06-28-planning-userflow-generation]\n  planning-prd-view: [2026-06-28-planning-stage-tracer]\n  planning-features-view: [2026-06-28-planning-features-generation, 2026-07-08-planning-when-then-authoring]\n  planning-only-recognition: [2026-06-28-planning-only-project-recognition]\n=> features.md capability 6개에 실배지(픽스처 없이 실데이터). Jest: parseFeatureCapabilities 4/4 PASS."
+          }
+        }
+      ]
+    },
+    {
+      "title": "archive된 change도 매핑 스캔에 포함한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "동시성": "buildCapabilityIndex는 파일시스템 읽기전용 스캔(readdirSync/statSync) — 쓰기·공유 가변상태 없음, race 표면 없음.",
+          "대량": "archive dated change 32개 1단계 재귀 선형 스캔. 성능 계약 없음(배지 파생). 대량 임계 무관.",
+          "특수문자": "archive dated 디렉토리명은 날짜접두 슬러그(`2026-MM-DD-<key>`) — 조인은 그 안의 specs/<dir> vs features 키 글자단위 정확 비교. 임의 특수문자 입력 표면 없음(파일시스템 이름은 컨벤션 통제)."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "archive change가 노드에 매핑된다",
+          "layer": "server",
+          "means": "라이브 API linkedChanges가 전부 archive dated change(2026-*)임을 확인 + buildCapabilityIndex D2 테스트(archive 포함·archived=true·활성 병합·미매칭 unlinked)",
+          "basis": "라이브 linkedChanges 6개 값 전부 openspec/changes/archive/2026-*/ 소속(활성 change와 교집합 0, design.md 실측 일치) · Jest D2 5케이스 PASS · capabilityIndex.ts:147-154 archive 1단계 재귀 grep 확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "caption": "archive change가 노드 배지로 표시됨",
+            "text": "linkedChanges 값 6개 전부 archive dated change:\n  2026-06-28-planning-stage-tracer, 2026-06-28-planning-features-generation,\n  2026-06-28-planning-userflow-generation, 2026-06-28-planning-only-project-recognition,\n  2026-07-08-planning-when-then-authoring\n활성 change(flowforge-*, propose-flowforge-link, planning-audit-trigger) specs ∩ features 키 = 0.\n=> archive 제외였다면 배지 0이었을 것. archive 포함으로 6개 실배지.\nJest D2: archive 포함/archived=true/활성 오염 안 함/활성+archive 병합/archive 미매칭 unlinked = 5/5 PASS."
+          }
+        }
+      ]
+    },
+    {
+      "title": "다른 docs/spec.md 소비자와 다른 프로젝트를 저촉하지 않는다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "동시성": "읽기전용 라우트(GET) — 회귀 대상 graph/koreanLabels/changes/projects 모두 파일 읽기 파생. 공유 가변상태 없음.",
+          "대량": "프로젝트 7개 · 라우트별 선형 처리. 성능 계약 없음. 대량 임계 무관.",
+          "특수문자": "프로젝트명/capability 키는 슬러그 컨벤션(파일시스템 통제) — 임의 특수문자 입력 표면 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "wowa-app planning 뷰 무저촉",
+          "layer": "server",
+          "means": "라이브 API로 wowa-app planning-features(파일없음 폴백)·graph·projects 동작 확인 + D4 회귀(파일없음=빈Set=배지0) 및 projects.ts charter 주입 불변 grep/테스트",
+          "basis": "wowa-app planning-features 404(planning_features_not_found — 크래시 없이 폴백, 배지0) · graph 200 · projects 200 · projects.ts:94-97 parseCharterCapabilities 주입 유지 grep · capabilityIndex import는 docs.ts+projects.ts 2곳뿐(graph/koreanLabels/changes 미import) · Jest D4 회귀케이스 PASS",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "caption": "타 프로젝트/타 소비자 무저촉(라이브 + grep + 테스트)",
+            "text": "라이브:\n  GET /api/docs/wowa-app/planning-features -> 404 planning_features_not_found (크래시 없음, features.md 부재 -> 빈 Set -> 배지 0)\n  GET /api/docs/wowa-app/graph -> 200\n  GET /api/projects -> 200\ngrep(D4):\n  capabilityIndex import = docs.ts, projects.ts (2곳). graph.ts/koreanLabels.ts/changes.ts 미import.\n  projects.ts:94 parseCharterCapabilities(specMd) 주입 유지 -> charter 카드 UI 계약 불변.\n의도된 확장(회귀 아님): projects.ts도 buildCapabilityIndex archive 완화 공유 -> archive change 노출 가능. design.md에 additive·비파괴로 명시. 활성 링크 제거 없음.\nJest: 22/22 PASS(거짓연결0·unlinked·시그니처 불변 포함)."
+          }
+        },
+        {
+          "scenario": "실배지 라이브 UI 렌더(tasks D.1/VERIFY 실픽셀 해소)",
+          "layer": "web",
+          "means": "browse로 라이브 flowforge 기획 기능명세 뷰를 열어 요구사항 노드의 change 배지 실픽셀 확인",
+          "basis": "browse goto+click(기획 기능명세)+screenshot. 6개 capability 요구사항에 'change N' 배지 렌더(planning-features-view=change 2). 구현 change 없는 capability(spec-md-build-artifact 등)는 배지 없음 — API 데이터와 일치.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/vmap-ff-features.png",
+            "caption": "라이브 flowforge 기획 기능명세 — features.md capability 6개에 change 배지 실픽셀(planning-features-view=change 2), 미구현 capability는 배지 없음"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 22,
+      "passed": 22,
+      "failed": 0,
+      "basis": "npm run test --workspace server -- capabilityIndex → Test Suites 1 passed, Tests 22 passed (exit 0). + 라이브 curl 실응답."
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 1,
+      "passed": 1,
+      "failed": 0,
+      "basis": "browse 라이브 실픽셀 캡처 evidence/vmap-ff-features.png — change 배지 렌더 확인(node-mapping UI 불변, 입력 데이터만 전환)."
+    }
+  ],
+  "codeState": {
+    "head": "0c532d4592d8a74c73feb27fce96ca97a587ec3a",
+    "dirty": true,
+    "branch": "feat/flowforge-feedback-changes",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260712-1505.html"
+}

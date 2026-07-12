@@ -1,0 +1,61 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — flowforge-mapping-basis-shift</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — flowforge-mapping-basis-shift</h1>
+<p class="muted">검증일: 2026-07-12T15:05:00+09:00 · 환경: server(라이브 http://localhost:8812 + https://flowforge.gaegul.house 200) · web(browse 실픽셀 캡처) · Jest 단위/통합 22 PASS. android/ios 미해당. · run: run-20260712-1505 · commit 0c532d45 (dirty)</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 4 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>capability↔change 매핑의 조인 원천을 features.md로 전환한다</td><td>features.md capability로 실배지가 뜬다</td><td>server</td><td>라이브 API GET /api/docs/flowforge/planning-features 의 linkedChanges + parseFeatureCapabilities 단위/통합 테스트(픽스처 불필요, 실데이터)</td><td><code>curl 실응답 6개 capability에 linkedChanges 부착 · Jest parseFeatureCapabilities 4케이스 PASS · docs.ts:150 parseFeatureCapabilities 배선 grep 확인</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">GET /api/docs/flowforge/planning-features → linkedChanges:
+  planning-prd-generation: [2026-06-28-planning-stage-tracer]
+  planning-features-generation: [2026-06-28-planning-features-generation]
+  planning-userflow-generation: [2026-06-28-planning-userflow-generation]
+  planning-prd-view: [2026-06-28-planning-stage-tracer]
+  planning-features-view: [2026-06-28-planning-features-generation, 2026-07-08-planning-when-then-authoring]
+  planning-only-recognition: [2026-06-28-planning-only-project-recognition]
+=&gt; features.md capability 6개에 실배지(픽스처 없이 실데이터). Jest: parseFeatureCapabilities 4/4 PASS.</pre></td></tr>
+<tr><td>archive된 change도 매핑 스캔에 포함한다</td><td>archive change가 노드에 매핑된다</td><td>server</td><td>라이브 API linkedChanges가 전부 archive dated change(2026-*)임을 확인 + buildCapabilityIndex D2 테스트(archive 포함·archived=true·활성 병합·미매칭 unlinked)</td><td><code>라이브 linkedChanges 6개 값 전부 openspec/changes/archive/2026-*/ 소속(활성 change와 교집합 0, design.md 실측 일치) · Jest D2 5케이스 PASS · capabilityIndex.ts:147-154 archive 1단계 재귀 grep 확인</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">linkedChanges 값 6개 전부 archive dated change:
+  2026-06-28-planning-stage-tracer, 2026-06-28-planning-features-generation,
+  2026-06-28-planning-userflow-generation, 2026-06-28-planning-only-project-recognition,
+  2026-07-08-planning-when-then-authoring
+활성 change(flowforge-*, propose-flowforge-link, planning-audit-trigger) specs ∩ features 키 = 0.
+=&gt; archive 제외였다면 배지 0이었을 것. archive 포함으로 6개 실배지.
+Jest D2: archive 포함/archived=true/활성 오염 안 함/활성+archive 병합/archive 미매칭 unlinked = 5/5 PASS.</pre></td></tr>
+<tr><td>다른 docs/spec.md 소비자와 다른 프로젝트를 저촉하지 않는다</td><td>wowa-app planning 뷰 무저촉</td><td>server</td><td>라이브 API로 wowa-app planning-features(파일없음 폴백)·graph·projects 동작 확인 + D4 회귀(파일없음=빈Set=배지0) 및 projects.ts charter 주입 불변 grep/테스트</td><td><code>wowa-app planning-features 404(planning_features_not_found — 크래시 없이 폴백, 배지0) · graph 200 · projects 200 · projects.ts:94-97 parseCharterCapabilities 주입 유지 grep · capabilityIndex import는 docs.ts+projects.ts 2곳뿐(graph/koreanLabels/changes 미import) · Jest D4 회귀케이스 PASS</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">라이브:
+  GET /api/docs/wowa-app/planning-features -&gt; 404 planning_features_not_found (크래시 없음, features.md 부재 -&gt; 빈 Set -&gt; 배지 0)
+  GET /api/docs/wowa-app/graph -&gt; 200
+  GET /api/projects -&gt; 200
+grep(D4):
+  capabilityIndex import = docs.ts, projects.ts (2곳). graph.ts/koreanLabels.ts/changes.ts 미import.
+  projects.ts:94 parseCharterCapabilities(specMd) 주입 유지 -&gt; charter 카드 UI 계약 불변.
+의도된 확장(회귀 아님): projects.ts도 buildCapabilityIndex archive 완화 공유 -&gt; archive change 노출 가능. design.md에 additive·비파괴로 명시. 활성 링크 제거 없음.
+Jest: 22/22 PASS(거짓연결0·unlinked·시그니처 불변 포함).</pre></td></tr>
+<tr><td>다른 docs/spec.md 소비자와 다른 프로젝트를 저촉하지 않는다</td><td>실배지 라이브 UI 렌더(tasks D.1/VERIFY 실픽셀 해소)</td><td>web</td><td>browse로 라이브 flowforge 기획 기능명세 뷰를 열어 요구사항 노드의 change 배지 실픽셀 확인</td><td><code>browse goto+click(기획 기능명세)+screenshot. 6개 capability 요구사항에 &#x27;change N&#x27; 배지 렌더(planning-features-view=change 2). 구현 change 없는 capability(spec-md-build-artifact 등)는 배지 없음 — API 데이터와 일치.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/vmap-ff-features.png"><img src="evidence/vmap-ff-features.png" alt="라이브 flowforge 기획 기능명세 — features.md capability 6개에 change 배지 실픽셀(planning-features-view=change 2), 미구현 capability는 배지 없음" style="max-width:240px;border:1px solid #ccc"></a></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>capability↔change 매핑의 조인 원천을 features.md로 전환한다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="parseFeatureCapabilities/buildCapabilityIndex는 파일 IO 없는(또는 읽기전용) 순수 스캔 — 공유 가변상태 없음, race condition 표면 없음.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="features.md capability 11개 · 활성/archive change 선형 스캔. 성능 계약 없음(배지 파생, 밀리초 단위). 대량 임계 무관.">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>archive된 change도 매핑 스캔에 포함한다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="buildCapabilityIndex는 파일시스템 읽기전용 스캔(readdirSync/statSync) — 쓰기·공유 가변상태 없음, race 표면 없음.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="archive dated change 32개 1단계 재귀 선형 스캔. 성능 계약 없음(배지 파생). 대량 임계 무관.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="archive dated 디렉토리명은 날짜접두 슬러그(`2026-MM-DD-&lt;key&gt;`) — 조인은 그 안의 specs/&lt;dir&gt; vs features 키 글자단위 정확 비교. 임의 특수문자 입력 표면 없음(파일시스템 이름은 컨벤션 통제).">N/A</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>다른 docs/spec.md 소비자와 다른 프로젝트를 저촉하지 않는다</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="읽기전용 라우트(GET) — 회귀 대상 graph/koreanLabels/changes/projects 모두 파일 읽기 파생. 공유 가변상태 없음.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="프로젝트 7개 · 라우트별 선형 처리. 성능 계약 없음. 대량 임계 무관.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="프로젝트명/capability 키는 슬러그 컨벤션(파일시스템 통제) — 임의 특수문자 입력 표면 없음.">N/A</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>22</td><td>22</td><td>0</td><td>npm run test --workspace server -- capabilityIndex → Test Suites 1 passed, Tests 22 passed (exit 0). + 라이브 curl 실응답.</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>1</td><td>1</td><td>0</td><td>browse 라이브 실픽셀 캡처 evidence/vmap-ff-features.png — change 배지 렌더 확인(node-mapping UI 불변, 입력 데이터만 전환).</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>
