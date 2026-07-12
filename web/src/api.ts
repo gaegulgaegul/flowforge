@@ -235,6 +235,25 @@ export async function fetchAuditCapabilities(
   return (await res.json()) as { project: string; capabilities: Record<string, CapabilityAuditSummary> };
 }
 
+/**
+ * "감사 진행" 트리거 — 그 프로젝트의 openspec-audit 잡을 큐잉한다(얇은 인증 프록시).
+ * 202면 큐잉 성공(호스트 워커가 결정적 실행 → audit.json 갱신). 인증 게이트 활성 시
+ * 무자격은 401. 성공 후 UI는 폴링으로 fetchAuditCapabilities를 재조회해 판정을 갱신한다.
+ */
+export async function runAudit(project: string): Promise<{ ok: boolean; taskId?: number }> {
+  const res = await fetch(`/api/docs/${project}/audit-run`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({}),
+  });
+  if (res.status !== 202) {
+    if (res.status === 401) throw new Error("감사 실행 권한이 없습니다(인증 필요).");
+    throw new Error(`audit-run ${res.status}`);
+  }
+  const body = (await res.json().catch(() => ({}))) as { taskId?: number };
+  return { ok: true, ...(typeof body.taskId === "number" ? { taskId: body.taskId } : {}) };
+}
+
 /** 화면 레지스트리(features.md 화면목록 + 상세기능 N:M 링크) — 상세 패널 연결화면 섹션용.
  * 화면목록 미작성이면 빈 screens/links(에러 아님). */
 export async function fetchPlanningScreens(project: string): Promise<ScreenRegistry> {

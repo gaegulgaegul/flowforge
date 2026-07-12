@@ -48,6 +48,7 @@ import {
   fetchDocsWireframeSuggestions,
   applyDocsWireframeSuggestions,
   fetchAuditCapabilities,
+  runAudit,
   fetchPlanningScreens,
   type ChangeSummary,
   applyInChunks,
@@ -134,6 +135,8 @@ export function App(): JSX.Element {
   const [featureEdges, setFeatureEdges] = useState<Edge[]>([]);
   // capability별 audit 요약(docs/audit.json) — 요구사항 노드 배지용. null=미로드/실패(배지 없음, D-6).
   const [featureAudit, setFeatureAudit] = useState<Record<string, CapabilityAuditSummary> | null>(null);
+  // "감사 진행" 실행 상태(planning-audit-trigger). idle→running(큐잉+폴링 대기)→idle. 에러는 status 라인에.
+  const [auditRunning, setAuditRunning] = useState(false);
   // 화면 레지스트리(features.md 화면목록 + N:M 링크) — 상세 패널 연결화면 섹션용. null=미로드/실패(섹션 없음, D-4).
   const [planningScreens, setPlanningScreens] = useState<ScreenRegistry | null>(null);
   // 기능명세 속성 제안 큐(docs/planning/features.suggestions.json) — 승인/반려 편집 UI(6b).
@@ -628,6 +631,59 @@ export function App(): JSX.Element {
     }
   }, []);
 
+  /**
+   * "감사 진행"(planning-audit-trigger) — 그 프로젝트의 openspec-audit을 큐잉하고,
+   * 202 후 폴링으로 fetchAuditCapabilities를 재조회해 판정을 갱신한다(호스트 워커가
+   * 결정적으로 실행 → audit.json 갱신, 실시간 스트리밍은 non-goal). race 가드(dashReqToken):
+   * 감사 중 다른 카드로 이동하면 폴링 결과를 폐기한다.
+   */
+  const runProjectAudit = useCallback(() => {
+    if (!dashProject || auditRunning) return;
+    const project = dashProject.name;
+    const token = dashReqToken.current; // 이 시점의 프로젝트 요청 토큰(이동 시 무효화됨)
+    setAuditRunning(true);
+    setStatus("감사 실행 중… (완료 후 자동 재조회)");
+    void runAudit(project)
+      .then(() => {
+        // 202 = 큐잉됨. 워커가 audit.json을 갱신할 때까지 몇 초 간격으로 재조회(최대 N회).
+        const MAX_POLLS = 20;
+        const POLL_MS = 3000;
+        let polls = 0;
+        const poll = (): void => {
+          if (token !== dashReqToken.current) return; // 다른 카드로 이동 — 폐기
+          polls += 1;
+          void fetchAuditCapabilities(project)
+            .then((r) => {
+              if (token !== dashReqToken.current) return;
+              const caps = r.capabilities;
+              const hasData = Object.keys(caps).length > 0;
+              if (hasData || polls >= MAX_POLLS) {
+                setFeatureAudit(caps);
+                setAuditRunning(false);
+                setStatus(hasData ? "감사 완료 — 판정을 갱신했습니다." : "감사 큐잉됨 — 아직 결과가 없습니다(나중에 새로고침).");
+                return;
+              }
+              window.setTimeout(poll, POLL_MS);
+            })
+            .catch(() => {
+              if (token !== dashReqToken.current) return;
+              if (polls >= MAX_POLLS) {
+                setAuditRunning(false);
+                setStatus("감사 결과 조회 실패(나중에 새로고침).");
+                return;
+              }
+              window.setTimeout(poll, POLL_MS);
+            });
+        };
+        window.setTimeout(poll, POLL_MS);
+      })
+      .catch((e: unknown) => {
+        if (token !== dashReqToken.current) return;
+        setAuditRunning(false);
+        setStatus(`감사 실행 실패: ${String(e instanceof Error ? e.message : e)}`);
+      });
+  }, [dashProject, auditRunning]);
+
   // PRD 제안 승인/반려 적용 — POST apply 후 PRD·제안 큐 재조회(반영·큐 갱신을 화면에 반사).
   // race 가드: 제출 시점의 프로젝트로 재조회하고, 그 사이 다른 카드로 이동했으면 폐기.
   // skipped 대량 나열 절단(3차 review): 상위 SKIPPED_PREVIEW_CAP건 + "외 M건" — 상태바 범람 방지.
@@ -968,6 +1024,20 @@ export function App(): JSX.Element {
             </>
           )}
         </nav>
+        {/* 감사 진행(planning-audit-trigger): auditStatus가 unknown/warn일 때만 노출(정합/불합엔 강제 노출 안 함).
+            클릭 → 큐잉(202) → 폴링 재조회 → 판정 갱신. 실행 중엔 비활성+라벨 전환. */}
+        {dashProject && (dashProject.auditStatus === "unknown" || dashProject.auditStatus === "warn") && (
+          <button
+            type="button"
+            className="dash-audit-run"
+            data-testid="audit-run-btn"
+            onClick={runProjectAudit}
+            disabled={auditRunning}
+            title="이 프로젝트 전체를 감사(spec.md ↔ 코드 정합)합니다"
+          >
+            {auditRunning ? "감사 중…" : "🔍 감사 진행"}
+          </button>
+        )}
         {dashStage === "views" && tab === "flow" && dangling > 0 && (
           <span style={{ color: "#f0a05a" }}>⚠ dangling {dangling}</span>
         )}
