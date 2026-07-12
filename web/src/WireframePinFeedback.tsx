@@ -18,10 +18,10 @@
  * (getBoundingClientRect), 새 라이브러리 없음.
  */
 import { useEffect, useRef, useState } from "react";
-import type { WireDocDevice, WireDoc } from "@flowforge/shared";
+import type { WireDocDevice, WireDoc, WireFeedbackItem, WireFeedbackStatus } from "@flowforge/shared";
 import { WireframeDeviceFrame } from "./WireframeDeviceFrame.js";
 import type { WireframeOverlayCtx } from "./WireframeDeviceFrame.js";
-import { postWireframeFeedback } from "./api.js";
+import { postWireframeFeedback, fetchWireframeFeedback, updateWireframeFeedback } from "./api.js";
 
 /** 프레임에 넘길 이동 요청(핀 목록 클릭 → 그 디바이스·화면으로 전환). nonce로 같은 대상 재요청도 트리거. */
 interface FocusTarget {
@@ -30,9 +30,14 @@ interface FocusTarget {
   readonly nonce: number;
 }
 
-/** 화면에 꽂힌 핀 1개(로컬 세션 상태 + 서버 append 완료분). id=화면 내 표시 번호. */
+/**
+ * 화면에 꽂힌 핀 1개. `id`=화면 내 표시 번호(로컬), `serverId`=파일 영속 식별자(resolve/update 대상 키).
+ * `status`=생애주기(open/resolved). serverId 없는 핀은 아직 서버 append 전(낙관 표시).
+ */
 interface Pin {
   readonly id: number;
+  readonly serverId: string | null;
+  readonly status: WireFeedbackStatus;
   readonly screenId: string;
   readonly device: WireDocDevice;
   readonly xPct: number;
@@ -187,7 +192,7 @@ function PinLayer({
         <button
           key={p.id}
           type="button"
-          className={`wf-pin${editing?.editId === p.id ? " wf-pin--active" : ""}`}
+          className={`wf-pin${editing?.editId === p.id ? " wf-pin--active" : ""}${p.status === "resolved" ? " wf-pin--resolved" : ""}`}
           style={{ left: `${p.xPct}%`, top: `${p.yPct}%` }}
           data-testid={`wf-pin-${p.id}`}
           onClick={(e) => {
@@ -211,36 +216,69 @@ function PinLayer({
   );
 }
 
-/** 오른쪽 목록 — 전체 핀(디바이스 무관). 클릭 시 그 핀 재열림(다른 디바이스면 안내는 프레임이 처리). */
-function PinList({ pins, activeId, onOpen }: { pins: readonly Pin[]; activeId: number | null; onOpen: (pin: Pin) => void }): JSX.Element {
+/**
+ * 오른쪽 목록 — 전체 핀(디바이스 무관). 핀 본문 클릭=재열림, resolve 버튼=상태 토글(flowforge-pin-
+ * feedback-lifecycle). resolved 핀은 흐리게 표시. 행은 div(버튼 중첩 금지 — 내부에 열기·resolve 두 버튼).
+ */
+function PinList({
+  pins,
+  activeId,
+  onOpen,
+  onToggleResolve,
+}: {
+  pins: readonly Pin[];
+  activeId: number | null;
+  onOpen: (pin: Pin) => void;
+  onToggleResolve: (pin: Pin) => void;
+}): JSX.Element {
+  const openCount = pins.filter((p) => p.status === "open").length;
   return (
     <aside className="wf-pin-side" data-testid="wf-pin-side">
       <h4 className="wf-pin-side-h">이 프로젝트의 피드백</h4>
-      <div className="wf-pin-side-cnt">{pins.length}개 · 핀을 클릭하면 열립니다</div>
+      <div className="wf-pin-side-cnt">
+        {pins.length}개 · 열림 {openCount} · 핀을 클릭하면 열립니다
+      </div>
       {pins.length === 0 ? (
         <div className="wf-pin-empty" data-testid="wf-pin-empty">
           아직 없습니다.
           <br />
-          와이어를 ⌘+클릭해 첫 피드백을 남겨보세요.
+          핀 모드를 켜고 와이어를 클릭해 첫 피드백을 남겨보세요.
         </div>
       ) : (
         <div className="wf-pin-list">
           {pins.map((p) => (
-            <button
+            <div
               key={p.id}
-              type="button"
-              className={`wf-pin-row${p.id === activeId ? " wf-pin-row--active" : ""}`}
+              className={`wf-pin-row${p.id === activeId ? " wf-pin-row--active" : ""}${p.status === "resolved" ? " wf-pin-row--resolved" : ""}`}
               data-testid={`wf-pin-row-${p.id}`}
-              onClick={() => onOpen(p)}
             >
-              <span className="wf-pin-num">{p.id}</span>
-              <span className="wf-pin-row-body">
-                <span className="wf-pin-row-txt">{p.text}</span>
-                <span className="wf-pin-row-meta">
-                  {p.region} · {p.device === "mobile" ? "모바일" : "데스크탑"} · {p.screenId}
+              <button
+                type="button"
+                className="wf-pin-row-open"
+                data-testid={`wf-pin-row-open-${p.id}`}
+                onClick={() => onOpen(p)}
+              >
+                <span className="wf-pin-num">{p.id}</span>
+                <span className="wf-pin-row-body">
+                  <span className="wf-pin-row-txt">{p.text}</span>
+                  <span className="wf-pin-row-meta">
+                    {p.region} · {p.device === "mobile" ? "모바일" : "데스크탑"} · {p.screenId}
+                    {p.status === "resolved" ? " · ✓ 해결됨" : ""}
+                  </span>
                 </span>
-              </span>
-            </button>
+              </button>
+              <button
+                type="button"
+                className="wf-pin-resolve"
+                data-testid={`wf-pin-resolve-${p.id}`}
+                aria-pressed={p.status === "resolved"}
+                disabled={!p.serverId}
+                title={p.serverId ? "" : "저장 중… 잠시 후 다시 시도"}
+                onClick={() => onToggleResolve(p)}
+              >
+                {p.status === "resolved" ? "다시 열기" : "해결"}
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -269,6 +307,48 @@ export function WireframePinFeedback({
   const [activeId, setActiveId] = useState<number | null>(null);
   const [focusTarget, setFocusTarget] = useState<FocusTarget | null>(null);
   const focusNonce = useRef(0);
+  // 표시 번호(seq) 발급용 ref — 마운트 시딩과 신규 추가가 같은 카운터를 공유(번호 충돌 방지).
+  const seqRef = useRef(0);
+
+  // 화면 id → device 매핑(서버 피드백 item에는 device가 없으므로 화면 목록에서 파생).
+  const deviceOf = (screenId: string): WireDocDevice =>
+    screens.find((s) => s.id === screenId)?.device ?? "desktop";
+
+  // 마운트/프로젝트 진입 시 저장된 피드백을 GET으로 로드해 pins 시딩 → 새로고침 후에도 핀 유지.
+  useEffect(() => {
+    let cancelled = false;
+    setPins([]);
+    seqRef.current = 0;
+    setSeq(0);
+    fetchWireframeFeedback(project)
+      .then((items: WireFeedbackItem[]) => {
+        if (cancelled) return;
+        const seeded: Pin[] = items.map((it) => {
+          const id = ++seqRef.current;
+          return {
+            id,
+            serverId: it.id,
+            status: it.status,
+            screenId: it.screenId,
+            device: deviceOf(it.screenId),
+            xPct: it.xPct,
+            yPct: it.yPct,
+            text: it.text,
+            region: it.region ?? "",
+          };
+        });
+        setPins(seeded);
+        setSeq(seqRef.current);
+      })
+      .catch(() => {
+        // 로드 실패는 조용히 빈 상태 유지(읽기 실패로 UI를 막지 않음).
+      });
+    return () => {
+      cancelled = true;
+    };
+    // project가 바뀌면 다시 로드. screens는 device 파생에만 쓰여 의존성에서 제외(재로딩 불필요).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project]);
 
   // Esc로 팝오버 닫기(목업 동작).
   useEffect(() => {
@@ -297,16 +377,50 @@ export function WireframePinFeedback({
     setActiveId(null);
   };
 
-  // 저장: 서버에 append(빈텍스트·범위밖은 서버 최종 방어) 후 로컬 핀 반영. 실패는 팝오버가 표면화(throw).
+  // resolve 토글: 서버 PATCH(status) → 로컬 status 갱신. serverId 없는 핀(아직 미저장)은 무시.
+  const toggleResolve = async (pin: Pin): Promise<void> => {
+    if (!pin.serverId) return;
+    const next: WireFeedbackStatus = pin.status === "resolved" ? "open" : "resolved";
+    await updateWireframeFeedback(project, pin.serverId, { status: next });
+    setPins((prev) => prev.map((p) => (p.id === pin.id ? { ...p, status: next } : p)));
+  };
+
+  // 저장 분기(중복 append 제거): 기존 핀(serverId 있음)=PATCH in-place 수정, 새 핀=POST append 후
+  // 서버 id를 얻기 위해 재조회(신규 레코드의 serverId 확보 → 이후 resolve/수정 대상이 됨).
   const onSaved = async (ed: Editor, text: string, region: string): Promise<void> => {
-    await postWireframeFeedback(project, { screenId: ed.screenId, text, xPct: ed.xPct, yPct: ed.yPct, region });
     if (ed.editId !== null) {
+      const target = pins.find((p) => p.id === ed.editId);
+      if (target?.serverId) {
+        // 기존 핀 수정 = in-place update(중복 append 없음).
+        await updateWireframeFeedback(project, target.serverId, { text });
+        setPins((prev) => prev.map((p) => (p.id === ed.editId ? { ...p, text, region } : p)));
+        return;
+      }
+      // serverId 없는(미저장) 핀 수정은 로컬만 반영(방어적 — 통상 발생 안 함).
       setPins((prev) => prev.map((p) => (p.id === ed.editId ? { ...p, text, region } : p)));
-    } else {
-      const id = seq + 1;
-      setSeq(id);
-      setPins((prev) => [...prev, { id, screenId: ed.screenId, device: ed.device, xPct: ed.xPct, yPct: ed.yPct, text, region }]);
+      return;
     }
+    // 새 핀 = append 후 재조회로 serverId 확보.
+    await postWireframeFeedback(project, { screenId: ed.screenId, text, xPct: ed.xPct, yPct: ed.yPct, region });
+    const id = seqRef.current + 1;
+    seqRef.current = id;
+    setSeq(id);
+    let serverId: string | null = null;
+    try {
+      const items = await fetchWireframeFeedback(project);
+      // 좌표·텍스트·화면이 일치하는 최신 레코드를 이 핀의 serverId로 매칭(방금 append분).
+      const match = items
+        .filter((it) => it.screenId === ed.screenId && it.text === text && it.xPct === ed.xPct && it.yPct === ed.yPct)
+        .pop();
+      serverId = match?.id ?? null;
+    } catch {
+      serverId = null; // 재조회 실패해도 로컬 표시는 유지(다음 로드 때 serverId 확보).
+    }
+    setPins((prev) => [
+      ...prev,
+      { id, serverId, status: "open", screenId: ed.screenId, device: ed.device, xPct: ed.xPct, yPct: ed.yPct, text, region },
+    ]);
+    return;
   };
 
   return (
@@ -345,7 +459,7 @@ export function WireframePinFeedback({
             />
           )}
         />
-        <PinList pins={pins} activeId={activeId} onOpen={openExisting} />
+        <PinList pins={pins} activeId={activeId} onOpen={openExisting} onToggleResolve={(p) => void toggleResolve(p)} />
       </div>
     </div>
   );

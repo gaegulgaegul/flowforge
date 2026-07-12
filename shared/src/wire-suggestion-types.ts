@@ -38,12 +38,19 @@ export interface WireSuggestionQueue {
   readonly suggestions: readonly WireSuggestion[];
 }
 
+/** 핀 피드백 생애주기 상태(flowforge-pin-feedback-lifecycle) — 신규=open, resolve=resolved. */
+export type WireFeedbackStatus = "open" | "resolved";
+
 /**
- * 인플레이스 핀 피드백 1건 — 사람→AI 역방향 write(A안 파일 릴레이, D2 정정: Figma 코멘트식).
+ * 인플레이스 핀 피드백 1건 — 사람→AI 역방향 write(A안 파일 릴레이, Figma 코멘트식).
  * 화면별 입력칸 나열이 아니라, 와이어 위 클릭한 그 좌표(xPct·yPct)에 묶인 지점 단위 피드백.
  */
 export interface WireFeedbackItem {
-  /** 피드백 대상 화면 id(WireScreen2.id). */
+  /** 안정적 영속 식별자(서버 append 시 부여) — resolve·in-place 수정 대상 키(flowforge-pin-feedback-lifecycle). */
+  readonly id: string;
+  /** 생애주기 상태 — 신규=open, resolve 시 resolved(flowforge-pin-feedback-lifecycle). */
+  readonly status: WireFeedbackStatus;
+  /** 피드백 대상 화면 id(WireDoc.id). */
   readonly screenId: string;
   /** 사용자가 남긴 자유 텍스트(비어 있으면 거부). */
   readonly text: string;

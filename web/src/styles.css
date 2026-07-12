@@ -1035,19 +1035,39 @@ button.wf-pin--active .wf-pin-head { outline: 3px solid rgba(217,102,63,.4); }
 .wf-pin-empty { font-size: 13px; color: var(--lofi-muted, #8b949e); padding: 16px 4px; text-align: center; line-height: 1.6; }
 .wf-pin-list { display: flex; flex-direction: column; gap: 8px; }
 .wf-pin-row {
-  display: flex; gap: 10px; align-items: flex-start; text-align: left; width: 100%;
-  border: 1px solid var(--border); border-radius: 10px; background: var(--bg); cursor: pointer;
-  padding: 10px; transition: border-color .12s;
+  display: flex; gap: 8px; align-items: stretch; width: 100%;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  padding: 6px; transition: border-color .12s;
 }
 .wf-pin-row:hover { border-color: var(--pin); }
 .wf-pin-row--active { border-color: var(--pin); background: rgba(217,102,63,.12); }
+.wf-pin-row--resolved { opacity: .55; }
+.wf-pin-row--resolved .wf-pin-num { background: var(--lofi-muted, #8b949e); }
+/* 행 안의 열기 버튼(핀 번호+텍스트) — 클릭 시 그 핀 재열림. */
+.wf-pin-row-open {
+  flex: 1; min-width: 0; display: flex; gap: 10px; align-items: flex-start; text-align: left;
+  background: none; border: 0; cursor: pointer; padding: 4px; color: inherit;
+}
 .wf-pin-num {
   flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
   background: var(--pin); color: #fff; font-size: 11px; font-weight: 700;
 }
 .wf-pin-row-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .wf-pin-row-txt { font-size: 13px; color: var(--text); line-height: 1.4; word-break: break-word; }
+.wf-pin-row-resolved .wf-pin-row-txt { text-decoration: line-through; }
 .wf-pin-row-meta { font-size: 10px; color: var(--lofi-muted, #8b949e); }
+/* resolve 토글 버튼(행 우측). */
+.wf-pin-resolve {
+  flex: none; align-self: center; border: 1px solid var(--border); border-radius: 8px;
+  background: #22262e; color: var(--lofi-muted, #8b949e); cursor: pointer; font-size: 11px;
+  font-weight: 600; padding: 5px 9px; white-space: nowrap;
+}
+.wf-pin-resolve:hover:not(:disabled) { border-color: var(--pin); color: var(--text); }
+.wf-pin-resolve:disabled { opacity: .4; cursor: default; }
+.wf-pin-row--resolved .wf-pin-resolve { background: rgba(74,194,107,.14); border-color: rgba(74,194,107,.5); color: #6bd489; }
+/* resolved 핀 마커(오버레이) — 흐리게 + 초록 톤. */
+button.wf-pin--resolved { opacity: .5; }
+button.wf-pin--resolved .wf-pin-head { background: #4ac26b; }
 .wf-pin-relay {
   margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border);
   font-size: 11.5px; color: var(--lofi-muted, #8b949e); line-height: 1.5;

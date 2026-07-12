@@ -16,6 +16,7 @@
  * apply body/result는 6a의 PrdApplyRequest/PrdApplyResult를 재사용한다(형태 동일).
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import type {
@@ -26,6 +27,7 @@ import type {
   WireSuggestion,
   WireSuggestionQueue,
   WireFeedbackItem,
+  WireFeedbackStatus,
 } from "@flowforge/shared";
 import { PLANNING_WIREFRAME_FIXTURE } from "../parser/planningWireframeFixture.js";
 
@@ -249,21 +251,55 @@ export function buildDocsPlanningWireframe2(docsDir: string): readonly WireDoc[]
   return readApprovedWireframe(docsDir) ?? PLANNING_WIREFRAME_FIXTURE;
 }
 
-// ── feedback write (사람→AI 역방향, A안 파일 릴레이) ──────────────────────────
+// ── feedback write/read (사람→AI 역방향, A안 파일 릴레이 + 생애주기) ───────────
 
 /** 주입 가능한 시계(테스트 안정성 — Date.now/new Date 직접 사용 금지). 기본=현재 ISO. */
 export type NowIso = () => string;
 const defaultNowIso: NowIso = () => new Date().toISOString();
 
-/** feedback 사이드카 읽기(누적 append용). 없거나 깨졌으면 빈 배열. throw 금지. */
-function readFeedbackSidecar(path: string): WireFeedbackItem[] {
+/** 주입 가능한 id 생성기(테스트 안정성 — randomUUID 직접 사용 금지). 기본=crypto.randomUUID. */
+export type GenId = () => string;
+const defaultGenId: GenId = () => randomUUID();
+
+/**
+ * feedback 사이드카 raw 읽기(내부 — 하위호환 기본값 주입 전 원본 배열). 없거나 깨졌으면 빈 배열. throw 금지.
+ * id/status가 없는 구버전 레코드도 그대로 반환한다(정규화는 normalizeFeedback가 담당).
+ */
+function readFeedbackSidecar(path: string): Record<string, unknown>[] {
   if (!existsSync(path)) return [];
   try {
     const parsed: unknown = JSON.parse(readFileSync(path, "utf-8"));
-    return Array.isArray(parsed) ? (parsed as WireFeedbackItem[]) : [];
+    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : [];
   } catch {
     return [];
   }
+}
+
+/**
+ * 구버전 레코드(id/status 없음)에 결정적 기본값을 주입해 WireFeedbackItem으로 정규화한다.
+ * - status 없으면 "open". id 없으면 **결정적 파생**(`legacy-<index>-<ts>-<xPct>-<yPct>`) — 같은 레코드가
+ *   read마다 같은 id를 얻어 resolve 대상 지정이 안정적이다(신규 난수 id를 매번 만들지 않음).
+ * 기존 필드(screenId/text/ts/xPct/yPct/region)는 보존한다.
+ */
+function normalizeFeedback(raw: Record<string, unknown>, index: number): WireFeedbackItem {
+  const status: WireFeedbackStatus = raw["status"] === "resolved" ? "resolved" : "open";
+  const id =
+    typeof raw["id"] === "string" && raw["id"].length > 0
+      ? (raw["id"] as string)
+      : `legacy-${index}-${String(raw["ts"] ?? "")}-${String(raw["xPct"] ?? "")}-${String(raw["yPct"] ?? "")}`;
+  const item: WireFeedbackItem = {
+    id,
+    status,
+    screenId: String(raw["screenId"] ?? ""),
+    text: String(raw["text"] ?? ""),
+    ts: String(raw["ts"] ?? ""),
+    xPct: typeof raw["xPct"] === "number" ? (raw["xPct"] as number) : 0,
+    yPct: typeof raw["yPct"] === "number" ? (raw["yPct"] as number) : 0,
+    ...(typeof raw["region"] === "string" && (raw["region"] as string).length > 0
+      ? { region: raw["region"] as string }
+      : {}),
+  };
+  return item;
 }
 
 /** 좌표 %가 0~100 범위의 유한 숫자인가(범위 밖·NaN·Infinity 거부). */
@@ -272,26 +308,38 @@ function isValidPct(v: unknown): v is number {
 }
 
 /**
- * 인플레이스 핀 피드백을 feedback 사이드카에 append(사람→AI 역방향, D2/D3 A안 파일 릴레이).
+ * 프로젝트의 핀 피드백 전체를 배열로 읽는다(flowforge-pin-feedback-lifecycle GET 원천).
+ * id/status 없는 구버전 레코드에 결정적 기본값을 **읽을 때(lazy)** 주입한다 — 파일은 재기록하지 않는다
+ * (부작용 최소; 첫 write가 일어날 때 정규화된 전체가 재기록되어 자연히 스키마 승격). throw 금지.
+ */
+export function readWireframeFeedback(docsDir: string, project: string): WireFeedbackItem[] {
+  const path = feedbackSidecarPath(docsDir, project);
+  return readFeedbackSidecar(path).map((raw, i) => normalizeFeedback(raw, i));
+}
+
+/**
+ * 인플레이스 핀 피드백을 feedback 사이드카에 append(사람→AI 역방향, A안 파일 릴레이).
  * flowforge는 write만 하고 AI를 호출하지 않는다. Figma 코멘트식: 클릭한 좌표(xPct·yPct 0~100)에
- * 묶인 지점 단위 피드백. 빈 텍스트(공백만)·범위 밖 좌표는 거부(쓰레기 방지). ts는 주입 시계(nowIso)로
- * 스탬프 — 테스트 안정성. write는 RW 볼륨(WIREFRAME_FEEDBACK_ROOT)에.
+ * 묶인 지점 단위 피드백. 저장 레코드에 **고유 id + status:"open"** 부여(flowforge-pin-feedback-lifecycle).
+ * 빈 텍스트(공백만)·범위 밖 좌표는 거부(쓰레기 방지). ts·id는 주입 가능(테스트 안정성). read-modify-write.
  */
 export function appendWireframeFeedback(
   docsDir: string,
   project: string,
   input: { screenId: string; text: string; xPct: number; yPct: number; region?: string },
   nowIso: NowIso = defaultNowIso,
+  genId: GenId = defaultGenId,
 ): { ok: boolean } {
   const text = (input.text ?? "").trim();
   if (text.length === 0) return { ok: false };
   // 좌표 유효성 방어(0~100 밖·NaN·Infinity 거부) — 지점 단위 피드백은 좌표가 곧 의미.
   if (!isValidPct(input.xPct) || !isValidPct(input.yPct)) return { ok: false };
-  // 미존재 화면 id 방어 — 현재 와이어(승인분/픽스처)에 없는 화면엔 피드백을 기록하지 않는다
-  // (쓰레기 피드백 방지, spec: "알 수 없는 화면 id는 기록하지 않거나 거부").
+  // 미존재 화면 id 방어 — 현재 와이어(승인분/픽스처)에 없는 화면엔 피드백을 기록하지 않는다.
   const known = new Set(buildDocsPlanningWireframe2(docsDir).map((s) => s.id));
   if (!known.has(input.screenId)) return { ok: false };
   const item: WireFeedbackItem = {
+    id: genId(),
+    status: "open",
     screenId: input.screenId,
     text,
     ts: nowIso(),
@@ -302,8 +350,39 @@ export function appendWireframeFeedback(
   const path = feedbackSidecarPath(docsDir, project);
   const root = wireframeFeedbackRoot();
   if (!existsSync(root)) mkdirSync(root, { recursive: true });
-  const items = readFeedbackSidecar(path);
+  // read-modify-write: 최신 파일을 정규화해 읽고 append 후 전체 재기록(구버전도 스키마 승격).
+  const items = readFeedbackSidecar(path).map((raw, i) => normalizeFeedback(raw, i));
   items.push(item);
+  writeFileSync(path, JSON.stringify(items, null, 2), "utf-8");
+  return { ok: true };
+}
+
+/**
+ * id로 지정한 피드백을 in-place 갱신한다(flowforge-pin-feedback-lifecycle — resolve 토글·텍스트 수정).
+ * read-modify-write: 최신 파일을 정규화해 읽고 → id 매칭 레코드의 status/text만 패치(id·screenId·좌표
+ * 보존) → 전체 재기록. 미매칭 id는 `{ok:false}`(라우트 404), 파일 불변. 빈 text 패치는 거부(쓰레기 방지).
+ * 삭제가 아닌 soft-close라 이력이 보존된다. 단일 프로세스 sync write라 파일 잠금 불필요(D5).
+ */
+export function updateWireframeFeedback(
+  docsDir: string,
+  project: string,
+  id: string,
+  patch: { status?: WireFeedbackStatus; text?: string },
+): { ok: boolean } {
+  const path = feedbackSidecarPath(docsDir, project);
+  if (!existsSync(path)) return { ok: false };
+  // 빈 text 패치는 거부(공백만) — status 없이 text만 바꾸는 요청의 쓰레기 방지.
+  if (patch.text !== undefined && patch.text.trim().length === 0) return { ok: false };
+  const items = readFeedbackSidecar(path).map((raw, i) => normalizeFeedback(raw, i));
+  const idx = items.findIndex((it) => it.id === id);
+  if (idx === -1) return { ok: false };
+  const current = items[idx] as WireFeedbackItem;
+  const next: WireFeedbackItem = {
+    ...current,
+    ...(patch.status !== undefined ? { status: patch.status } : {}),
+    ...(patch.text !== undefined ? { text: patch.text.trim() } : {}),
+  };
+  items[idx] = next;
   writeFileSync(path, JSON.stringify(items, null, 2), "utf-8");
   return { ok: true };
 }

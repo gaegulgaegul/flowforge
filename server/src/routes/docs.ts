@@ -19,7 +19,9 @@
  * POST /api/docs/:project/planning-user-flow-suggestions/apply?flow=<stem> 승인·반려 적용(승인분만 <stem>.md 에지 append)
  * GET /api/docs/:project/planning-wireframe-suggestions       와이어 레이아웃 제안 큐 읽기(없으면 빈 큐 200)
  * POST /api/docs/:project/planning-wireframe-suggestions/apply 승인·반려 적용(승인분만 와이어 원천 반영, RW 볼륨)
- * POST /api/docs/:project/planning-wireframe-feedback         인플레이스 핀 피드백 write(좌표 xPct·yPct, 사람→AI 역방향, A안 릴레이)
+ * POST /api/docs/:project/planning-wireframe-feedback         인플레이스 핀 피드백 write(좌표 xPct·yPct, id·status:open 부여, A안 릴레이)
+ * GET  /api/docs/:project/planning-wireframe-feedback         저장된 핀 피드백 배열 재조회(빈 파일=[], 구버전 하위호환)
+ * PATCH /api/docs/:project/planning-wireframe-feedback/:id    id로 resolve 토글·text in-place 수정(중복 append 없음)
  *
  * :project는 슬래시를 포함할 수 있어 와일드카드(*)로 받는다. docs는 SSOT(읽기전용)지만,
  * 예외로 유저플로우 좌표 overlay와 PRD 승인 반영(승인=사용자 의도)만 쓴다.
@@ -57,6 +59,8 @@ import {
   readDocsWireframeSuggestions,
   applyWireframeSuggestions,
   appendWireframeFeedback,
+  readWireframeFeedback,
+  updateWireframeFeedback,
 } from "../lib/wireDocs.js";
 import { readAuditCapabilities } from "../lib/auditSummary.js";
 import { isLayoutOverlay } from "../lib/changes.js";
@@ -502,6 +506,73 @@ docsRouter.post(
     });
     if (!result.ok) {
       res.status(400).json({ error: "empty_feedback" });
+      return;
+    }
+    res.json({ ok: true });
+  }),
+);
+
+// ── 핀 피드백 GET + PATCH (flowforge-pin-feedback-lifecycle) ──────────────────
+// POST append 라우트(위)는 불변. GET(재조회)·PATCH(resolve/in-place 수정)만 신설.
+
+/** feedback GET — 저장된 핀 피드백 배열(빈 파일=[]). read는 공개(GET 게이트 없음, 기존 규약). */
+docsRouter.get(
+  "/api/docs/:project(*)/planning-wireframe-feedback",
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    // id/status 없는 구버전 레코드는 read에서 결정적 기본값 주입(하위호환). 파일 미변경(lazy).
+    res.json({ project, items: readWireframeFeedback(dir, project) });
+  }),
+);
+
+/**
+ * PATCH body 검증: {status?, text?} — status는 화이트리스트, text는 빈문자(공백만) 거부(append와 동형).
+ * 빈 text·화이트리스트 밖 status·둘 다 없음은 400(미존재 id 404와 구분). 여기서 빈 text를 거르면
+ * updateWireframeFeedback의 ok:false는 순수 "미존재 id" 신호가 되어 라우트가 404로 명확히 매핑한다.
+ */
+function isWireframeFeedbackPatch(v: unknown): v is { status?: "open" | "resolved"; text?: string } {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  if (o["status"] !== undefined && o["status"] !== "open" && o["status"] !== "resolved") return false;
+  if (o["text"] !== undefined) {
+    if (typeof o["text"] !== "string") return false;
+    if ((o["text"] as string).trim().length === 0) return false; // 빈 text 거부(400)
+  }
+  // 최소 하나는 있어야 의미 있는 patch.
+  if (o["status"] === undefined && o["text"] === undefined) return false;
+  return true;
+}
+
+/**
+ * feedback PATCH — id로 지정한 레코드의 status(resolve 토글)·text(in-place 수정) 갱신.
+ * 미존재 id는 404(원본 불변), 빈 text·화이트리스트 밖 status는 400. read-modify-write는 lib가 보장.
+ * 쓰기라 requireWriteAuth 게이트(POST append와 동일 정책).
+ */
+docsRouter.patch(
+  "/api/docs/:project(*)/planning-wireframe-feedback/:id",
+  requireWriteAuth,
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    const id = String(req.params.id ?? "");
+    const body: unknown = req.body;
+    if (!isWireframeFeedbackPatch(body)) {
+      res.status(400).json({ error: "invalid_request" });
+      return;
+    }
+    const result = updateWireframeFeedback(dir, project, id, body);
+    // 미존재 id(또는 파일 없음)·빈 text = ok:false. 여기선 미존재를 404로 구분(빈 text는 위 검증에서 이미 400).
+    if (!result.ok) {
+      res.status(404).json({ error: "feedback_not_found" });
       return;
     }
     res.json({ ok: true });

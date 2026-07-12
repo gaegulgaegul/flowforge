@@ -83,6 +83,7 @@ export type {
   WireSuggestion,
   WireSuggestionQueue,
   WireFeedbackItem,
+  WireFeedbackStatus,
 } from './wire-suggestion-types.js';
 
 export type {

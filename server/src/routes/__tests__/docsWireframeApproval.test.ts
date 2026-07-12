@@ -229,6 +229,94 @@ describe("와이어 승인/반려 + 피드백 API", () => {
     expect(res.status).toBe(404);
   });
 
+  // ── GET feedback + PATCH resolve/update (flowforge-pin-feedback-lifecycle) ──
+  it("GET feedback — 저장된 피드백 배열을 반환한다(id·status 포함)", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "남긴 것", xPct: 10, yPct: 20 });
+    const res = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.items)).toBe(true);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].text).toBe("남긴 것");
+    expect(res.body.items[0].status).toBe("open");
+    expect(typeof res.body.items[0].id).toBe("string");
+  });
+
+  it("GET feedback — 파일 없으면 빈 배열(404 아님)", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual([]);
+  });
+
+  it("GET feedback — 경로 조작 차단(404)", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/..%2f..%2fetc/planning-wireframe-feedback");
+    expect(res.status).toBe(404);
+  });
+
+  it("PATCH feedback/:id — resolve로 status 갱신 200", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 5, yPct: 5 });
+    const list = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    const id = list.body.items[0].id as string;
+    const res = await request(app).patch(`/api/docs/p/planning-wireframe-feedback/${id}`).send({ status: "resolved" });
+    expect(res.status).toBe(200);
+    const after = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    expect(after.body.items[0].status).toBe("resolved");
+  });
+
+  it("PATCH feedback/:id — text in-place 수정, 배열 길이 불변", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "원본", xPct: 5, yPct: 5 });
+    const list = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    const id = list.body.items[0].id as string;
+    const res = await request(app).patch(`/api/docs/p/planning-wireframe-feedback/${id}`).send({ text: "수정본" });
+    expect(res.status).toBe(200);
+    const after = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    expect(after.body.items).toHaveLength(1); // 중복 없음
+    expect(after.body.items[0].text).toBe("수정본");
+    expect(after.body.items[0].xPct).toBe(5); // 좌표 보존
+  });
+
+  it("PATCH feedback/:id — 존재하지 않는 id는 404", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 5, yPct: 5 });
+    const res = await request(app).patch("/api/docs/p/planning-wireframe-feedback/nope-id").send({ status: "resolved" });
+    expect(res.status).toBe(404);
+  });
+
+  it("PATCH feedback/:id — status 화이트리스트 밖 값은 400", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 5, yPct: 5 });
+    const list = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    const id = list.body.items[0].id as string;
+    const res = await request(app).patch(`/api/docs/p/planning-wireframe-feedback/${id}`).send({ status: "archived" });
+    expect(res.status).toBe(400);
+  });
+
+  it("PATCH feedback/:id — 빈 text는 400", async () => {
+    makePlanning("p");
+    const app = await loadApp();
+    await request(app).post("/api/docs/p/planning-wireframe-feedback").send({ screenId: "grid", text: "x", xPct: 5, yPct: 5 });
+    const list = await request(app).get("/api/docs/p/planning-wireframe-feedback");
+    const id = list.body.items[0].id as string;
+    const res = await request(app).patch(`/api/docs/p/planning-wireframe-feedback/${id}`).send({ text: "   " });
+    expect(res.status).toBe(400);
+  });
+
+  it("PATCH feedback/:id — 경로 조작 차단(404)", async () => {
+    const app = await loadApp();
+    const res = await request(app).patch("/api/docs/..%2f..%2fetc/planning-wireframe-feedback/x").send({ status: "resolved" });
+    expect(res.status).toBe(404);
+  });
+
   // ── 재생성 격리(D6): 그 화면만 갱신, 타 화면 승인분 불변 ──
   it("재생성 격리 — 큐 갱신 후 승인하면 그 화면만 바뀌고 타 화면은 불변(D6)", async () => {
     // 1) grid만 먼저 승인(승인분 원천 생성).
