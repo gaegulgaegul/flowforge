@@ -4,7 +4,7 @@ import type {
   LayoutOverlay,
   IANode,
   Wireframe,
-  WireScreen2,
+  WireDoc,
   Prd,
   SpecTreeNode,
   DecisionTimeline,
@@ -257,20 +257,20 @@ export async function fetchDocsPlanningIa(
 }
 
 /**
- * 기획 단계 planning 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]).
- * 데스크탑/모바일 프레임 안에 영역별 배치. WireframeDeviceFrame이 렌더한다(세로 목록 아님).
+ * 기획 단계 planning 와이어 = 화면별 HTML 문서(WireDoc[], flowforge-wireframe-iframe).
+ * 각 화면은 id·title·device·html(자족 문서). WireframeDeviceFrame이 sandbox iframe에 렌더한다.
  */
 export async function fetchDocsPlanningWireframe(
   project: string,
-): Promise<{ project: string; screens: WireScreen2[] }> {
+): Promise<{ project: string; screens: WireDoc[] }> {
   const res = await fetch(`/api/docs/${project}/planning-wireframe`);
   if (!res.ok) throw new Error(`docs planning-wireframe ${res.status}`);
-  return (await res.json()) as { project: string; screens: WireScreen2[] };
+  return (await res.json()) as { project: string; screens: WireDoc[] };
 }
 
 /**
  * 와이어 레이아웃 제안 큐 읽기(docs/planning/wireframe.suggestions.json).
- * 큐 없으면 빈 큐(version:1, suggestions:[]). features 제안 큐의 와이어판(WireScreen2 레이아웃 교체 제안).
+ * 큐 없으면 빈 큐(version:1, suggestions:[]). features 제안 큐의 와이어판(화면별 HTML 문서 교체 제안).
  */
 export async function fetchDocsWireframeSuggestions(
   project: string,

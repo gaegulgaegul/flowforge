@@ -15,16 +15,19 @@
  * server(큐 read/apply·feedback write)와 web(승인 UI·피드백 입력)이 공유. apply body/result는
  * 6a의 PrdApplyRequest/PrdApplyResult와 형태가 같아 여기서 신설하지 않고 그대로 재사용한다.
  */
-import type { WireScreen2 } from './wire-screen2-types.js';
+import type { WireDoc } from './wire-doc-types.js';
 
-/** 와이어 레이아웃 갱신 제안 1건 — 한 화면(screenId)의 전체 WireScreen2 레이아웃 교체. */
+/**
+ * 와이어 갱신 제안 1건 — 한 화면(screenId)의 전체 HTML 문서 교체(flowforge-wireframe-iframe, BREAKING).
+ * 이전 `WireScreen2` 요소배열 레이아웃 교체에서 화면별 HTML 문서 교체로 전환됐다.
+ */
 export interface WireSuggestion {
   /** 안정적 식별자(승인/반려 대상 지정). 스킬이 부여. flowforge는 id로만 큐를 조작. */
   readonly id: string;
-  /** 대상 화면 id(WireScreen2.id·화면목록 `<!-- screen: id -->`와 공유 — 유저플로우·IA와 정합). */
+  /** 대상 화면 id(WireDoc.id·화면목록 `<!-- screen: id -->`와 공유 — 유저플로우·IA와 정합). */
   readonly screenId: string;
-  /** 승인 시 반영할 새 레이아웃(디바이스·영역·본문배치·요소). */
-  readonly layout: WireScreen2;
+  /** 승인 시 반영할 새 화면 HTML 문서(id·title·device·html). */
+  readonly doc: WireDoc;
   /** 제안 근거(선택, UI 표시용). */
   readonly rationale?: string;
 }

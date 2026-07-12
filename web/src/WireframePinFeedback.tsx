@@ -1,29 +1,31 @@
 /**
  * 인플레이스 핀 피드백 (planning-wireframe-generation-feedback — D2 정정: Figma 코멘트식).
  *
- * 확정 목업(feedback-pin-mockup)의 React 번역. "화면마다 입력칸 나열"이 아니라, 와이어 위 고칠 그
- * 지점을 ⌘(cmd/ctrl)+클릭(또는 [핀 모드] 켜고 클릭) → 클릭한 그 좌표에 팝오버(textarea)가 뜨고,
- * 저장하면 그 좌표에 핀(번호 마커)이 꽂힌다. 핀·오른쪽 목록을 클릭하면 그 피드백이 다시 열린다(수정 가능).
+ * Figma 코멘트식. "화면마다 입력칸 나열"이 아니라, 와이어 위 고칠 그 지점을 [핀 모드] 켜고 클릭 →
+ * 클릭한 그 좌표에 팝오버(textarea)가 뜨고, 저장하면 그 좌표에 핀(번호 마커)이 꽂힌다. 핀·오른쪽 목록을
+ * 클릭하면 그 피드백이 다시 열린다(수정 가능).
  *
- * 피드백은 지점 단위 — 클릭 좌표(xPct·yPct 0~100)에 묶이고, 좌표에서 영역(본문/상단메뉴/사이드/하단바)이
- * 자동 인식된다. 데스크탑/모바일 핀은 화면·디바이스별로 분리. 빈 텍스트 저장은 막고, Esc로 팝오버를 닫는다.
+ * flowforge-wireframe-iframe 이후: 와이어 본문이 sandbox iframe이라 iframe 내부 DOM엔 접근할 수 없다
+ * (cross-origin 경계). 따라서 핀 좌표(xPct·yPct 0~100)는 iframe **표면**(오버레이 바운딩 박스) 상대
+ * 위치다. 보기 모드에선 오버레이가 pointer-events:none이라 iframe이 클릭을 받아 문서 동작(입력/버튼)이
+ * 살고, 핀 모드 armed 시에만 오버레이가 클릭을 캡처해 핀을 찍는다(모드별 pointer-events 토글).
  *
- * flowforge는 feedback 사이드카에 write만 하고 AI를 호출하지 않는다(A안 파일 릴레이, D3). 저장된 핀은
- * 이번 세션의 로컬 상태 — 서버는 feedback을 읽어 그 지점만 재생성한다(즉시성 없음).
+ * flowforge는 feedback 사이드카에 write만 하고 AI를 호출하지 않는다(A안 파일 릴레이). 서버는 feedback을
+ * 읽어 그 지점만 재생성한다(즉시성 없음).
  *
  * WireframeDeviceFrame(디바이스 프레임·device/화면 상태의 단일 소유자)을 재사용하고, 프레임 위 오버레이
  * (renderOverlay)로 핀 레이어만 얹는다(게으름 위계 — 프레임을 다시 만들지 않음). 좌표 계산은 표준 DOM
  * (getBoundingClientRect), 새 라이브러리 없음.
  */
 import { useEffect, useRef, useState } from "react";
-import type { WireDevice, WireScreen2 } from "@flowforge/shared";
+import type { WireDocDevice, WireDoc } from "@flowforge/shared";
 import { WireframeDeviceFrame } from "./WireframeDeviceFrame.js";
 import type { WireframeOverlayCtx } from "./WireframeDeviceFrame.js";
 import { postWireframeFeedback } from "./api.js";
 
 /** 프레임에 넘길 이동 요청(핀 목록 클릭 → 그 디바이스·화면으로 전환). nonce로 같은 대상 재요청도 트리거. */
 interface FocusTarget {
-  readonly device: WireDevice;
+  readonly device: WireDocDevice;
   readonly screenId: string;
   readonly nonce: number;
 }
@@ -32,7 +34,7 @@ interface FocusTarget {
 interface Pin {
   readonly id: number;
   readonly screenId: string;
-  readonly device: WireDevice;
+  readonly device: WireDocDevice;
   readonly xPct: number;
   readonly yPct: number;
   readonly text: string;
@@ -42,14 +44,14 @@ interface Pin {
 /** 열린 팝오버 상태 — 새 지점(editId 없음) 또는 기존 핀 수정(editId 있음). */
 interface Editor {
   readonly screenId: string;
-  readonly device: WireDevice;
+  readonly device: WireDocDevice;
   readonly xPct: number;
   readonly yPct: number;
   readonly editId: number | null;
 }
 
 /** 좌표(0~100%)에서 영역 자동 인식 — 디바이스별 y/x 임계(목업 regionAt 로직). */
-function regionAt(device: WireDevice, xPct: number, yPct: number): string {
+function regionAt(device: WireDocDevice, xPct: number, yPct: number): string {
   if (device === "mobile") {
     if (yPct < 20) return "상단바";
     if (yPct > 82) return "하단 메뉴바";
@@ -161,6 +163,9 @@ function PinLayer({
   const visible = pins.filter((p) => p.screenId === ctx.screenId && p.device === ctx.device);
   const editing = editor && editor.screenId === ctx.screenId && editor.device === ctx.device ? editor : null;
 
+  // 좌표는 오버레이(=iframe 표면) 바운딩 박스 기준 xPct/yPct(0~100). iframe 내부 DOM엔 접근하지 않는다
+  // (sandbox cross-origin 경계). 보기 모드에선 오버레이가 pointer-events:none이라 이 핸들러가 안 불리고
+  // iframe이 클릭을 받아 문서 동작이 살아난다. 핀 모드 armed 시에만 오버레이가 클릭을 캡처해 핀을 찍는다.
   const onLayerClick = (e: React.MouseEvent<HTMLDivElement>): void => {
     if (!(pinMode || e.metaKey || e.ctrlKey)) return; // 보기 모드 일반 클릭은 무시
     const r = e.currentTarget.getBoundingClientRect();
@@ -255,7 +260,7 @@ export function WireframePinFeedback({
   screens,
 }: {
   project: string;
-  screens: readonly WireScreen2[];
+  screens: readonly WireDoc[];
 }): JSX.Element | null {
   const [pins, setPins] = useState<Pin[]>([]);
   const [seq, setSeq] = useState(0);
@@ -308,7 +313,7 @@ export function WireframePinFeedback({
     <div className="wf-pin-root" data-testid="wf-pin">
       <div className="wf-pin-toolbar">
         <span className="wf-pin-hint">
-          ⌘(Cmd/Ctrl)+클릭 또는 [핀 모드] 켜고 와이어를 클릭 → 그 자리에 피드백을 남깁니다
+          [핀 모드]를 켜고 와이어를 클릭 → 그 자리에 피드백을 남깁니다 (핀 모드가 꺼져 있으면 와이어의 버튼·입력이 실제로 동작)
         </span>
         <button
           type="button"

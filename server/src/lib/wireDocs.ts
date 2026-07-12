@@ -21,30 +21,16 @@ import { basename, dirname, join } from "node:path";
 import type {
   PrdApplyRequest,
   PrdApplyResult,
-  WireBodyLayout,
-  WireDevice,
-  WireElement,
-  WireElementKind,
-  WireScreen2,
+  WireDocDevice,
+  WireDoc,
   WireSuggestion,
   WireSuggestionQueue,
   WireFeedbackItem,
 } from "@flowforge/shared";
 import { PLANNING_WIREFRAME_FIXTURE } from "../parser/planningWireframeFixture.js";
 
-// ── WireScreen2 스키마 어휘(shared 타입과 정합 필수) ──────────────────────────
-const DEVICES: ReadonlySet<string> = new Set<WireDevice>(["desktop", "mobile"]);
-const BODY_LAYOUTS: ReadonlySet<string> = new Set<WireBodyLayout>(["grid", "stack", "tree", "form"]);
-const ELEMENT_KINDS: ReadonlySet<string> = new Set<WireElementKind>([
-  "nav-item",
-  "tab",
-  "card",
-  "input",
-  "button",
-  "text",
-  "tree-node",
-  "placeholder",
-]);
+// ── WireDoc 스키마 어휘(shared 타입과 정합 필수) ──────────────────────────────
+const DEVICES: ReadonlySet<string> = new Set<WireDocDevice>(["desktop", "mobile"]);
 
 // ── 경로 규약 ────────────────────────────────────────────────────────────────
 
@@ -77,52 +63,29 @@ export function feedbackSidecarPath(docsDir: string, project: string): string {
   return join(wireframeFeedbackRoot(), `${project}.feedback.json`);
 }
 
-// ── 스키마 가드 ──────────────────────────────────────────────────────────────
+// ── 스키마 가드 (WireDoc — HTML 문서, flowforge-wireframe-iframe) ─────────────
 
-/** 요소 1개가 WireElement 스키마인가(kind 8종·label string·goto?·span?). */
-function isValidWireElement(v: unknown): v is WireElement {
-  if (typeof v !== "object" || v === null) return false;
-  const e = v as Record<string, unknown>;
-  if (!ELEMENT_KINDS.has(e["kind"] as string)) return false;
-  if (typeof e["label"] !== "string") return false;
-  if (e["goto"] !== undefined && typeof e["goto"] !== "string") return false;
-  if (e["span"] !== undefined && typeof e["span"] !== "number") return false;
-  return true;
-}
-
-/** 영역(topbar/sidebar/bottombar) 요소 배열이 유효한가(선택 필드 — undefined면 통과). */
-function isValidRegionArray(v: unknown): boolean {
-  if (v === undefined) return true;
-  return Array.isArray(v) && v.every(isValidWireElement);
-}
-
-/** layout이 WireScreen2 스키마를 만족하는가(id·title·device·regions.body layout·요소 kind). */
-function isValidWireScreen2(v: unknown): v is WireScreen2 {
+/**
+ * 화면 문서가 WireDoc 스키마를 만족하는가 — id·title·html string + device 어휘.
+ * html은 신뢰되지 않은 AI 생성물이라 flowforge는 렌더 시 sandbox iframe에만 넣는다(내용 검증 아님,
+ * 스키마 계약만). 외부 참조는 문서 CSP가 차단하므로 여기서 URL 검사는 하지 않는다(격리가 방어선).
+ */
+export function isValidWireDoc(v: unknown): v is WireDoc {
   if (typeof v !== "object" || v === null) return false;
   const s = v as Record<string, unknown>;
   if (typeof s["id"] !== "string" || typeof s["title"] !== "string") return false;
   if (!DEVICES.has(s["device"] as string)) return false;
-  const regions = s["regions"];
-  if (typeof regions !== "object" || regions === null) return false;
-  const r = regions as Record<string, unknown>;
-  const body = r["body"];
-  if (typeof body !== "object" || body === null) return false;
-  const b = body as Record<string, unknown>;
-  if (!BODY_LAYOUTS.has(b["layout"] as string)) return false;
-  if (!Array.isArray(b["elements"]) || !b["elements"].every(isValidWireElement)) return false;
-  if (!isValidRegionArray(r["topbar"])) return false;
-  if (!isValidRegionArray(r["sidebar"])) return false;
-  if (!isValidRegionArray(r["bottombar"])) return false;
+  if (typeof s["html"] !== "string") return false;
   return true;
 }
 
-/** 한 제안이 스키마에 맞는가 — id·screenId string + layout이 WireScreen2 스키마. */
+/** 한 제안이 스키마에 맞는가 — id·screenId string + doc이 WireDoc 스키마. */
 export function isValidWireSuggestion(v: unknown): v is WireSuggestion {
   if (typeof v !== "object" || v === null) return false;
   const s = v as Record<string, unknown>;
   if (typeof s["id"] !== "string" || typeof s["screenId"] !== "string") return false;
   if (s["rationale"] !== undefined && typeof s["rationale"] !== "string") return false;
-  return isValidWireScreen2(s["layout"]);
+  return isValidWireDoc(s["doc"]);
 }
 
 // ── 큐 read/write ────────────────────────────────────────────────────────────
@@ -162,12 +125,12 @@ function writeDocsWireframeSuggestions(docsDir: string, queue: WireSuggestionQue
 // ── 승인분 원천 read/write (RW 볼륨) ──────────────────────────────────────────
 
 /** 승인분 원천 JSON 읽기. 없거나 깨졌거나 스키마 위반이면 null(폴백=픽스처). throw 금지. */
-function readApprovedWireframe(docsDir: string): WireScreen2[] | null {
+function readApprovedWireframe(docsDir: string): WireDoc[] | null {
   const p = approvedWireframePath(docsDir);
   if (!existsSync(p)) return null;
   try {
     const parsed: unknown = JSON.parse(readFileSync(p, "utf-8"));
-    if (!Array.isArray(parsed) || !parsed.every(isValidWireScreen2)) return null;
+    if (!Array.isArray(parsed) || !parsed.every(isValidWireDoc)) return null;
     return parsed;
   } catch {
     return null;
@@ -175,16 +138,16 @@ function readApprovedWireframe(docsDir: string): WireScreen2[] | null {
 }
 
 /** 승인분 원천 JSON 쓰기(RW 볼륨). 루트 디렉토리 자동 생성. 실패는 호출부가 catch(writeFailed). */
-function writeApprovedWireframe(docsDir: string, screens: readonly WireScreen2[]): void {
+function writeApprovedWireframe(docsDir: string, docs: readonly WireDoc[]): void {
   const root = wireframeFeedbackRoot();
   if (!existsSync(root)) mkdirSync(root, { recursive: true });
-  writeFileSync(approvedWireframePath(docsDir), JSON.stringify(screens, null, 2), "utf-8");
+  writeFileSync(approvedWireframePath(docsDir), JSON.stringify(docs, null, 2), "utf-8");
 }
 
 /**
  * 현재 와이어 원천(승인분 있으면 그것, 없으면 픽스처). apply의 merge 기준(base)과 렌더 원천이 같다.
  */
-function currentWireframeBase(docsDir: string): WireScreen2[] {
+function currentWireframeBase(docsDir: string): WireDoc[] {
   return readApprovedWireframe(docsDir) ?? [...PLANNING_WIREFRAME_FIXTURE];
 }
 
@@ -196,8 +159,8 @@ function currentWireframeBase(docsDir: string): WireScreen2[] {
  * 라인패치의 노드개수/capability 지문 비교(featureDocs)와 동형의 JSON판 불변식.
  */
 export function wireframeInvariantHolds(
-  before: readonly WireScreen2[],
-  after: readonly WireScreen2[],
+  before: readonly WireDoc[],
+  after: readonly WireDoc[],
 ): boolean {
   const b = new Set(before.map((s) => s.id));
   const a = new Set(after.map((s) => s.id));
@@ -232,7 +195,7 @@ export function applyWireframeSuggestions(docsDir: string, req: PrdApplyRequest)
     const merged = new Map(base.map((s) => [s.id, s] as const));
     // 큐 배열 순서로 반영(같은 화면 여러 승인은 뒤가 최종 — 결정론).
     for (const s of willApply) {
-      merged.set(s.screenId, s.layout);
+      merged.set(s.screenId, s.doc);
       applied++;
       approvedIds.push(s.id);
     }
@@ -278,11 +241,11 @@ export function pruneWireframeQueue(docsDir: string, processedIds: ReadonlySet<s
 // ── 원천 교체: buildDocsPlanningWireframe2 ────────────────────────────────────
 
 /**
- * planning 와이어 레이아웃(WireScreen2[]) 제공 — 승인분 원천이 있으면 그걸, 없으면 픽스처 폴백.
- * 1단계 렌더러·라우트·web은 무변경(`readonly WireScreen2[]` 계약 유지, 동기). 승인분 JSON이
- * 없거나 깨졌으면 픽스처로 안전 폴백해 1단계 렌더가 안 깨지게 한다.
+ * planning 와이어(WireDoc[] — 화면별 HTML 문서) 제공 — 승인분 원천이 있으면 그걸, 없으면 픽스처 폴백.
+ * 렌더러·라우트·web은 화면별 HTML 문서를 sandbox iframe에 렌더한다. 승인분 JSON이 없거나 깨졌으면
+ * 픽스처로 안전 폴백해 렌더가 죽지 않게 한다(throw 금지).
  */
-export function buildDocsPlanningWireframe2(docsDir: string): readonly WireScreen2[] {
+export function buildDocsPlanningWireframe2(docsDir: string): readonly WireDoc[] {
   return readApprovedWireframe(docsDir) ?? PLANNING_WIREFRAME_FIXTURE;
 }
 

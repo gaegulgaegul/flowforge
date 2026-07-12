@@ -8,7 +8,7 @@
  * GET /api/docs/:project/planning-prd       planning/prd.md → manyfast 5섹션 PRD (기획 단계 산출물)
  * GET /api/docs/:project/planning-features        planning/features.md → 기능명세 3단 트리(FeatureTree)
  * GET /api/docs/:project/audit-capabilities       docs/audit.json items[] → capability 단위 집계 맵(없으면 빈 맵 200)
- * GET /api/docs/:project/planning-wireframe       planning/features.md 화면목록 요소 → Wireframe(화면=WireScreen, 요소=WireBox)
+ * GET /api/docs/:project/planning-wireframe       화면별 HTML 문서(WireDoc[]) — sandbox iframe 렌더 원천(승인분 ?? 픽스처)
  * GET /api/docs/:project/planning-user-flow        planning/user-flow/<flow>.md(Mermaid) → SpecGraph + layout + versions
  * PUT /api/docs/:project/planning-user-flow/layout 드래그 좌표 저장(docs 첫 쓰기 — overlay JSON만)
  * GET /api/docs/:project/planning-prd-suggestions       PRD 제안 큐 읽기(없으면 빈 큐 200)
@@ -215,9 +215,8 @@ docsRouter.get(
       res.status(404).json({ error: "docs_not_found" });
       return;
     }
-    // planning 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]). 레이아웃 데이터 원천은 이 change에선
-    // 고정 픽스처(D-6) — resolveDocsDir로 프로젝트 정합만 확인하고 픽스처를 반환한다. AI 생성물이
-    // 나중에 이 자리에 들어온다(후속 change).
+    // planning 와이어 = 화면별 HTML 문서(WireDoc[]) — sandbox iframe 렌더 원천. 승인분 있으면 그걸,
+    // 없으면 픽스처 폴백. flowforge 서버는 LLM 미호출(읽기 거울) — AI 생성 HTML을 소비·격리·렌더만 한다.
     const screens = buildDocsPlanningWireframe2(dir);
     res.json({ project, screens });
   }),

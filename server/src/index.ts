@@ -8,8 +8,11 @@ import { docsRouter } from "./routes/docs.js";
 import { projectsRouter } from "./routes/projects.js";
 import { corsMiddleware } from "./lib/corsOptions.js";
 import { cfAccessConfig } from "./lib/cfAccess.js";
+import { cspHeaders } from "./lib/cspHeaders.js";
 
 const app = express();
+// 앱 CSP 보안 헤더(flowforge-wireframe-iframe): frame-ancestors로 clickjacking 방어. 전역 부착(모든 응답).
+app.use(cspHeaders);
 // 와일드카드 CORS 제거(D-5): 화이트리스트 설정 시에만 미들웨어 부착. 미설정=헤더 없음(same-origin SPA 무영향).
 const cors = corsMiddleware();
 if (cors) {

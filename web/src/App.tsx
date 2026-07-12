@@ -14,7 +14,7 @@ import type {
   LayoutOverlay,
   IANode as IANodeT,
   Wireframe,
-  WireScreen2,
+  WireDoc,
   Prd,
   SpecTreeNode as SpecTreeNodeT,
   FeatureTreeNode as FeatureTreeNodeT,
@@ -158,9 +158,9 @@ export function App(): JSX.Element {
   const [planningIaNodes, setPlanningIaNodes] = useState<Node[]>([]);
   const [planningIaEdges, setPlanningIaEdges] = useState<Edge[]>([]);
 
-  // 기획 단계 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]) — 프로젝트 단위(skeleton에서 표시).
+  // 기획 단계 와이어 = 화면별 HTML 문서(WireDoc[]) — 프로젝트 단위(skeleton에서 표시).
   // change 와이어(wireframe)와 분리. 데스크탑/모바일 프레임 안 배치. WireframeDeviceFrame이 렌더(세로 목록 아님).
-  const [planningWireScreens, setPlanningWireScreens] = useState<WireScreen2[] | null>(null);
+  const [planningWireScreens, setPlanningWireScreens] = useState<WireDoc[] | null>(null);
   // 와이어 레이아웃 제안 큐(docs/planning/wireframe.suggestions.json) — 승인/반려 위저드(Parallel Group 3).
   // features 제안 큐와 대칭. 큐 비면 순수 읽기(디바이스 프레임 뷰만).
   const [wireSuggestions, setWireSuggestions] = useState<readonly WireSuggestion[]>([]);
