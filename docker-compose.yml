@@ -32,6 +32,12 @@ services:
       FLOWFORGE_CF_ACCESS_TEAM_DOMAIN: ${FLOWFORGE_CF_ACCESS_TEAM_DOMAIN:-}
       FLOWFORGE_WRITE_TOKEN: ${FLOWFORGE_WRITE_TOKEN:-}
       FLOWFORGE_CORS_ORIGIN: ${FLOWFORGE_CORS_ORIGIN:-}
+      # openspec-audit 큐(planning-audit-trigger). 컨테이너는 loopback으로 호스트 큐에 못 닿아
+      # 도커 브리지 게이트웨이(172.18.0.1:8810, OPENSPEC_BIND=0.0.0.0)로 POST한다. env override 가능.
+      OPENSPEC_QUEUE_URL: ${OPENSPEC_QUEUE_URL:-http://172.18.0.1:8810/api/tasks}
+      # 큐 서비스 토큰(Bearer). 큐 server.py의 OPENSPEC_CONSOLE_TOKEN과 동일값이어야 audit enqueue 통과.
+      # 실값은 호스트 .env(git-ignored)에서 주입 — 이 파일에 커밋하지 않는다(30-security).
+      OPENSPEC_CONSOLE_TOKEN: ${OPENSPEC_CONSOLE_TOKEN:-}
     volumes:
       # 시각화 대상 = wowa-app openspec(change 6개, 데모 풍부). spec.md=읽기, viz/graph-overlay.json=쓰기라 RW.
       # wowa .gitignore에 openspec/**/viz/ 추가해 시각화 산출물 git 오염 차단함.
