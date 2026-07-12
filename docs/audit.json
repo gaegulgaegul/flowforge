@@ -1,13 +1,13 @@
 {
   "spec": "/home/gaegul/flowforge/docs/spec.md",
   "scanRoot": "/home/gaegul/flowforge",
-  "finalJudgment": "조건부",
+  "finalJudgment": "FAIL",
   "counts": {
-    "PASS": 113,
-    "FAIL": 0,
-    "UNVERIFIABLE": 168
+    "PASS": 117,
+    "FAIL": 10,
+    "UNVERIFIABLE": 193
   },
-  "reason": "미검증(UNVERIFIABLE) 168건 — 100% 검증 아님",
+  "reason": "거짓 주장/미구현 10건",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -18,7 +18,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:130"
+      "evidence": "server/src/routes/graph.ts:117"
     },
     {
       "capability": "spec-tree-view",
@@ -117,7 +117,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:117"
+      "evidence": "server/src/routes/graph.ts:104"
     },
     {
       "capability": "prd-view",
@@ -227,7 +227,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/capabilityIndex.ts:65"
+      "evidence": "server/src/lib/capabilityIndex.ts:117"
     },
     {
       "capability": "capability-change-navigation",
@@ -238,7 +238,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/capabilityIndex.ts:23"
+      "evidence": "server/src/lib/capabilityIndex.ts:34"
     },
     {
       "capability": "capability-change-navigation",
@@ -334,10 +334,10 @@
       "line": 59,
       "kind": "assert:symbol",
       "claim": "assert:symbol CapabilityChangeList",
-      "verdict": "PASS",
-      "reason": "",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
       "method": "export 심볼 대조",
-      "evidence": "web/src/CapabilityChangeList.tsx:18"
+      "evidence": null
     },
     {
       "capability": "capability-change-navigation",
@@ -689,7 +689,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:63"
+      "evidence": "server/src/routes/docs.ts:85"
     },
     {
       "capability": "docs-ingest",
@@ -744,7 +744,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:70"
+      "evidence": "server/src/routes/docs.ts:92"
     },
     {
       "capability": "docs-ingest",
@@ -821,7 +821,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:83"
+      "evidence": "server/src/routes/docs.ts:105"
     },
     {
       "capability": "docs-ingest",
@@ -865,7 +865,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:96"
+      "evidence": "server/src/routes/docs.ts:118"
     },
     {
       "capability": "docs-ingest",
@@ -953,7 +953,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:109"
+      "evidence": "server/src/routes/docs.ts:131"
     },
     {
       "capability": "planning-prd-view",
@@ -975,7 +975,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-prd-view",
@@ -986,7 +986,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-prd-view",
@@ -997,7 +997,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=readonly)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:173"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:212"
     },
     {
       "capability": "planning-prd-view",
@@ -1053,7 +1053,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=readonly)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:173"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:212"
     },
     {
       "capability": "planning-only-recognition",
@@ -1064,7 +1064,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-only-recognition",
@@ -1075,7 +1075,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (4토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:112",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:132",
       "llmHint": "hasDocs가 user-flow.md / PRD.md(charter) 또는 planning/prd.md(기획) 중 하나라도 있으면 docs 프로젝트로 인정한다. planning/prd.md OR 추가는 인식 범위를 넓힐 뿐 charter 프로젝트 인식을 보존한다."
     },
     {
@@ -1098,7 +1098,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:127"
+      "evidence": "server/src/routes/docs.ts:149"
     },
     {
       "capability": "planning-features-view",
@@ -1120,7 +1120,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-features-view",
@@ -1131,7 +1131,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-features-view",
@@ -1142,7 +1142,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=readonly)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:173"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:212"
     },
     {
       "capability": "planning-features-view",
@@ -1153,7 +1153,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (2토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:131",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:152",
       "llmHint": "features.md를 헤더 레벨(##/###/####)로 3단 위계 파싱, 요구사항에 capability 키(`<!-- capability: -->`)·노드에 중요도/상태 속성을 채운 FeatureTree로 반환"
     },
     {
@@ -1221,7 +1221,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:215"
+      "evidence": "server/src/routes/docs.ts:312"
     },
     {
       "capability": "planning-userflow-view",
@@ -1232,7 +1232,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/parser/planningUserFlowBuilder.ts:184"
+      "evidence": "server/src/parser/planningUserFlowBuilder.ts:188"
     },
     {
       "capability": "planning-userflow-view",
@@ -1254,7 +1254,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-userflow-view",
@@ -1265,7 +1265,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-userflow-view",
@@ -1299,7 +1299,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:237"
+      "evidence": "server/src/routes/docs.ts:334"
     },
     {
       "capability": "planning-userflow-view",
@@ -1321,7 +1321,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-userflow-view",
@@ -1332,7 +1332,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-userflow-view",
@@ -1343,7 +1343,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:173",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:212",
       "llmHint": "드래그 좌표(LayoutOverlay)를 `<group>-vN.overlay.json`에만 기록하고 명세 .md는 변경하지 않음, 재조회 시 저장 좌표가 dagre 자동배치보다 우선 적용"
     },
     {
@@ -1377,7 +1377,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/capabilityIndex.ts:135"
+      "evidence": "server/src/lib/capabilityIndex.ts:187"
     },
     {
       "capability": "planning-capability-detail",
@@ -1388,7 +1388,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-capability-detail",
@@ -1399,7 +1399,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-capability-detail",
@@ -1410,7 +1410,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=readonly)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:173"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:212"
     },
     {
       "capability": "planning-capability-detail",
@@ -1421,7 +1421,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (5토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/lib/__tests__/capabilityIndex.test.ts:126",
+      "evidence": "server/src/lib/__tests__/capabilityIndex.test.ts:212",
       "llmHint": "features는 일치 capability 요구사항 가지만 필터, 유저플로우는 `> capability:` 마커 선언 stem만, changes는 byCapability 재사용 — 연결 0개여도 빈 구조로 200"
     },
     {
@@ -1444,7 +1444,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:287"
+      "evidence": "server/src/routes/docs.ts:384"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1488,7 +1488,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1499,7 +1499,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-prd-approval-apply",
@@ -1711,7 +1711,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:262"
+      "evidence": "server/src/routes/docs.ts:359"
     },
     {
       "capability": "planning-prd-approval-queue",
@@ -1733,7 +1733,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-prd-approval-queue",
@@ -1744,7 +1744,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-prd-approval-queue",
@@ -1778,7 +1778,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:145"
+      "evidence": "server/src/routes/docs.ts:174"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1866,7 +1866,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:269"
+      "evidence": "web/src/api.ts:220"
     },
     {
       "capability": "planning-feature-audit-badge",
@@ -1910,7 +1910,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:159"
+      "evidence": "server/src/routes/docs.ts:188"
     },
     {
       "capability": "planning-panel-screen-links",
@@ -1921,7 +1921,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:279"
+      "evidence": "web/src/api.ts:249"
     },
     {
       "capability": "planning-panel-screen-links",
@@ -1954,7 +1954,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-panel-screen-links",
@@ -2006,10 +2006,10 @@
       "line": 309,
       "kind": "assert:symbol",
       "claim": "assert:symbol buildPlanningIaTreeFromRegistry",
-      "verdict": "PASS",
-      "reason": "",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
       "method": "export 심볼 대조",
-      "evidence": "server/src/parser/planningIaBuilder.ts:32"
+      "evidence": null
     },
     {
       "capability": "planning-panel-screen-links",
@@ -2054,7 +2054,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:354"
+      "evidence": "server/src/routes/docs.ts:451"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2087,7 +2087,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2109,7 +2109,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:375"
+      "evidence": "server/src/routes/docs.ts:472"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2120,7 +2120,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:463"
+      "evidence": "web/src/api.ts:473"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2208,7 +2208,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/api.ts:448"
+      "evidence": "web/src/api.ts:458"
     },
     {
       "capability": "planning-userflow-approval-edit",
@@ -2420,7 +2420,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:327"
+      "evidence": "server/src/routes/docs.ts:424"
     },
     {
       "capability": "planning-features-approval-apply",
@@ -2453,7 +2453,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-features-approval-apply",
@@ -2654,7 +2654,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "cross-project-change-views",
@@ -2665,7 +2665,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "cross-project-change-views",
@@ -2732,7 +2732,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "api-write-auth",
@@ -2765,7 +2765,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/writeAuth.test.ts:110",
+      "evidence": "server/src/routes/__tests__/auditRun.test.ts:131",
       "llmHint": "게이트 판정=(CF Access JWT 풀검증 통과) OR (Bearer가 FLOWFORGE_WRITE_TOKEN 상수시간 일치). 두 env(AUD+TEAM_DOMAIN, WRITE_TOKEN) 모두 부재면 통과(개발 모드). GET 라우트는 게이트 밖(엣지 소관). node:crypto만 사용(신규 npm 의존성 0)"
     },
     {
@@ -2832,7 +2832,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:313"
+      "evidence": "server/src/routes/docs.ts:410"
     },
     {
       "capability": "planning-features-approval-queue",
@@ -2854,7 +2854,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-features-approval-queue",
@@ -2865,7 +2865,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=safe-4xx)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:148"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:169"
     },
     {
       "capability": "planning-features-approval-queue",
@@ -2876,7 +2876,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (5토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/lib/__tests__/wireDocs.test.ts:137",
+      "evidence": "server/src/lib/__tests__/wireDocs.test.ts:177",
       "llmHint": "features.suggestions.json을 JSON.parse 후 op=\"set-attrs\"·nodePath=string[]·priority/status 어휘(낮음|중간|높음 / 시작전|진행중|완료|중단) 검증으로 필터해 유효 제안만 반환, priority·status 둘 다 없는 무의미 제안은 제외, id 중복은 first-occurrence-wins dedup, 파일 없음·깨진 JSON은 빈 큐로 폴백"
     },
     {
@@ -2923,7 +2923,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:112",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:132",
       "llmHint": "PRD는 신규 디렉토리 `docs/planning/`에만 쓰고 기존 charter 상주문서(`docs/spec.md`·`docs/PRD.md`)를 수정·덮어쓰지 않는다"
     },
     {
@@ -2946,7 +2946,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:131",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:152",
       "llmHint": "openspec-plan은 PRD(`docs/planning/prd.md`)가 있는 상태에서만 features.md를 생성하고, PRD 없이 features 단독 생성을 하지 않는다(manyfast 순차 게이트). PRD의 개요·핵심가치를 입력 맥락으로 요구사항을 도출한다"
     },
     {
@@ -2970,7 +2970,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/parser/__tests__/featureTreeBuilder.test.ts:45",
+      "evidence": "server/src/lib/__tests__/capabilityIndex.test.ts:293",
       "llmHint": "각 노드(요구사항/기능/상세기능)에 중요도(낮음|중간|높음)·상태(시작전|진행중|완료|중단) 속성을 헤더 끝 또는 직후 줄에 표기한다"
     },
     {
@@ -2993,7 +2993,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:131",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:152",
       "llmHint": "openspec-plan은 기능명세(`docs/planning/features.md`)에 기능이 1개 이상 있는 상태에서만 유저플로우를 생성하고, 기능명세 없이 단독 생성을 하지 않는다(manyfast 순차 게이트). 새 목적(흐름)은 새 group, 수정은 같은 group의 새 버전(`-vN`)으로 폴더 누적한다"
     },
     {
@@ -3040,7 +3040,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/docs.ts:198"
+      "evidence": "server/src/routes/docs.ts:207"
     },
     {
       "capability": "planning-wireframe-device",
@@ -3051,7 +3051,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/wireDocs.ts:285"
+      "evidence": "server/src/lib/wireDocs.ts:250"
     },
     {
       "capability": "planning-wireframe-device",
@@ -3062,7 +3062,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=readonly)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:173"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:212"
     },
     {
       "capability": "planning-wireframe-device",
@@ -3073,7 +3073,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "불변식 보장 테스트 존재 (kind=no-traversal)",
-      "evidence": "server/src/routes/__tests__/docs.test.ts:155"
+      "evidence": "server/src/routes/__tests__/docs.test.ts:176"
     },
     {
       "capability": "planning-wireframe-device",
@@ -3082,9 +3082,9 @@
       "kind": "behavior",
       "claim": "behavior: WireScreen2[]{id, title, device(desktop|mobile), regions(topbar/sidebar/bottombar/body), body.layout(grid|stack|tree|form), 요소 kind/label/goto} 반환. 모바일 요소 goto는 모바일 화면을 가리켜 디바이스 흐름 유지(프레임이 데스크탑으로 튀지 않음)",
       "verdict": "UNVERIFIABLE",
-      "reason": "유사 테스트 있음 (7토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "reason": "유사 테스트 있음 (4토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/parser/__tests__/planningWireframeFixture.test.ts:19",
+      "evidence": "server/src/routes/__tests__/docsWireframeApproval.test.ts:91",
       "llmHint": "WireScreen2[]{id, title, device(desktop|mobile), regions(topbar/sidebar/bottombar/body), body.layout(grid|stack|tree|form), 요소 kind/label/goto} 반환. 모바일 요소 goto는 모바일 화면을 가리켜 디바이스 흐름 유지(프레임이 데스크탑으로 튀지 않음)"
     },
     {
@@ -3107,7 +3107,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "web/src/WireframeDeviceFrame.tsx:139"
+      "evidence": "web/src/WireframeDeviceFrame.tsx:153"
     },
     {
       "capability": "planning-wireframe-device",
@@ -3116,9 +3116,9 @@
       "kind": "behavior",
       "claim": "behavior: 데스크탑=브라우저 크롬+상단 메뉴+사이드+본문(grid/stack/tree/form), 모바일=폰 프레임+상단 타이틀+본문+하단 메뉴바. 회색조 로우피델리티, 요소 goto 클릭 이동, 디바이스 토글·화면 목록. 기존 WireframePanel(change 경로)과 병존(golden·change 와이어 무저촉)",
       "verdict": "UNVERIFIABLE",
-      "reason": "유사 테스트 있음 (5토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/parser/__tests__/planningWireframeFixture.test.ts:37",
+      "evidence": "web/src/__tests__/FlowDetailPanel.test.tsx:37",
       "llmHint": "데스크탑=브라우저 크롬+상단 메뉴+사이드+본문(grid/stack/tree/form), 모바일=폰 프레임+상단 타이틀+본문+하단 메뉴바. 회색조 로우피델리티, 요소 goto 클릭 이동, 디바이스 토글·화면 목록. 기존 WireframePanel(change 경로)과 병존(golden·change 와이어 무저촉)"
     },
     {
@@ -3127,6 +3127,438 @@
       "line": 481,
       "kind": "metric",
       "claim": "metric: 라이브 실픽셀 grounding — 목업(wireframe-mockup-deploy)과 시각 대조로 \"세로 목록 아님·화면 배치 맞음\" 확인",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록 무조건 렌더 (기획문서 유무 무관)",
+      "line": 488,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol dash-changes-section",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
+      "method": "export 심볼 대조",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록 무조건 렌더 (기획문서 유무 무관)",
+      "line": 489,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol planTabsAvail",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
+      "method": "export 심볼 대조",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록 무조건 렌더 (기획문서 유무 무관)",
+      "line": 490,
+      "kind": "freetext",
+      "claim": "change 목록 블록(`<section class=\"dash-changes-section\">` — h3 + capability별 `dash-cap` 버튼)은 skeleton 단계에서 게이트 없이 항상 렌더된다. `planTabsAvail`(기획문서 존재 배열)이 change 목록 노출을 막지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록 무조건 렌더 (기획문서 유무 무관)",
+      "line": 491,
+      "kind": "freetext",
+      "claim": "invariant: 기획문서 있는 프로젝트는 기획 탭 바(`planTabsAvail.length > 0`)와 change 목록이 형제로 병존 렌더된다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록 무조건 렌더 (기획문서 유무 무관)",
+      "line": 492,
+      "kind": "freetext",
+      "claim": "invariant: 기획문서 없는 프로젝트는 `planTabsAvail.length === 0`이라 기획 탭/섹션은 안 뜨고 change 목록만 렌더된다(게이트 제거 전과 픽셀 동일 — 회귀 없음).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록 무조건 렌더 (기획문서 유무 무관)",
+      "line": 493,
+      "kind": "freetext",
+      "claim": "invariant: 그래프 탭(dash-body--wide, overflow:hidden)에서도 change 목록 section이 `flex:0 0 auto`+`max-height:40vh`+`overflow-y:auto`로 그래프 캔버스(min-height:480px)에 덮이지 않고 독립 스크롤로 전 항목 도달된다. 그래프 section은 overflow:hidden으로 change 영역을 침범하지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록 무조건 렌더 (기획문서 유무 무관)",
+      "line": 494,
+      "kind": "metric",
+      "claim": "metric: gstack 라이브 실픽셀 — flowforge(기획문서 있음) PRD 탭·그래프 탭(기능명세/유저플로우) 모두 기획 탭+change 목록 병존 확인, agentic-harness(기획문서 없음) change 목록만 노출 무회귀 확인 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록에서 5종 뷰 진입",
+      "line": 497,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol openCapability",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
+      "method": "export 심볼 대조",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록에서 5종 뷰 진입",
+      "line": 498,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol openChangeViews",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
+      "method": "export 심볼 대조",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록에서 5종 뷰 진입",
+      "line": 499,
+      "kind": "freetext",
+      "claim": "change 목록의 capability 버튼 클릭 시 `openCapability`가 그 capability의 change 상세(capChanges)로 이동하고, change 클릭 시 `openChangeViews`가 5종 뷰(views) + PRD 탭 활성으로 진입한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록에서 5종 뷰 진입",
+      "line": 500,
+      "kind": "freetext",
+      "claim": "invariant: 진입 경로는 신규 데이터·라우트 없이 기존 openCapability→capChanges→openChangeViews→views 흐름을 재사용한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change 목록에서 5종 뷰 진입",
+      "line": 501,
+      "kind": "metric",
+      "claim": "metric: gstack 라이브 — capability 클릭→capChanges 이동, change 클릭→views+PRD 탭 활성(change 있는 capability는 wowa-app로 실증) PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change·capability 부재의 안전 표면화",
+      "line": 504,
+      "kind": "freetext",
+      "claim": "change나 capability가 없어도 빈 화면 대신 상태를 명시 표면화한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change·capability 부재의 안전 표면화",
+      "line": 505,
+      "kind": "freetext",
+      "claim": "invariant: capability 0개 프로젝트는 \"표시할 capability가 없습니다\" 안내를 change 목록 자리에 노출한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change·capability 부재의 안전 표면화",
+      "line": 506,
+      "kind": "freetext",
+      "claim": "invariant: change 0개 capability는 \"change 0개\"로 표기되고, 클릭 시 빈 상세로 진입하되 오류 없이 처리된다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-entry",
+      "feature": "change·capability 부재의 안전 표면화",
+      "line": 507,
+      "kind": "metric",
+      "claim": "metric: gstack 라이브 — capability 0개(agentic-harness) 안내 노출, change 0개 capability 표기·빈 상세 안전 처리 확인 PASS.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)",
+      "line": 514,
+      "kind": "assert:endpoint",
+      "claim": "assert:endpoint GET /api/docs/:project/planning-features",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "route 문자열 대조 (normalized)",
+      "evidence": "server/src/routes/docs.ts:149"
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)",
+      "line": 515,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol attachLinkedChanges",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/capabilityIndex.ts:218"
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)",
+      "line": 516,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol buildCapabilityIndex",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/capabilityIndex.ts:117"
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)",
+      "line": 517,
+      "kind": "freetext",
+      "claim": "요구사항 노드에 그 capability의 연관 change(byCapability 조회)를 linkedChanges로 부여한다. 연관 change 0개면 필드 미부착(빈 배열이 아니라 undefined — 비파괴 옵셔널).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)",
+      "line": 518,
+      "kind": "freetext",
+      "claim": "기능·빈 capability 노드·가상 루트엔 미부착한다(요구사항+capability 있고 연관 change>0일 때만).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)",
+      "line": 519,
+      "kind": "invariant",
+      "claim": "invariant:readonly 표시·진입만 — 노드에서 change를 편집·추가·삭제하지 않는다(쓰기 라우트 없음).",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=readonly)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:212"
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)",
+      "line": 520,
+      "kind": "freetext",
+      "claim": "invariant: null 트리·capability 없음·changesRoot 부재·readdirSync 실패는 크래시 없이 빈 처리한다(early return·try/catch).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)",
+      "line": 521,
+      "kind": "behavior",
+      "claim": "behavior: capability→change 매핑을 노드 트리에 파생 부여한다(요구사항 부여·하위 상속·화면 역경유 합집합·연관 0개 빈 처리).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "web/src/__tests__/FlowDetailPanel.test.tsx:37",
+      "llmHint": "capability→change 매핑을 노드 트리에 파생 부여한다(요구사항 부여·하위 상속·화면 역경유 합집합·연관 0개 빈 처리)."
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "요구사항 노드 연관 change 파생 API (`GET /api/docs/:project/planning-features`)",
+      "line": 522,
+      "kind": "metric",
+      "claim": "metric: server Jest 파생 테스트 4건 PASS(capabilityIndex.test.ts) + 라이브 실픽셀(요구사항 노드 change 배지·미표시 대비·콘솔 0).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "하위 노드 상속 + 화면 역경유 파생 (web adapter)",
+      "line": 525,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol toIAFlow",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
+      "method": "export 심볼 대조",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "하위 노드 상속 + 화면 역경유 파생 (web adapter)",
+      "line": 526,
+      "kind": "freetext",
+      "claim": "featureTreeAdapter가 각 요구사항의 linkedChanges를 그 서브트리(자신·기능·상세기능) 전체에 상속한다(linkedChangesById 맵, 조건부 부착).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "하위 노드 상속 + 화면 역경유 파생 (web adapter)",
+      "line": 527,
+      "kind": "freetext",
+      "claim": "iaAdapter가 화면 id→연결 상세기능→상위 요구사항 linkedChanges를 역경유해 화면 노드에 합집합(중복 제거)으로 부착한다(toIAFlow의 changeMapping 옵션, 화면 노드에만).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "하위 노드 상속 + 화면 역경유 파생 (web adapter)",
+      "line": 528,
+      "kind": "behavior",
+      "claim": "behavior: 상세기능은 상위 capability change와 연결 화면 change의 합집합을 표시한다(중복 제거).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (2토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "server/src/lib/__tests__/wireDocs.test.ts:218",
+      "llmHint": "상세기능은 상위 capability change와 연결 화면 change의 합집합을 표시한다(중복 제거)."
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "하위 노드 상속 + 화면 역경유 파생 (web adapter)",
+      "line": 529,
+      "kind": "metric",
+      "claim": "metric: 라이브 실픽셀 grounding — 서브트리 상속 4노드 배지(DOM .feature-tree-change=4, 클리핑 0) + IA 화면 노드 배지(기능명세 화면·기획 뷰) + 미연관 노드 미표시.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "노드 change 배지 + 상세 패널 진입 (web 렌더)",
+      "line": 532,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol FeatureNode",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
+      "method": "export 심볼 대조",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "노드 change 배지 + 상세 패널 진입 (web 렌더)",
+      "line": 533,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol IANode",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
+      "method": "export 심볼 대조",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "노드 change 배지 + 상세 패널 진입 (web 렌더)",
+      "line": 534,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol FeatureDetailPanel",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/FeatureDetailPanel.tsx:59"
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "노드 change 배지 + 상세 패널 진입 (web 렌더)",
+      "line": 535,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol IADetailPanel",
+      "verdict": "FAIL",
+      "reason": "export 심볼 없음 (거짓 주장/미구현)",
+      "method": "export 심볼 대조",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "노드 change 배지 + 상세 패널 진입 (web 렌더)",
+      "line": 536,
+      "kind": "freetext",
+      "claim": "FeatureNode·IANode는 linkedChanges.length>0인 노드에만 \"change N\" 배지(span)를 렌더한다(클릭 액션 없음, 표시 신호만). 연관 0개면 미표시.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "노드 change 배지 + 상세 패널 진입 (web 렌더)",
+      "line": 537,
+      "kind": "freetext",
+      "claim": "FeatureDetailPanel·IADetailPanel의 \"연관 change\" 섹션은 각 change를 button으로 렌더하고, 클릭 시 onOpenChange로 그 change의 5종 뷰(PRD 탭)에 진입한다(openChangeViews 재사용, 딥링크 URL 기록).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "노드 change 배지 + 상세 패널 진입 (web 렌더)",
+      "line": 538,
+      "kind": "invariant",
+      "claim": "invariant:readonly 배지·섹션은 표시·진입만 — 편집·추가·삭제 UI 없음.",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "불변식 보장 테스트 존재 (kind=readonly)",
+      "evidence": "server/src/routes/__tests__/docs.test.ts:212"
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "노드 change 배지 + 상세 패널 진입 (web 렌더)",
+      "line": 539,
+      "kind": "behavior",
+      "claim": "behavior: 전역 change 목록(dash-changes-section)은 렌더하지 않는다(연관 매핑으로 대체).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "유사 테스트 있음 (2토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
+      "evidence": "web/src/__tests__/FlowDetailPanel.test.tsx:37",
+      "llmHint": "전역 change 목록(dash-changes-section)은 렌더하지 않는다(연관 매핑으로 대체)."
+    },
+    {
+      "capability": "flowforge-change-node-mapping",
+      "feature": "노드 change 배지 + 상세 패널 진입 (web 렌더)",
+      "line": 540,
+      "kind": "metric",
+      "claim": "metric: 라이브 실픽셀 grounding — 배지 클릭 후 상세 패널→5종 뷰 PRD 탭 진입+딥링크 URL(?project=&change=&tab=prd)+패널 닫힘, 전역 목록 DOM 부재, 콘솔 에러 0.",
       "verdict": "UNVERIFIABLE",
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
@@ -3146,48 +3578,68 @@
     },
     {
       "type": "endpoint",
-      "what": "GET /api/changes/:id(*)/ia",
-      "source": "server/src/routes/graph.ts:91"
-    },
-    {
-      "type": "endpoint",
       "what": "PUT /api/changes/:id(*)/layout",
-      "source": "server/src/routes/graph.ts:143"
+      "source": "server/src/routes/graph.ts:130"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/wireframe",
-      "source": "server/src/routes/graph.ts:104"
+      "source": "server/src/routes/graph.ts:91"
     },
     {
       "type": "endpoint",
-      "what": "GET /api/docs/:project(*)/planning-ia",
-      "source": "server/src/routes/docs.ts:178"
+      "what": "POST /api/docs/:project(*)/audit-run",
+      "source": "server/src/routes/docs.ts:675"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/docs/:project(*)/planning-wireframe-feedback",
+      "source": "server/src/routes/docs.ts:602"
     },
     {
       "type": "endpoint",
       "what": "POST /api/docs/:project(*)/planning-wireframe-feedback",
-      "source": "server/src/routes/docs.ts:469"
+      "source": "server/src/routes/docs.ts:566"
+    },
+    {
+      "type": "endpoint",
+      "what": "PATCH /api/docs/:project(*)/planning-wireframe-feedback/:id",
+      "source": "server/src/routes/docs.ts:639"
     },
     {
       "type": "endpoint",
       "what": "GET /api/docs/:project(*)/planning-wireframe-suggestions",
-      "source": "server/src/routes/docs.ts:408"
+      "source": "server/src/routes/docs.ts:505"
     },
     {
       "type": "endpoint",
       "what": "POST /api/docs/:project(*)/planning-wireframe-suggestions/apply",
-      "source": "server/src/routes/docs.ts:422"
+      "source": "server/src/routes/docs.ts:519"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/docs/:project(*)/planning-wireframe/:screenId/doc",
+      "source": "server/src/routes/docs.ts:240"
+    },
+    {
+      "type": "endpoint",
+      "what": "POST /api/docs/:project(*)/planning-wireframe/preview",
+      "source": "server/src/routes/docs.ts:264"
+    },
+    {
+      "type": "endpoint",
+      "what": "GET /api/docs/:project(*)/planning-wireframe/preview/:token/doc",
+      "source": "server/src/routes/docs.ts:294"
     },
     {
       "type": "endpoint",
       "what": "GET /api/health",
-      "source": "server/src/index.ts:30"
+      "source": "server/src/index.ts:33"
     },
     {
       "type": "symbol",
       "what": "App",
-      "source": "web/src/App.tsx:97"
+      "source": "web/src/App.tsx:98"
     },
     {
       "type": "symbol",
@@ -3206,28 +3658,13 @@
     },
     {
       "type": "symbol",
-      "what": "FeatureDetailPanel",
-      "source": "web/src/FeatureDetailPanel.tsx:57"
-    },
-    {
-      "type": "symbol",
-      "what": "FeatureNode",
-      "source": "web/src/FeatureNode.tsx:44"
+      "what": "FeatureListView",
+      "source": "web/src/FeatureListView.tsx:119"
     },
     {
       "type": "symbol",
       "what": "FlowDetailPanel",
-      "source": "web/src/FlowDetailPanel.tsx:67"
-    },
-    {
-      "type": "symbol",
-      "what": "IADetailPanel",
-      "source": "web/src/IADetailPanel.tsx:36"
-    },
-    {
-      "type": "symbol",
-      "what": "IANode",
-      "source": "web/src/IANode.tsx:13"
+      "source": "web/src/FlowDetailPanel.tsx:88"
     },
     {
       "type": "symbol",
@@ -3262,12 +3699,22 @@
     {
       "type": "symbol",
       "what": "WireframePinFeedback",
-      "source": "web/src/WireframePinFeedback.tsx:253"
+      "source": "web/src/WireframePinFeedback.tsx:296"
     },
     {
       "type": "symbol",
       "what": "__resetJwksCacheForTests",
       "source": "server/src/lib/cfAccess.ts:74"
+    },
+    {
+      "type": "symbol",
+      "what": "_resetAuditDebounce",
+      "source": "server/src/lib/auditTrigger.ts:47"
+    },
+    {
+      "type": "symbol",
+      "what": "_resetWirePreviewStore",
+      "source": "server/src/lib/wirePreview.ts:102"
     },
     {
       "type": "symbol",
@@ -3277,42 +3724,42 @@
     {
       "type": "symbol",
       "what": "appendWireframeFeedback",
-      "source": "server/src/lib/wireDocs.ts:317"
+      "source": "server/src/lib/wireDocs.ts:326"
     },
     {
       "type": "symbol",
       "what": "applyDocsFeatureSuggestions",
-      "source": "web/src/api.ts:391"
+      "source": "web/src/api.ts:401"
     },
     {
       "type": "symbol",
       "what": "applyDocsPrdSuggestions",
-      "source": "web/src/api.ts:234"
+      "source": "web/src/api.ts:185"
     },
     {
       "type": "symbol",
       "what": "applyDocsWireframeSuggestions",
-      "source": "web/src/api.ts:326"
+      "source": "web/src/api.ts:303"
     },
     {
       "type": "symbol",
       "what": "applyInChunks",
-      "source": "web/src/api.ts:204"
+      "source": "web/src/api.ts:155"
     },
     {
       "type": "symbol",
       "what": "applyWireframeSuggestions",
-      "source": "server/src/lib/wireDocs.ts:218"
+      "source": "server/src/lib/wireDocs.ts:183"
     },
     {
       "type": "symbol",
       "what": "approvedWireframePath",
-      "source": "server/src/lib/wireDocs.ts:70"
+      "source": "server/src/lib/wireDocs.ts:58"
     },
     {
       "type": "symbol",
       "what": "autoLayout",
-      "source": "web/src/graphAdapter.ts:46"
+      "source": "web/src/graphAdapter.ts:51"
     },
     {
       "type": "symbol",
@@ -3323,16 +3770,6 @@
       "type": "symbol",
       "what": "buildGraph",
       "source": "server/src/parser/graphBuilder.ts:32"
-    },
-    {
-      "type": "symbol",
-      "what": "buildIATree",
-      "source": "server/src/parser/iaBuilder.ts:14"
-    },
-    {
-      "type": "symbol",
-      "what": "buildPlanningIaTree",
-      "source": "server/src/parser/planningIaBuilder.ts:25"
     },
     {
       "type": "symbol",
@@ -3351,6 +3788,11 @@
     },
     {
       "type": "symbol",
+      "what": "buildScreenToDetailLabels",
+      "source": "web/src/screenCrosslink.ts:18"
+    },
+    {
+      "type": "symbol",
       "what": "buildSpecTree",
       "source": "server/src/parser/specTreeBuilder.ts:15"
     },
@@ -3358,6 +3800,11 @@
       "type": "symbol",
       "what": "buildUserFlowFromLines",
       "source": "server/src/parser/planningUserFlowBuilder.ts:164"
+    },
+    {
+      "type": "symbol",
+      "what": "buildWireById",
+      "source": "web/src/screenCrosslink.ts:48"
     },
     {
       "type": "symbol",
@@ -3371,8 +3818,23 @@
     },
     {
       "type": "symbol",
+      "what": "createWirePreview",
+      "source": "web/src/api.ts:273"
+    },
+    {
+      "type": "symbol",
+      "what": "cspHeaders",
+      "source": "server/src/lib/cspHeaders.ts:16"
+    },
+    {
+      "type": "symbol",
       "what": "danglingCount",
-      "source": "web/src/graphAdapter.ts:154"
+      "source": "web/src/graphAdapter.ts:162"
+    },
+    {
+      "type": "symbol",
+      "what": "detailLabelsForScreen",
+      "source": "web/src/screenCrosslink.ts:35"
     },
     {
       "type": "symbol",
@@ -3382,112 +3844,97 @@
     {
       "type": "symbol",
       "what": "feedbackSidecarPath",
-      "source": "server/src/lib/wireDocs.ts:75"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchCapabilities",
-      "source": "web/src/api.ts:90"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchCapabilityDetail",
-      "source": "web/src/api.ts:110"
+      "source": "server/src/lib/wireDocs.ts:63"
     },
     {
       "type": "symbol",
       "what": "fetchChanges",
-      "source": "web/src/api.ts:51"
+      "source": "web/src/api.ts:47"
     },
     {
       "type": "symbol",
       "what": "fetchDocsFeatureSuggestions",
-      "source": "web/src/api.ts:379"
+      "source": "web/src/api.ts:389"
     },
     {
       "type": "symbol",
       "what": "fetchDocsGraph",
-      "source": "web/src/api.ts:162"
+      "source": "web/src/api.ts:113"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningFeatures",
-      "source": "web/src/api.ts:260"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchDocsPlanningIa",
-      "source": "web/src/api.ts:289"
+      "source": "web/src/api.ts:211"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningPrd",
-      "source": "web/src/api.ts:181"
+      "source": "web/src/api.ts:132"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningUserFlow",
-      "source": "web/src/api.ts:434"
+      "source": "web/src/api.ts:444"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPlanningWireframe",
-      "source": "web/src/api.ts:302"
+      "source": "web/src/api.ts:259"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrd",
-      "source": "web/src/api.ts:174"
+      "source": "web/src/api.ts:125"
     },
     {
       "type": "symbol",
       "what": "fetchDocsPrdSuggestions",
-      "source": "web/src/api.ts:188"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchDocsProjects",
-      "source": "web/src/api.ts:155"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchDocsWireframe",
-      "source": "web/src/api.ts:168"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchDocsWireframeSuggestions",
-      "source": "web/src/api.ts:314"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchGraph",
-      "source": "web/src/api.ts:121"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchIA",
-      "source": "web/src/api.ts:127"
-    },
-    {
-      "type": "symbol",
-      "what": "fetchPrd",
       "source": "web/src/api.ts:139"
     },
     {
       "type": "symbol",
+      "what": "fetchDocsProjects",
+      "source": "web/src/api.ts:106"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsWireframe",
+      "source": "web/src/api.ts:119"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchDocsWireframeSuggestions",
+      "source": "web/src/api.ts:291"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchGraph",
+      "source": "web/src/api.ts:78"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchPrd",
+      "source": "web/src/api.ts:90"
+    },
+    {
+      "type": "symbol",
       "what": "fetchProjects",
-      "source": "web/src/api.ts:82"
+      "source": "web/src/api.ts:71"
     },
     {
       "type": "symbol",
       "what": "fetchSpecTree",
-      "source": "web/src/api.ts:145"
+      "source": "web/src/api.ts:96"
     },
     {
       "type": "symbol",
       "what": "fetchWireframe",
-      "source": "web/src/api.ts:133"
+      "source": "web/src/api.ts:84"
+    },
+    {
+      "type": "symbol",
+      "what": "fetchWireframeFeedback",
+      "source": "web/src/api.ts:356"
     },
     {
       "type": "symbol",
@@ -3498,6 +3945,11 @@
       "type": "symbol",
       "what": "flowTarget",
       "source": "server/src/parser/flowBinder.ts:120"
+    },
+    {
+      "type": "symbol",
+      "what": "getWirePreview",
+      "source": "server/src/lib/wirePreview.ts:90"
     },
     {
       "type": "symbol",
@@ -3521,8 +3973,13 @@
     },
     {
       "type": "symbol",
+      "what": "isValidWireDoc",
+      "source": "server/src/lib/wireDocs.ts:75"
+    },
+    {
+      "type": "symbol",
       "what": "isValidWireSuggestion",
-      "source": "server/src/lib/wireDocs.ts:120"
+      "source": "server/src/lib/wireDocs.ts:85"
     },
     {
       "type": "symbol",
@@ -3533,6 +3990,16 @@
       "type": "symbol",
       "what": "parseCharterPrd",
       "source": "server/src/parser/charterPrdParser.ts:47"
+    },
+    {
+      "type": "symbol",
+      "what": "parseDeepLink",
+      "source": "web/src/deeplink.ts:30"
+    },
+    {
+      "type": "symbol",
+      "what": "parseFeatureCapabilities",
+      "source": "server/src/lib/capabilityIndex.ts:51"
     },
     {
       "type": "symbol",
@@ -3547,7 +4014,7 @@
     {
       "type": "symbol",
       "what": "postWireframeFeedback",
-      "source": "web/src/api.ts:357"
+      "source": "web/src/api.ts:334"
     },
     {
       "type": "symbol",
@@ -3572,7 +4039,12 @@
     {
       "type": "symbol",
       "what": "pruneWireframeQueue",
-      "source": "server/src/lib/wireDocs.ts:271"
+      "source": "server/src/lib/wireDocs.ts:236"
+    },
+    {
+      "type": "symbol",
+      "what": "putWirePreview",
+      "source": "server/src/lib/wirePreview.ts:71"
     },
     {
       "type": "symbol",
@@ -3592,12 +4064,22 @@
     {
       "type": "symbol",
       "what": "readDocsWireframeSuggestions",
-      "source": "server/src/lib/wireDocs.ts:134"
+      "source": "server/src/lib/wireDocs.ts:99"
     },
     {
       "type": "symbol",
       "what": "readOverlay",
       "source": "server/src/lib/changes.ts:77"
+    },
+    {
+      "type": "symbol",
+      "what": "readWireframeFeedback",
+      "source": "server/src/lib/wireDocs.ts:315"
+    },
+    {
+      "type": "symbol",
+      "what": "runAudit",
+      "source": "web/src/api.ts:233"
     },
     {
       "type": "symbol",
@@ -3607,12 +4089,12 @@
     {
       "type": "symbol",
       "what": "saveDocsPlanningUserFlowLayout",
-      "source": "web/src/api.ts:493"
+      "source": "web/src/api.ts:503"
     },
     {
       "type": "symbol",
       "what": "saveLayout",
-      "source": "web/src/api.ts:416"
+      "source": "web/src/api.ts:426"
     },
     {
       "type": "symbol",
@@ -3623,6 +4105,11 @@
       "type": "symbol",
       "what": "sectionBody",
       "source": "server/src/parser/markdown.ts:50"
+    },
+    {
+      "type": "symbol",
+      "what": "serializeDeepLink",
+      "source": "web/src/deeplink.ts:47"
     },
     {
       "type": "symbol",
@@ -3646,23 +4133,18 @@
     },
     {
       "type": "symbol",
-      "what": "toFeatureTreeFlow",
-      "source": "web/src/featureTreeAdapter.ts:105"
+      "what": "toFeatureTreeList",
+      "source": "web/src/featureTreeAdapter.ts:110"
     },
     {
       "type": "symbol",
       "what": "toFlowEdges",
-      "source": "web/src/graphAdapter.ts:136"
+      "source": "web/src/graphAdapter.ts:144"
     },
     {
       "type": "symbol",
       "what": "toFlowNodes",
-      "source": "web/src/graphAdapter.ts:75"
-    },
-    {
-      "type": "symbol",
-      "what": "toIAFlow",
-      "source": "web/src/iaAdapter.ts:62"
+      "source": "web/src/graphAdapter.ts:80"
     },
     {
       "type": "symbol",
@@ -3676,13 +4158,33 @@
     },
     {
       "type": "symbol",
+      "what": "triggerAudit",
+      "source": "server/src/lib/auditTrigger.ts:56"
+    },
+    {
+      "type": "symbol",
+      "what": "updateWireframeFeedback",
+      "source": "web/src/api.ts:367"
+    },
+    {
+      "type": "symbol",
+      "what": "updateWireframeFeedback",
+      "source": "server/src/lib/wireDocs.ts:366"
+    },
+    {
+      "type": "symbol",
+      "what": "wireForScreen",
+      "source": "web/src/screenCrosslink.ts:61"
+    },
+    {
+      "type": "symbol",
       "what": "wireframeFeedbackRoot",
-      "source": "server/src/lib/wireDocs.ts:60"
+      "source": "server/src/lib/wireDocs.ts:48"
     },
     {
       "type": "symbol",
       "what": "wireframeInvariantHolds",
-      "source": "server/src/lib/wireDocs.ts:198"
+      "source": "server/src/lib/wireDocs.ts:163"
     },
     {
       "type": "symbol",
@@ -3694,10 +4196,10 @@
     {
       "what": "GET (regex route)",
       "reason": "정규식 라우트 — 정적 path 대조 불가",
-      "source": "server/src/index.ts:43"
+      "source": "server/src/index.ts:46"
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-20260710-0801.html",
-  "runId": "run-20260710-0801"
+  "historyHtml": "audit-20260712-1224.html",
+  "runId": "run-20260712-1224"
 }
