@@ -31,6 +31,8 @@ const KIND_META: Record<NodeKind, { tag: string; accent: string }> = {
 export interface FlowDetailPanelProps {
   /** 열려있는 노드 data. null이면 닫힘(패널은 항상 마운트하되 open 클래스로 슬라이드). */
   node: SpecNodeData | null;
+  /** 현재 프로젝트 키 — crosslink 와이어 프리뷰의 iframe src(서버 문서 라우트) 구성에 필요. */
+  project: string;
   onClose: () => void;
   /** 연결 노드 클릭 시 그 노드로 전환(있으면). id로 다른 노드 data를 찾아 연다. */
   onSelectById?: (id: string) => void;
@@ -85,6 +87,7 @@ function FlowRow({
 
 export function FlowDetailPanel({
   node,
+  project,
   onClose,
   onSelectById,
   crosslink,
@@ -194,7 +197,8 @@ export function FlowDetailPanel({
                     {crosslink?.wire ? (
                       <>
                         <div className="flow-detail-wire-preview">
-                          <WireframeDeviceFrame screens={[crosslink.wire]} hideControls />
+                          {/* crosslink.wire는 원천(planning-wireframe)에서 온 승인분 → doc.id로 direct 로드. */}
+                          <WireframeDeviceFrame screens={[crosslink.wire]} project={project} hideControls />
                         </div>
                         {screenId && onOpenWire && (
                           <button

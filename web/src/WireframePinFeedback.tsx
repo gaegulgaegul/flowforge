@@ -442,6 +442,7 @@ export function WireframePinFeedback({
       <div className="wf-pin-stage">
         <WireframeDeviceFrame
           screens={screens}
+          project={project}
           {...(focusTarget ? { focusTarget } : {})}
           renderOverlay={(ctx) => (
             <PinLayer

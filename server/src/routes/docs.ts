@@ -28,7 +28,7 @@
  * 예외로 유저플로우 좌표 overlay와 PRD 승인 반영(승인=사용자 의도)만 쓴다.
  */
 import { dirname, join } from "node:path";
-import { Router } from "express";
+import express, { Router } from "express";
 import type { Response } from "express";
 import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from "../parser/docsAdapter.js";
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
@@ -68,7 +68,17 @@ import { resolveProjectDir } from "../lib/projects.js";
 import { isLayoutOverlay } from "../lib/changes.js";
 import { safe } from "../lib/safe-error.js";
 import { requireWriteAuth } from "../lib/requireWriteAuth.js";
-import { APPLY_BATCH_CAP } from "@flowforge/shared";
+import { putWirePreview, getWirePreview, WIRE_PREVIEW_MAX_HTML_BYTES } from "../lib/wirePreview.js";
+import { APPLY_BATCH_CAP, WIRE_DOC_CSP } from "@flowforge/shared";
+
+/**
+ * preview POST 전용 body 파서(전역 express.json 100KB 기본보다 큰 한도).
+ * 와이어 문서는 인라인 자산(data URI 이미지 등)으로 자족적이라 100KB를 쉽게 넘을 수 있다 → 전역 한도를
+ * 올리지 않고(다른 write 라우트 노출 최소화) 이 라우트만 넉넉히 받는다. 최종 크기 게이트는
+ * putWirePreview(WIRE_PREVIEW_MAX_HTML_BYTES)가 담당하므로, 파서 한도는 그보다 살짝 크게 잡아
+ * 상한 초과를 라우트의 413(putWirePreview null)로 일관되게 처리한다(파서 조기 413 회피).
+ */
+const wirePreviewBodyParser = express.json({ limit: WIRE_PREVIEW_MAX_HTML_BYTES + 64 * 1024 });
 
 export const docsRouter = Router();
 
@@ -207,6 +217,95 @@ docsRouter.get(
     // 없으면 픽스처 폴백. flowforge 서버는 LLM 미호출(읽기 거울) — AI 생성 HTML을 소비·격리·렌더만 한다.
     const screens = buildDocsPlanningWireframe2(dir);
     res.json({ project, screens });
+  }),
+);
+
+// ── 와이어 문서 서빙(CSP meta→HTTP 헤더 전환) ─────────────────────────────────
+// iframe이 srcdoc이 아니라 src(서버 라우트)로 문서를 로드한다. 문서 HTML은 무변형으로 서빙하되,
+// CSP는 응답 헤더(WIRE_DOC_CSP)로 강제한다 — 브라우저가 문서 내용과 무관하게 적용하므로 적대적
+// HTML로는 절대 우회 불가(meta 주입 정규식 마스킹 우회를 원천 제거).
+
+/** 문서 HTML을 text/html + WIRE_DOC_CSP 헤더로 서빙(승인분·미리보기 공통 헬퍼 — 무변형·격리 동일). */
+function serveWireDoc(res: Response, html: string): void {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Content-Security-Policy", WIRE_DOC_CSP);
+  res.send(html);
+}
+
+/**
+ * GET .../planning-wireframe/:screenId/doc — 승인분(원천) 화면 HTML 문서를 그대로 서빙(iframe src 대상).
+ * buildDocsPlanningWireframe2로 WireDoc[]를 만들고 screenId 매칭 문서를 무변형 서빙한다. 미매칭=404.
+ * read라 인증 게이트 없음(다른 GET docs 라우트와 동형). CSP는 응답 헤더로 강제.
+ */
+docsRouter.get(
+  "/api/docs/:project(*)/planning-wireframe/:screenId/doc",
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    const dir = resolveDocsDir(project);
+    if (!dir) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    const screenId = String(req.params.screenId ?? "");
+    const doc = buildDocsPlanningWireframe2(dir).find((d) => d.id === screenId);
+    if (!doc) {
+      res.status(404).json({ error: "wire_doc_not_found" });
+      return;
+    }
+    serveWireDoc(res, doc.html);
+  }),
+);
+
+/**
+ * POST .../planning-wireframe/preview — 미승인 제안/crosslink의 임시 HTML을 단기 토큰으로 저장.
+ * body={html}. putWirePreview가 크기 상한 초과 시 null → 413(payload_too_large). write가 아니라 read
+ * 규약과 동형(추측 불가 토큰 발급, TTL·상한으로 DoS 방어)이라 requireWriteAuth 불필요.
+ */
+docsRouter.post(
+  "/api/docs/:project(*)/planning-wireframe/preview",
+  wirePreviewBodyParser,
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    // project 유효성만 확인(문서는 원천이 아니라 body로 옴 — dir는 안 씀). 미존재 project=404.
+    if (!resolveDocsDir(project)) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    const body: unknown = req.body;
+    const html = (body as { html?: unknown } | null)?.html;
+    if (typeof html !== "string") {
+      res.status(400).json({ error: "invalid_request" });
+      return;
+    }
+    const token = putWirePreview(html);
+    if (token === null) {
+      // 크기 상한 초과(WIRE_PREVIEW_MAX_HTML_BYTES) → 토큰 미발급.
+      res.status(413).json({ error: "payload_too_large" });
+      return;
+    }
+    res.json({ token });
+  }),
+);
+
+/**
+ * GET .../planning-wireframe/preview/:token/doc — 저장된 미리보기 HTML을 승인분과 동일하게 서빙.
+ * getWirePreview가 미존재/만료 시 null → 404. text/html + WIRE_DOC_CSP 헤더(격리 동일).
+ */
+docsRouter.get(
+  "/api/docs/:project(*)/planning-wireframe/preview/:token/doc",
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    if (!resolveDocsDir(project)) {
+      res.status(404).json({ error: "docs_not_found" });
+      return;
+    }
+    const token = String(req.params.token ?? "");
+    const html = getWirePreview(token);
+    if (html === null) {
+      res.status(404).json({ error: "wire_preview_not_found" });
+      return;
+    }
+    serveWireDoc(res, html);
   }),
 );
 

@@ -265,6 +265,26 @@ export async function fetchDocsPlanningWireframe(
 }
 
 /**
+ * 미승인 제안(위저드)의 임시 HTML을 서버에 단기 저장하고 미리보기 토큰을 받는다(CSP meta→헤더 전환).
+ * 원천에 없는 임시 문서를 iframe `src`로 로드하기 위한 왕복 — 서버는 추측 불가 토큰(TTL·상한)으로만
+ * 서빙하고 문서 CSP는 응답 헤더로 강제한다(문서 무변형). write가 아니라 read 규약과 동형(인증 게이트 없음).
+ * 413=크기 상한 초과(토큰 미발급).
+ */
+export async function createWirePreview(project: string, html: string): Promise<string> {
+  const res = await fetch(`/api/docs/${project}/planning-wireframe/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ html }),
+  });
+  if (!res.ok) {
+    if (res.status === 413) throw new Error("미리보기 문서가 너무 큽니다.");
+    throw new Error(`wire-preview ${res.status}`);
+  }
+  const body = (await res.json()) as { token: string };
+  return body.token;
+}
+
+/**
  * 와이어 레이아웃 제안 큐 읽기(docs/planning/wireframe.suggestions.json).
  * 큐 없으면 빈 큐(version:1, suggestions:[]). features 제안 큐의 와이어판(화면별 HTML 문서 교체 제안).
  */

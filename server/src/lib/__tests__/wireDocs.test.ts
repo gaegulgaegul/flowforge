@@ -17,9 +17,8 @@ import * as fs from "node:fs";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createRequire } from "node:module";
 import type { WireDoc, WireSuggestion } from "@flowforge/shared";
-import { WIRE_IFRAME_SANDBOX, WIRE_DOC_CSP, WIRE_APP_CSP, injectWireDocCsp } from "@flowforge/shared";
+import { WIRE_IFRAME_SANDBOX, WIRE_DOC_CSP, WIRE_APP_CSP } from "@flowforge/shared";
 import {
   readDocsWireframeSuggestions,
   isValidWireSuggestion,
@@ -36,20 +35,6 @@ import {
   pruneWireframeQueue,
 } from "../wireDocs.js";
 import { PLANNING_WIREFRAME_FIXTURE } from "../../parser/planningWireframeFixture.js";
-// jsdom 최소 타입 슬라이스: 서버 tsconfig엔 DOM lib·@types/jsdom이 없다(백엔드). CSP 주입 결과를
-// 실파싱 검증하는 데 필요한 API 표면만 로컬로 선언한다(테스트 파일 국소화 — 새 devDep/tsconfig 변경 없음).
-interface JsdomEl {
-  getAttribute(name: string): string | null;
-  querySelector(sel: string): JsdomEl | null;
-  readonly content: { querySelector(sel: string): JsdomEl | null };
-}
-interface JsdomDoc {
-  readonly head: JsdomEl;
-  querySelectorAll(sel: string): ArrayLike<JsdomEl>;
-}
-type JsdomCtor = new (html: string) => { window: { document: JsdomDoc } };
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { JSDOM } = createRequire(import.meta.url)("jsdom") as { JSDOM: JsdomCtor };
 
 /** 최소 유효 WireDoc(데스크탑, 자족 HTML). */
 function screen(id: string, over: Partial<WireDoc> = {}): WireDoc {
@@ -149,102 +134,6 @@ describe("wire-security 상수 (격리·CSP 불변식)", () => {
   });
 });
 
-/**
- * injectWireDocCsp — srcdoc 렌더 직전 문서 CSP 주입(적대적 HTML 방어).
- * 보안 리뷰 BLOCK 회귀: 주석 안 가짜 <head>로 CSP를 우회하려는 입력을 실제 head에 주입해야 한다.
- */
-describe("injectWireDocCsp (문서 CSP 주입 — 주석 우회 방어)", () => {
-  const META = `<meta http-equiv="Content-Security-Policy" content="${WIRE_DOC_CSP}">`;
-
-  it("정상 문서: 실제 <head> 바로 안에 CSP 메타를 삽입한다", () => {
-    const out = injectWireDocCsp("<!DOCTYPE html><html><head><title>t</title></head><body>b</body></html>");
-    expect(out).toContain(META);
-    // 메타가 <head> 바로 뒤, <title> 앞에 온다.
-    expect(out.indexOf(META)).toBeLessThan(out.indexOf("<title>"));
-  });
-
-  it("🔴 BLOCK 회귀: 주석 안 가짜 <head>가 앞서도 CSP는 죽은 주석이 아니라 실제 <head>에 들어간다", () => {
-    const evil = '<!-- <head> --><head foo="bar"><title>t</title></head><body>y</body></html>';
-    const out = injectWireDocCsp(evil);
-    // 메타는 주석 종료(-->) 이후, 실제 <head foo="bar"> 뒤에 삽입돼야 한다.
-    const metaAt = out.indexOf(META);
-    expect(metaAt).toBeGreaterThan(out.indexOf("-->"));
-    expect(metaAt).toBeGreaterThan(out.indexOf('<head foo="bar">'));
-    // 주석 내용은 원본 그대로 보존(주석 안에 메타가 들어가지 않음).
-    expect(out).toContain("<!-- <head> -->");
-  });
-
-  it("🔴 BLOCK 회귀: inert <template> 안 가짜 <head>가 앞서도 CSP는 template이 아니라 실제 <head>에 들어간다", () => {
-    // <template>의 content는 inert DOM fragment라 그 안 <head>는 실제 문서 head가 아니다.
-    // 마스킹 없이는 정규식이 template 안 가짜 head에 먼저 매치 → CSP가 죽은 fragment에 갇힌다(BLOCK 실측).
-    const evil =
-      '<html><template><head></head></template><head><title>real</title></head><body>y</body></html>';
-    const out = injectWireDocCsp(evil);
-    const metaAt = out.indexOf(META);
-    // 메타는 template 종료(</template>) 이후, 실제 <head> 뒤에 삽입돼야 한다.
-    expect(metaAt).toBeGreaterThan(out.indexOf("</template>"));
-    expect(metaAt).toBeGreaterThan(out.indexOf("<head><title>real</title>"));
-    // 실제 head 안 <title> 앞에 온다(= 실제 head 바로 뒤).
-    expect(metaAt).toBeLessThan(out.indexOf("<title>real</title>"));
-    // template의 원본 내용은 보존(그 안에 메타가 들어가지 않음).
-    expect(out).toContain("<template><head></head></template>");
-  });
-
-  it("🔴 BLOCK 회귀(jsdom 실파싱): 주입 결과의 live head엔 CSP가 있고 template.content엔 갇히지 않는다", () => {
-    // review가 jsdom `live head has CSP:false`로 BLOCK을 실증했다 → 수정 후엔 true여야 한다.
-    const evil =
-      '<html><template><head></head></template><head><title>real</title></head><body>y</body></html>';
-    const out = injectWireDocCsp(evil);
-    const doc = new JSDOM(out).window.document;
-    const CSP_SEL = 'meta[http-equiv="Content-Security-Policy"]';
-
-    // 1) 실제 문서 head(live head)에 우리 CSP 메타가 있다.
-    const liveCsp = doc.head.querySelector(CSP_SEL);
-    const liveHeadHasCsp = liveCsp !== null;
-    expect(liveHeadHasCsp).toBe(true); // ← 수정 전엔 false(BLOCK)였던 지점
-    expect(liveCsp?.getAttribute("content")).toBe(WIRE_DOC_CSP);
-
-    // 2) CSP 메타가 어떤 <template>의 inert content에도 갇히지 않았다.
-    const templates = doc.querySelectorAll("template");
-    let trappedInTemplate = false;
-    for (let i = 0; i < templates.length; i++) {
-      if (templates[i]?.content.querySelector(CSP_SEL)) {
-        trappedInTemplate = true;
-      }
-    }
-    expect(trappedInTemplate).toBe(false);
-  });
-
-  it("주석 안 가짜 <html>이 앞서도 실제 <html>/<head> 경로로 주입된다", () => {
-    const evil = "<!-- <html> --><html><body>y</body></html>";
-    const out = injectWireDocCsp(evil);
-    expect(out).toContain(META);
-    expect(out.indexOf(META)).toBeGreaterThan(out.indexOf("-->"));
-  });
-
-  it("<head> 없이 <html>만 있으면 <head>를 만들어 그 안에 CSP를 넣는다", () => {
-    const out = injectWireDocCsp("<html><body>only body</body></html>");
-    expect(out).toContain(`<head>${META}</head>`);
-  });
-
-  it("<html>도 <head>도 없으면 문서 맨 앞에 CSP를 앞세운다", () => {
-    const out = injectWireDocCsp("<body>bare</body>");
-    expect(out.startsWith(META)).toBe(true);
-  });
-
-  it("공격자가 느슨한 CSP 메타를 심어도 우리 메타가 앞선다(스펙상 정책은 restrictive 결합)", () => {
-    const evil = '<html><head><meta http-equiv="Content-Security-Policy" content="default-src *"><title>t</title></head><body>y</body></html>';
-    const out = injectWireDocCsp(evil);
-    // 우리 메타(default-src 'none' 포함)가 공격자 메타(default-src *)보다 먼저 온다.
-    expect(out.indexOf(META)).toBeLessThan(out.indexOf('content="default-src *"'));
-  });
-
-  it("대문자 HEAD도 인식한다(대소문자 무관)", () => {
-    const out = injectWireDocCsp("<HTML><HEAD></HEAD><BODY>b</BODY></HTML>");
-    expect(out).toContain(META);
-    expect(out.indexOf(META)).toBeLessThan(out.indexOf("</HEAD>"));
-  });
-});
 
 describe("readDocsWireframeSuggestions", () => {
   let root: string;

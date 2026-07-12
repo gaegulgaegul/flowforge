@@ -36,7 +36,7 @@ const WIRE: WireDoc = {
 describe("FlowDetailPanel 화면 허브 상호참조", () => {
   it("C.1 화면 노드 + 와이어/기능 있음 → 연관 와이어 프리뷰 + 연관 기능 목록 렌더", () => {
     const crosslink: ScreenCrosslinkData = { wire: WIRE, featureLabels: ["알림 설정", "프로필 편집"] };
-    render(<FlowDetailPanel node={screenNode()} onClose={() => {}} crosslink={crosslink} onOpenWire={() => {}} />);
+    render(<FlowDetailPanel node={screenNode()} project="demo" onClose={() => {}} crosslink={crosslink} onOpenWire={() => {}} />);
     // 연관 와이어 섹션 + 프리뷰(디바이스 프레임) + 열기 버튼.
     expect(screen.getByTestId("flow-detail-wire")).toBeInTheDocument();
     expect(screen.getByTestId("wf-df-desktop")).toBeInTheDocument();
@@ -50,21 +50,21 @@ describe("FlowDetailPanel 화면 허브 상호참조", () => {
 
   it("E.1 화면 아님(행동) 노드 → 상호참조 섹션 미노출(흐름 섹션만)", () => {
     const crosslink: ScreenCrosslinkData = { wire: WIRE, featureLabels: ["알림 설정"] };
-    render(<FlowDetailPanel node={actionNode()} onClose={() => {}} crosslink={crosslink} />);
+    render(<FlowDetailPanel node={actionNode()} project="demo" onClose={() => {}} crosslink={crosslink} />);
     expect(screen.queryByTestId("flow-detail-wire")).toBeNull();
     expect(screen.queryByTestId("flow-detail-features")).toBeNull();
   });
 
   it("E.2 연결 0개(와이어도 기능도 없음) → 빈 상태, 크래시 없음", () => {
     const crosslink: ScreenCrosslinkData = { wire: null, featureLabels: [] };
-    render(<FlowDetailPanel node={screenNode()} onClose={() => {}} crosslink={crosslink} />);
+    render(<FlowDetailPanel node={screenNode()} project="demo" onClose={() => {}} crosslink={crosslink} />);
     expect(screen.getByTestId("flow-detail-wire")).toHaveTextContent("연결된 와이어 없음");
     expect(screen.getByTestId("flow-detail-features")).toHaveTextContent("연관 기능 없음");
   });
 
   it("E.3 dangling 화면 id(레지스트리·와이어 어디에도 없음) → 빈 상태, id 숨기지 않고 크래시 없음", () => {
     // crosslink 미제공(undefined) = 조인 결과 없음. 화면 노드지만 상호참조 데이터가 없어도 빈 상태로 렌더.
-    render(<FlowDetailPanel node={screenNode({ screenId: "ghost" })} onClose={() => {}} />);
+    render(<FlowDetailPanel node={screenNode({ screenId: "ghost" })} project="demo" onClose={() => {}} />);
     expect(screen.getByTestId("flow-detail-wire")).toHaveTextContent("연결된 와이어 없음");
     expect(screen.getByTestId("flow-detail-features")).toHaveTextContent("연관 기능 없음");
   });
@@ -73,7 +73,7 @@ describe("FlowDetailPanel 화면 허브 상호참조", () => {
     const node = screenNode({
       outgoing: [{ otherId: "n2", otherLabel: "다음 화면", edgeLabel: "이동", edgecase: false, dangling: false }],
     });
-    render(<FlowDetailPanel node={node} onClose={() => {}} crosslink={{ wire: WIRE, featureLabels: [] }} />);
+    render(<FlowDetailPanel node={node} project="demo" onClose={() => {}} crosslink={{ wire: WIRE, featureLabels: [] }} />);
     expect(screen.getByText("➡️ 나가는 흐름")).toBeInTheDocument();
     expect(screen.getByText("⬅️ 들어오는 흐름")).toBeInTheDocument();
   });

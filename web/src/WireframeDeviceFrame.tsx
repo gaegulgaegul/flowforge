@@ -2,9 +2,14 @@
  * WireframeDeviceFrame — 디바이스 프레임(데스크탑/모바일) 안에 화면별 HTML 문서를 sandbox iframe으로 렌더한다.
  *
  * flowforge-wireframe-iframe(Phase 5, BREAKING): 좌표 없는 요소 박스(폐기된 `WireScreen2` 렌더러)를
- * 화면별 **실 HTML 문서(WireDoc.html)**로 교체했다. 문서는 `<iframe srcdoc sandbox={WIRE_IFRAME_SANDBOX}>`
- * 안에서만 렌더된다 — allow-same-origin 미부여로 부모 오리진(토큰·상태·DOM) 격리, 문서 CSP(WIRE_DOC_CSP)
- * 주입으로 외부 리소스 로드·네트워크 유출 차단. 진짜 HTML이라 입력/버튼/폼이 실제로 동작한다(피드백5).
+ * 화면별 **실 HTML 문서(WireDoc.html)**로 교체했다. 문서는 `<iframe src sandbox={WIRE_IFRAME_SANDBOX}>`
+ * 안에서만 렌더된다 — allow-same-origin 미부여로 부모 오리진(토큰·상태·DOM) 격리.
+ *
+ * CSP 전달(meta→헤더 전환): iframe은 이제 `srcdoc`가 아니라 `src`(서버 라우트)로 문서를 로드한다.
+ * 문서 CSP(WIRE_DOC_CSP)는 그 라우트의 HTTP 응답 헤더로 강제된다(브라우저가 문서 내용과 무관하게 적용
+ * → 적대적 HTML의 meta 마스킹 우회 원천 차단). 승인분은 원천에 있으므로 `screenId`로 direct 로드
+ * (`.../planning-wireframe/:screenId/doc`), 미승인 제안(위저드)은 원천에 없는 임시 HTML이라 렌더 전
+ * POST preview로 토큰을 받아 `.../planning-wireframe/preview/:token/doc`로 로드한다.
  *
  * 디바이스 프레임 크롬(데스크탑 브라우저 크롬 / 모바일 폰 프레임)·디바이스 토글·화면 탭은 재사용한다
  * (게으름 위계 — 프레임 셸 재작성 금지, 본문만 iframe로 교체). 프레임 위 오버레이(핀 레이어)도 유지.
@@ -15,7 +20,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { WireDocDevice, WireDoc } from "@flowforge/shared";
-import { WIRE_IFRAME_SANDBOX, injectWireDocCsp } from "@flowforge/shared";
+import { WIRE_IFRAME_SANDBOX } from "@flowforge/shared";
+import { createWirePreview } from "./api.js";
 
 /** 프레임 위 오버레이 렌더 컨텍스트 — 현재 디바이스/화면 id(핀 필터·좌표계용). */
 export interface WireframeOverlayCtx {
@@ -23,20 +29,69 @@ export interface WireframeOverlayCtx {
   readonly screenId: string;
 }
 
+/** 승인분 direct 문서 src(원천 screenId로 서버 라우트 로드 — CSP는 응답 헤더로 강제). */
+function directDocSrc(project: string, screenId: string): string {
+  return `/api/docs/${encodeURIComponent(project)}/planning-wireframe/${encodeURIComponent(screenId)}/doc`;
+}
+
 /**
- * 화면 HTML을 sandbox iframe으로 렌더한다. srcdoc에 CSP 주입 문서(injectWireDocCsp — 주석 우회 방어
- * 포함, shared 단일 원천)를 넣고, sandbox는 shared 상수값(allow-scripts만, allow-same-origin 없음).
- * iframe 내부는 격리 경계라 부모 컨텍스트에 도달할 수 없다.
+ * 화면 HTML을 sandbox iframe으로 렌더한다. iframe은 `srcdoc`가 아니라 `src`(서버 라우트)로 문서를
+ * 로드하고, sandbox는 shared 상수값(allow-scripts만, allow-same-origin 없음)이라 부모 오리진과
+ * cross-origin(opaque)이다 → 격리 유지. CSP는 그 라우트의 응답 헤더로 강제된다(문서로 우회 불가).
+ *
+ * - 승인분(preview=false): `doc.id`로 direct 라우트를 즉시 src에 건다(왕복 없음).
+ * - 미승인 제안(preview=true): `doc.html`이 원천에 없으므로 렌더 전 POST로 미리보기 토큰을 받아
+ *   preview 라우트를 src에 건다(비동기 — 발급 전 로딩, 실패 시 에러 메시지).
  */
-function DocFrame({ doc }: { doc: WireDoc }): JSX.Element {
-  const srcDoc = useMemo(() => injectWireDocCsp(doc.html), [doc.html]);
+function DocFrame({
+  doc,
+  project,
+  preview = false,
+}: {
+  doc: WireDoc;
+  project: string;
+  preview?: boolean;
+}): JSX.Element {
+  const directSrc = useMemo(
+    () => (preview ? null : directDocSrc(project, doc.id)),
+    [preview, project, doc.id],
+  );
+  // 미승인 제안: 토큰 발급 왕복. "loading"=발급 중, string=preview src, "error"=실패.
+  const [previewSrc, setPreviewSrc] = useState<string | "loading" | "error">("loading");
+
+  useEffect(() => {
+    if (!preview) return;
+    let alive = true;
+    setPreviewSrc("loading");
+    createWirePreview(project, doc.html)
+      .then((token) => {
+        if (!alive) return;
+        setPreviewSrc(
+          `/api/docs/${encodeURIComponent(project)}/planning-wireframe/preview/${encodeURIComponent(token)}/doc`,
+        );
+      })
+      .catch(() => {
+        if (alive) setPreviewSrc("error");
+      });
+    return () => {
+      alive = false;
+    };
+  }, [preview, project, doc.html]);
+
+  const src = directSrc ?? previewSrc;
+  if (src === "loading") {
+    return <div className="wf-df-iframe wf-df-loading" data-testid="wf-df-loading">미리보기 준비 중…</div>;
+  }
+  if (src === "error") {
+    return <div className="wf-df-iframe wf-df-error" data-testid="wf-df-error">미리보기를 불러오지 못했습니다.</div>;
+  }
   return (
     <iframe
       className="wf-df-iframe"
       data-testid="wf-df-iframe"
       title={doc.title}
       sandbox={WIRE_IFRAME_SANDBOX}
-      srcDoc={srcDoc}
+      src={src}
     />
   );
 }
@@ -46,7 +101,17 @@ function DocFrame({ doc }: { doc: WireDoc }): JSX.Element {
  * 넣어, 핀 오버레이의 바운딩 박스가 iframe 표면과 정확히 일치하게 한다(크롬 30px 오프셋 배제 — 핀 좌표는
  * iframe 표면 기준이어야 하므로). viewport는 position:relative 기준이 되도록 CSS에서 고정.
  */
-function DesktopScreen({ doc, overlay }: { doc: WireDoc; overlay?: ReactNode }): JSX.Element {
+function DesktopScreen({
+  doc,
+  project,
+  preview = false,
+  overlay,
+}: {
+  doc: WireDoc;
+  project: string;
+  preview?: boolean;
+  overlay?: ReactNode;
+}): JSX.Element {
   return (
     <div className="wf-df-frame wf-df-frame--desktop" data-testid="wf-df-desktop">
       <div className="wf-df-chrome">
@@ -56,7 +121,7 @@ function DesktopScreen({ doc, overlay }: { doc: WireDoc; overlay?: ReactNode }):
         <span className="wf-df-url">flowforge.gaegul.house</span>
       </div>
       <div className="wf-df-viewport">
-        <DocFrame doc={doc} />
+        <DocFrame doc={doc} project={project} preview={preview} />
         {overlay}
       </div>
     </div>
@@ -64,11 +129,21 @@ function DesktopScreen({ doc, overlay }: { doc: WireDoc; overlay?: ReactNode }):
 }
 
 /** 모바일 프레임: 폰 프레임 + iframe 본문. overlay는 iframe 표면(viewport) 안(핀 좌표 정합). */
-function MobileScreen({ doc, overlay }: { doc: WireDoc; overlay?: ReactNode }): JSX.Element {
+function MobileScreen({
+  doc,
+  project,
+  preview = false,
+  overlay,
+}: {
+  doc: WireDoc;
+  project: string;
+  preview?: boolean;
+  overlay?: ReactNode;
+}): JSX.Element {
   return (
     <div className="wf-df-frame wf-df-frame--mobile" data-testid="wf-df-mobile">
       <div className="wf-df-viewport">
-        <DocFrame doc={doc} />
+        <DocFrame doc={doc} project={project} preview={preview} />
         {overlay}
       </div>
     </div>
@@ -77,11 +152,20 @@ function MobileScreen({ doc, overlay }: { doc: WireDoc; overlay?: ReactNode }): 
 
 export function WireframeDeviceFrame({
   screens,
+  project,
+  preview = false,
   hideControls = false,
   renderOverlay,
   focusTarget,
 }: {
   screens: readonly WireDoc[];
+  /** 현재 프로젝트 키 — iframe src(서버 문서 라우트) 구성에 필요. */
+  project: string;
+  /**
+   * 미승인 제안(위저드)처럼 원천에 없는 임시 HTML이면 true — 렌더 전 POST preview로 토큰을 받아
+   * preview 라우트로 로드한다. 기본 false(승인분은 doc.id로 direct 로드).
+   */
+  preview?: boolean;
   /** 위저드 카드 내 단일 미리보기용 — 디바이스 토글·화면 탭·캡션 크롬을 숨긴다. 첫 화면만 렌더. */
   hideControls?: boolean;
   /**
@@ -126,9 +210,9 @@ export function WireframeDeviceFrame({
       <div className="wf-df-root wf-df-root--preview">
         <div className="wf-df-stage">
           {active.device === "desktop" ? (
-            <DesktopScreen doc={active} overlay={overlay} />
+            <DesktopScreen doc={active} project={project} preview={preview} overlay={overlay} />
           ) : (
-            <MobileScreen doc={active} overlay={overlay} />
+            <MobileScreen doc={active} project={project} preview={preview} overlay={overlay} />
           )}
         </div>
       </div>
@@ -175,9 +259,9 @@ export function WireframeDeviceFrame({
       </div>
       <div className="wf-df-stage">
         {active.device === "desktop" ? (
-          <DesktopScreen doc={active} overlay={overlay} />
+          <DesktopScreen doc={active} project={project} preview={preview} overlay={overlay} />
         ) : (
-          <MobileScreen doc={active} overlay={overlay} />
+          <MobileScreen doc={active} project={project} preview={preview} overlay={overlay} />
         )}
       </div>
       <p className="wf-df-caption">

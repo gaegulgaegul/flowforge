@@ -19,15 +19,25 @@
  *
  * ⚠️ 이 값에 `allow-same-origin`을 절대 추가하지 마라. allow-scripts와 동시 부여 시 문서가 부모
  *    오리진으로 승격되어 토큰·저장소·DOM에 접근할 수 있다(sandbox 우회의 대표 벡터).
+ *
+ * 참고(CSP meta→헤더 전환): iframe은 이제 `srcdoc`가 아니라 `src`(서버 라우트)로 문서를 로드한다.
+ * `src` + `allow-scripts`(allow-same-origin 없음)이면 로드된 문서는 **opaque origin**이라 부모와
+ * cross-origin이다 → 부모 격리 불변식은 그대로 유지된다(라이브 실측: contentDocument 접근 시 TypeError).
  */
 export const WIRE_IFRAME_SANDBOX = 'allow-scripts' as const;
 
 /**
- * 문서 CSP(iframe 안 와이어 HTML 문서에 주입) — 외부 리소스 로드·네트워크 유출 표면 제거.
+ * 문서 CSP — iframe 안 와이어 HTML 문서에 강제되는 정책. 외부 리소스 로드·네트워크 유출 표면 제거.
  *
  * `default-src 'none'` 기반: 외부 script/style/img/font/connect(fetch·XHR·WebSocket)를 전부 차단한다.
  * 자족 인라인 자산만 허용(`'unsafe-inline'`은 문서가 인라인 스크립트/스타일로 자족하므로 최소 허용).
  * 외부 CDN·트래킹 픽셀·외부 fetch는 전부 차단되어 외부 네트워크로 데이터가 나가지 않는다.
+ *
+ * ⚠️ 전달 방식(중요): 이 정책은 문서 HTML을 서빙하는 **서버 라우트의 HTTP 응답 헤더**
+ *    (`Content-Security-Policy`)로 강제한다 — 과거처럼 문서 안에 `<meta>`로 주입하지 않는다.
+ *    meta 주입은 삽입 지점을 정규식으로 찾아야 했는데 적대적 HTML(주석 속 가짜 head·inert template·
+ *    미종료 template·속성값 `</template>`)이 마스킹을 계속 뚫어 CSP를 무력화할 수 있었다(verify FAIL 실증).
+ *    HTTP 헤더 CSP는 브라우저가 **문서 내용과 무관하게** 강제하므로 문서로는 절대 우회할 수 없다(근본 해결).
  */
 export const WIRE_DOC_CSP =
   "default-src 'none'; " +
@@ -43,9 +53,8 @@ export const WIRE_DOC_CSP =
  * 앱 CSP(flowforge 자체 응답 헤더) — clickjacking 방어(현재 서버에 CSP 전무 → 이 change에서 신설).
  *
  * `frame-ancestors 'self'`: flowforge가 신뢰되지 않은 상위 프레임에 임베드(clickjacking 대상)되지 않게.
- * `frame-src 'self'`: 심층방어용. 단 와이어 iframe은 전부 `srcdoc`(about:srcdoc)라 frame-src의 실제
- *   제약 대상(외부 src URL)이 없다 — **실질 방어는 "iframe에 외부 src URL을 절대 넣지 않는다"는 코드
- *   불변식**이지 이 지시어가 아니다(WireframeDeviceFrame은 srcDoc만 사용). frame-src는 향후 실수 방지용.
+ * `frame-src 'self'`: 와이어 iframe은 이제 same-origin 서버 라우트(`/api/docs/.../doc`)를 `src`로
+ *   로드한다 → `frame-src 'self'`가 iframe 원천을 same-origin으로 실제로 제약한다(외부 URL 프레임 차단).
  * 앱 자체 SPA(same-origin 인라인 번들)는 무손상이 되도록 script/style은 'self'+'unsafe-inline' 허용.
  */
 export const WIRE_APP_CSP =
@@ -59,37 +68,9 @@ export const WIRE_APP_CSP =
   "frame-ancestors 'self'; " +
   "base-uri 'self'";
 
-/**
- * 와이어 HTML 문서에 문서 CSP(WIRE_DOC_CSP)를 `<meta http-equiv>`로 주입한다(srcdoc 렌더 직전).
- *
- * ⚠️ html은 **적대적 입력**(신뢰되지 않은 AI 생성물)이라 이 주입 로직 자체가 우회 시도 대상이다.
- * 순진한 정규식은 HTML 주석 안 가짜 `<head>` 문자열(예: `<!-- <head> --><head>...`)에 먼저 매치해
- * CSP 메타를 **죽은 주석 안**에 넣고 실제 head는 CSP 없이 렌더된다(보안 리뷰 BLOCK 실측). 그래서 매치
- * 위치는 **주석을 마스킹한 스캔 사본**에서 찾고, 원본의 그 인덱스에 삽입한다(주석 속 가짜 태그 무시).
- * 같은 이유로 `<template>...</template>`도 마스킹한다: template의 content는 inert DOM fragment라
- * 그 안 `<head>`는 실제 문서 head가 아닌데(예: `<template><head></head></template><head>real</head>`),
- * 마스킹하지 않으면 정규식이 inert template 안 가짜 head에 먼저 매치해 CSP를 죽은 fragment에 가둔다(BLOCK 실측).
- * 여러 CSP 메타가 공존해도 CSP 스펙상 정책은 restrictively 결합되므로 우리 메타를 앞세우면 완화 불가.
- *
- * 렌더러(web)·테스트가 같은 함수를 공유해 drift를 막는다(D8 — 보안은 단일 원천).
- */
-export function injectWireDocCsp(html: string): string {
-  const meta = `<meta http-equiv="Content-Security-Policy" content="${WIRE_DOC_CSP}">`;
-  // 스캔 사본: HTML 주석 + inert <template> content를 같은 길이 공백으로 마스킹(인덱스 원본과 1:1 유지,
-  // 주석 속 가짜 태그와 template의 inert head를 무시 → 실제 문서 head에만 CSP 주입).
-  const scan = html
-    .replace(/<!--[\s\S]*?-->/g, (c) => " ".repeat(c.length))
-    .replace(/<template[^>]*>[\s\S]*?<\/template>/gi, (c) => " ".repeat(c.length));
-
-  const headMatch = /<head[^>]*>/i.exec(scan);
-  if (headMatch) {
-    const at = headMatch.index + headMatch[0].length;
-    return html.slice(0, at) + meta + html.slice(at);
-  }
-  const htmlMatch = /<html[^>]*>/i.exec(scan);
-  if (htmlMatch) {
-    const at = htmlMatch.index + htmlMatch[0].length;
-    return html.slice(0, at) + `<head>${meta}</head>` + html.slice(at);
-  }
-  return `${meta}${html}`;
-}
+// 참고(CSP meta→헤더 전환): 과거엔 여기 `injectWireDocCsp(html)`가 있어 렌더 직전 문서 HTML의
+// `<head>`에 `<meta http-equiv="Content-Security-Policy">`를 주입했다. 그러나 삽입 지점을 정규식으로
+// 찾아야 했고, 적대적 HTML(주석 속 가짜 head·inert template·미종료 template·속성값 `</template>`)이
+// 마스킹을 계속 뚫어 CSP를 죽은 노드에 가두는 우회가 반복됐다(verify FAIL 실증). 이제 CSP는 문서를
+// 서빙하는 **서버 라우트의 HTTP 응답 헤더**(WIRE_DOC_CSP)로 강제한다 — 브라우저가 문서 내용과 무관하게
+// 적용하므로 문서로는 절대 우회 불가(근본 해결). 문서 문자열은 무변형 서빙한다(주입 로직 자체를 제거).

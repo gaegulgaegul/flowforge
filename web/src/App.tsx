@@ -1152,6 +1152,7 @@ export function App(): JSX.Element {
           (flowforge-screen-crosslink). crosslink는 화면 노드일 때만 정의됨(그 외 undefined → 섹션 미노출). */}
       <FlowDetailPanel
         node={selectedFlow}
+        project={dashProject?.name ?? ""}
         onClose={() => setSelectedFlow(null)}
         onSelectById={selectFlowById}
         {...(flowCrosslink ? { crosslink: flowCrosslink } : {})}

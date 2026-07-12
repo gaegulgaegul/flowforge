@@ -33,7 +33,6 @@ export {
   WIRE_IFRAME_SANDBOX,
   WIRE_DOC_CSP,
   WIRE_APP_CSP,
-  injectWireDocCsp,
 } from './wire-security.js';
 
 export type {

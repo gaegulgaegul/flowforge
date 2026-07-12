@@ -59,7 +59,8 @@ export function WireframeApprovalWizard({
             <p className="feature-approval-rationale">{sug.rationale}</p>
           )}
           <div className="wire-approval-preview" data-testid="wire-approval-preview">
-            <WireframeDeviceFrame screens={[sug.doc]} hideControls />
+            {/* 미승인 제안 = 원천에 없는 임시 HTML → preview 토큰 라우트로 로드(preview). */}
+            <WireframeDeviceFrame screens={[sug.doc]} project={project} preview hideControls />
           </div>
         </>
       )}
