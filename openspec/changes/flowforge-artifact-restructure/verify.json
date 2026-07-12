@@ -1,0 +1,361 @@
+{
+  "change": "flowforge-artifact-restructure",
+  "verifiedAt": "2026-07-12T14:15:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 14,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "[feature-list-view] 기능명세 뷰가 들여쓴 트리/리스트로 렌더된다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "FeatureTree 데이터는 서버 파서(featureTreeBuilder)가 타입 보장 — 어댑터/리스트는 이미 검증된 FeatureTreeNode만 받는다. 렌더 계층에 타입 오염 유입 경로 없음.",
+          "동시성": "순수 클라이언트 렌더(읽기 전용 트리 평탄화). 공유 가변 상태·동시 쓰기 없음.",
+          "특수문자": "라벨은 React 텍스트 노드로 렌더(자동 이스케이프). XSS/특수문자 인젝션 표면 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "기능명세 뷰가 다이어그램이 아니라 리스트로 렌더된다",
+          "layer": "web",
+          "means": "browse로 flowforge 기획 '기획 기능명세' 탭 열어 DOM 확인: [data-testid=feature-list] 존재, [data-testid=feature-list-item] 53개, .react-flow 개수 0(캔버스 노드-엣지 다이어그램 없음). 요구사항>기능>상세기능이 --feature-depth(0/1/2)로 들여쓰기.",
+          "basis": "web 레이어(browse 실픽셀) — [data-testid] + getComputedStyle('--feature-depth') 관측",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/03-feature-list.png",
+            "caption": "기획 기능명세 탭: 요구사항>기능>상세기능 들여쓴 리스트(.react-flow 0). browse js: {list:true, items:53, reactflow:0}"
+          }
+        },
+        {
+          "scenario": "두 진입점 모두 리스트로 전환된다(다이어그램 잔존 0)",
+          "layer": "web",
+          "means": "정적: FeatureNode.tsx 삭제(파일 부재), featureTreeAdapter는 toFeatureTreeList만 export(toFeatureFlow/dagre 제거), nodeTypes={spec,specTree}에 feature 노드타입 없음. FeatureTree는 planning 진입점에서 FeatureListView(App.tsx:1036)로만 렌더되고, change 계보는 별도 capability(specTree=change spec.md). 남은 ReactFlow 인스턴스(d-spec/d-flow)는 FeatureTree 아님. 라이브: 기획 기능명세 탭 .react-flow 0.",
+          "basis": "web(static grep + browse 실픽셀) — FeatureNode 부재·nodeTypes에 feature 없음·라이브 리스트 .react-flow 0",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/03-feature-list.png",
+            "caption": "planning 진입점 라이브: FeatureListView 리스트만(다이어그램 잔존 0). 정적: FeatureNode.tsx 부재·nodeTypes={spec,specTree}(feature 노드타입 없음)·featureTreeAdapter=toFeatureTreeList(dagre 제거)."
+          }
+        }
+      ]
+    },
+    {
+      "title": "[feature-list-view] 리스트가 다이어그램의 표시 정보를 무손실로 보존한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "뱃지/칩 필드(priority/status/audit/screens)는 shared 유니언 타입으로 서버가 보장. 리스트 렌더는 조건부 표시(값 있으면 표시)로 잘못된 타입 유입 경로 없음.",
+          "동시성": "읽기 전용 렌더. 뱃지/칩 계산은 어댑터 순수 함수(toFeatureTreeList)."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "뱃지·칩·태그가 리스트 항목에 그대로 표시된다",
+          "layer": "web",
+          "means": "browse로 리스트 항목 텍스트 관측: 타입태그(요구사항/기능/상세기능), priority(높음/중간), status(완료/진행중), audit(미감사/정합), capability 칩(planning-prd-generation 등), change 칩(change 1/2), 메모(📝 TODO...) 모두 렌더. 스크린샷 03에 시각 확인.",
+          "basis": "web(browse 실픽셀 + DOM 텍스트)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/03-feature-list.png",
+            "caption": "각 항목: 타입태그+priority+status+audit+capability칩+change칩+메모(📝) 모두 표시. FeatureNode 배지 세트 무손실."
+          }
+        },
+        {
+          "scenario": "상세기능의 연결화면 칩이 화면 레지스트리와 같은 id로 붙는다",
+          "layer": "web",
+          "means": "browse: 상세기능 항목 .feature-list-screen-chip 라벨(예: '🖥 기능명세 화면','🖥 기획 뷰') 관측. 교차확인: GET /api/docs/flowforge/planning-screens → labels=['프로젝트 카드 그리드'(grid),'기획 뷰'(skeleton),'기능명세 화면'(features)]. 칩 라벨이 레지스트리 라벨과 정확히 일치 → 동일 id 조인(회귀 0).",
+          "basis": "web(browse 실픽셀 칩) × server(planning-screens API 골든) 교차확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/03-feature-list.png",
+            "caption": "상세기능 연결화면 칩 '🖥 기능명세 화면'/'🖥 기획 뷰' = planning-screens API 라벨(features/skeleton)과 동일 id. 조인 회귀 0."
+          }
+        }
+      ]
+    },
+    {
+      "title": "[ia-removal] IA 뷰가 산출물에서 제거된다 (5종→4종)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "제거(부재) 요구사항 — 탭 목록에서 IA 항목의 부재를 검증. null 입력 개념 없음.",
+          "빈값": "탭 목록 존재는 항상 보장(4종). 빈 탭바 시나리오는 이 요구의 관심사 아님.",
+          "잘못된타입": "탭은 정적 UI 상수(문자열 리터럴). 런타임 입력 없음.",
+          "에러경로": "탭 렌더는 에러 경로 없는 정적 렌더. 라우트 에러경로는 R2에서 다룸.",
+          "동시성": "정적 탭 UI — 공유 가변 상태 없음.",
+          "대량": "탭 4개 고정. 대량 경계 없음.",
+          "특수문자": "탭 라벨은 고정 리터럴. 사용자 입력 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "change 뷰에 IA 탭이 없다",
+          "layer": "web",
+          "means": "browse로 change views 진입 후 header 탭 관측: [PRD, 명세(change), 유저플로우, 와이어프레임] — 정확히 4개, 'IA 트리' 없음.",
+          "basis": "web(browse 실픽셀 — header 버튼 텍스트)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/04-change-views-tabs.png",
+            "caption": "change 뷰 탭: PRD·명세(change)·유저플로우·와이어프레임 (IA 트리 부재)"
+          }
+        },
+        {
+          "scenario": "planning 뷰에 화면 구조(IA) 탭이 없다",
+          "layer": "web",
+          "means": "browse로 flowforge 기획(planning) 뷰 plan-tabs 관측: [PRD, 기획 기능명세, 와이어프레임, 유저플로우] — 정확히 4개, '화면 구조'(IA) 없음.",
+          "basis": "web(browse 실픽셀 — [data-testid=plan-tabs] 버튼)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/03-feature-list.png",
+            "caption": "planning 탭: PRD·기획 기능명세·와이어프레임·유저플로우 (화면 구조/IA 부재)"
+          }
+        },
+        {
+          "scenario": "IA 컴포넌트·어댑터·상태·토글이 코드에서 제거된다(dead reference 0)",
+          "layer": "server",
+          "means": "정적 코드 게이트(UI 픽셀 아님): web/src/{IANode.tsx,iaAdapter.ts} 파일 부재. App.tsx grep: iaNodes/iaEdges/planningIaNodes/iaVerbose/onIaNodeClick/IADetailPanel 라이브 참조 0(주석/CSS만 잔존). nodeTypes에 ia 없음. npm run typecheck(shared/server/web 3 workspaces) exit 0 → dead reference 0.",
+          "basis": "static(grep 파일 부재) + typecheck(빌드 dead-reference 게이트, 코드 레이어)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "ls IANode.tsx/iaAdapter.ts → 부재. grep IANode/iaAdapter/iaVerbose/onIaNodeClick in web/src → 라이브 코드 0(SpecTreeNode.tsx 주석·styles.css 클래스명만). npm run typecheck TYPECHECK_EXIT=0.",
+            "caption": "IA 컴포넌트/어댑터/상태/토글 제거 — typecheck 통과(dead ref 0)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[ia-removal] IA 서버 빌더와 라우트가 제거된다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "라우트 부재 검증 — null 입력 개념 없음.",
+          "빈값": "빈 파라미터도 미등록 라우트라 404. 경계값(존재 change id vs 미존재)로 커버.",
+          "잘못된타입": "라우트 미등록이라 타입 무관하게 404.",
+          "동시성": "라우트 부재는 정적 사실. 동시성 무관.",
+          "대량": "단일 라우트 존재/부재. 대량 경계 없음.",
+          "특수문자": "미등록 라우트는 입력 무관 404. 경로 조작은 planning-screens 골든(R3)에서 별도 검증."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "IA 라우트가 더 이상 응답하지 않는다(404 미존재)",
+          "layer": "server",
+          "means": "라이브 curl: GET /api/docs/flowforge/planning-ia → 404. GET /api/changes/implement-ios-app/ia → 404, /api/changes/server-foundation-auth/ia → 404. 실제 존재하는 change id로도 404 = 핸들러 미등록.",
+          "basis": "server(라이브 curl HTTP status)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "curl -o /dev/null -w %{http_code}: planning-ia=404, changes/implement-ios-app/ia=404, changes/server-foundation-auth/ia=404. graph.ts 주석 'IA 라우트(/api/changes/:id/ia) 제거'.",
+            "caption": "IA 라우트 3종 모두 404(핸들러 제거)"
+          }
+        },
+        {
+          "scenario": "IA 서버 빌더 파일이 제거된다(dead import 0)",
+          "layer": "server",
+          "means": "정적: server/src/parser/{iaBuilder.ts,planningIaBuilder.ts} 파일 부재, shared/src/ia-types.ts 부재. server jest 528/528 통과(41 suites) — planningIaBuilder.test.ts 부재이며 dead import 0으로 전체 green. web/src에 fetchIA/fetchDocsPlanningIa 부재(api.ts엔 fetchPlanningScreens만).",
+          "basis": "static(파일 부재) + server jest(빌드·import 게이트)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "ls iaBuilder.ts/planningIaBuilder.ts/ia-types.ts → 부재. server jest: 41 suites, 528 tests PASS(JEST_ALL_EXIT=0). api.ts grep fetchIA/fetchDocsPlanningIa → 0(fetchPlanningScreens만 남음).",
+            "caption": "IA 빌더/shared 타입/web fetch 제거 — 서버 528 테스트 green(dead import 0)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "[ia-removal] IA 제거가 화면 id 데이터·파싱을 건드리지 않는다 (불변식)",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "planning-screens는 마커(<!-- screen: id -->) 파싱 — 마커 없으면 빈 배열(골든 커버). 타입 오염 경로 없음.",
+          "동시성": "화면 id 파싱은 파일 읽기(읽기 전용). 동시 쓰기 없음.",
+          "대량": "화면목록 규모는 실사용 소량(라이브 3개). 대량 경계 요구 아님."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "화면 id 파싱이 IA 제거 후에도 동작한다(화면 id 골든 회귀 0)",
+          "layer": "server",
+          "means": "server jest docs.planning: 'GET /planning-screens' 8/8 PASS — 화면목록 2개+링크 픽스처에서 {screens,links} 200, 화면목록 없는 프로젝트 빈 배열 200(빈값), 미존재 프로젝트 404(에러경로), 경로조작(..) 404(특수문자/보안). 라이브 curl planning-screens = {screens:[grid,skeleton,features], links:[...]} 정상.",
+          "basis": "server(jest 골든 + 라이브 curl)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "jest docs.planning: 8 passed(planning-screens 4 + audit 4). 라이브 curl planning-screens → {screens:[{id:grid},{id:skeleton},{id:features}],links:[3]}. IA 제거 전/후 동일(골든).",
+            "caption": "planning-screens 엔드포인트 골든 8/8 — 화면 id 파싱 회귀 0"
+          }
+        },
+        {
+          "scenario": "유저플로우·와이어의 화면 id 조인이 유지된다",
+          "layer": "web",
+          "means": "browse: 기능명세 상세기능 연결화면 칩이 screenRegistry 라벨과 동일 id로 표시(R2-S4에서 교차확인). 유저플로우 탭 진입 시 ReactFlow 마운트·런타임 에러 0. 조인키 데이터원(screenRegistry/planning-screens) 불변(R2 라우트 골든).",
+          "basis": "web(browse) + server(planning-screens 불변)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/06-userflow.png",
+            "caption": "유저플로우 탭 정상 마운트(런타임 에러 0). 조인키 planning-screens 골든 통과 → 화면 id 조인 유지"
+          }
+        },
+        {
+          "scenario": "feature→screen 딥링크가 IA 부재로 깨지지 않는다",
+          "layer": "web",
+          "means": "browse: 기능명세 상세 패널의 연결화면 칩(.feature-detail-screen '기획 뷰') 클릭 → 상태바 '연결 화면: 기획 뷰 (유저플로우 탭의 해당 화면 노드에서 상호참조를 볼 수 있습니다)' 표시. 앱 alive, console app-error 0. 구 IA 딥링크 타깃 제거 → no-op/안내 처리(D4).",
+          "basis": "web(browse 클릭 + console --errors)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/07-screenchip-click.png",
+            "caption": "연결화면 칩 클릭 → 안내 상태바 표시, 런타임 에러 0(no-op 처리). 칩은 여전히 화면 라벨 표시."
+          }
+        }
+      ]
+    },
+    {
+      "title": "[view-labels] 두 계보의 '기능명세서' 레이블이 UI에서 구분된다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "null": "레이블은 고정 문자열 리터럴 — null 입력 개념 없음.",
+          "빈값": "탭 레이블은 항상 비어있지 않은 고정 문자열.",
+          "잘못된타입": "정적 문자열 리터럴 — 런타임 타입 입력 없음.",
+          "에러경로": "레이블 렌더는 에러 경로 없는 정적 표시.",
+          "동시성": "정적 UI 텍스트 — 공유 상태 없음.",
+          "대량": "탭 2개(change/planning) 고정 비교. 대량 없음.",
+          "특수문자": "레이블은 개발자 고정 리터럴. 사용자 입력·인젝션 표면 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "change 탭과 planning 탭 레이블이 서로 다르다",
+          "layer": "web",
+          "means": "browse: change 뷰 탭='명세(change)'(App.tsx:945), planning 뷰 탭='기획 기능명세'(App.tsx:998) — 두 레이블 문자열이 서로 다름. 둘 다 그냥 '기능명세서'로 표기되지 않음. 라이브 header/plan-tabs로 확인.",
+          "basis": "web(browse 실픽셀) + static(App.tsx 레이블 리터럴)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/04-change-views-tabs.png",
+            "caption": "change 탭='명세(change)' vs planning 탭='기획 기능명세' — 레이블 상이(라이브 확인)"
+          }
+        },
+        {
+          "scenario": "계보 출처가 드러난다",
+          "layer": "web",
+          "means": "'명세(change)'는 change 계보(openspec-propose의 spec.md), '기획 기능명세'는 planning 계보(openspec-plan의 features.md)를 레이블로 식별 가능하게 한다. 두 탭이 서로 다른 데이터원(specTree vs featureTree)을 렌더하며 UI 레이블로 구분됨.",
+          "basis": "web(browse 실픽셀) + static(specTree=change spec.md, featureTree=planning features.md 데이터원 분리)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/04-change-views-tabs.png",
+            "caption": "change 탭 '명세(change)'=change 계보(spec.md/openspec-propose). planning 탭 '기획 기능명세'=planning 계보(features.md/openspec-plan). 레이블로 계보 출처 식별."
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 4,
+      "passed": 4,
+      "failed": 0,
+      "basis": "라이브 curl(IA 라우트 404 3종, planning-screens 정상) + jest(docs.planning 8/8, 전체 528/528) + typecheck exit 0",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 7,
+      "passed": 7,
+      "failed": 0,
+      "basis": "browse 실픽셀 7 캡처(grid/skeleton/feature-list/change-tabs/spec/userflow/screenchip) + DOM 관측(react-flow 0, feature-list 53항목, 탭 4종, 칩 id 교차확인) + console app-error 0",
+      "reason": ""
+    }
+  ],
+  "codeState": {
+    "head": "fc3bac5960925f6ae15cd56547839f0549d58f75",
+    "dirty": true,
+    "branch": "feat/flowforge-feedback-changes",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260712-1415.html"
+}
