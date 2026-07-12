@@ -27,6 +27,15 @@ function makeChange(project: string, change: string, caps: string[], proposalTit
   }
 }
 
+/** <ROOT>/<project>/openspec/changes/archive/<dated>/specs/<cap>/spec.md 픽스처(D2 archive 완화 검증). */
+function makeArchiveChange(project: string, dated: string, caps: string[]): void {
+  for (const cap of caps) {
+    const dir = join(ROOT, project, "openspec", "changes", "archive", dated, "specs", cap);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "spec.md"), `## capability: ${cap}\n`);
+  }
+}
+
 /** <ROOT>/<project>/docs/spec.md (charter 뼈대 — capability 병기 한글명). */
 function makeCharterSpec(project: string, body: string): void {
   const dir = join(ROOT, project, "docs");
@@ -109,6 +118,18 @@ describe("GET /api/projects/:project/capabilities", () => {
     expect(a.changeKeys).toContain("ch1"); // 연결된 change
     const b = res.body.capabilities.find((c: { key: string }) => c.key === "cap-b");
     expect(b.koreanLabel).toBe("cap-b"); // 병기 없음 → 영문키 폴백
+  });
+
+  it("(mapping-basis-shift D2) charter capability를 구현한 archive change도 changeKeys에 포함한다(additive·비파괴)", async () => {
+    // projects.ts는 여전히 charter 원천이지만, buildCapabilityIndex archive 완화의 부작용으로
+    // archive change도 노출된다(활성 링크를 빼지 않고 archive를 더함만 — design.md D4 정직표기).
+    makeCharterSpec("proj", "## capability: cap-a — 가나다\n");
+    makeChange("proj", "active-ch", ["cap-a"], "활성 체인지");
+    makeArchiveChange("proj", "2026-01-01-archived-ch", ["cap-a"]);
+    const res = await request(await loadApp()).get("/api/projects/proj/capabilities");
+    expect(res.status).toBe(200);
+    const a = res.body.capabilities.find((c: { key: string }) => c.key === "cap-a");
+    expect(a.changeKeys).toEqual(expect.arrayContaining(["active-ch", "2026-01-01-archived-ch"]));
   });
 
   it("존재하지 않는 프로젝트는 404", async () => {

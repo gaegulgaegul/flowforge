@@ -87,9 +87,15 @@ capability 키 **글자단위 정확 비교**(trim만, 유사도 X)를 그대로
 
 **docs/spec.md의 다른 소비자와 wowa-app을 저촉하지 않는 방법:**
 
-1. **`buildCapabilityIndex` 시그니처·기존 동작 불변** → 이 함수를 쓰는 `projects.ts`(capability 카드
-   대시보드)는 무손상. projects.ts는 계속 `parseCharterCapabilities`로 charter 카드를 만든다
-   (그 UI 계약이 charter capability라서 — 매핑 배지와 별개 관심사). 기존 459 테스트 그대로 GREEN 유지.
+1. **`buildCapabilityIndex` 시그니처 불변** → 이 함수를 쓰는 `projects.ts`(capability 카드 대시보드)는
+   호출부·주입 집합(charter caps) 무변경. projects.ts는 계속 `parseCharterCapabilities`로 charter 카드를
+   만든다(그 UI 계약이 charter capability라서 — 매핑 배지와 별개 관심사).
+   ⚠️ **정직 표기(부작용 1건):** archive 완화(D2)는 `buildCapabilityIndex` 자체의 스캔 범위를 넓히므로,
+   projects.ts의 `capabilities`/`changes` 응답에도 **archive change가 추가로 나타날 수 있다**(활성 링크를
+   *빼지 않고* archive를 *더함*만 — 비파괴·additive). 이는 "이 capability는 archive된 change로 구현됨"을
+   projects 카드에도 일관되게 보여주는 의도된 확장이며, 기존 469 테스트는 archive 픽스처를 만들지 않아
+   회귀하지 않는다. archive를 docs.ts에만 국한하고 싶다면 후속에서 `buildCapabilityIndex`에 옵션 플래그를
+   추가할 수 있으나(D2에서 옵션 미채택 결정), 현재는 두 소비자 공통으로 archive 포함이 더 정합적이라 판단.
 2. **원천 전환은 `docs.ts` planning-features 라우트 한 곳에만** — `graph.ts`·`koreanLabels.ts`·
    `changes.ts`는 애초에 `capabilityIndex`를 import하지 않는다(grep 확인). `parseCharterCapabilities`는
    `koreanLabels.parseCapabilityLabels`와 별개 함수라 교체와 무관.
