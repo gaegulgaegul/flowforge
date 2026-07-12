@@ -24,8 +24,8 @@ audit-run 엔드포인트는 requireWriteAuth(CF Access JWT 또는 Bearer 토큰
 - **WHEN** project에 `..`나 절대경로가 포함된다
 - **THEN** 4xx를 반환하고 실행하지 않는다
 
-### Requirement: 감사는 호스트 워커가 결정적으로 실행하고 결과를 저장한다
-flowforge 컨테이너는 audit을 직접 실행하지 않고 큐잉만 SHALL 한다. 실제 실행은 openspec-reports 호스트 워커가 결정적 파이썬 3-step(audit_scan → audit_match → generate_report)을 shell=False로 SHALL 수행하며, 결과를 `<project>/docs/audit.json`에 저장한다. claude/LLM을 거치지 않는다.
+### Requirement: 감사는 호스트 워커가 판정을 결정적으로 산출하고 결과를 저장한다
+flowforge 컨테이너는 audit을 직접 실행하지 않고 큐잉만 SHALL 한다. 실제 실행은 openspec-reports 호스트 워커가 담당한다. 워커는 openspec-audit 스킬을 고정 프롬프트(`/openspec-audit`)로 실행하며, **판정(PASS/FAIL/UNVERIFIABLE)은 스킬 내부의 결정적 파이썬 3-step(audit_scan → audit_match → generate_report, shell=False)이 route/symbol 문자열 매칭으로 SHALL 산출**한다. LLM은 스크립트 실행을 오케스트레이션하고 behavior 라인에 주석만 달 수 있으며, **LLM 판단은 UNVERIFIABLE 상한에 묶여 PASS를 만들 수 없다**. 결과는 `<project>/docs/audit.json`에 저장한다.
 
 #### Scenario: 감사 실행 후 audit.json 갱신
 - **WHEN** 워커가 audit 잡을 처리한다

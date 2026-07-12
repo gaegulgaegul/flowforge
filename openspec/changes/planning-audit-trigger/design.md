@@ -13,7 +13,14 @@
 
 - **B 탈락**: 컨테이너가 호스트 명령 실행 = RCE 방어 무의미.
 - **A vs C**: A는 큐 db·orphan reaping·stale reclaim·CF Access를 재구현 → 5건 방어를 다시 밟을 위험. C는 굳은 코어 재사용.
-- **C의 함정 해소**: 현 워커는 `claude -p "/openspec-verify {change}"`만 실행. audit은 LLM 불필요한 결정적 파이썬이라 claude로 감싸면 비결정적·토큰소비·느림. → 워커에 claude 안 거치고 파이썬 3-step 직접 실행하는 분기 신설.
+- **C의 함정(원안)**: 현 워커는 `claude -p "/openspec-verify {change}"`만 실행. audit의 판정은 LLM 불필요한 결정적 파이썬이라, claude로 감싸면 오케스트레이션이 비결정적·토큰소비·느림. → 원안은 "워커에 claude 안 거치고 파이썬 3-step 직접 실행하는 분기 신설"이었다(결정론·토큰절약·속도·보안표면 축소 목적).
+
+- **실행 단계 재조정(실제 채택) — claude+openspec-audit 스킬 경유(A/C 방향)**: 구현 단계에서 원안(워커에 3-step 직접 분기)을 뒤집고, 워커가 `claude -p /openspec-audit`로 스킬을 실행하는 방식을 채택했다. 정직하게 그 이유와 트레이드오프를 기록한다.
+  - **채택 이유(DRY·단일진실)**: openspec-audit 스킬이 **이미 그 3개 스크립트(audit_scan/audit_match/generate_report, stdlib-only, subprocess/network 0건)를 정본 실행체로 감싸고 있다.** 워커에 3-step을 다시 구현하면 스킬과 중복 유지보수가 되고 두 실행경로가 갈라질 위험이 있다. 스킬 재사용이 DRY이자 단일진실.
+  - **판정 결정론은 유지된다**: claude는 스크립트 실행을 오케스트레이션하고 behavior 라인에 주석만 달 수 있을 뿐, **판정(PASS/FAIL/UNVERIFIABLE) 자체는 스킬 내부 결정론 스크립트가 route/symbol 문자열 매칭으로 산출**한다. PASS는 스크립트 산출물에만 근거하고, LLM 판단은 UNVERIFIABLE 상한에 묶여 **LLM이 PASS를 만들 수 없다.** 따라서 결과 신뢰성은 원안과 동등하게 담보된다.
+  - **수용한 비용(트레이드오프)**: claude 오케스트레이션 경유로 (a) 토큰 소비, (b) 실행 시간 증가·변동, (c) 오케스트레이션 비결정(같은 코드라도 claude 실행경로는 매번 다를 수 있음)이 발생한다. **이를 감수 트레이드오프로 수용**한다 — 판정 값 자체는 동일하므로 신뢰성 손실은 없고, 스킬 재사용이 얻는 단일진실이 이 비용을 상쇄한다고 판단.
+  - **보안표면**: claude 실행은 `--dangerously-skip-permissions`를 쓰므로 표면이 넓어진다. 이는 워커의 기존 **DISALLOWED_TOOLS** 제한 + **systemd 샌드박스**(ProtectSystem=strict, ReadWritePaths 최소, egress 차단, 자격증명 RO)의 2겹 방어에 의존해 억제한다.
+  - **잔여 리스크(정직 명시)**: 토큰 소비·실행시간 변동은 상시 존재한다. 오케스트레이션 자체는 비결정적이다(실행경로 재현 불가). 단 **판정 값은 결정론 스크립트가 산출하므로 동일**하다 — 비결정성은 경로에 있고 결과에는 없다.
 
 ## 데이터 흐름
 
