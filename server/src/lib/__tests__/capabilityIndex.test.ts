@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   parseCharterCapabilities,
+  parseFeatureCapabilities,
   buildCapabilityIndex,
   buildCapabilityDetail,
   attachLinkedChanges,
@@ -27,6 +28,15 @@ function makeChange(changesRoot: string, change: string, caps: string[]): void {
   }
 }
 
+/** openspec/changes/archive/<dated-change>/specs/<cap>/spec.md 픽스처(archive 완화 검증용). */
+function makeArchiveChange(changesRoot: string, datedChange: string, caps: string[]): void {
+  for (const cap of caps) {
+    const dir = join(changesRoot, "archive", datedChange, "specs", cap);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "spec.md"), `## capability: ${cap}\n`);
+  }
+}
+
 describe("parseCharterCapabilities — charter 측 capability 키 집합", () => {
   it("docs/spec.md의 `## capability:` 키를 모두 뽑는다(병기는 키만)", () => {
     const md = "## capability: project-card-grid — 프로젝트 카드 그리드\n## capability: korean-display-labels\n";
@@ -34,6 +44,33 @@ describe("parseCharterCapabilities — charter 측 capability 키 집합", () =>
     expect(set.has("project-card-grid")).toBe(true);
     expect(set.has("korean-display-labels")).toBe(true);
     expect(set.size).toBe(2);
+  });
+});
+
+describe("parseFeatureCapabilities — features.md 측 capability 키 집합 (D1 조인 원천)", () => {
+  it("features.md의 `<!-- capability: K -->` 키를 모두 뽑는다(featureTreeBuilder RE_CAPABILITY 동형)", () => {
+    const md = [
+      "## 요구사항A <!-- capability: planning-features-view -->",
+      "### 기능",
+      "## 요구사항B",
+      "<!-- capability: planning-prd-view -->",
+    ].join("\n");
+    const set = parseFeatureCapabilities(md);
+    expect(set.has("planning-features-view")).toBe(true);
+    expect(set.has("planning-prd-view")).toBe(true);
+    expect(set.size).toBe(2);
+  });
+
+  it("charter 문법(`## capability: K`)은 뽑지 않는다(주석 마커만, 원천 분리)", () => {
+    // features 파서는 HTML 주석 마커만 본다 — charter의 `## capability:` 헤더에 오매칭하면 안 됨.
+    const md = "## capability: charter-only-key\n일반 본문 텍스트\n";
+    const set = parseFeatureCapabilities(md);
+    expect(set.has("charter-only-key")).toBe(false);
+    expect(set.size).toBe(0);
+  });
+
+  it("빈 문자열/파일없음 대체 입력이면 빈 Set(비파괴 폴백)", () => {
+    expect(parseFeatureCapabilities("").size).toBe(0);
   });
 });
 
@@ -81,6 +118,54 @@ describe("buildCapabilityIndex — specs 디렉토리명 ↔ capability 키 연�
     const idx = buildCapabilityIndex(charter, root);
     expect(idx.byCapability.get("cap-a")).toContain("multi");
     expect(idx.byCapability.get("cap-b")).toContain("multi");
+  });
+
+  // D2: archive 완화 — archive/ 하위 dated change도 스캔에 포함(활성 전용이던 것을 완화).
+  it("(D2) archive/ 하위 dated change도 byCapability에 포함한다", () => {
+    const caps = new Set(["planning-features-view"]);
+    makeArchiveChange(root, "2026-06-28-planning-features-generation", ["planning-features-view"]);
+    const idx = buildCapabilityIndex(caps, root);
+    expect(idx.byCapability.get("planning-features-view")).toEqual([
+      "2026-06-28-planning-features-generation",
+    ]);
+  });
+
+  it("(D2) archive change 링크에 archived=true 플래그가 붙는다(활성 구분)", () => {
+    const caps = new Set(["cap-a"]);
+    makeArchiveChange(root, "2026-01-01-old-change", ["cap-a"]);
+    const idx = buildCapabilityIndex(caps, root);
+    const link = idx.links.find((l) => l.changeKey === "2026-01-01-old-change");
+    expect(link?.linked).toBe(true);
+    expect(link?.archived).toBe(true);
+  });
+
+  it("(D2) 활성 change 링크는 archived가 참이 아니다(archive 완화가 활성을 오염 안 함)", () => {
+    const caps = new Set(["cap-a"]);
+    makeChange(root, "active-change", ["cap-a"]);
+    const idx = buildCapabilityIndex(caps, root);
+    const link = idx.links.find((l) => l.changeKey === "active-change");
+    expect(link?.archived).toBeFalsy();
+  });
+
+  it("(D2) 활성+archive가 같은 capability를 구현하면 둘 다 병합해 담는다", () => {
+    const caps = new Set(["cap-a"]);
+    makeChange(root, "active-a", ["cap-a"]);
+    makeArchiveChange(root, "2026-01-01-archived-a", ["cap-a"]);
+    const idx = buildCapabilityIndex(caps, root);
+    expect(idx.byCapability.get("cap-a")).toEqual(
+      expect.arrayContaining(["active-a", "2026-01-01-archived-a"]),
+    );
+    expect(idx.byCapability.get("cap-a")).toHaveLength(2);
+  });
+
+  it("(D2) archive 미매칭 change도 unlinked로 표면화(silent drop 금지, 활성과 동일 규칙)", () => {
+    const caps = new Set(["cap-a"]);
+    makeArchiveChange(root, "2026-01-01-orphan", ["nonexistent-cap"]);
+    const idx = buildCapabilityIndex(caps, root);
+    expect(idx.unlinked).toContainEqual({
+      changeKey: "2026-01-01-orphan",
+      capabilityKey: "nonexistent-cap",
+    });
   });
 });
 

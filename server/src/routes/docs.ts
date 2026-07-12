@@ -46,7 +46,7 @@ import {
   isSafeFlowToken,
 } from "../lib/docs.js";
 import {
-  parseCharterCapabilities,
+  parseFeatureCapabilities,
   buildCapabilityIndex,
   attachLinkedChanges,
 } from "../lib/capabilityIndex.js";
@@ -144,10 +144,12 @@ docsRouter.get(
       res.status(404).json({ error: "planning_features_not_found" });
       return;
     }
-    // flowforge-change-node-mapping: 요구사항 노드에 연관 change(linkedChanges)를 부여.
-    // dir=<projectRoot>/docs 이므로 charter=<dir>/spec.md, changesRoot=<projectRoot>/openspec/changes.
-    const charterCaps = parseCharterCapabilities(readDocsFile(dir, "spec.md") ?? "");
-    const index = buildCapabilityIndex(charterCaps, join(dirname(dir), "openspec", "changes"));
+    // flowforge-change-node-mapping + mapping-basis-shift(D1): 요구사항 노드에 연관 change(linkedChanges) 부여.
+    // 조인 원천을 폐기 방향 charter(docs/spec.md)에서 features.md capability로 전환한다 — 노드 좌변
+    // (attachLinkedChanges의 node.capability)과 동일 원천이라 정합. dir=<projectRoot>/docs 이므로
+    // features=<dir>/planning/features.md, changesRoot=<projectRoot>/openspec/changes(archive 포함, D2).
+    const featureCaps = parseFeatureCapabilities(readDocsFile(dir, join("planning", "features.md")) ?? "");
+    const index = buildCapabilityIndex(featureCaps, join(dirname(dir), "openspec", "changes"));
     const linked = attachLinkedChanges(tree, index);
     res.json({ project, tree: linked ?? tree });
   }),

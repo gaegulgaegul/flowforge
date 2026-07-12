@@ -56,6 +56,12 @@ export interface CapabilityChangeLink {
    * False entries are surfaced as "미연결" — never silently dropped.
    */
   linked: boolean;
+  /**
+   * True when the change lives under openspec/changes/archive/ (완료·아카이브).
+   * Additive/optional — 기존 소비자는 무시. 후속 change가 활성/archive 시각 구분에 쓸 수 있게
+   * 데이터만 실어둔다(node-mapping 배지 UI는 이 change에서 불변).
+   */
+  archived?: boolean;
 }
 
 /** One change row in a capability detail (English key + Korean display name). */
