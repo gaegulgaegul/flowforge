@@ -1,0 +1,216 @@
+{
+  "change": "planning-audit-trigger",
+  "verifiedAt": "2026-07-12T13:05:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 7,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "미감사 프로젝트에 감사 실행 버튼을 노출한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "빈값": "버튼 노출 여부는 auditStatus enum(unknown/warn/clean/fail) 4상태만의 함수라 '빈 문자열' 입력 개념이 없다 — auditStatus는 서버 readAuditStatus가 항상 4값 중 하나로 폴백(없으면 unknown)한다.",
+          "잘못된타입": "auditStatus는 shared 타입(AuditStatus union)으로 컴파일 타임에 고정 — 런타임 임의 타입 주입 경로 없음.",
+          "동시성": "버튼 노출은 순수 렌더 조건(dashProject.auditStatus 파생)이라 경쟁 상태 없음. 클릭 후 재조회 race는 Requirement 3(runProjectAudit dashReqToken 가드)에서 커버.",
+          "대량": "단일 프로젝트 상세의 단일 버튼 — 대량 데이터 축이 없다.",
+          "특수문자": "버튼 노출 판정에 문자열 파싱이 없다(enum 비교뿐)."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "미확인 상태에 버튼 표시 (auditStatus=unknown → '감사 진행' 버튼 노출)",
+          "layer": "web",
+          "means": "라이브 browse(gstack, localhost:8812): auditStatus=unknown 프로젝트(ssoksok) 상세 진입 → 헤더에 '🔍 감사 진행' 버튼(@e6) 실제 노출 확인. 코드: App.tsx:970 조건(auditStatus unknown/warn).",
+          "basis": "web adapter: web/src/App.tsx + gstack browse 8812 렌더",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s1-button-unknown.png",
+            "caption": "ssoksok(unknown) 상세 헤더에 '🔍 감사 진행' 버튼 노출 — 라이브 렌더"
+          }
+        },
+        {
+          "scenario": "정합/불합(fail) 상태에는 강제 노출 안 함 (경계·에러경로: FAIL→'fail'은 unknown/warn 아님 → 버튼 숨김)",
+          "layer": "web",
+          "means": "라이브 browse: flowforge(audit.json finalJudgment=FAIL → auditStatus='fail') 상세엔 '감사 진행' 버튼 미노출 확인 — mapFinalJudgment(projects.ts:117~120: FAIL→fail)·App.tsx:970(unknown/warn만). 경계값(상태 enum 경계)·에러경로(파싱 실패→unknown 폴백) 함께 커버.",
+          "basis": "web adapter: projects.ts mapFinalJudgment + App.tsx:970 + 라이브 렌더",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s6-grid-audit-badges.png",
+            "caption": "flowforge 카드 '실패' 배지(FAIL 반영). 상세엔 버튼 미노출(fail≠unknown/warn)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "감사 실행은 인증 게이트와 프로젝트 화이트리스트를 통과해야 한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "project 파라미터는 express route param이라 항상 string — 비문자열 타입 주입 경로 없음. 빈/특수문자/traversal은 아래에서 커버.",
+          "대량": "audit-run은 단일 project 키만 받는다(배열·대량 입력 축 없음). 연타 대량은 디바운스(동시성 클래스)로 커버."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "무인증 요청 거부 (게이트 활성 시 401, 큐 미호출)",
+          "layer": "server",
+          "means": "jest+supertest auditRun.test.ts: FLOWFORGE_WRITE_TOKEN 설정(게이트 활성) → Authorization 없이 POST /api/docs/flowforge/audit-run → 401 unauthorized + 큐 미호출 assert. requireWriteAuth.ts gateEnabled()=true 경로. (dev-mode 8812는 gateEnabled=false passthrough라 라이브 401 대신 테스트로 실증 — 그 사실 명시.)",
+          "basis": "server adapter: auditRun.test.ts (npm test, jest 15/15 PASS)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "auditRun.test.ts '무인증 → 401, 큐 미호출': expect(res.status).toBe(401); expect(res.body).toEqual({error:'unauthorized'}). npm test → 15 passed.",
+            "caption": "무인증 401 (게이트 활성 jest)"
+          }
+        },
+        {
+          "scenario": "경로조작 project 거부 (.. / 절대경로 → 4xx, 미실행)",
+          "layer": "server",
+          "means": "라이브 curl(8812): POST /api/docs/..%2f..%2fetc/audit-run → 400 invalid_project. 미등록 nonexistent-proj-xyz → 400. resolveProjectDir(docs.ts:681)=null→400. 빈값/특수문자/traversal 경계 커버. jest auditRun.test.ts에도 경로조작 케이스.",
+          "basis": "server adapter: docs.ts resolveProjectDir + 라이브 curl 8812 + jest",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "curl -XPOST .../..%2f..%2fetc/audit-run → HTTP 400 {\"error\":\"invalid_project\"}; curl .../nonexistent-proj-xyz/audit-run → HTTP 400. resolveProjectDir null 가드.",
+            "caption": "경로조작·미등록 400 (라이브)"
+          }
+        },
+        {
+          "scenario": "연타 디바운스 (동시성: 중복 enqueue 억제)",
+          "layer": "server",
+          "means": "jest auditTrigger.test.ts: DEBOUNCE_MS 창 내 반복 호출 → 잡 1건만 enqueue, 후속은 debounced(202 관용). auditTrigger.ts 프로세스 로컬 맵. 동시성 클래스 커버.",
+          "basis": "server adapter: auditTrigger.test.ts (jest)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "auditTrigger.test.ts 디바운스 케이스 PASS (jest 15/15). docs.ts:695 debounced→202.",
+            "caption": "연타 디바운스 (jest)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "감사는 호스트 워커가 판정을 결정적으로 산출하고 결과를 저장한다",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "covered",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "워커 action은 ALLOWED_ACTIONS={verify,audit} 화이트리스트로 고정 — 임의 타입/미지 action은 build_command가 raise(test_unknown_action_raises). project 경로 파생만 씀.",
+          "대량": "audit은 프로젝트 단위 단일 잡(spec.md 전체 vs 코드). 대량 배치 축 없음 — 큐 직렬 pop(test_pop_serial_one_at_a_time)."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "감사 실행 후 audit.json 갱신 (워커→openspec-audit 스킬→docs/audit.json 새 finalJudgment)",
+          "layer": "server",
+          "means": "라이브 e2e: 큐 task2(flowforge/audit) status=done + flowforge/docs/audit.json 생성(runId=run-20260712-1224, finalJudgment=FAIL). 재실행 실증: 버튼 엔드포인트로 task3 enqueue(202) → 워커 처리 중 audit.json 재작성(mtime 12:24→12:52, runId=run-20260712-1300, counts PASS117/FAIL10/UNVERIFIABLE193). 판정=스킬 내부 결정론 3-step 산출(worker.py:48 /openspec-audit 고정템플릿, shell 미경유). 명령주입 change 프롬프트 미유출·미등록 거부 unittest 커버.",
+          "basis": "server adapter(워커): queue.db + docs/audit.json 재조회 + worker.py + test_worker.py(19 PASS)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "queue task2=done; task3 enqueue via POST audit-run(202,taskId=3)→처리 중 docs/audit.json 재작성 runId run-20260712-1224→run-20260712-1300, finalJudgment=FAIL, counts={PASS:117,FAIL:10,UNVERIFIABLE:193}. FAIL=코드↔spec 대조 판정(audit 정상 동작)이지 AUD scenario 실패 아님. test_worker.py: audit 미등록 거부·명령주입 프롬프트 미유출 PASS.",
+            "caption": "audit.json 라이브 갱신 (e2e write-through)"
+          }
+        },
+        {
+          "scenario": "UI가 결과를 재조회해 반영한다 (감사 완료 후 폴링 재조회 → 판정 화면 표시)",
+          "layer": "web",
+          "means": "코드: runProjectAudit(App.tsx:551) 202 후 fetchAuditCapabilities 폴링(MAX_POLLS=20, POLL_MS=3000) → setFeatureAudit 판정 갱신. 라이브: flowforge 카드/상세가 저장된 audit.json(finalJudgment=FAIL)을 readAuditStatus→'fail' 배지로 반영(browse 렌더 확인). 서버 readAuditStatus(projects.ts:129)가 audit.json 재조회.",
+          "basis": "web adapter: App.tsx runProjectAudit 폴링 + projects.ts readAuditStatus + gstack browse 8812",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s6-grid-audit-badges.png",
+            "caption": "flowforge 카드 audit 판정(FAIL→'실패') UI 반영 — audit.json 재조회 결과"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 6,
+      "passed": 6,
+      "failed": 0,
+      "basis": "express 라우트 + openspec-reports 호스트 워커. jest(auditRun/auditTrigger 15건)·python unittest(worker 19·console 25)·라이브 curl 8812·큐 e2e(queue.db)·docs/audit.json 재조회.",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 4,
+      "passed": 4,
+      "failed": 0,
+      "basis": "web/src (App.tsx 버튼·runProjectAudit 폴링, projects.ts readAuditStatus). gstack browse 라이브 렌더 8812 — ssoksok(unknown) 버튼 노출·flowforge(fail) 배지 반영 스크린샷.",
+      "reason": ""
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "detect: 프로젝트에 android 소스/gradle 없음(flowforge=web/server TS)",
+      "reason": "적용 불가: mobile 레이어 없음"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "detect: iOS 소스 없음 + 비-macOS",
+      "reason": "적용 불가: mobile 레이어 없음 / macOS 필요"
+    }
+  ],
+  "codeState": {
+    "head": "cd7a4491733efb8eae05c705389f2656e1fbc9eb",
+    "dirty": true,
+    "branch": "feat/flowforge-feedback-changes",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260712-1305.html"
+}
