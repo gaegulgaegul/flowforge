@@ -146,6 +146,35 @@ describe("planningUserFlowBuilder", () => {
     }
   });
 
+  it("화면(page) 노드에 바레 screenId(mermaidId 소문자)를 실어주고, 화면 아닌 노드엔 없다 (flowforge-screen-crosslink A.1/A.3)", () => {
+    // 화면(box) B/D는 screenId, 시작(stadium) A·행동(diamond) C는 screenId 없음(undefined).
+    const md = [
+      "```mermaid",
+      "flowchart TD",
+      '  Start(["앱 시작"]) --> Grid["프로젝트 목록"]',
+      '  Grid --> Check{"권한 확인"}',
+      '  Check -->|성공| Detail["상세 화면"]',
+      "```",
+    ].join("\n");
+    const { docsDir, cleanup } = makeFlow("cross-v1", md);
+    try {
+      const graph = buildDocsPlanningUserFlow(docsDir, "cross-v1")!;
+      const byLabel = Object.fromEntries(graph.nodes.map((n) => [n.label, n]));
+      // 화면 노드 = 바레 화면 id(mermaidId 소문자). Grid(mermaidId "Grid") → "grid".
+      expect(byLabel["프로젝트 목록"]!.kind).toBe("screen");
+      expect(byLabel["프로젝트 목록"]!.screenId).toBe("grid");
+      expect(byLabel["상세 화면"]!.kind).toBe("screen");
+      expect(byLabel["상세 화면"]!.screenId).toBe("detail");
+      // 화면 아닌 노드는 screenId 없음(undefined) — 시작·행동.
+      expect(byLabel["앱 시작"]!.kind).toBe("start");
+      expect(byLabel["앱 시작"]!.screenId).toBeUndefined();
+      expect(byLabel["권한 확인"]!.kind).toBe("action");
+      expect(byLabel["권한 확인"]!.screenId).toBeUndefined();
+    } finally {
+      cleanup();
+    }
+  });
+
   it("파일이 없으면 null", () => {
     const { docsDir, cleanup } = makeFlow("main-v1", FLOW);
     try {
