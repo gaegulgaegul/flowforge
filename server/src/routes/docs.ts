@@ -63,6 +63,8 @@ import {
   updateWireframeFeedback,
 } from "../lib/wireDocs.js";
 import { readAuditCapabilities } from "../lib/auditSummary.js";
+import { triggerAudit } from "../lib/auditTrigger.js";
+import { resolveProjectDir } from "../lib/projects.js";
 import { isLayoutOverlay } from "../lib/changes.js";
 import { safe } from "../lib/safe-error.js";
 import { requireWriteAuth } from "../lib/requireWriteAuth.js";
@@ -558,5 +560,45 @@ docsRouter.patch(
       return;
     }
     res.json({ ok: true });
+  }),
+);
+
+/**
+ * POST /api/docs/:project/audit-run — "감사 진행" 트리거(얇은 인증 프록시).
+ *
+ * flowforge 컨테이너는 audit을 직접 실행하지 않고(홈 RO 마운트) openspec-reports 큐에
+ * 잡을 enqueue만 한다(auditTrigger). 인증은 requireWriteAuth(CF Access JWT 또는 Bearer),
+ * project 키는 resolveProjectDir 화이트리스트('..'·슬래시·미등록 차단)로 재검증한다.
+ *
+ * 응답: 202(큐잉됨) / 400(경로조작·미등록) / 401(무인증, 미들웨어) / 502(큐 오류·워커 401).
+ * 프로덕션에서 인증(env)이 활성이어야 공개 RCE 트리거를 막는다(design 게이트 5).
+ */
+docsRouter.post(
+  "/api/docs/:project(*)/audit-run",
+  requireWriteAuth,
+  safe(async (req, res) => {
+    const project = String(req.params.project ?? "");
+    // 화이트리스트 + 실재 검증(슬래시·'..'·미등록·심링크 차단). null이면 실행 안 함.
+    if (resolveProjectDir(project) === null) {
+      res.status(400).json({ error: "invalid_project" });
+      return;
+    }
+    const result = await triggerAudit(project);
+    if (result.ok) {
+      res.status(202).json({ ok: true, ...(result.taskId !== undefined ? { taskId: result.taskId } : {}) });
+      return;
+    }
+    // 실패 분류 → HTTP 매핑. invalid_project는 위에서 걸러졌지만 방어적으로 400.
+    if (result.status === "invalid_project") {
+      res.status(400).json({ error: "invalid_project" });
+      return;
+    }
+    if (result.status === "debounced") {
+      // 연타 억제 — 이미 최근에 큐잉됨. 202로 관용 처리(잡은 안 늘리되 사용자엔 성공처럼).
+      res.status(202).json({ ok: true, debounced: true });
+      return;
+    }
+    // unauthorized(워커 토큰 문제)·queue_error(네트워크·비202)는 업스트림 게이트웨이 실패 → 502.
+    res.status(502).json({ error: "audit_enqueue_failed", reason: result.status ?? "queue_error" });
   }),
 );
