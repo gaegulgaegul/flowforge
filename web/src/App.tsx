@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import {
   ReactFlow,
   Background,
@@ -12,7 +12,6 @@ import {
 import type {
   SpecGraph,
   LayoutOverlay,
-  IANode as IANodeT,
   Wireframe,
   WireScreen2,
   Prd,
@@ -27,14 +26,12 @@ import type {
 } from "@flowforge/shared";
 import {
   fetchGraph,
-  fetchIA,
   fetchWireframe,
   fetchPrd,
   fetchSpecTree,
   fetchProjects,
   fetchDocsPlanningPrd,
   fetchDocsPlanningFeatures,
-  fetchDocsPlanningIa,
   fetchDocsPlanningWireframe,
   fetchDocsPlanningUserFlow,
   saveDocsPlanningUserFlowLayout,
@@ -55,13 +52,11 @@ import {
 import type { ProjectCard } from "@flowforge/shared";
 import { ProjectGrid } from "./ProjectGrid.js";
 import { toFlowNodes, toFlowEdges, danglingCount, type SpecNodeData } from "./graphAdapter.js";
-import { toIAFlow, type IANodeData } from "./iaAdapter.js";
 import { toSpecTreeFlow } from "./specTreeAdapter.js";
-import { toFeatureTreeFlow, type FeatureNodeData } from "./featureTreeAdapter.js";
+import { toFeatureTreeList, type FeatureNodeData, type FeatureListItemFlat } from "./featureTreeAdapter.js";
 import { SpecNode } from "./SpecNode.js";
-import { IANode } from "./IANode.js";
 import { SpecTreeNode } from "./SpecTreeNode.js";
-import { FeatureNode } from "./FeatureNode.js";
+import { FeatureListView } from "./FeatureListView.js";
 import { WireframePanel } from "./WireframePanel.js";
 import { WireframeApprovalWizard } from "./WireframeApprovalWizard.js";
 import { WireframePinFeedback } from "./WireframePinFeedback.js";
@@ -70,13 +65,19 @@ import { PrdApprovalWizard } from "./PrdApprovalWizard.js";
 import { FeatureApprovalWizard } from "./FeatureApprovalWizard.js";
 import { UserFlowApprovalWizard } from "./UserFlowApprovalWizard.js";
 import { FeatureDetailPanel } from "./FeatureDetailPanel.js";
-import { FlowDetailPanel } from "./FlowDetailPanel.js";
-import { IADetailPanel } from "./IADetailPanel.js";
+import { FlowDetailPanel, type ScreenCrosslinkData } from "./FlowDetailPanel.js";
+import {
+  buildScreenToDetailLabels,
+  detailLabelsForScreen,
+  buildWireById,
+  wireForScreen,
+} from "./screenCrosslink.js";
 import { parseDeepLink, serializeDeepLink, type Tab } from "./deeplink.js";
 
 // 커스텀 노드 타입 매핑 — 컴포넌트 밖 상수로 두어 재마운트 방지.
-// featureTree는 기획 기능명세서 전용(specTree와 분리, 타입 전략 B).
-const nodeTypes: NodeTypes = { spec: SpecNode, ia: IANode, specTree: SpecTreeNode, featureTree: FeatureNode };
+// featureTree는 리스트 렌더로 전환(flowforge-artifact-restructure) — RF 노드 타입에서 빠짐.
+// IA 뷰 제거(flowforge-ia-removal) — ia 노드 타입 제거.
+const nodeTypes: NodeTypes = { spec: SpecNode, specTree: SpecTreeNode };
 
 // skipped 대량 나열 절단 상한 — 상위 N건만 상태바에 미리보기(수백 건이 상태바를 뒤덮지 않게).
 // 매직 넘버 인라인 이중 정의를 상수 1곳으로 단일화(드리프트 방지).
@@ -100,20 +101,15 @@ export function App(): JSX.Element {
   // 5종 뷰 fetch·배치 저장에 ?project=로 실려 해당 프로젝트 openspec 하위에서 해석된다.
   const [selectedProject, setSelectedProject] = useState<string | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("prd");
-  // skeleton(기획 뼈대) 단계 전용 탭. views 단계의 tab(5종)과 완전히 분리 — 충돌 방지.
-  const [planTab, setPlanTab] = useState<"prd" | "features" | "ia" | "wire" | "flow">("prd");
-  const [iaVerbose, setIaVerbose] = useState(false);
+  // skeleton(기획 뼈대) 단계 전용 탭. views 단계의 tab(4종)과 완전히 분리 — 충돌 방지.
+  // IA 뷰 제거(flowforge-ia-removal) — "ia" 제거, 산출물 4종.
+  const [planTab, setPlanTab] = useState<"prd" | "features" | "wire" | "flow">("prd");
   const [status, setStatus] = useState("");
 
   // 유저플로우 상태
   const [flowNodes, setFlowNodes] = useState<Node[]>([]);
   const [flowEdges, setFlowEdges] = useState<Edge[]>([]);
   const [dangling, setDangling] = useState(0);
-
-  // IA 트리 상태
-  const [iaRoot, setIaRoot] = useState<IANodeT | null>(null);
-  const [iaNodes, setIaNodes] = useState<Node[]>([]);
-  const [iaEdges, setIaEdges] = useState<Edge[]>([]);
 
   // 와이어프레임 상태
   const [wireframe, setWireframe] = useState<Wireframe | null>(null);
@@ -130,8 +126,9 @@ export function App(): JSX.Element {
   // 기획 단계 기능명세서(docs/planning/features.md) — 프로젝트 단위(skeleton에서 표시).
   // 가상 루트 노드(children=요구사항들)를 보관, adapter로 RF nodes/edges로 변환해 렌더.
   const [planningFeatures, setPlanningFeatures] = useState<FeatureTreeNodeT | null>(null);
-  const [featureNodes, setFeatureNodes] = useState<Node[]>([]);
-  const [featureEdges, setFeatureEdges] = useState<Edge[]>([]);
+  // 기능명세 계층 리스트 항목(flowforge-artifact-restructure) — 다이어그램 nodes/edges 대체.
+  // 어댑터(toFeatureTreeList)가 트리를 평탄화하고 파생 필드(audit·연결화면·연관 change)를 실어준다.
+  const [featureItems, setFeatureItems] = useState<FeatureListItemFlat[]>([]);
   // capability별 audit 요약(docs/audit.json) — 요구사항 노드 배지용. null=미로드/실패(배지 없음, D-6).
   const [featureAudit, setFeatureAudit] = useState<Record<string, CapabilityAuditSummary> | null>(null);
   // 화면 레지스트리(features.md 화면목록 + N:M 링크) — 상세 패널 연결화면 섹션용. null=미로드/실패(섹션 없음, D-4).
@@ -148,15 +145,6 @@ export function App(): JSX.Element {
   // 유저플로우 노드 클릭 → 상세 패널(FlowDetailPanel). null이면 닫힘.
   // 노드 data(SpecNodeData)를 보관 — 어댑터가 상세 필드(incoming/outgoing 흐름)를 실어준다.
   const [selectedFlow, setSelectedFlow] = useState<SpecNodeData | null>(null);
-  // IA 노드 클릭 → 상세 패널(IADetailPanel). null이면 닫힘.
-  // 노드 data(IANodeData)를 보관 — 어댑터가 상세 필드(childRefs=N:M 연결·parentLabel)를 실어준다.
-  const [selectedIa, setSelectedIa] = useState<IANodeData | null>(null);
-
-  // 기획 단계 IA(docs/planning/features.md 화면목록 → 화면 1급 노드 IATree) — 프로젝트 단위(skeleton에서 표시).
-  // change IA(iaRoot/iaNodes/iaEdges)와 분리. 화면=부모, N:M 연결 상세기능=자식. toIAFlow·IANode 재사용.
-  const [planningIaRoot, setPlanningIaRoot] = useState<IANodeT | null>(null);
-  const [planningIaNodes, setPlanningIaNodes] = useState<Node[]>([]);
-  const [planningIaEdges, setPlanningIaEdges] = useState<Edge[]>([]);
 
   // 기획 단계 와이어 = 디바이스 프레임 레이아웃(WireScreen2[]) — 프로젝트 단위(skeleton에서 표시).
   // change 와이어(wireframe)와 분리. 데스크탑/모바일 프레임 안 배치. WireframeDeviceFrame이 렌더(세로 목록 아님).
@@ -219,9 +207,6 @@ export function App(): JSX.Element {
         setStatus("");
       })
       .catch((e: unknown) => setStatus(`그래프 로드 실패: ${String(e)}`));
-    fetchIA(selected, selectedProject)
-      .then((r) => setIaRoot(r.tree))
-      .catch((e: unknown) => setStatus(`IA 로드 실패: ${String(e)}`));
     fetchWireframe(selected, selectedProject)
       .then((r) => setWireframe(r.wireframe))
       .catch((e: unknown) => setStatus(`와이어 로드 실패: ${String(e)}`));
@@ -263,14 +248,6 @@ export function App(): JSX.Element {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  // IA 트리/뷰모드 바뀌면 레이아웃 재계산
-  useEffect(() => {
-    if (!iaRoot) return;
-    const { nodes, edges } = toIAFlow(iaRoot, iaVerbose);
-    setIaNodes(nodes);
-    setIaEdges(edges);
-  }, [iaRoot, iaVerbose]);
-
   // 기능명세서 트리 바뀌면 레이아웃 재계산
   useEffect(() => {
     if (!specRoot) return;
@@ -279,46 +256,19 @@ export function App(): JSX.Element {
     setSpecEdges(edges);
   }, [specRoot]);
 
-  // 기획 기능명세서(planningFeatures) 바뀌면 레이아웃 재계산. null이면 비운다.
-  // featureAudit(null=미로드/실패)은 undefined로 넘겨 배지 없음(D-6) — 그래프 렌더는 무영향.
-  // planningScreens(null=미로드/실패)도 undefined로 넘겨 연결화면 없음(D-4) — 그래프 렌더는 무영향.
+  // 기획 기능명세서(planningFeatures) 바뀌면 계층 리스트 항목 재계산. null이면 비운다.
+  // featureAudit(null=미로드/실패)은 undefined로 넘겨 배지 없음(D-6) — 리스트 렌더는 무영향.
+  // planningScreens(null=미로드/실패)도 undefined로 넘겨 연결화면 없음(D-4) — 리스트 렌더는 무영향.
+  // (flowforge-artifact-restructure) 다이어그램(nodes/edges) → 들여쓴 리스트 항목으로 전환.
   useEffect(() => {
     if (!planningFeatures) {
-      setFeatureNodes([]);
-      setFeatureEdges([]);
+      setFeatureItems([]);
       return;
     }
-    const { nodes, edges } = toFeatureTreeFlow(
-      planningFeatures,
-      featureAudit ?? undefined,
-      planningScreens ?? undefined,
+    setFeatureItems(
+      toFeatureTreeList(planningFeatures, featureAudit ?? undefined, planningScreens ?? undefined),
     );
-    setFeatureNodes(nodes);
-    setFeatureEdges(edges);
   }, [planningFeatures, featureAudit, planningScreens]);
-
-  // 기획 IA(planningIaRoot) 바뀌면 레이아웃 재계산. null이면 비운다. change IA와 동일한 toIAFlow 재사용
-  // (화면 1급 노드 IA는 간단히뷰 고정 — verbose 토글은 change IA 전용).
-  // planningFeatures+planningScreens 둘 다 있으면 화면 노드에 연관 change 역경유 부착(B.2,
-  // flowforge-change-node-mapping). 둘 중 하나라도 null(미로드/실패)이면 매핑 생략(안전한 무영향).
-  useEffect(() => {
-    if (!planningIaRoot) {
-      setPlanningIaNodes([]);
-      setPlanningIaEdges([]);
-      return;
-    }
-    // 기획 IA는 화면 구조 어휘로 태그 오버라이드(change IA는 변경/기능군/요구사항 기본 유지).
-    const { nodes, edges } = toIAFlow(
-      planningIaRoot,
-      false,
-      { change: "화면목록", capability: "화면", requirement: "상세기능" },
-      planningFeatures && planningScreens
-        ? { featureTree: planningFeatures, screenRegistry: planningScreens }
-        : undefined,
-    );
-    setPlanningIaNodes(nodes);
-    setPlanningIaEdges(edges);
-  }, [planningIaRoot, planningFeatures, planningScreens]);
 
   const onFlowNodesChange = useCallback((changes: NodeChange[]) => {
     setFlowNodes((nds) => applyNodeChanges(changes, nds));
@@ -339,22 +289,21 @@ export function App(): JSX.Element {
     });
   }, [selected, selectedProject]);
 
-  // 기능명세 노드 클릭 → 상세 패널 열기. featureTree 타입 노드만 대상(다른 뷰 노드는 무시).
-  const onFeatureNodeClick = useCallback((_e: ReactMouseEvent, node: Node) => {
-    if (node.type !== "featureTree") return;
-    setSelectedFeature(node.data as FeatureNodeData);
+  // 기능명세 리스트 항목 클릭 → 상세 패널 열기. 리스트가 노드 data(FeatureNodeData)를 직접 넘긴다
+  // (다이어그램 onNodeClick 대체 — flowforge-artifact-restructure).
+  const openFeature = useCallback((data: FeatureNodeData) => {
+    setSelectedFeature(data);
     // 한 번에 한 패널만 열리도록 다른 뷰 선택은 닫는다(패널은 같은 고정 위치 공유).
     setSelectedFlow(null);
-    setSelectedIa(null);
   }, []);
 
-  // 상세 패널 안 자식 노드 클릭 → 그 id의 노드 data로 전환. 현재 렌더 중인 features 노드 집합에서 찾는다.
+  // 상세 패널 안 자식 노드 클릭 → 그 id의 항목 data로 전환. 현재 렌더 중인 features 리스트에서 찾는다.
   const selectFeatureById = useCallback(
     (id: string) => {
-      const found = featureNodes.find((n) => n.id === id);
-      if (found) setSelectedFeature(found.data as FeatureNodeData);
+      const found = featureItems.find((it) => it.id === id);
+      if (found) setSelectedFeature(found.data);
     },
-    [featureNodes],
+    [featureItems],
   );
 
   // 유저플로우 노드 클릭 → 상세 패널 열기. spec 타입 노드만 대상(다른 뷰 노드는 무시).
@@ -363,7 +312,6 @@ export function App(): JSX.Element {
     if (node.type !== "spec") return;
     setSelectedFlow(node.data as SpecNodeData);
     setSelectedFeature(null);
-    setSelectedIa(null);
   }, []);
 
   // 상세 패널 안 연결 노드 클릭 → 그 id의 노드 data로 전환. 현재 렌더 중인 유저플로우 노드 집합에서 찾는다.
@@ -376,41 +324,16 @@ export function App(): JSX.Element {
     [planningFlowNodes, flowNodes],
   );
 
-  // IA 노드 클릭 → 상세 패널 열기. ia 타입 노드만 대상(다른 뷰 노드는 무시).
-  // 기획 IA(planningIaNodes)와 change IA(iaNodes)가 같은 핸들러를 공유한다.
-  const onIaNodeClick = useCallback((_e: ReactMouseEvent, node: Node) => {
-    if (node.type !== "ia") return;
-    setSelectedIa(node.data as IANodeData);
-    setSelectedFeature(null);
-    setSelectedFlow(null);
-  }, []);
-
-  // 상세 패널 안 자식/부모 노드 클릭 → 그 id의 노드 data로 전환. 현재 렌더 중인 IA 노드 집합에서 찾는다.
-  const selectIaById = useCallback(
-    (id: string) => {
-      const pool = [...planningIaNodes, ...iaNodes];
-      const found = pool.find((n) => n.id === id);
-      if (found) setSelectedIa(found.data as IANodeData);
-    },
-    [planningIaNodes, iaNodes],
-  );
-
-  // 기능명세 상세 패널 화면 칩 클릭 → 기획 IA 뷰의 해당 화면 노드로 딥링크.
-  // 매칭은 server가 실어준 원본 screenId 문자열 동치만(slug 복제 금지 — 거짓 연결 0).
-  // 매칭 실패(레지스트리↔IA 불일치)는 무해: 탭 전환 없이 상태바 안내만(저작 오류를 숨기지 않되 화면은 안 깨짐).
-  const selectScreenInIa = useCallback(
+  // 기능명세 상세 패널 화면 칩 클릭 처리(flowforge-ia-removal D4).
+  // IA 뷰가 제거돼 딥링크 *타깃*이 사라졌으므로, 칩 자체는 유지하되 클릭은 상태바 안내로 안전 처리한다
+  // (칩 라벨은 화면 레지스트리에서 오므로 정보 손실 0 — 런타임 에러 없이 no-op+안내).
+  // 유저플로우↔화면 크로스링크의 새 타깃은 별도 change(flowforge-screen-crosslink)에서 배선한다.
+  const selectScreenChip = useCallback(
     (screenId: string) => {
-      const found = planningIaNodes.find((n) => (n.data as IANodeData).screenId === screenId);
-      if (!found) {
-        const chip = selectedFeature?.screens?.find((s) => s.id === screenId);
-        setStatus(`IA에서 화면을 찾지 못했습니다: ${chip?.label ?? screenId}`);
-        return;
-      }
-      setPlanTab("ia");
-      setSelectedIa(found.data as IANodeData);
-      setSelectedFeature(null); // 패널 상호배타 유지(기능명세 상세 패널 닫기)
+      const chip = selectedFeature?.screens?.find((s) => s.id === screenId);
+      setStatus(`연결 화면: ${chip?.label ?? screenId} (유저플로우 탭의 해당 화면 노드에서 상호참조를 볼 수 있습니다)`);
     },
-    [planningIaNodes, selectedFeature],
+    [selectedFeature],
   );
 
   // 기획 유저플로우 드래그: 위치 변경을 state에 반영(저장은 onNodeDragStop에서 한 번).
@@ -541,18 +464,6 @@ export function App(): JSX.Element {
       .catch(() => {
         if (token !== dashReqToken.current) return;
         setPlanningScreens(null); // 조회 실패 — 연결화면 섹션만 생략(그래프·패널 무영향, D-4)
-      });
-    // 기획 단계 IA(docs/planning/features.md 화면목록) 로드 — 없으면(404) null로 비움(에러 아님).
-    setPlanningIaRoot(null);
-    fetchDocsPlanningIa(card.name)
-      .then((r) => {
-        if (token !== dashReqToken.current) return;
-        // 화면이 하나도 없으면 children 빈 루트 — 탭에 안 띄우려고 화면 0개면 null 취급.
-        setPlanningIaRoot(r.tree.children.length > 0 ? r.tree : null);
-      })
-      .catch(() => {
-        if (token !== dashReqToken.current) return;
-        setPlanningIaRoot(null); // 화면목록 미작성 — 정상(미표시)
       });
     // 기획 단계 와이어(디바이스 프레임 레이아웃) 로드 — 없으면(404) null로 비움(에러 아님).
     setPlanningWireScreens(null);
@@ -866,10 +777,9 @@ export function App(): JSX.Element {
     setTab("prd");
     setDashStage("views");
     setStatus("");
-    // 진입 시 열려있던 노드 상세 패널(기능명세·IA·유저플로우)을 닫는다 — 안 닫으면 z-index 고정
-    // 패널이 방금 진입한 change 5종 뷰를 계속 가린다(다른 전환 경로의 패널 상호배타와 동일 규칙).
+    // 진입 시 열려있던 노드 상세 패널(기능명세·유저플로우)을 닫는다 — 안 닫으면 z-index 고정
+    // 패널이 방금 진입한 change 4종 뷰를 계속 가린다(다른 전환 경로의 패널 상호배타와 동일 규칙).
     setSelectedFeature(null);
-    setSelectedIa(null);
     setSelectedFlow(null);
     // 딥링크 URL 기록. change.project가 있을 때만 — ?project= 없이는 왕복 복원이 안 되는
     // 전역 진입 change는 URL을 남기지 않는다(마운트 복원이 project·change 둘 다 요구하는 것과 일관).
@@ -915,16 +825,16 @@ export function App(): JSX.Element {
   );
 
   // skeleton 뷰 탭: 있는 뷰만 노출, 활성 탭이 없는 뷰를 가리키면 첫 유효 탭으로 폴백.
-  const planTabsAvail: Array<"prd" | "features" | "ia" | "wire" | "flow"> = [];
+  // IA 뷰 제거(flowforge-ia-removal) — 4종(prd·features·wire·flow).
+  const planTabsAvail: Array<"prd" | "features" | "wire" | "flow"> = [];
   if (planningPrd) planTabsAvail.push("prd");
   if (planningFeatures) planTabsAvail.push("features");
-  if (planningIaRoot) planTabsAvail.push("ia");
   if (planningWireScreens) planTabsAvail.push("wire");
   if (planningUserFlow) planTabsAvail.push("flow");
-  const activePlanTab: "prd" | "features" | "ia" | "wire" | "flow" = planTabsAvail.includes(planTab)
+  const activePlanTab: "prd" | "features" | "wire" | "flow" = planTabsAvail.includes(planTab)
     ? planTab
     : (planTabsAvail[0] ?? "prd");
-  const planTabBtn = (key: "prd" | "features" | "ia" | "wire" | "flow", label: string): JSX.Element => (
+  const planTabBtn = (key: "prd" | "features" | "wire" | "flow", label: string): JSX.Element => (
     <button
       key={key}
       onClick={() => setPlanTab(key)}
@@ -936,6 +846,38 @@ export function App(): JSX.Element {
     </button>
   );
 
+  // 화면 id 조인 인덱스(flowforge-screen-crosslink) — 로드된 화면목록·와이어에서 파생.
+  // 데이터가 바뀔 때만 재계산(선택된 노드와 무관 — 인덱스는 프로젝트 단위).
+  const screenToDetails = useMemo(
+    () => buildScreenToDetailLabels(planningScreens),
+    [planningScreens],
+  );
+  const wireById = useMemo(() => buildWireById(planningWireScreens), [planningWireScreens]);
+
+  // 선택된 유저플로우 노드가 화면(page)이면 그 화면 id로 와이어·연관 기능을 조인해 패널에 넘긴다.
+  // 화면 아님/조인 데이터 없음이면 undefined(패널이 상호참조 섹션을 안 그림 — 기존 흐름 섹션만).
+  const flowCrosslink: ScreenCrosslinkData | undefined = useMemo(() => {
+    if (!selectedFlow || selectedFlow.kind !== "screen") return undefined;
+    const sid = selectedFlow.screenId;
+    return {
+      wire: wireForScreen(wireById, sid),
+      featureLabels: detailLabelsForScreen(screenToDetails, sid),
+    };
+  }, [selectedFlow, wireById, screenToDetails]);
+
+  // "와이어 탭에서 열기"(D.1) — 딥링크 유틸이 planning 탭엔 없으므로 인앱 탭 전환으로 폴백.
+  // planning skeleton 단계에선 planTab="wire"로 전환(화면 프레임 목록에서 해당 화면을 볼 수 있게).
+  const openWireForScreen = useCallback((_screenId: string) => {
+    setPlanTab("wire");
+    setSelectedFlow(null); // 패널 상호배타(탭 전환 시 상세 패널 닫기)
+  }, []);
+
+  // 연관 기능명세 상세기능 라벨 클릭(D.2) — 상태바 식별 표시(기획 기능명세 탭에서 찾을 수 있게 안내).
+  // features 노드 id는 feat-...라 라벨 문자열 딥링크가 취약하므로, 라벨 식별만 필수로 제공한다.
+  const selectFeatureLabelFromFlow = useCallback((label: string) => {
+    setStatus(`연관 기능명세 상세기능: ${label} (기획 기능명세 탭에서 확인)`);
+  }, []);
+
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <header style={{ padding: "10px 16px", borderBottom: "1px solid #2a2e38", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
@@ -944,9 +886,8 @@ export function App(): JSX.Element {
         {dashStage === "views" && (
           <div style={{ display: "flex", gap: 4 }}>
             {tabBtn("prd", "PRD")}
-            {tabBtn("spec", "기능명세서")}
+            {tabBtn("spec", "명세(change)")}
             {tabBtn("flow", "유저플로우")}
-            {tabBtn("ia", "IA 트리")}
             {tabBtn("wire", "와이어프레임")}
           </div>
         )}
@@ -971,11 +912,6 @@ export function App(): JSX.Element {
         {dashStage === "views" && tab === "flow" && dangling > 0 && (
           <span style={{ color: "#f0a05a" }}>⚠ dangling {dangling}</span>
         )}
-        {dashStage === "views" && tab === "ia" && (
-          <button onClick={() => setIaVerbose((v) => !v)} data-testid="ia-view-btn">
-            {iaVerbose ? "간단히 보기" : "자세히 보기"}
-          </button>
-        )}
         <span style={{ color: "#9aa0ad", fontSize: 13 }}>{status}</span>
       </header>
       <div style={{ flex: 1, minHeight: 0 }}>
@@ -985,12 +921,11 @@ export function App(): JSX.Element {
             <ProjectGrid projects={projects} onOpenProject={openProject} />
           </div>
         ) : dashStage === "skeleton" ? (
-          <div className={`dash-body${["features", "ia", "flow", "wire"].includes(activePlanTab) ? " dash-body--wide" : ""}`}>
+          <div className={`dash-body${["features", "flow", "wire"].includes(activePlanTab) ? " dash-body--wide" : ""}`}>
             {planTabsAvail.length > 0 && (
               <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 12 }} data-testid="plan-tabs">
                 {planningPrd && planTabBtn("prd", "PRD")}
-                {planningFeatures && planTabBtn("features", "기능명세서")}
-                {planningIaRoot && planTabBtn("ia", "화면 구조")}
+                {planningFeatures && planTabBtn("features", "기획 기능명세")}
                 {planningWireScreens && planTabBtn("wire", "와이어프레임")}
                 {planningUserFlow && planTabBtn("flow", "유저플로우")}
               </div>
@@ -1012,11 +947,12 @@ export function App(): JSX.Element {
                 <PrdPanel prd={planningPrd} />
               </section>
             )}
-            {/* 기획 단계 기능명세서(docs/planning/features.md) — 있으면 3단 트리(FeatureTree)로 렌더 */}
+            {/* 기획 단계 기능명세(docs/planning/features.md) — 계층 리스트(들여쓴 아웃라인)로 렌더
+                (flowforge-artifact-restructure): 다이어그램(ReactFlow FeatureNode) → 리스트 전환. */}
             {planningFeatures && activePlanTab === "features" && (
               <section className="dash-planning-features" data-testid="planning-features">
-                <h3 className="dash-h">{dashProject?.displayName} — 기획 기능명세서</h3>
-                {/* 제안 큐가 있으면 노드 속성 승인/반려 위저드(6b), 큐 비면 렌더 안 함(순수 읽기 트리 뷰). */}
+                <h3 className="dash-h">{dashProject?.displayName} — 기획 기능명세</h3>
+                {/* 제안 큐가 있으면 노드 속성 승인/반려 위저드(6b), 큐 비면 렌더 안 함(순수 읽기 리스트 뷰). */}
                 <FeatureApprovalWizard
                   key={dashProject?.name ?? ""}
                   project={dashProject?.name ?? ""}
@@ -1027,40 +963,7 @@ export function App(): JSX.Element {
                   appliedTick={featAppliedTick}
                 />
                 <div className="dash-plan-flow">
-                  <ReactFlow
-                    key="d-planning-features"
-                    nodes={featureNodes}
-                    edges={featureEdges}
-                    nodeTypes={nodeTypes}
-                    nodesDraggable={false}
-                    onNodeClick={onFeatureNodeClick}
-                    fitView
-                    fitViewOptions={{ minZoom: 0.7, maxZoom: 1 }}
-                  >
-                    <Background />
-                    <Controls />
-                  </ReactFlow>
-                </div>
-              </section>
-            )}
-            {/* 기획 단계 IA(docs/planning/features.md 화면목록) — 있으면 화면 1급 노드 IA를 toIAFlow로 렌더 */}
-            {planningIaRoot && activePlanTab === "ia" && (
-              <section className="dash-planning-ia" data-testid="planning-ia">
-                <h3 className="dash-h">{dashProject?.displayName} — 화면 구조</h3>
-                <div className="dash-plan-flow">
-                  <ReactFlow
-                    key="d-planning-ia"
-                    nodes={planningIaNodes}
-                    edges={planningIaEdges}
-                    nodeTypes={nodeTypes}
-                    nodesDraggable={false}
-                    onNodeClick={onIaNodeClick}
-                    fitView
-                    fitViewOptions={{ minZoom: 0.7, maxZoom: 1 }}
-                  >
-                    <Background />
-                    <Controls />
-                  </ReactFlow>
+                  <FeatureListView items={featureItems} onSelect={openFeature} />
                 </div>
               </section>
             )}
@@ -1156,12 +1059,6 @@ export function App(): JSX.Element {
                 <Controls />
               </ReactFlow>
             )}
-            {tab === "ia" && (
-              <ReactFlow key="d-ia" nodes={iaNodes} edges={iaEdges} nodeTypes={nodeTypes} nodesDraggable={false} onNodeClick={onIaNodeClick} fitView>
-                <Background />
-                <Controls />
-              </ReactFlow>
-            )}
             {tab === "wire" && wireframe && <WireframePanel wireframe={wireframe} />}
           </>
         )}
@@ -1171,7 +1068,7 @@ export function App(): JSX.Element {
         node={selectedFeature}
         onClose={() => setSelectedFeature(null)}
         onSelectById={selectFeatureById}
-        onSelectScreen={selectScreenInIa}
+        onSelectScreen={selectScreenChip}
         onOpenChange={(changeKey) =>
           openChangeViews({
             key: changeKey,
@@ -1180,25 +1077,16 @@ export function App(): JSX.Element {
           })
         }
       />
-      {/* 유저플로우 노드 상세 패널 — 같은 UX/CSS 재사용. incoming/outgoing 흐름 표시. */}
+      {/* 유저플로우 노드 상세 패널 — 같은 UX/CSS 재사용. incoming/outgoing 흐름 표시.
+          화면(page) 노드면 화면 허브 상호참조(연관 와이어·연관 기능명세)를 추가로 표시
+          (flowforge-screen-crosslink). crosslink는 화면 노드일 때만 정의됨(그 외 undefined → 섹션 미노출). */}
       <FlowDetailPanel
         node={selectedFlow}
         onClose={() => setSelectedFlow(null)}
         onSelectById={selectFlowById}
-      />
-      {/* IA 노드 상세 패널 — 같은 UX/CSS 재사용. 계층(부모/자식)·N:M 연결 상세기능·연관 change 표시. */}
-      <IADetailPanel
-        node={selectedIa}
-        onClose={() => setSelectedIa(null)}
-        onSelectById={selectIaById}
-        onOpenChange={(changeKey) =>
-          openChangeViews({
-            key: changeKey,
-            // displayName은 openChangeViews가 읽지 않음(진입은 key·project만 사용) — key로 채워도 무해.
-            displayName: changeKey,
-            ...(dashProject?.name ? { project: dashProject.name } : {}),
-          })
-        }
+        {...(flowCrosslink ? { crosslink: flowCrosslink } : {})}
+        onOpenWire={openWireForScreen}
+        onSelectFeatureLabel={selectFeatureLabelFromFlow}
       />
     </div>
   );

@@ -23,6 +23,13 @@ export interface GraphNode {
    * docs 입력에서만 세팅될 수 있는 옵셔널 필드 — change 경로(기존 빌더)는 채우지 않으므로 undefined(비파괴).
    */
   readonly seed?: boolean;
+  /**
+   * 바레 화면 id(flowforge-screen-crosslink) — 유저플로우 화면(page) 노드가 와이어(WireScreen2.id)·
+   * 화면목록(ScreenNode.id)과 공유하는 조인키. GraphNode.id는 `uflow-<slug>-<mermaidId>`라 바레 id가
+   * 아니므로 별도로 실어준다(IA의 screenId 부여와 대칭). 화면 종류 노드에만 채워지고 나머지(시작/섹션/
+   * 행동)·change/골든 경로는 undefined(비파괴).
+   */
+  readonly screenId?: string;
 }
 
 /** 화면 간 전이. spec 시나리오의 THEN 문장에서 파생된다. */

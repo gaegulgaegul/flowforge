@@ -172,6 +172,10 @@ export function buildUserFlowFromLines(lines: readonly string[], scenario = ""):
     kind: n.kind,
     label: n.label,
     specName: n.mermaidId,
+    // 화면(page) 노드에만 바레 화면 id(mermaidId 소문자)를 실어준다(flowforge-screen-crosslink A.3).
+    // 와이어(WireScreen2.id)·화면목록(ScreenNode.id)과 공유하는 조인키 — IA의 screenId 부여와 대칭.
+    // 화면 아닌 노드(시작/섹션/행동)는 키 자체를 생략(exactOptionalPropertyTypes: undefined면 비파괴).
+    ...(n.kind === "screen" ? { screenId: n.mermaidId.toLowerCase() } : {}),
   }));
   const rawNodes = new Map<string, string>([...nodes.values()].map((n) => [n.mermaidId, n.label]));
   return { graph: { nodes: outNodes, edges }, rawNodes, rawEdges };

@@ -24,6 +24,11 @@ export interface SpecNodeData extends Record<string, unknown> {
   kind: NodeKind;
   /** charter 상주 docs의 SEED(미검증) 마킹. change 경로는 undefined → 배지 미표시. */
   seed?: boolean;
+  /**
+   * 바레 화면 id(flowforge-screen-crosslink) — 화면(page) 노드가 와이어·화면목록·기능명세와 공유하는
+   * 조인키. 서버 GraphNode.screenId를 그대로 통과. 화면 아닌 노드·조인키 없는 경로는 undefined.
+   */
+  screenId?: string;
   /** 상세 패널용 파생 필드 — 이 노드로 들어오는 흐름(다른 노드 → 이 노드). */
   incoming?: readonly FlowEdgeRef[];
   /** 상세 패널용 파생 필드 — 이 노드에서 나가는 흐름(이 노드 → 다른 노드). */
@@ -121,6 +126,9 @@ export function toFlowNodes(graph: SpecGraph, layout: LayoutOverlay): Node<SpecN
       label: n.label,
       kind: n.kind,
       ...(n.seed !== undefined ? { seed: n.seed } : {}),
+      // 화면 노드 조인키(flowforge-screen-crosslink) — 서버가 실은 screenId를 통과.
+      // exactOptionalPropertyTypes: undefined면 키 생략(seed 패턴과 동형).
+      ...(n.screenId !== undefined ? { screenId: n.screenId } : {}),
       incoming: incomingByNode.get(n.id) ?? [],
       outgoing: outgoingByNode.get(n.id) ?? [],
     };

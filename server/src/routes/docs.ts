@@ -8,6 +8,7 @@
  * GET /api/docs/:project/planning-prd       planning/prd.md → manyfast 5섹션 PRD (기획 단계 산출물)
  * GET /api/docs/:project/planning-features        planning/features.md → 기능명세 3단 트리(FeatureTree)
  * GET /api/docs/:project/audit-capabilities       docs/audit.json items[] → capability 단위 집계 맵(없으면 빈 맵 200)
+ * GET /api/docs/:project/planning-screens         planning/features.md 화면목록 → { screens, links }(화면 id 데이터원 — 유저플로우·와이어·기능명세 조인키)
  * GET /api/docs/:project/planning-wireframe       planning/features.md 화면목록 요소 → Wireframe(화면=WireScreen, 요소=WireBox)
  * GET /api/docs/:project/planning-user-flow        planning/user-flow/<flow>.md(Mermaid) → SpecGraph + layout + versions
  * PUT /api/docs/:project/planning-user-flow/layout 드래그 좌표 저장(docs 첫 쓰기 — overlay JSON만)
@@ -30,7 +31,6 @@ import type { Response } from "express";
 import { buildDocsGraph, buildDocsWireframe, buildDocsDecisionTimeline } from "../parser/docsAdapter.js";
 import { buildDocsPlanningPrd } from "../parser/prdBuilder.js";
 import { buildDocsPlanningFeatures } from "../parser/featureTreeBuilder.js";
-import { buildPlanningIaTree } from "../parser/planningIaBuilder.js";
 import { buildScreenRegistry } from "../parser/screenRegistry.js";
 import { buildDocsPlanningUserFlow } from "../parser/planningUserFlowBuilder.js";
 import {
@@ -185,26 +185,6 @@ docsRouter.get(
       return;
     }
     res.json({ screens: registry.screens, links: registry.links });
-  }),
-);
-
-docsRouter.get(
-  "/api/docs/:project(*)/planning-ia",
-  safe(async (req, res) => {
-    const project = String(req.params.project ?? "");
-    const dir = resolveDocsDir(project);
-    if (!dir) {
-      res.status(404).json({ error: "docs_not_found" });
-      return;
-    }
-    // 화면 1급 노드(features.md 화면목록) → IA 트리(화면=부모, 연결 상세기능=자식).
-    // features.md 자체가 없으면 null → 404(planning-features와 동형).
-    const tree = buildPlanningIaTree(dir);
-    if (!tree) {
-      res.status(404).json({ error: "planning_ia_not_found" });
-      return;
-    }
-    res.json({ project, tree });
   }),
 );
 

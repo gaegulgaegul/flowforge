@@ -1,9 +1,10 @@
 /**
- * graph 라우트 — change 목록 / 그래프·IA·와이어·PRD·기능명세서(파서) / 레이아웃 오버레이 저장
+ * graph 라우트 — change 목록 / 그래프·와이어·PRD·기능명세서(파서) / 레이아웃 오버레이 저장
+ *
+ * (flowforge-ia-removal) IA 라우트(/api/changes/:id/ia) 제거 — 산출물 4종화.
  *
  * GET  /api/changes                change id 목록(과거 /api/projects — 대시보드가 그 경로를 점유해 이동)
  * GET  /api/changes/:id/graph      spec.md 파싱 → SpecGraph(shared 계약) + 레이아웃 머지
- * GET  /api/changes/:id/ia         IA 트리
  * GET  /api/changes/:id/wireframe  와이어프레임
  * GET  /api/changes/:id/prd        proposal+design → PRD 5섹션(읽기전용 파생)
  * GET  /api/changes/:id/spec-tree  기능명세서 3단 트리(읽기전용 파생)
@@ -16,7 +17,6 @@ import { Router } from "express";
 import type { Request } from "express";
 import type { GraphNode, GraphEdge, SpecGraph, LayoutOverlay } from "@flowforge/shared";
 import { buildGraph } from "../parser/graphBuilder.js";
-import { buildIATree } from "../parser/iaBuilder.js";
 import { buildWireframe } from "../parser/wireframeBuilder.js";
 import { buildPrd } from "../parser/prdBuilder.js";
 import { buildSpecTree } from "../parser/specTreeBuilder.js";
@@ -85,19 +85,6 @@ graphRouter.get(
     const graph = toSpecGraph(dir);
     const layout = readOverlay(dir) ?? {};
     res.json({ id, graph, layout });
-  }),
-);
-
-graphRouter.get(
-  "/api/changes/:id(*)/ia",
-  safe(async (req, res) => {
-    const id = String(req.params.id ?? "");
-    const dir = resolveChangeFromReq(req);
-    if (!dir) {
-      res.status(404).json({ error: "change_not_found" });
-      return;
-    }
-    res.json({ id, tree: buildIATree(dir).root });
   }),
 );
 
