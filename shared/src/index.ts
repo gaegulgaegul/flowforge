@@ -8,12 +8,6 @@ export type {
 } from './graph-types.js';
 
 export type {
-  IANodeKind,
-  IANode,
-  IATree,
-} from './ia-types.js';
-
-export type {
   WireBoxKind,
   WireBox,
   WireScreen,

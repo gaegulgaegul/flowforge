@@ -4,8 +4,8 @@
  * manyfast식으로 화면(페이지)을 기획 명세의 1급 엔티티로 둔다(요구사항·기능·상세기능과 나란한 아이템).
  * 상세기능은 여러 화면에, 한 화면은 여러 상세기능을 담는 N:M 관계다(links[]가 연결 테이블).
  *
- * 예광탄 범위(세로 관통 1개): features.md → screenRegistry(병렬 파서) → planningIaBuilder(IATree 재사용)
- *   → 기획 IA 뷰. featureTreeBuilder(features 트리)는 건드리지 않는다(회귀 0).
+ * 화면 id 데이터원: features.md → screenRegistry(병렬 파서) → 기능명세 연결화면 칩 + 유저플로우/와이어 조인키.
+ *   featureTreeBuilder(features 트리)는 건드리지 않는다(회귀 0). (IA 뷰는 flowforge-ia-removal로 제거됨.)
  */
 
 /** 화면 1급 노드. id는 명시 영문 식별자(features.md의 `<!-- screen: <id> -->`), label은 표시 이름. */

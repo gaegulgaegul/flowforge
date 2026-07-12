@@ -64,7 +64,7 @@ describe("graph API — 크로스프로젝트 ?project=", () => {
 
   it("?project= 있으면 그 프로젝트 change로 5종 뷰 200 (404 없음)", async () => {
     const app = await loadApp();
-    for (const view of ["graph", "ia", "wireframe", "prd", "spec-tree"]) {
+    for (const view of ["graph", "wireframe", "prd", "spec-tree"]) {
       const res = await request(app).get(`/api/changes/feature-a/${view}?project=wowa-app`);
       expect(res.status).toBe(200);
     }

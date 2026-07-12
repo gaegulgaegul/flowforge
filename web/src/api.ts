@@ -2,7 +2,6 @@
 import type {
   SpecGraph,
   LayoutOverlay,
-  IANode,
   Wireframe,
   WireScreen2,
   Prd,
@@ -26,11 +25,6 @@ export interface GraphResponse {
   id: string;
   graph: SpecGraph;
   layout: LayoutOverlay;
-}
-
-export interface IAResponse {
-  id: string;
-  tree: IANode;
 }
 
 export interface WireframeResponse {
@@ -83,12 +77,6 @@ export async function fetchGraph(id: string, project?: string): Promise<GraphRes
   const res = await fetch(withProject(`/api/changes/${id}/graph`, project));
   if (!res.ok) throw new Error(`graph ${res.status}`);
   return (await res.json()) as GraphResponse;
-}
-
-export async function fetchIA(id: string, project?: string): Promise<IAResponse> {
-  const res = await fetch(withProject(`/api/changes/${id}/ia`, project));
-  if (!res.ok) throw new Error(`ia ${res.status}`);
-  return (await res.json()) as IAResponse;
 }
 
 export async function fetchWireframe(id: string, project?: string): Promise<WireframeResponse> {
@@ -241,19 +229,6 @@ export async function fetchPlanningScreens(project: string): Promise<ScreenRegis
   const res = await fetch(`/api/docs/${project}/planning-screens`);
   if (!res.ok) throw new Error(`docs planning-screens ${res.status}`);
   return (await res.json()) as ScreenRegistry;
-}
-
-/**
- * 기획 단계 화면 1급 노드(docs/planning/features.md 화면목록) → 기획 IA 트리(IATree 재사용).
- * 화면=부모 노드, N:M으로 연결된 상세기능=자식. 기존 iaAdapter.toIAFlow·IANode로 그대로 렌더.
- */
-export async function fetchDocsPlanningIa(
-  project: string,
-): Promise<{ project: string; tree: IANode }> {
-  const res = await fetch(`/api/docs/${project}/planning-ia`);
-  if (!res.ok) throw new Error(`docs planning-ia ${res.status}`);
-  const data = (await res.json()) as { project: string; tree: { root: IANode } };
-  return { project: data.project, tree: data.tree.root };
 }
 
 /**
