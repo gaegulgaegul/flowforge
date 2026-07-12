@@ -2,7 +2,39 @@
 
 ---
 
-## 재검토 — 2026-07-12 07:07 (커밋 1bf712f 이후, template 우회 수정분 재verify)
+## 재검토 — 2026-07-12 17:15 (커밋 ea07495 이후, CSP meta→HTTP헤더 전환분 재verify) — **배포 가능**
+
+> 트리거: 아래 두 차례 검토(2026-07-12 최초 + 07:07)가 BLOCK한 **injectWireDocCsp 마스킹 사다리 우회**(template 데코이 + script주석·속성값 `</template>`·미종료 template 3벡터)를 커밋 ea07495가 **근본 제거**했다: `injectWireDocCsp`(meta 정규식 주입) 폐기, 와이어 HTML을 서버 라우트로 서빙하며 **CSP를 HTTP 응답 헤더**로 강제(`GET .../planning-wireframe/:screenId/doc`), iframe은 srcDoc→src 전환. 이 전환을 재verify(재배포 후 라이브 + 서버 545 + browse 부모격리 실측)하고, **전환이 정말 마스킹 우회 클래스를 전부 닫았는지 + 새 표면을 열지 않았는지** 적대적으로 재확인했다.
+> 재verify 리포트: `verify.html` finalJudgment=**PASS**(PASS 25 / FAIL 0), archiveGate **열림**.
+
+### 이전 BLOCK 전부 — ✅ 해결됨 (헤더 CSP 전환으로 마스킹 우회 클래스 원천 제거)
+
+이전 검토가 BLOCK한 것은 전부 **하나의 결함 클래스**였다: `injectWireDocCsp`가 정규식+마스킹으로 HTML 삽입 위치를 판정 → 적대적 HTML(주석/template/속성값/미종료 quirk)이 마스킹을 뚫어 CSP 메타가 inert 노드에 갇히고 live head에 CSP=0. 근본 원인은 리팩토링 추천대로 **CSP를 문서에서 떼어 HTTP 응답 헤더로 이전**하여 제거됐다.
+
+- **최초 #1 (template 데코이)**, **재검토 신규 3벡터 (①script주석 가짜head ②속성값 안 `</template>` ③미종료 template)** — **모두 해결됨.** 이유: 브라우저는 **응답 헤더**의 CSP를 문서 내용과 무관하게 적용한다. 문서 HTML은 자신을 서빙하는 응답의 헤더를 바꿀 수 없다 → 마스킹 사다리 우회가 통째로 **무의미**해진다(공격 대상 자체가 사라짐).
+- **근본해결 핵심 증거 — 6 적대 페이로드가 헤더 CSP에 무력**: `docsWireDoc.test.ts`가 6종(①scriptInHead ②attrCloseTemplate ③unterminatedTemplate ④commentDecoy ⑤nestedTemplateHead ⑥normal)을 각각 doc.html로 넣고 서빙해도 **응답 헤더 CSP = WIRE_DOC_CSP로 불변**, 본문 무변형, `http-equiv="Content-Security-Policy"` 미주입임을 실증(6/6 PASS). = 과거 우회 6벡터 전부 헤더 방식에선 성립 불가.
+- **라이브 실측**: `curl -I http://localhost:8812/api/docs/flowforge/planning-wireframe/grid/doc` → `Content-Security-Policy: default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'` · `Content-Type: text/html; charset=utf-8` · `X-Content-Type-Options: nosniff`. 본문에 meta CSP 0건. → CSP가 지키던 **outbound 유출 차단**(`connect-src 'none'`)이 어떤 문서에도 붙는다.
+- **정적 게이트**: `injectWireDocCsp` 실행 소스 0건(주석만), `srcDoc` 실행 소스 0건(src 전환), `res.setHeader("Content-Security-Policy", WIRE_DOC_CSP)` in `docs.ts:231`, web `dangerouslySetInnerHTML`/`innerHTML` 싱크 0건.
+
+### 적대적 재검토 — 헤더 전환이 새 표면을 열었나? (5개 자문) — **새 BLOCK 없음**
+
+전환은 새 라우트 2개(direct 서빙 + preview 토큰 왕복)와 프로세스 로컬 저장소를 추가한다. 이 새 표면을 파괴자/보안감사자 관점으로 팠다:
+
+- **(a) 라우트 접근통제·경로주입** — ✅ CLEAN. `project`는 `resolveDocsDir`가 `'..'` 금지 + `/^[A-Za-z0-9_-]+$/` 단일 세그먼트만 허용(슬래시 불허) → `:project(*)` 와일드카드 경유 깊이 접근 차단. 라이브 실측: `..%2F..%2Fetc` → 404. `screenId`는 알려진 화면 집합 대조(`.find(d => d.id === screenId)`)만, FS 경로 세그먼트 미사용 → 순회 벡터 없음. GET doc 라우트에 인증 게이트 없음은 **다른 GET docs 라우트와 동형(읽기 거울)** — 정상.
+- **(b) preview 토큰 추측/DoS** — ✅ CLEAN. 토큰=`crypto.randomUUID()`(추측·열거 불가, Date.now/Math.random 아님). DoS 3중 상한: `WIRE_PREVIEW_MAX_HTML_BYTES=512KB`(초과=413), `WIRE_PREVIEW_MAX_ENTRIES=200`(초과=오래된 것부터 evict), `WIRE_PREVIEW_TTL_MS=5분`(만료 lazy 삭제). 파서 한도(512KB+64KB)도 별도. 라이브 실측: 600KB POST → 413, 정상 POST→토큰→GET 200 왕복, bogus 토큰 → 404. POST에 requireWriteAuth 없으나 **영속 FS가 아니라 휘발 메모리(TTL·상한)** 저장이라 write 규약 아님 — 읽기 거울과 동형(수용 가능, 잔여 리스크 낮음).
+- **(c) src 전환 후 부모격리 유지(opaque origin)** — ✅ CLEAN. sandbox=`allow-scripts`(WIRE_IFRAME_SANDBOX 불변, allow-same-origin 없음). iframe이 srcDoc→src로 바뀌어도 sandbox가 부여한 **opaque origin**은 유지된다. browse 라이브 실측(vif5): iframe src 로드 후 부모에서 `contentDocument = null (BLOCKED)`, `contentWindow.location.href THREW SecurityError (BLOCKED)`, `contentWindow.document THREW SecurityError (BLOCKED)`. 부모 오리진(토큰·상태·DOM) 도달 불가.
+- **(d) 헤더가 모든 doc 응답에 붙나(빠지는 경로 없나)** — ✅ CLEAN. 승인분·preview **둘 다** 단일 헬퍼 `serveWireDoc`(`docs.ts:229`)를 통과 → Content-Type + WIRE_DOC_CSP 헤더 일관 부여. doc HTML 서빙 우회 경로 없음(grep). 추가로 앱 CSP 미들웨어(`app.use(cspHeaders)`)가 라우터보다 **먼저** 마운트(`index.ts:15` < docsRouter `:38`)라 doc 응답에도 앱 헤더가 겹쳐 붙음.
+- **(e) Content-Type sniffing(nosniff)** — ✅ CLEAN. `cspHeaders` 미들웨어가 **모든 응답**에 `X-Content-Type-Options: nosniff` 세팅. 라이브 doc 라우트 curl -I에서 nosniff 실확인. text/html 명시 + nosniff로 MIME sniffing 벡터 없음.
+
+### 재검토 최종 배포 가능 여부 — **배포 가능 (BLOCK 0)**
+
+이전 두 검토가 BLOCK한 마스킹 사다리 우회(총 4벡터: template·script주석·속성값 `</template>`·미종료 template)는 **CSP를 HTTP 응답 헤더로 이전**하는 근본 리팩토링으로 **원천 제거**됐다 — 문서가 응답 헤더를 못 바꾸므로 마스킹 우회 클래스 전체가 성립 불가(6 적대 페이로드 헤더 불변 실증). 전환이 추가한 새 표면(direct/preview 라우트·토큰 저장소) 5축 적대 재검토에서 **새 BLOCK 없음**: 경로주입 차단·randomUUID 토큰·3중 DoS 상한·opaque origin 격리 유지·헤더 전역 부여·nosniff 전부 실증. 재verify finalJudgment=**PASS**(25/0/0/0), archiveGate **열림**. → **archive 진행 가능.**
+
+- 잔여 CONCERNS(배포 비차단): (1) preview POST에 write auth 없음 — 휘발 메모리·TTL·상한이라 리스크 낮으나 인식 표기. (2) 앱 CSP `WIRE_APP_CSP`의 `script-src 'unsafe-inline'`는 부모 SPA XSS를 못 막음(frame-ancestors만 clickjacking 방어) — 최초 #3 그대로 유효, 장기 nonce/hash는 별도 change.
+
+---
+
+## 재검토 — 2026-07-12 07:07 (커밋 1bf712f 이후, template 우회 수정분 재verify) — ⚠️ 아래는 이력(이후 ea07495로 전부 해결됨)
 
 > 트리거: 아래 최초 검토(2026-07-12)가 BLOCK한 **#1 `injectWireDocCsp` `<template>` 데코이 CSP 우회**를 커밋 1bf712f가 수정(scan에 `<template>…</template>` 마스킹 추가 + 회귀 2건). 이 수정을 **재verify**(재배포 후 라이브 + 서버 테스트 530 + jsdom·실브라우저 실증)하고 BLOCK 해소 여부를 적대적으로 재확인했다.
 > 재verify 리포트: `verify.html` finalJudgment=**FAIL**(PASS 23 / FAIL 2), archiveGate **닫힘**. 발행: https://openspec.gaegul.house/flowforge-wireframe-iframe/verify.html
