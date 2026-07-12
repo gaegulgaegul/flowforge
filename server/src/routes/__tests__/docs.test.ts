@@ -100,6 +100,26 @@ describe("docs API", () => {
     // docs 없는 프로젝트(스캔에서 제외돼야 함)
     mkdirSync(join(ROOT, "empty", "docs"), { recursive: true });
     writeFileSync(join(ROOT, "empty", "docs", "notes.md"), "x");
+    // mapping-basis-shift 회귀 픽스처: features.md capability(feat-cap)를 구현한 change가
+    // archive에만 있고, charter(spec.md)에는 feat-cap이 없다. 옛 charter 조인이면 배지 0,
+    // 새 features.md+archive 조인이면 배지가 떠야 한다(D1+D2 실증).
+    const mapDocs = join(ROOT, "mapproj", "docs");
+    const mapPlanning = join(mapDocs, "planning");
+    mkdirSync(mapPlanning, { recursive: true });
+    // charter spec.md에는 feat-cap이 없다(폐기 원천이 조인에서 빠졌음을 증명).
+    writeFileSync(join(mapDocs, "spec.md"), "## capability: unrelated-charter-cap\n");
+    writeFileSync(
+      join(mapPlanning, "features.md"),
+      ["# 기능명세서", "## 지도 요구사항", "<!-- capability: feat-cap -->", "### 상세"].join("\n"),
+    );
+    // archive에만 있는 구현 change(dated 래퍼) — specs/feat-cap/spec.md.
+    const archSpec = join(ROOT, "mapproj", "openspec", "changes", "archive", "2026-01-01-map-impl", "specs", "feat-cap");
+    mkdirSync(archSpec, { recursive: true });
+    writeFileSync(join(archSpec, "spec.md"), "## capability: feat-cap\n");
+    // 활성 change는 이름이 안 맞음(교집합 0) — 옛 활성전용 조인이 왜 배지 0이었는지 재현.
+    const actSpec = join(ROOT, "mapproj", "openspec", "changes", "unrelated-active", "specs", "some-other-cap");
+    mkdirSync(actSpec, { recursive: true });
+    writeFileSync(join(actSpec, "spec.md"), "## capability: some-other-cap\n");
     process.env.DOCS_ROOT = ROOT;
   });
 
@@ -113,8 +133,9 @@ describe("docs API", () => {
     const app = await loadApp();
     const res = await request(app).get("/api/docs/projects");
     expect(res.status).toBe(200);
-    // charter(only-prd, ssok) + planning-only(planonly) 모두 포함, docs없는 empty는 제외, 정렬.
-    expect(res.body.projects).toEqual(["only-prd", "planonly", "ssok"]);
+    // charter(only-prd, ssok) + planning-only(planonly) + 매핑 회귀 픽스처(mapproj) 포함,
+    // docs없는 empty는 제외, 정렬.
+    expect(res.body.projects).toEqual(["mapproj", "only-prd", "planonly", "ssok"]);
   });
 
   it("planning-only 프로젝트(planning/prd.md만)도 planning-prd가 200+5섹션", async () => {
@@ -156,6 +177,24 @@ describe("docs API", () => {
     const app = await loadApp();
     const res = await request(app).get("/api/docs/..%2f..%2fetc/planning-features");
     expect(res.status).toBe(404);
+  });
+
+  it("(mapping-basis-shift) planning-features — features.md capability를 구현한 archive change가 노드 배지로 뜬다", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/mapproj/planning-features");
+    expect(res.status).toBe(200);
+    const req0 = res.body.tree.root.children[0];
+    expect(req0.capability).toBe("feat-cap");
+    // D1: 옛 charter(spec.md엔 feat-cap 없음) 조인이면 여기가 undefined였다. features.md+archive 조인이라 배지가 뜬다.
+    expect(req0.linkedChanges).toEqual(["2026-01-01-map-impl"]);
+  });
+
+  it("(mapping-basis-shift) planonly는 change 없음 → 배지 미부착(비파괴 옵셔널 유지)", async () => {
+    const app = await loadApp();
+    const res = await request(app).get("/api/docs/planonly/planning-features");
+    expect(res.status).toBe(200);
+    // openspec/changes 자체가 없는 프로젝트 — linkedChanges 필드가 안 붙어야 한다(회귀 0).
+    expect(res.body.tree.root.children[0].linkedChanges).toBeUndefined();
   });
 
   it("GET /api/docs/:project/planning-user-flow — Mermaid → SpecGraph + layout + versions", async () => {

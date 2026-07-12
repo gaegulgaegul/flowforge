@@ -17,8 +17,19 @@ import type { CapabilityChangeLink, FeatureTree } from "@flowforge/shared";
 const RE_CAP = /^##\s+capability:\s*(.+?)\s*$/i;
 
 /**
+ * features.md 요구사항 capability 마커 `<!-- capability: KEY -->` 추출.
+ * featureTreeBuilder의 RE_CAPABILITY와 **동일 정규식**(글자단위, 키 변형 없음).
+ * charter의 `## capability:` 헤더 문법과 네임스페이스가 분리돼 오매칭하지 않는다.
+ */
+const RE_FEATURE_CAP = /<!--\s*capability:\s*([A-Za-z0-9_-]+)\s*-->/;
+
+/**
  * docs/spec.md 본문에서 charter capability 키 집합을 뽑는다.
  * 병기(`키 — 한글`)는 키만 취한다(연결은 영문 슬러그로). trim 외 변형 없음.
+ *
+ * ⚠️ charter(docs/spec.md)는 폐기 방향(backbone 안2, 2026-07-02). node-mapping 배지 조인은
+ * `parseFeatureCapabilities`(features.md)로 전환됐다(mapping-basis-shift D1). 이 함수는 여전히
+ * projects.ts의 capability 카드 대시보드가 소비하므로 유지한다.
  */
 export function parseCharterCapabilities(specMd: string): Set<string> {
   const out = new Set<string>();
@@ -27,6 +38,21 @@ export function parseCharterCapabilities(specMd: string): Set<string> {
     if (!m || !m[1]) continue;
     const { key } = splitCapabilityLabel(m[1]);
     if (key) out.add(key);
+  }
+  return out;
+}
+
+/**
+ * docs/planning/features.md 본문에서 요구사항 capability 키 집합을 뽑는다(mapping-basis-shift D1).
+ * `<!-- capability: KEY -->` 마커만 본다(charter `## capability:` 헤더 문법과 분리). featureTreeBuilder
+ * RE_CAPABILITY 동형이라 노드 좌변(attachLinkedChanges)과 조인 필터가 **동일 원천**으로 정합한다.
+ * 파일 부재/빈 입력이면 빈 Set → 배지 0(비파괴 폴백).
+ */
+export function parseFeatureCapabilities(featuresMd: string): Set<string> {
+  const out = new Set<string>();
+  for (const raw of featuresMd.split(/\r?\n/)) {
+    const m = RE_FEATURE_CAP.exec(raw);
+    if (m && m[1]) out.add(m[1]);
   }
   return out;
 }
@@ -57,13 +83,39 @@ export interface CapabilityIndex {
   unlinked: { changeKey: string; capabilityKey: string }[];
 }
 
+/** 디렉토리인지 안전 판정(stat 실패=false). */
+function isDir(path: string): boolean {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+/** changesRoot 하위의 디렉토리명 목록(정렬). 읽기 실패=빈 배열(안전 폴백). */
+function dirNamesOf(root: string): string[] {
+  try {
+    return readdirSync(root).sort();
+  } catch {
+    return [];
+  }
+}
+
 /**
- * charter capability 집합과 changes 스캔 루트로 역방향 인덱스를 만든다.
- * @param charterCaps  parseCharterCapabilities 결과(charter 측 진실)
+ * charter/features capability 집합과 changes 스캔 루트로 역방향 인덱스를 만든다.
+ *
+ * `allowedCaps`는 조인 필터(허용 capability 집합) — **원천에 무관**(charter든 features.md든).
+ * 이 시그니처·의미는 mapping-basis-shift 전후 불변이라 projects.ts(charter 카드) 소비가 무손상이다.
+ * node-mapping 배지 경로(docs.ts)만 주입 집합을 features.md로 바꾼다(D1).
+ *
+ * archive 완화(D2): `openspec/changes/archive/<dated-change>/`(1단계)도 change로 스캔에 포함한다.
+ * 활성 전용이던 것을 완화 — 완료돼 archive된 change의 capability도 배지로 표시(archived=true 표기).
+ *
+ * @param allowedCaps  조인 필터 집합(charter=projects.ts / features.md=docs.ts node-mapping)
  * @param changesRoot  openspec/changes 절대 경로(테스트는 임시 루트 주입)
  */
 export function buildCapabilityIndex(
-  charterCaps: Set<string>,
+  allowedCaps: Set<string>,
   changesRoot: string,
 ): CapabilityIndex {
   const byCapability = new Map<string, string[]>();
@@ -72,27 +124,13 @@ export function buildCapabilityIndex(
 
   if (!existsSync(changesRoot)) return { byCapability, links, unlinked };
 
-  let names: string[];
-  try {
-    names = readdirSync(changesRoot).sort();
-  } catch {
-    return { byCapability, links, unlinked };
-  }
-
-  for (const changeKey of names) {
-    const changeDir = join(changesRoot, changeKey);
-    let st;
-    try {
-      st = statSync(changeDir);
-    } catch {
-      continue;
-    }
-    if (!st.isDirectory() || changeKey === "archive") continue;
-
+  /** 한 change 디렉토리를 처리해 링크/인덱스/미연결을 채운다(활성·archive 공통). */
+  const processChange = (changeDir: string, changeKey: string, archived: boolean): void => {
     for (const capKey of specDirsOf(changeDir)) {
       // 글자단위 정확 비교 — set 멤버십. 유사도·정규화 추가 금지(거짓연결 0).
-      const linked = charterCaps.has(capKey);
-      links.push({ capabilityKey: capKey, changeKey, linked });
+      const linked = allowedCaps.has(capKey);
+      // archived는 archive 하위일 때만 실어 활성 링크 형태를 바꾸지 않는다(옵셔널·비파괴).
+      links.push({ capabilityKey: capKey, changeKey, linked, ...(archived ? { archived: true } : {}) });
       if (linked) {
         const arr = byCapability.get(capKey) ?? [];
         arr.push(changeKey);
@@ -101,6 +139,20 @@ export function buildCapabilityIndex(
         unlinked.push({ changeKey, capabilityKey: capKey });
       }
     }
+  };
+
+  for (const changeKey of dirNamesOf(changesRoot)) {
+    const changeDir = join(changesRoot, changeKey);
+    if (!isDir(changeDir)) continue;
+    if (changeKey === "archive") {
+      // archive/ 아래는 dated change 래퍼 — 한 단계 더 내려가 각각을 change로 처리(D2).
+      for (const dated of dirNamesOf(changeDir)) {
+        const datedDir = join(changeDir, dated);
+        if (isDir(datedDir)) processChange(datedDir, dated, true);
+      }
+      continue;
+    }
+    processChange(changeDir, changeKey, false);
   }
 
   return { byCapability, links, unlinked };
