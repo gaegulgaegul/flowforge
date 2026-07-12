@@ -1,4 +1,33 @@
 # 배포 전 최종 검토 — flowforge-wireframe-iframe
+
+---
+
+## 재검토 — 2026-07-12 07:07 (커밋 1bf712f 이후, template 우회 수정분 재verify)
+
+> 트리거: 아래 최초 검토(2026-07-12)가 BLOCK한 **#1 `injectWireDocCsp` `<template>` 데코이 CSP 우회**를 커밋 1bf712f가 수정(scan에 `<template>…</template>` 마스킹 추가 + 회귀 2건). 이 수정을 **재verify**(재배포 후 라이브 + 서버 테스트 530 + jsdom·실브라우저 실증)하고 BLOCK 해소 여부를 적대적으로 재확인했다.
+> 재verify 리포트: `verify.html` finalJudgment=**FAIL**(PASS 23 / FAIL 2), archiveGate **닫힘**. 발행: https://openspec.gaegul.house/flowforge-wireframe-iframe/verify.html
+
+### 최초 BLOCK(#1 template 데코이) — ✅ 해결됨 (부분)
+- 커밋 1bf712f가 `wire-security.ts:81-82`에 주석 마스킹 뒤 `.replace(/<template[^>]*>[\s\S]*?<\/template>/gi, …)` 체이닝을 추가했다.
+- **실증**: 최초 BLOCK의 정확한 페이로드 `<html><template><head></head></template><head><title>real</title></head>…`를 (a) jest 회귀 2건(문자열 위치 + jsdom 실파싱: live head has CSP=true, template.content trapped=false) — 서버 530/530 PASS, (b) 실브라우저 Chrome DOMParser 재검증 — `review-BLOCK-template=DEFENDED`(ourInHead=true, trappedTpl=false)로 확인. **이 벡터는 닫혔다.**
+
+### 그러나 — 🔴 신규 BLOCK 2건 (동일 심각도 클래스, archive 차단 유지)
+최초 검토가 예고한 대로(review #2 "정규식으로 HTML 구조 판정 = 마스킹 사다리가 계속 샌다", 그리고 #1 각주의 `<head foo="-->">` 미확정 후보)가 **실체화**됐다. `injectWireDocCsp`의 마스킹은 **주석 + `<template>` 두 종류만** 가리므로(`:81-82`), 아래 3형태에서 문서 CSP 메타가 실제 `<head>`가 아닌 inert 위치에 삽입되고 **live head에는 우리 CSP가 0**이 된다(jsdom + 실브라우저 Chrome DOMParser 양쪽 실증, `ourInHead=false`):
+
+1. **[BLOCK] `<script>` 주석 안 가짜 `<head>`** — `<script>/* <head></head> */</script><head><title>r</title></head>…`. scan이 `<script>` 내용을 마스킹하지 않아 정규식 `/<head[^>]*>/`이 script 텍스트 안 가짜 head에 먼저 매치 → CSP가 inert script 텍스트에 갇힘. 실브라우저: `inScript=true, ourInHead=false`.
+2. **[BLOCK] 속성값 안 `</template>`** — `<head foo="</template>"><title>r</title></head>…`. template 마스킹 정규식이 속성값 안 `</template>`를 실 태그로 오인해 마스킹 경계가 깨짐 → CSP 메타가 `foo` 속성값 문자열 안(`foo="</template><meta…">`)에 들어가 실제 요소가 안 됨. (= 최초 #1 각주의 미확정 후보 벡터 — 이제 확정.)
+3. **[BLOCK] 미종료 `<template>`** — `<template><head></head><head><title>r</title></head>…`(닫는 `</template>` 없음). 마스킹 정규식이 `</template>`를 요구하므로 매치 실패 → 미마스킹 → CSP가 template.content(inert)에 갇힘. 실브라우저: `trappedTpl=true, ourInHead=false`.
+
+- **왜 여전히 BLOCK인가(최초 검토 #1과 동일 근거)**: sandbox(`allow-scripts`, `allow-same-origin` 미부여 — 라이브 경계 TypeError로 부모 격리는 유효)는 **부모 오리진** 접근만 막는다. iframe 문서 **자신의 outbound 네트워크**(fetch/XHR/`<img src>`/WebSocket to 제3자) 차단은 오직 `WIRE_DOC_CSP`의 `connect-src 'none'`/`default-src 'none'` 몫이다. 이 3벡터 중 하나로 생성된 악성 AI 문서는 문서 CSP가 붙지 않아 이 change가 명시적으로 선언한 "외부 네트워크 유출 차단"(`wire-security.ts:30`) 속성을 그대로 잃는다. `doc.html`은 `wireDocs.ts`가 신뢰되지 않은 AI 생성물로 명시하므로 D1 위협 모델의 방어 대상 바로 그것.
+- **근본 원인(최초 #2와 동일)**: 정규식+마스킹 사다리로 HTML 구조를 판정하는 접근 자체. 마스킹을 하나 더 추가해도(script/속성값/미종료 template) 다음 quirk가 또 샌다. 재발 방지 = 삽입 위치를 실 HTML 파서로 결정하거나, CSP를 문서 생성 시점에 스켈레톤에 고정하는 계약으로 이전(최초 리팩토링 추천 항목과 동일).
+- 증거: `verify-evidence/vif2-realbrowser-probe.png`(실브라우저 6-shape), scratchpad `vif2-realbrowser.html`·`vif2-triage.mjs`·`vif2-bypass-analysis.mjs`(jsdom·실브라우저 재현).
+
+### 재검토 최종 배포 가능 여부 — **배포 불가 (신규 치명 2건 · archive 차단)**
+최초 #1(template)은 닫혔으나, 같은 함수의 같은 결함 클래스(마스킹 사다리)가 script 주석·속성값 `</template>`·미종료 template 3형태로 남아 문서 CSP를 무력화한다(jsdom+실브라우저 실증). 재verify finalJudgment=FAIL, archiveGate 닫힘. **표면적으로 template 벡터만 막지 말고 삽입 위치 판정을 실 파서/스켈레톤 계약으로 이전한 뒤 3벡터 회귀 테스트를 추가하고 재verify PASS를 받아 archive로 진행할 것.** (아래는 최초 2026-07-12 검토 원문 — 최초 #1은 위에서 ✅해결 처리, 근본원인 #2는 신규 3벡터로 재확인됨.)
+
+---
+
+# (최초) 배포 전 최종 검토 — flowforge-wireframe-iframe
 검토일: 2026-07-12 / 검토 범위: 이 change의 diff (commit fb002e9, 20 파일) — shared(`wire-security.ts`·`wire-doc-types.ts`·`wire-suggestion-types.ts`·`index.ts`), server(`lib/cspHeaders.ts`·`lib/wireDocs.ts`·`index.ts`·`routes/docs.ts`·`parser/planningWireframeFixture.ts` + 테스트 4종), web(`WireframeDeviceFrame.tsx`·`WireframePinFeedback.tsx`·`App.tsx`·`WireframeApprovalWizard.tsx`·`api.ts`·`styles.css`). 앱 전체가 아니라 이 change 경로만.
 
 > 성격: 좌표 없는 요소배열(WireScreen2)을 화면별 자족 HTML 문서(WireDoc[])의 **sandbox iframe 렌더**로 BREAKING 전환. 이 change의 절반은 보안(임의 AI 생성 HTML/JS 렌더). server(WireDoc 빌더·CSP 주입·앱 CSP 헤더) + web(iframe srcdoc 렌더·핀 오버레이) + shared(보안 상수 단일 원천).

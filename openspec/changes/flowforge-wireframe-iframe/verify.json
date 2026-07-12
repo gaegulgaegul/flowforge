@@ -1,16 +1,16 @@
 {
   "change": "flowforge-wireframe-iframe",
-  "verifiedAt": "2026-07-12T06:05:07+09:00",
-  "finalJudgment": "PASS",
+  "verifiedAt": "2026-07-12T07:07:40+09:00",
+  "finalJudgment": "FAIL",
   "counts": {
-    "pass": 25,
-    "fail": 0,
+    "pass": 23,
+    "fail": 2,
     "검증안함": 0,
     "skipped": 0
   },
   "archiveGate": {
-    "open": true,
-    "reason": ""
+    "open": false,
+    "reason": "scenario FAIL 존재"
   },
   "requirements": [
     {
@@ -441,14 +441,14 @@
         {
           "scenario": "외부 리소스 로드 차단 — WHEN 와이어 HTML이 외부 URL script/style/img/font 로드하거나 외부 fetch/XHR/WebSocket 시도 THEN CSP가 요청 차단, 외부 네트워크로 데이터 안 나감(인라인만 허용)",
           "layer": "web",
-          "means": "라이브 실측: iframe srcdoc 안에 주입된 CSP meta = \"default-src 'none'; ... img-src data:; font-src data:; connect-src 'none'\". default-src 'none'로 미지정 소스 전면차단, connect-src 'none'로 fetch/XHR/WS 원천 차단, img/font는 data:만. 외부 host(http(s)://) 소스 미허용. ※실제 외부 fetch 페이로드 실행은 미관측(CSP 문자열 실주입 확인으로 대체, 명시).",
-          "basis": "browse js: 라이브 iframe srcdoc의 CSP meta 실측 + jest wireDocs.test.ts CSP 문자열",
-          "result": "PASS",
+          "means": "라이브 재배포(1bf712f 반영) + 실브라우저 DOMParser 재검증. injectWireDocCsp가 문서 CSP meta를 주입해 default-src 'none'/connect-src 'none'로 외부 로드·fetch를 차단해야 함. 정상/template 데코이(review BLOCK 페이로드)에서는 CSP가 실 head에 삽입됨(DEFENDED). 그러나 재verify 적대검증에서 **동일 심각도 신규 우회 3종**을 실증: (1)<script>주석 안 가짜<head> → CSP가 inert script 텍스트에 갇힘, (2)<head foo=\"</template>\"> 속성값이 template 마스킹 정규식을 깨뜨림, (3)미종료 <template> → CSP가 template.content에 갇힘. 세 경우 모두 실브라우저·jsdom 파싱에서 live head has our CSP=false → 문서 CSP 미적용.",
+          "basis": "node vif2-triage/vif2-bypass-analysis(jsdom HTML5 파서) + browse 실브라우저 DOMParser(vif2-realbrowser.html): script-fake-head/head-attr-quote/template-unclosed 전부 ourInHead=false",
+          "result": "FAIL",
           "evidence": {
             "kind": "screenshot",
-            "path": "verify-evidence/vif-csp-adversarial.png",
-            "caption": "CSP connect-src 'none' 실주입 (라이브 + 적대적 재검증: 실브라우저서 CSP 살아있음)",
-            "text": "라이브 srcdoc CSP meta 실측: <meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; ...; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'\">. jest: '문서 CSP는 default-src none 기반이고 외부 connect를 차단' ✓, '외부 host script/style/img 소스 미허용' ✓, CSP에 http(s):// 부재 ✓. [적대적 재검증] security-reviewer가 injectWireDocCsp 정규식 /<head[^>]*>/ 이 malformed '<head foo<script>' 를 과소비해 CSP meta를 <script> 안(inert)에 넣는 문자열-레벨 갭 제기 → 실브라우저 DOMParser로 실측한 결과 6개 페이로드 shape(정상·head_no_gt_script·bare_head_script·comment_fake_head·no_head·attacker_loose_csp) 전부 ourCSPlive=true(meta가 실제 HEAD 자식으로 파싱, inScript=false, 문서순서 first). 즉 실브라우저 토큰화는 문자열 과소비를 복구해 CSP가 살아있음 — 실효 우회 미발생. 또한 sandbox(allow-same-origin 미부여)가 CSP 독립으로 격리 강제. ⚠️실외부 fetch 실행 관측이 아닌 CSP 실주입+실브라우저 파싱 확인."
+            "path": "verify-evidence/vif2-realbrowser-probe.png",
+            "caption": "실브라우저 DOMParser 재검증 — template 데코이는 DEFENDED이나 script/attr-quote/unclosed-template 3종은 CSP-EVADED(신규 BLOCK)",
+            "text": "실브라우저(Chrome DOMParser) 6-shape 결과: review-BLOCK-template=DEFENDED(수정 유효) · noscript-decoy=DEFENDED · baseline-normal=DEFENDED · **script-fake-head=BYPASS(inScript=true, ourInHead=false)** · **head-attr-quote=BYPASS(ourInHead=false)** · **template-unclosed=BYPASS(trappedTpl=true, ourInHead=false)**. jsdom 교차확인 동일. 수정(1bf712f)은 comment+template만 마스킹(wire-security.ts:81-82)하므로 script content/속성값 내 </template>/미종료 template는 미방어. CSP 무력화는 sandbox로 상쇄 불가(sandbox=allow-scripts는 부모 격리만; outbound 유출 차단은 CSP 몫) → review.md #1과 동일 심각도 BLOCK 클래스."
           }
         },
         {
@@ -515,14 +515,14 @@
         {
           "scenario": "XSS 페이로드가 부모로 전이되지 않음 — WHEN <script>·onerror=·javascript: 등 XSS 페이로드 담은 와이어 HTML 렌더 THEN 페이로드는 sandbox 경계 못 넘고 flowforge 앱 컨텍스트 미실행",
           "layer": "web",
-          "means": "방어 조합: (1) sandbox allow-same-origin 미부여→부모 오리진 전이 불가(라이브 경계 실측), (2) injectWireDocCsp 주석우회 방어(BLOCK 회귀 7건 — 주석 안 가짜 head/느슨한 공격자 CSP meta에도 우리 CSP가 실 head에 삽입). doc.html은 sandbox iframe srcdoc로만 소비(부모 DOM 미주입, grep). ※실 XSS 페이로드 렌더 관측 미실행(속성+회귀테스트로 대체, 명시).",
-          "basis": "jest injectWireDocCsp 7건(주석우회 XSS/CSP evasion) + browse 부모격리 + grep 상위DOM 부재",
-          "result": "PASS",
+          "means": "방어 조합 (1)sandbox allow-same-origin 미부여→부모 오리진 전이 불가(라이브 경계 실측, 유효) + (2)injectWireDocCsp 문서 CSP 주입. template 데코이(review BLOCK)는 수정으로 방어됨(회귀 2건 PASS). 그러나 (2)의 CSP 주입은 신규 3우회(script주석/속성값 </template>/미종료 template)에서 여전히 무력화됨 → 그 문서들은 문서 CSP 없이 렌더(외부 fetch/img/connect 차단 상실). sandbox가 부모 전이는 막지만, CSP가 지키는 iframe 자신의 outbound 유출 차단은 이 우회로 뚫림.",
+          "basis": "jest injectWireDocCsp template 회귀 2건 PASS(수정 유효) + vif2 실브라우저/jsdom 신규 3우회 실증(ourInHead=false) + 라이브 부모격리 TypeError",
+          "result": "FAIL",
           "evidence": {
             "kind": "screenshot",
-            "path": "verify-evidence/vif-isolation-proof.png",
-            "caption": "XSS 부모 미전이 (sandbox+CSP주입 회귀 7건, 실페이로드 미실행 명시)",
-            "text": "jest injectWireDocCsp 7건 PASS: '🔴 BLOCK 회귀: 주석 안 가짜 <head>가 앞서도 CSP는 죽은 주석이 아니라 실제 <head>에 들어간다' ✓, '공격자가 느슨한 CSP 메타를 심어도 우리 메타가 앞선다' ✓, '대문자 HEAD도 인식' ✓ 등. + 라이브 부모격리 TypeError + doc.html은 srcdoc만(부모 DOM 미주입 grep). ⚠️실 <script>/onerror/javascript: 페이로드 렌더 관측 미완 — sandbox+CSP 속성+주석우회 회귀로 검증(실공격 미실행)."
+            "path": "verify-evidence/vif2-realbrowser-probe.png",
+            "caption": "XSS/CSP 경계 — 부모 전이는 sandbox로 차단(유효)이나 문서 CSP는 신규 3우회로 무력화(BLOCK)",
+            "text": "template 데코이 우회는 1bf712f로 닫힘(jest 2건 PASS, 실브라우저 DEFENDED). 부모 오리진 전이는 sandbox(allow-same-origin 미부여)로 물리 차단(라이브 경계 유효). BUT injectWireDocCsp의 comment+template 마스킹만으로는 script주석 가짜head·속성값 내 </template>·미종료 template 3종에서 문서 CSP가 실 head에 안 들어감(ourInHead=false 실증) → 그 악성 문서는 CSP 없이 외부로 fetch/이미지 유출 가능. review.md #1이 정의한 '외부 네트워크 유출 차단 상실' 속성이 남은 3벡터로 재현됨."
           }
         },
         {
@@ -545,20 +545,20 @@
     {
       "layer": "server",
       "status": "PASS",
-      "ran": 528,
-      "passed": 528,
+      "ran": 530,
+      "passed": 530,
       "failed": 0,
-      "basis": "jest.config.js + package.json test=jest; NODE_OPTIONS=--experimental-vm-modules npx jest → 41 suites/528 tests PASS, EXIT 0 (PIPESTATUS 검증). 와이어/CSP/계약 관련 107건 별도 verbose 확인.",
+      "basis": "jest.config.js + package.json test=jest; NODE_OPTIONS=--experimental-vm-modules npx jest → 41 suites / 530 tests PASS(재실측 EXIT 0). injectWireDocCsp template 방어 회귀 2건 포함(수정 전 FAIL 실증).",
       "reason": "WireDoc 스키마·CSP 상수·injectWireDocCsp 주석우회 회귀·라우트 계약·핀 좌표·안전폴백 전부 실행."
     },
     {
       "layer": "web",
-      "status": "PASS",
-      "ran": 9,
+      "status": "FAIL",
+      "ran": 11,
       "passed": 9,
-      "failed": 0,
-      "basis": "browse(gstack) 라이브 실측 localhost:8812(HTTP 200, docker up). iframe sandbox='allow-scripts'·srcdoc·주입 CSP meta·부모격리(contentDoc/Win TypeError)·디바이스토글/화면탭/핀레이어·앱 CSP 헤더(curl)·실 마크업 렌더(스크린샷).",
-      "reason": "보안 격리·CSP·렌더·핀 라이브 실측. 단 iframe 내부 키스트로크/클릭 반응·실 악성 페이로드 실행 관측은 browse frame 타깃팅(한글선택자·SPA 재렌더 stale-ref) 제약으로 미완 — 해당 scenario는 코드경로 실재+allow-scripts 활성/sandbox 속성+경계 TypeError로 검증(실공격/실입력 미관측 정직 표기)."
+      "failed": 2,
+      "basis": "browse(gstack) 라이브 재배포 실측 localhost:8812(docker compose up -d --build 후 HTTP 200, 이미지 20s). iframe sandbox='allow-scripts'. + injectWireDocCsp 실브라우저 DOMParser 재검증(6 shape).",
+      "reason": "injectWireDocCsp CSP 주입이 신규 3우회(script주석·속성값 </template>·미종료 template)에서 무력화 — 문서 CSP 미적용(BLOCK). 나머지 격리/sandbox/핀 시나리오는 PASS."
     },
     {
       "layer": "android",
@@ -580,11 +580,11 @@
     }
   ],
   "codeState": {
-    "head": "6197da2757bbb18fdcd22f254ebd43280da6976b",
+    "head": "1bf712fba97711934a4a03dc22955b2515ed3829",
     "dirty": true,
     "branch": "feat/flowforge-feedback-changes",
     "gitUnavailable": false
   },
   "reportHtml": "verify.html",
-  "historyHtml": "verify-20260712-0605.html"
+  "historyHtml": "verify-20260712-0707.html"
 }
