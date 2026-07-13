@@ -1,6 +1,10 @@
 # flowforge-change-node-mapping
 
-## ADDED Requirements
+## Purpose
+
+기획 기능명세 트리의 각 노드(요구사항/기능/상세기능)와 화면 노드에, 그 노드와 연관된 change만 in-place로 매핑해 표시한다. 매핑은 요구사항 노드의 capability 키로 `byCapability`를 조회하고, 하위 노드는 상위 요구사항의 capability를 상속하며, 화면 노드는 상세기능↔화면 링크를 역경유해 파생한다. 연관 change가 없는 노드에는 아무것도 붙이지 않고, 기존의 전역 change 목록 통짜 나열은 제거한다. 노드에 매핑된 change를 클릭하면 5종 뷰로 진입한다(읽기 전용, openChangeViews 재사용).
+
+## Requirements
 
 ### Requirement: 요구사항 노드에 연관 change만 in-place로 매핑한다
 기획 기능명세 트리의 요구사항 노드는 그 노드의 capability 키로 연관된 change가 있을 때만, 그 change를 노드 자리에 in-place로 SHALL 표시한다. 연관 change가 없는 노드에는 아무것도 표시하지 않는다(전역 목록 나열 금지).

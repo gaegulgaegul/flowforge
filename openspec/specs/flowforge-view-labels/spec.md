@@ -1,8 +1,10 @@
 # flowforge-view-labels
 
+## Purpose
+
 두 계보에 중복된 "기능명세서" 레이블을 UI에서 구분 가능하게 만드는 능력. planning 계보(`docs/planning/features.md`, openspec-plan 산출)와 change 계보(change의 `specs/<cap>/spec.md`, openspec-propose 산출)가 레이블 또는 안내로 구별된다. 노드 타입은 코드상 이미 분리돼 있으나(`App.tsx:82`의 `specTree` vs `featureTree`) 레이블이 같아 UI에서 혼동됐다.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: 두 계보의 "기능명세서" 레이블이 UI에서 구분된다
 change 뷰의 기능명세 탭(`App.tsx:941`)과 planning 뷰의 기능명세 탭(`App.tsx:993`)에 붙은 동일한 "기능명세서" 레이블을, 두 계보가 UI만으로 구별되도록 서로 다른 레이블 또는 계보 안내로 바꿔야 SHALL 한다. planning 계보는 openspec-plan(features.md) 산출, change 계보는 openspec-propose(spec.md) 산출임이 드러나야 한다.

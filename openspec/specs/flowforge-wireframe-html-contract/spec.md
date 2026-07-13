@@ -1,4 +1,10 @@
-## ADDED Requirements
+# flowforge-wireframe-html-contract
+
+## Purpose
+
+harness(openspec-plan 계열 스킬)가 생성해 flowforge에 전달할 화면별 HTML 산출물의 계약을 정의한다. 화면 id(유저플로우/IA 정합)·디바이스·문서 구조·인라인 자산·허용/금지 요소를 규정하며, 생성 주체는 flowforge 밖(스킬)이고 flowforge는 이 계약을 만족하는 HTML 문서를 소비·렌더만 한다(읽기 거울 원칙 유지). 전달 문서는 sandbox·CSP 제약 아래 렌더 가능하도록 자족적이어야 한다.
+
+## Requirements
 
 ### Requirement: harness가 화면별 HTML 문서를 생성해 flowforge에 전달한다
 

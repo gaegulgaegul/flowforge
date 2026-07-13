@@ -1,8 +1,10 @@
 # flowforge-feature-list-view
 
-기능명세서 뷰를 ReactFlow 노드-엣지 다이어그램이 아니라 **들여쓴 계층 트리/아웃라인 리스트**로 렌더하는 능력. 원본 데이터(`FeatureTreeNode` children 중첩)·서버 파서·연결화면 조인은 무변경, web 렌더 계층만 교체한다. planning 기능명세와 capability drill-down 기능명세 두 진입점 모두 적용된다.
+## Purpose
 
-## ADDED Requirements
+기능명세서 뷰를 ReactFlow 노드-엣지 다이어그램이 아니라 **들여쓴 계층 트리/아웃라인 리스트**로 렌더하는 능력. 원본 데이터(`FeatureTreeNode` children 중첩)는 순수 계층 트리라 다이어그램의 캔버스 패닝/줌·자동 레이아웃 비용만 크고 밀도·검색 면에서 리스트가 유리하다. 서버 파서·연결화면 조인은 무변경이고 web 렌더 계층만 교체하며, 다이어그램이 노드에 싣던 표시 정보(타입 태그·priority/status 뱃지·capability 칩·audit 뱃지·연결화면 칩·메모)를 무손실로 보존한다. planning 기능명세와 capability drill-down 기능명세 두 진입점 모두에 적용된다.
+
+## Requirements
 
 ### Requirement: 기능명세 뷰가 들여쓴 트리/리스트로 렌더된다
 기능명세서 뷰는 ReactFlow 노드-엣지 다이어그램이 아니라, `FeatureTree.root.children`을 `children` 깊이만큼 들여쓴 **계층 트리/아웃라인 리스트**로 렌더 SHALL 한다. dagre 자동 레이아웃(`featureTreeAdapter.ts:105-194`의 `rankdir:"LR"`)과 캔버스 패닝/줌은 이 뷰에서 쓰지 않는다. 데이터 원천(`shared/src/feature-tree-types.ts`의 `FeatureTree`/`FeatureTreeNode`)과 서버 파서(featureTreeBuilder)는 변경하지 않는다.

@@ -2,7 +2,11 @@
 
 > ⚠️ 분리 시점 **스텁 spec**이다. `openspec-propose`로 정식화 시 아래 Requirement를 D1~D4 결정에 맞춰 확정한다.
 
-## MODIFIED Requirements
+## Purpose
+
+capability↔change 매핑(node-mapping이 신설한 노드↔change 파생)이 라이브 실데이터에서 배지 0개가 되는 근본 원인을 고친다. 진실의 원천을 폐기 방향인 charter(`docs/spec.md`)에서 `docs/planning/features.md`의 요구사항 capability로 전환하고, archive된 change도 매핑 스캔에 포함해 실배지가 뜨게 한다. UI는 불변이며 데이터 조인 기준만 바뀐다.
+
+## Requirements
 
 ### Requirement: capability↔change 매핑의 조인 원천을 features.md로 전환한다
 `flowforge-change-node-mapping`이 신설한 노드↔change 매핑 파생은, capability 진실의 원천을 폐기 방향인 charter(`docs/spec.md`)가 아니라 `docs/planning/features.md`의 요구사항 capability(`<!-- capability: 키 -->`)로 SHALL 삼는다. UI(배지·상세패널·진입)는 불변이며 데이터 조인 기준만 바뀐다.

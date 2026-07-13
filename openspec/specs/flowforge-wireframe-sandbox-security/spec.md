@@ -1,4 +1,10 @@
-## ADDED Requirements
+# flowforge-wireframe-sandbox-security
+
+## Purpose
+
+AI가 생성한 임의 와이어 HTML/JS 렌더의 격리·CSP·XSS 방어 계약을 정의한다. 와이어 HTML은 `allow-scripts`는 부여하되 `allow-same-origin`은 부여하지 않는 sandbox iframe 안에서만 렌더되어 부모 오리진(flowforge 앱)의 DOM·쿠키·스토리지·토큰에 접근하지 못한다. CSP로 외부 리소스 로드와 네트워크 유출을 차단하고 앱 자체의 프레이밍 방어(frame-ancestors)를 세우며, XSS 페이로드가 sandbox·CSP 경계를 넘어 부모로 전이되지 못하도록 강제한다.
+
+## Requirements
 
 ### Requirement: AI 생성 와이어 HTML은 sandbox iframe으로 격리된다
 

@@ -1,6 +1,10 @@
 # flowforge-change-entry
 
-## ADDED Requirements
+## Purpose
+
+프로젝트에 기획문서(docs/planning/)가 있든 없든, openspec change의 5종 뷰(PRD/기능명세/유저플로우/IA/와이어)로 가는 진입로(capability별 change 목록)를 항상 노출한다. 기존에는 기획문서가 있는 프로젝트일수록 `planTabsAvail.length === 0` 게이트에 걸려 change 목록이 숨겨지는 역설이 있었는데, 이 capability는 그 게이트를 완화해 기획 탭과 change 목록이 병존하도록 한다. change 진입 경로(capability→change→5종 뷰)는 기존 openChangeViews 흐름을 재사용한다.
+
+## Requirements
 
 ### Requirement: 기획문서 유무와 무관하게 change 목록을 항상 노출한다
 skeleton 단계에서 프로젝트의 change 목록(capability별)은 그 프로젝트에 기획문서(docs/planning/)가 있든 없든 SHALL 노출된다. 기획문서 존재 여부(`planTabsAvail`)가 change 목록 노출을 막지 않는다.

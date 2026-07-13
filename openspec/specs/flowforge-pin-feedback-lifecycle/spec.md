@@ -1,4 +1,10 @@
-## ADDED Requirements
+# flowforge-pin-feedback-lifecycle
+
+## Purpose
+
+핀 피드백을 "쓰고 잊는" 로그에서 생애주기(open→resolved)를 관리하는 대상으로 확장한다. 각 피드백에 안정적 `id`와 `status`(open/resolved)를 부여하고, 저장된 피드백을 GET으로 재조회해 목록/인박스로 표시하며(새로고침 후에도 유지), resolve 토글과 id 기반 in-place 수정으로 중복 누적을 없앤다. id/status 없는 기존 레코드는 읽을 때 기본값을 부여해 하위호환한다.
+
+## Requirements
 
 ### Requirement: 핀 피드백에 안정적 id와 status를 부여한다
 

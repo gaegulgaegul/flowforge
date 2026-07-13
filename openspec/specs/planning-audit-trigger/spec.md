@@ -1,6 +1,10 @@
 # planning-audit-trigger
 
-## ADDED Requirements
+## Purpose
+
+flowforge에서 audit 상태가 미확인(unknown)/경고(warn)인 프로젝트에 "감사 진행" 버튼을 노출해, 사용자가 감사를 직접 실행하고 판정을 UI에 반영하는 닫힌 루프를 제공한다. flowforge 컨테이너는 홈 읽기전용 마운트라 audit을 직접 실행하지 못하므로, 얇은 인증 프록시로서 감사 잡을 openspec-reports 호스트 워커 큐에 위임한다. 실행은 인증 게이트(requireWriteAuth)와 프로젝트 화이트리스트를 통과해야 하며, 판정(PASS/FAIL/UNVERIFIABLE)은 워커 내부의 결정적 파이썬 3-step이 산출하고 결과는 audit.json에 저장된다.
+
+## Requirements
 
 ### Requirement: 미감사 프로젝트에 감사 실행 버튼을 노출한다
 audit 상태가 미확인(unknown) 또는 경고(warn)인 프로젝트에서, 사용자가 감사를 직접 실행할 수 있는 버튼을 SHALL 노출한다. 감사가 정합(clean)인 프로젝트에는 버튼을 강제 노출하지 않는다(재실행은 허용 가능).

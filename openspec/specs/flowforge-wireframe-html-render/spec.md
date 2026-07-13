@@ -1,4 +1,10 @@
-## ADDED Requirements
+# flowforge-wireframe-html-render
+
+## Purpose
+
+화면별 HTML 문서를 sandbox iframe에 렌더하는 flowforge 측 렌더러를 정의한다. 좌표 없는 요소 박스 근사가 아니라 실제 HTML을 렌더하므로 실화면에 근접하고, 문서 내 폼/입력/버튼이 실제로 동작한다(정적 아님). 디바이스 프레임(데스크탑/모바일)과 화면 전환 UI는 유지하되 프레임 본문은 iframe이 채우며, 핀 피드백 좌표는 iframe 표면 기준으로 재계산된다.
+
+## Requirements
 
 ### Requirement: 와이어는 화면별 HTML 문서를 iframe에 렌더한다
 

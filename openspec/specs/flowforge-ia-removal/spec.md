@@ -1,8 +1,10 @@
 # flowforge-ia-removal
 
-IA(화면구조) 뷰를 산출물에서 제거하는 능력(5종→4종: PRD·기능명세·유저플로우·와이어). IA 렌더 컴포넌트·어댑터·라우트·서버 빌더·탭을 제거한다. 🔴 **핵심 불변식**: 화면 id 파싱(`screenRegistry.ts`)·`/api/docs/:project/planning-screens` 라우트·화면 id 데이터는 존치해, 기능명세 연결화면·유저플로우·와이어의 화면 id 조인이 회귀 없이 유지된다.
+## Purpose
 
-## ADDED Requirements
+IA(화면구조) 뷰를 산출물에서 제거하는 능력(5종→4종: PRD·기능명세·유저플로우·와이어). IA는 유저플로우·와이어가 이미 화면을 다루므로 별도 뷰의 가치가 낮아, IA 렌더 컴포넌트·어댑터·라우트·서버 빌더·탭을 제거한다. 🔴 **핵심 불변식**: 화면 id 파싱(`screenRegistry.ts`)·`/api/docs/:project/planning-screens` 라우트·화면 id 데이터는 존치해, 기능명세 연결화면·유저플로우·와이어의 화면 id 조인이 회귀 없이 유지된다(제거하는 것은 IA 렌더뿐이고 화면 id 데이터원은 건드리지 않는다).
+
+## Requirements
 
 ### Requirement: IA 뷰가 산출물에서 제거된다 (5종→4종)
 flowforge는 IA(화면구조) 뷰를 더 이상 제공하지 SHALL NOT 한다. change 뷰의 "IA 트리" 탭(`App.tsx:941`)과 planning 뷰의 "화면 구조" 탭(`App.tsx:994`), 그 렌더 블록(change `App.tsx:1225-1229`, planning `App.tsx:1048-1067`), `iaVerbose` 토글(`App.tsx:975-977`), IA 노드타입 등록(`App.tsx:82`의 `ia: IANode`), `Tab`/planTab 유니언의 `"ia"`(`App.tsx:89,105`)를 제거한다. 남는 산출물은 4종(PRD·기능명세·유저플로우·와이어)이다.
