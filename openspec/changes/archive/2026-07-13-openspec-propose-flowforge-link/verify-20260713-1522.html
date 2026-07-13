@@ -1,0 +1,41 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — openspec-propose-flowforge-link</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — openspec-propose-flowforge-link</h1>
+<p class="muted">검증일: 2026-07-13T15:22:48+09:00 · 환경: docs 레이어만 적용(SKILL.md 스킬 문서 수정 change) — server/web/android/ios 전부 SKIPPED(적용 불가: flowforge 코드 무변경). 검증 수단=문서 grep/diff + 선행 의존 라이브 딥링크 실측. · run: run-20260713-1522 · commit d761d0a7 (dirty)</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 4 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>완료 요약에 flowforge change 딥링크 노출</td><td>발행 성공 시 flowforge 링크와 openspec 원문 병기</td><td>—</td><td>grep SKILL.md — published:true 분기에 flowforge 1차 링크 + openspec.gaegul.house 원문 병기 지시</td><td><code>소스 SKILL.md:194-195,220. 캐시 1.1.8 동일.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">SKILL.md:194 &#x27;**flowforge change URL 을 1차 링크로 노출**하고,&#x27; / :195 &#x27;openspec.gaegul.house 원문 링크(...)를 **함께 병기**한다&#x27; / :220 발행 성공 시 openspec 병기 지시. 소스=캐시 diff 완전일치.</pre></td></tr>
+<tr><td>완료 요약에 flowforge change 딥링크 노출</td><td>발행 스킵 시 flowforge URL 형식과 로컬 경로 안내</td><td>—</td><td>grep SKILL.md — skipped:true 분기에 로컬 경로 + flowforge URL 형식 + &#x27;openspec URL 지어내지 않는다&#x27; 지시</td><td><code>소스 SKILL.md:198-200,220. 캐시 1.1.8 동일.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">SKILL.md:198 &#x27;**skipped:true (env 없어 발행 스킵)**: 로컬 산출물 경로(openspec/changes/&lt;name&gt;/)와 함께&#x27; / :200 &#x27;openspec.gaegul.house 원문 URL 을 지어내지 않는다(그 링크는 유효하지 않다 — 로컬 경로만 적는다).&#x27;</pre></td></tr>
+<tr><td>완료 요약에 flowforge change 딥링크 노출</td><td>project env 부재 시 change-only 링크로 폴백</td><td>—</td><td>grep SKILL.md — VERIFY_PROJECT 미설정 시 ?project= 생략 폴백 지시</td><td><code>소스 SKILL.md:189,220. 캐시 1.1.8 동일.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><pre style="max-height:160px;overflow:auto;background:#f6f8fa;padding:6px">SKILL.md:189 &#x27;**VERIFY_PROJECT 미설정(project 값 없음) 폴백**: ?project= 파라미터를 통째로 **생략**하고&#x27; / :220 &#x27;(VERIFY_PROJECT 미설정 시 ?project= 생략)&#x27;. AND절=빈 project= 값/리터럴 &lt;project&gt; 플레이스홀더 잔존 금지.</pre></td></tr>
+<tr><td>완료 요약에 flowforge change 딥링크 노출</td><td>선행 의존(flowforge 딥링크 라우팅) 미배포 시 안내</td><td>web</td><td>grep design.md 선행 의존 리스크 명시 + 라이브 딥링크 실측(선행 change 실배포 여부)</td><td><code>design.md:50,53-55,60 선행 의존 섹션 + 라이브 GET 200 실측.</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/deeplink-live.png"><img src="evidence/deeplink-live.png" alt="라이브 딥링크 실픽셀(Playwright): https://flowforge.gaegul.house/?project=flowforge&amp;change=openspec-propose-flowforge-link&amp;tab=prd → HTTP 200, 브레드크럼 &#x27;⌂ 프로젝트 › openspec-propose-flowforge-link&#x27;로 change 뷰 복원(랜딩 grid 아님) + PRD 탭 활성(tab=prd 반영) + PRD 본문 렌더. 선행 의존(flowforge-deeplink-url, 2026-07-10 archive) 배포 완료 실증. 문서 리스크 명시=design.md:53-55." style="max-width:240px;border:1px solid #ccc"></a></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>완료 요약에 flowforge change 딥링크 노출</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="문서 안내 문구(URL 템플릿 문자열 조립 지시) — 런타임 타입 개념 없음">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="고정 URL 템플릿 안내 — 경계값 개념 없음">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="정적 스킬 문서 — 동시 실행 개념 없음">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="고정 URL 템플릿 1건 — 대량 데이터 없음">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>docs</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>4</td><td>4</td><td>0</td><td>이 change는 SKILL.md 스킬 문서 수정만 — 실행 코드 없음(spec TDD Plan §5-1). 검증 수단=grep/diff 문서 정합성 + 선행 의존 라이브 딥링크 실측.</td></tr>
+<tr><td>server</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>적용 불가</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>

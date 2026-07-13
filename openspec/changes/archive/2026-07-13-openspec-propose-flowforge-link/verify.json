@@ -1,0 +1,143 @@
+{
+  "change": "openspec-propose-flowforge-link",
+  "verifiedAt": "2026-07-13T15:22:48+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 4,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "완료 요약에 flowforge change 딥링크 노출",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "문서 안내 문구(URL 템플릿 문자열 조립 지시) — 런타임 타입 개념 없음",
+          "경계값": "고정 URL 템플릿 안내 — 경계값 개념 없음",
+          "동시성": "정적 스킬 문서 — 동시 실행 개념 없음",
+          "대량": "고정 URL 템플릿 1건 — 대량 데이터 없음"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "발행 성공 시 flowforge 링크와 openspec 원문 병기",
+          "layer": "—",
+          "means": "grep SKILL.md — published:true 분기에 flowforge 1차 링크 + openspec.gaegul.house 원문 병기 지시",
+          "basis": "소스 SKILL.md:194-195,220. 캐시 1.1.8 동일.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "SKILL.md:194 '**flowforge change URL 을 1차 링크로 노출**하고,' / :195 'openspec.gaegul.house 원문 링크(...)를 **함께 병기**한다' / :220 발행 성공 시 openspec 병기 지시. 소스=캐시 diff 완전일치.",
+            "caption": "S1 문서 증거"
+          }
+        },
+        {
+          "scenario": "발행 스킵 시 flowforge URL 형식과 로컬 경로 안내",
+          "layer": "—",
+          "means": "grep SKILL.md — skipped:true 분기에 로컬 경로 + flowforge URL 형식 + 'openspec URL 지어내지 않는다' 지시",
+          "basis": "소스 SKILL.md:198-200,220. 캐시 1.1.8 동일.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "SKILL.md:198 '**skipped:true (env 없어 발행 스킵)**: 로컬 산출물 경로(openspec/changes/<name>/)와 함께' / :200 'openspec.gaegul.house 원문 URL 을 지어내지 않는다(그 링크는 유효하지 않다 — 로컬 경로만 적는다).'",
+            "caption": "S2 문서 증거(에러경로: 발행 실패)"
+          }
+        },
+        {
+          "scenario": "project env 부재 시 change-only 링크로 폴백",
+          "layer": "—",
+          "means": "grep SKILL.md — VERIFY_PROJECT 미설정 시 ?project= 생략 폴백 지시",
+          "basis": "소스 SKILL.md:189,220. 캐시 1.1.8 동일.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "SKILL.md:189 '**VERIFY_PROJECT 미설정(project 값 없음) 폴백**: ?project= 파라미터를 통째로 **생략**하고' / :220 '(VERIFY_PROJECT 미설정 시 ?project= 생략)'. AND절=빈 project= 값/리터럴 <project> 플레이스홀더 잔존 금지.",
+            "caption": "S3 문서 증거(null/빈값/특수문자)"
+          }
+        },
+        {
+          "scenario": "선행 의존(flowforge 딥링크 라우팅) 미배포 시 안내",
+          "layer": "web",
+          "means": "grep design.md 선행 의존 리스크 명시 + 라이브 딥링크 실측(선행 change 실배포 여부)",
+          "basis": "design.md:50,53-55,60 선행 의존 섹션 + 라이브 GET 200 실측.",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/deeplink-live.png",
+            "caption": "라이브 딥링크 실픽셀(Playwright): https://flowforge.gaegul.house/?project=flowforge&change=openspec-propose-flowforge-link&tab=prd → HTTP 200, 브레드크럼 '⌂ 프로젝트 › openspec-propose-flowforge-link'로 change 뷰 복원(랜딩 grid 아님) + PRD 탭 활성(tab=prd 반영) + PRD 본문 렌더. 선행 의존(flowforge-deeplink-url, 2026-07-10 archive) 배포 완료 실증. 문서 리스크 명시=design.md:53-55."
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "docs",
+      "status": "PASS",
+      "ran": 4,
+      "passed": 4,
+      "failed": 0,
+      "basis": "이 change는 SKILL.md 스킬 문서 수정만 — 실행 코드 없음(spec TDD Plan §5-1). 검증 수단=grep/diff 문서 정합성 + 선행 의존 라이브 딥링크 실측."
+    },
+    {
+      "layer": "server",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: flowforge 서버 코드 무변경(agentic-harness SKILL.md 문서만). publish_docs.py·flowforge 서버 무변경(proposal Impact 명시).",
+      "reason": "적용 불가"
+    },
+    {
+      "layer": "web",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: flowforge 프론트 무변경. 딥링크 라우팅 소비자는 선행 change flowforge-deeplink-url(이미 archive/배포)의 몫.",
+      "reason": "적용 불가"
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: 안드로이드 레이어 없음.",
+      "reason": "적용 불가"
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "적용 불가: iOS 레이어 없음 + 비-macOS.",
+      "reason": "적용 불가"
+    }
+  ],
+  "codeState": {
+    "head": "d761d0a78fb65e6d37a4dab76d75fc8e41774c4e",
+    "dirty": true,
+    "branch": "feat/flowforge-feedback-changes",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260713-1522.html"
+}
