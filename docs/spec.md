@@ -56,7 +56,6 @@ change의 `proposal.md`+`design.md`를 manyfast 고정 5섹션으로 파생해 �
 - invariant: 읽기전용 — `/api/projects/:project/capabilities*`에 쓰기 메서드를 두지 않는다.
 
 ### 기능: 계층 드릴다운 + 브레드크럼 웹 렌더
-- assert:symbol CapabilityChangeList
 - 프로젝트 카드 → 뼈대(capability) → change 목록 → 5종 뷰의 4단 드릴다운을 제공하고, 브레드크럼으로 상위 단계 복귀를 지원한다.
 - change 클릭 시 기존 5종 뷰(prd|spec|flow|ia|wire) 경로(`/api/changes/:id/{graph,ia,wireframe,prd,spec-tree}`)를 재사용한다(신규 빌더를 호출하지 않는다).
 - metric: web 실픽셀 드릴다운+브레드크럼 시나리오 PASS(카드→skeleton→capChanges→views, 콘솔에러 0).
@@ -306,7 +305,6 @@ flowforge가 `docs/planning/prd.suggestions.json`(AI/스킬이 쓴 PRD 갱신 �
 - metric: 라이브 실픽셀 grounding — 링크 있는 상세기능 화면 나열·링크 없는 노드 섹션 생략·콘솔 에러 0.
 
 ### 기능: 화면 칩 → IA 딥링크 (panel-screen-deeplink)
-- assert:symbol buildPlanningIaTreeFromRegistry
 - behavior: IA 화면 노드는 서버가 실어주는 원본 screenId(additive)를 보유하고, 상세 패널 화면 칩 클릭은 그 값의 문자열 동치로만 대상 노드를 찾아 기획 IA 탭 전환+노드 상세 패널 오픈(slug 복제·퍼지 매칭 금지)
 - invariant: 매칭 실패 시 탭 전환 없이 상태바 안내만 — 저작 오류(화면목록↔IA 불일치)를 숨기지 않되 화면 불파괴
 - metric: planningIaBuilder screenId 단위 테스트 + 라이브 실픽셀(칩 클릭→IA 탭+노드 선택, 2026-07-07) PASS
@@ -485,18 +483,16 @@ flowforge 기획 와이어를 디바이스 프레임(데스크탑/모바일) 안
 skeleton 단계에서 change 목록(capability별)을 프로젝트의 기획문서(docs/planning/) 유무와 무관하게 항상 노출한다. 이전 `planTabsAvail.length === 0` 게이트가 기획문서 있는 프로젝트에서 change 5종 뷰 진입로를 통째로 숨기던 부작용을 제거했다. change 목록에서 capability→change→5종 뷰로 내려가는 진입 경로는 기존 openCapability→openChangeViews 흐름을 재사용한다.
 
 ### 기능: change 목록 무조건 렌더 (기획문서 유무 무관)
-- assert:symbol dash-changes-section
-- assert:symbol planTabsAvail
 - change 목록 블록(`<section class="dash-changes-section">` — h3 + capability별 `dash-cap` 버튼)은 skeleton 단계에서 게이트 없이 항상 렌더된다. `planTabsAvail`(기획문서 존재 배열)이 change 목록 노출을 막지 않는다.
+- invariant: 기획문서 존재 배열(planTabsAvail)이 change 목록 노출을 막지 않는다(게이트 없이 항상 렌더).
 - invariant: 기획문서 있는 프로젝트는 기획 탭 바(`planTabsAvail.length > 0`)와 change 목록이 형제로 병존 렌더된다.
 - invariant: 기획문서 없는 프로젝트는 `planTabsAvail.length === 0`이라 기획 탭/섹션은 안 뜨고 change 목록만 렌더된다(게이트 제거 전과 픽셀 동일 — 회귀 없음).
 - invariant: 그래프 탭(dash-body--wide, overflow:hidden)에서도 change 목록 section이 `flex:0 0 auto`+`max-height:40vh`+`overflow-y:auto`로 그래프 캔버스(min-height:480px)에 덮이지 않고 독립 스크롤로 전 항목 도달된다. 그래프 section은 overflow:hidden으로 change 영역을 침범하지 않는다.
 - metric: gstack 라이브 실픽셀 — flowforge(기획문서 있음) PRD 탭·그래프 탭(기능명세/유저플로우) 모두 기획 탭+change 목록 병존 확인, agentic-harness(기획문서 없음) change 목록만 노출 무회귀 확인 PASS.
 
 ### 기능: change 목록에서 5종 뷰 진입
-- assert:symbol openCapability
-- assert:symbol openChangeViews
 - change 목록의 capability 버튼 클릭 시 `openCapability`가 그 capability의 change 상세(capChanges)로 이동하고, change 클릭 시 `openChangeViews`가 5종 뷰(views) + PRD 탭 활성으로 진입한다.
+- invariant: capability 클릭→capChanges 이동, change 클릭→views+PRD 탭 활성 흐름(openCapability→openChangeViews)이 신규 데이터·라우트 없이 재사용된다.
 - invariant: 진입 경로는 신규 데이터·라우트 없이 기존 openCapability→capChanges→openChangeViews→views 흐름을 재사용한다.
 - metric: gstack 라이브 — capability 클릭→capChanges 이동, change 클릭→views+PRD 탭 활성(change 있는 capability는 wowa-app로 실증) PASS.
 
@@ -522,17 +518,13 @@ skeleton 단계에서 change 목록(capability별)을 프로젝트의 기획문�
 - metric: server Jest 파생 테스트 4건 PASS(capabilityIndex.test.ts) + 라이브 실픽셀(요구사항 노드 change 배지·미표시 대비·콘솔 0).
 
 ### 기능: 하위 노드 상속 + 화면 역경유 파생 (web adapter)
-- assert:symbol toIAFlow
 - featureTreeAdapter가 각 요구사항의 linkedChanges를 그 서브트리(자신·기능·상세기능) 전체에 상속한다(linkedChangesById 맵, 조건부 부착).
 - iaAdapter가 화면 id→연결 상세기능→상위 요구사항 linkedChanges를 역경유해 화면 노드에 합집합(중복 제거)으로 부착한다(toIAFlow의 changeMapping 옵션, 화면 노드에만).
 - behavior: 상세기능은 상위 capability change와 연결 화면 change의 합집합을 표시한다(중복 제거).
 - metric: 라이브 실픽셀 grounding — 서브트리 상속 4노드 배지(DOM .feature-tree-change=4, 클리핑 0) + IA 화면 노드 배지(기능명세 화면·기획 뷰) + 미연관 노드 미표시.
 
 ### 기능: 노드 change 배지 + 상세 패널 진입 (web 렌더)
-- assert:symbol FeatureNode
-- assert:symbol IANode
 - assert:symbol FeatureDetailPanel
-- assert:symbol IADetailPanel
 - FeatureNode·IANode는 linkedChanges.length>0인 노드에만 "change N" 배지(span)를 렌더한다(클릭 액션 없음, 표시 신호만). 연관 0개면 미표시.
 - FeatureDetailPanel·IADetailPanel의 "연관 change" 섹션은 각 change를 button으로 렌더하고, 클릭 시 onOpenChange로 그 change의 5종 뷰(PRD 탭)에 진입한다(openChangeViews 재사용, 딥링크 URL 기록).
 - invariant:readonly 배지·섹션은 표시·진입만 — 편집·추가·삭제 UI 없음.
