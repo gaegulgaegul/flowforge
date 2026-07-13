@@ -538,3 +538,137 @@ skeleton 단계에서 change 목록(capability별)을 프로젝트의 기획문�
 - invariant:readonly 배지·섹션은 표시·진입만 — 편집·추가·삭제 UI 없음.
 - behavior: 전역 change 목록(dash-changes-section)은 렌더하지 않는다(연관 매핑으로 대체).
 - metric: 라이브 실픽셀 grounding — 배지 클릭 후 상세 패널→5종 뷰 PRD 탭 진입+딥링크 URL(?project=&change=&tab=prd)+패널 닫힘, 전역 목록 DOM 부재, 콘솔 에러 0.
+
+## capability: flowforge-wireframe-html-contract — WireDoc HTML 계약
+
+harness(외부 openspec-plan 계열 스킬)가 flowforge에 넘길 화면별 HTML 산출물의 데이터 계약이다. 화면 하나 = 자족적 HTML 문서(id·title·device·html)이며, 자산은 인라인/data URI로 임베드하고 외부 호스트 참조·부모 오리진 통신·top-level navigation을 전제하지 않는다(sandbox·CSP가 거부). **생성 주체는 flowforge 밖(스킬)이고 flowforge 서버는 LLM을 호출하지 않는다**(읽기 거울). 따라서 flowforge의 책임은 생성이 아니라 **스키마 가드로 계약을 검증**하고, 위반·손상 문서를 안전 폴백/거부하는 것이다.
+
+### 기능: WireDoc 스키마 가드 (`isValidWireDoc`)
+- assert:symbol isValidWireDoc
+- assert:symbol WireDoc
+- `isValidWireDoc(v)`가 원천 read 시 각 화면 항목이 계약 스키마(id·title은 string, device는 `'desktop'|'mobile'`, html은 string)를 만족하는지 검증하는 타입가드다. 배열 read 경로는 `parsed.every(isValidWireDoc)`로 전량 검증하고, 하나라도 위반하면 null 반환(안전 폴백)해 렌더가 죽지 않게 한다. `WireDoc` 타입(shared)이 이 계약의 단일 원천이며, 서버·web·테스트가 같은 스키마를 공유한다.
+- invariant: 생성 주체는 flowforge 밖 — flowforge 서버 코드에 LLM/생성 호출(`*Client` 등)이 없고, 와이어 원천은 스킬이 전달한 HTML 문서다. flowforge는 스키마 가드로 검증만 한다.
+- invariant: 계약(자족성·화면 id 정합)을 위반하거나 손상된 문서가 와도 격리(sandbox + 헤더 CSP)는 항상 유지하고, 검증 실패 문서는 안전 폴백(필터/거부)으로 처리한다 — 보안 우선.
+- metric: wireDocs.test.ts("isValidWireDoc (화면별 HTML 문서 스키마 가드)": 정상 통과·html 타입오류/누락·id/title 타입오류 거부) PASS + 외부 호스트 참조 문서가 렌더 시 CSP로 차단됨(외부 로드 0) 실측.
+
+## capability: flowforge-wireframe-html-render — 와이어 HTML 문서 렌더
+
+와이어 뷰를 좌표 없는 요소 박스(폐기된 `WireScreen2` elements)가 아니라 **화면별 실 HTML 문서**로 렌더한다(BREAKING). 각 화면은 자족적 HTML 문서(id·title·device·html)이며, sandbox iframe의 `src`(서버 라우트)로 로드해 실제 마크업·폼·입력이 동작하도록 렌더한다. flowforge 서버는 LLM을 호출하지 않고(읽기 거울), 승인분 HTML 원천이 있으면 그것을, 없거나 깨졌으면 픽스처/빈 상태로 안전 폴백한다.
+
+### 기능: 화면별 HTML 문서 목록 (`GET /api/docs/:project/planning-wireframe`)
+- assert:endpoint GET /api/docs/:project/planning-wireframe
+- assert:symbol buildDocsPlanningWireframe2
+- `buildDocsPlanningWireframe2(dir)`가 승인분 HTML 원천(없으면 픽스처 폴백)에서 화면별 문서 `WireDoc[]`를 만들어 `{project, screens}`로 반환한다. 각 화면은 좌표 없는 요소 배열이 아니라 id·title·device·html(문서 문자열)을 담는다(새 계약, 이전 요소 배열 스키마와 BREAKING). docs 미존재 project는 404(docs_not_found).
+- invariant: 렌더 원천은 화면별 HTML 문서다 — 승인분 원천이 없거나 JSON이 깨져도 렌더는 throw하지 않고 빈 상태(또는 최소 폴백 문서)로 안전 처리한다.
+- metric: wireDocs.test.ts(buildDocsPlanningWireframe2 계약·안전 폴백) + docsWireDoc.test.ts(라우트 응답) PASS + 라이브 와이어 뷰 실픽셀 실증.
+
+### 기능: 화면 HTML 문서 서빙 (`GET /api/docs/:project/planning-wireframe/:screenId/doc`)
+- assert:endpoint GET /api/docs/:project/planning-wireframe/:screenId/doc
+- assert:symbol buildDocsPlanningWireframe2
+- iframe이 srcdoc이 아니라 src로 로드하도록, screenId에 매칭되는 승인분 화면 문서 HTML을 `text/html`로 **무변형** 서빙한다(미매칭=404 wire_doc_not_found). CSP는 문서 내용과 무관하게 응답 헤더로 강제하므로 적대적 HTML의 meta 주입 우회를 원천 제거한다(상세는 flowforge-wireframe-sandbox-security).
+- invariant: 문서 HTML은 서버가 파싱·변형하지 않고 그대로 서빙한다 — 격리는 응답 헤더 CSP + sandbox iframe이 담당하고, 문서 자체는 헤더를 바꿀 수 없다.
+- metric: docsWireDoc.test.ts("200 text/html + WIRE_DOC_CSP 헤더 + 본문 무변형", 미매칭 404) PASS.
+
+### 기능: 디바이스 프레임 안 iframe 렌더 (web `WireframeDeviceFrame`)
+- assert:symbol WireframeDeviceFrame
+- assert:symbol buildDocsPlanningWireframe2
+- `WireframeDeviceFrame`가 데스크탑(브라우저 크롬)·모바일(폰 프레임) 프레임 셸과 화면 탭·디바이스 토글은 유지하되, 프레임 본문을 화면 HTML 문서 iframe(`<iframe src sandbox=...>`)으로 채운다. 폐기된 `WireScreen2` 요소 박스 렌더러(`wf-df-el--*`)는 planning 와이어 경로에서 제거됐고, iframe HTML 렌더러가 원천이다. 핀 피드백 오버레이는 iframe **위** 레이어에 위치하고 좌표(xPct/yPct)는 iframe 표면 바운딩 박스 기준으로 계산한다(sandbox 내부 DOM 접근 불가).
+- invariant: 게으름 위계 — 디바이스 프레임 크롬(토글·탭)은 재사용하고 본문만 iframe로 교체한다(프레임 셸 재작성 금지).
+- metric: WireframeDeviceFrame 컴포넌트가 `sandbox={WIRE_IFRAME_SANDBOX}` + `src`로 iframe을 렌더함을 코드 실증(WireframeDeviceFrame.tsx:89~94) + 라이브 폼·입력 실동작 실증.
+
+## capability: flowforge-wireframe-sandbox-security — sandbox iframe·CSP 격리
+
+신뢰되지 않은 AI 생성 와이어 HTML을 sandbox iframe + 응답 Content-Security-Policy 헤더로 격리해, 문서가 부모 오리진(flowforge 앱의 쿠키·localStorage·DOM·토큰)에 접근하거나 외부 네트워크로 데이터를 유출하지 못하게 한다. 이 change의 핵심 보안 재설계는 CSP를 `<meta>` 주입에서 **HTTP 응답 헤더**로 전환한 것으로, 브라우저가 문서 내용과 무관하게 CSP를 적용하므로 적대적 HTML의 정규식 마스킹 우회를 원천 제거한다. 미승인 제안 미리보기는 원천에 없는 임시 HTML이라 추측 불가한 단기 토큰 URL로 서빙한다(TTL·크기·개수 상한으로 DoS 방어).
+
+### 기능: 앱 CSP 보안 헤더 미들웨어 (`cspHeaders`)
+- assert:symbol cspHeaders
+- 무의존 최소 미들웨어 `cspHeaders`를 `app.use(cspHeaders)`(index.ts:15)로 모든 응답에 적용해, flowforge 앱 응답에 CSP 헤더(`WIRE_APP_CSP`)를 세팅한다. `frame-ancestors 'self'`로 clickjacking(신뢰되지 않은 상위 프레임 임베드)을 막고, `X-Frame-Options: SAMEORIGIN`·`X-Content-Type-Options: nosniff`(구형 폴백)도 세팅한다. CSP 값은 shared 단일 원천(`WIRE_APP_CSP`)에서 가져와 렌더러·테스트와 drift를 막는다.
+- invariant: 문서용 CSP(`WIRE_DOC_CSP`)는 `default-src 'none'`·`connect-src 'none'`로 외부 script/style/img/font·fetch/XHR/WebSocket 로드를 차단하고 인라인 자산만 허용하며, 정책 문자열에 외부 URL(`https?://`)을 포함하지 않는다(네트워크 유출 표면 제거).
+- invariant: sandbox 값(`WIRE_IFRAME_SANDBOX`)에는 `allow-scripts`는 있고 `allow-same-origin`은 **없다** — 둘을 동시에 주면 sandbox가 무력화되어 부모 오리진 접근이 열린다.
+- metric: wireDocs.test.ts(보안 상수 단일 원천: allow-same-origin 미부여·CSP 외부 차단·frame-ancestors 'self' 검증) + docsWireDoc.test.ts(응답 CSP 헤더 = WIRE_DOC_CSP 불변, 적대적 페이로드에도 불변) PASS.
+
+### 기능: 미승인 제안 미리보기 토큰 (`POST /api/docs/:project/planning-wireframe/preview`)
+- assert:endpoint POST /api/docs/:project/planning-wireframe/preview
+- assert:symbol putWirePreview
+- 원천에 없는 미승인 제안·crosslink 임시 HTML을 렌더 직전 POST로 짧게 저장하고 추측 불가한 토큰(`crypto.randomUUID()`)을 발급해 `src=.../preview/:token/doc`로 로드한다. 저장분도 승인분과 **동일하게** text/html + WIRE_DOC_CSP 헤더로 서빙된다(격리 동일). 크기 상한 초과 시 `putWirePreview`가 null을 반환해 413(payload_too_large)로 거부한다.
+- invariant: 미리보기는 TTL(기본 5분, get 시 lazy 만료)·개수 상한(200)·단일 HTML 바이트 상한(512KB)으로 메모리 DoS를 막는다. write가 아니라 read 규약과 동형(추측 불가 토큰·상한)이라 requireWriteAuth 없이 안전하다. 저장 HTML은 파싱·변형·meta 주입 없이 그대로 보관·서빙한다(우회 벡터 원천 제거).
+- metric: wirePreview.test.ts(TTL 만료·개수/바이트 상한 거부·토큰 추측불가·lazy 삭제) PASS.
+
+## capability: planning-audit-trigger — 감사 실행 트리거
+
+미감사(unknown)·경고(warn) 프로젝트에서 사용자가 openspec-audit을 직접 실행할 수 있게 하는 "감사 진행" 트리거다. flowforge 컨테이너는 홈을 읽기전용(RO)으로 마운트하고 python3·git이 없어 audit을 직접 실행할 수 없다. 그래서 flowforge는 얇은 인증 프록시로만 동작해 openspec-reports 호스트 워커 큐에 잡을 enqueue하고, 실제 결정적 실행(audit_scan → audit_match → generate_report)과 `audit.json` 갱신은 워커가 담당한다.
+
+### 기능: 감사 실행 큐잉 (`POST /api/docs/:project/audit-run`)
+- assert:endpoint POST /api/docs/:project/audit-run
+- assert:symbol triggerAudit
+- 인증(requireWriteAuth) 게이트와 프로젝트 키 화이트리스트를 통과한 요청에 대해 `triggerAudit`이 openspec-reports 큐에 `{project, action:"audit"}` 잡을 enqueue한다. flowforge는 큐에 넣기만 하고 audit을 직접 실행하지 않는다(RO 마운트·도구 부재). 성공 시 202(큐잉됨)를 반환하고, 연타는 debounce로 202 관용 처리한다.
+- invariant: project 키는 `resolveProjectDir` 화이트리스트(`..`·슬래시·미등록·심링크 차단)로 재검증하고, 위반 입력은 잡을 큐잉하지 않고 400으로 거부한다(공개 RCE 트리거 방지).
+- invariant: 프로덕션 인증(CF Access JWT 또는 Bearer WRITE_TOKEN)이 활성이어야 라우트가 열린다 — 무인증 요청은 401로 거부하고 잡을 큐잉하지 않는다. 큐 오류·워커 401은 502로 매핑한다.
+- metric: auditRun.test.ts(라우트: 202 큐잉·400 경로조작·401 무인증·502 큐오류) + auditTrigger.test.ts(triggerAudit 분기: ok/invalid_project/debounced/unauthorized/queue_error) PASS.
+
+### 기능: 미감사 상태에 감사 버튼 노출 + 재조회 (web `runAudit`)
+- assert:symbol runAudit
+- assert:symbol triggerAudit
+- web는 auditStatus가 unknown/warn일 때만 "🔍 감사 진행" 버튼(data-testid="audit-run-btn")을 노출하고, 클릭 시 `runAudit(project)`가 audit-run 라우트를 호출한다. 202 이후 폴링으로 audit 판정을 재조회해 UI에 갱신 표시한다(감사 중… → 완료 후 재조회). 정합(clean) 프로젝트에는 버튼을 강제 노출하지 않는다.
+- invariant: 판정(PASS/FAIL/UNVERIFIABLE)은 flowforge/web/LLM이 아니라 워커 내부의 결정적 파이썬 3-step(route/symbol 문자열 매칭)이 산출한다 — flowforge는 그 저장본(audit.json)을 읽어 표시만 한다(읽기 거울).
+- metric: web `runAudit`(api.ts:233)이 audit-run 라우트를 호출하고, App.tsx의 버튼(App.tsx:973~979, audit-run-btn)이 unknown/warn 게이트로 렌더됨을 코드 실증 + 라이브 감사 후 판정 갱신 실증.
+
+## capability: flowforge-mapping-basis-shift — capability↔change 매핑 원천 전환
+
+`flowforge-change-node-mapping`이 신설한 노드↔change 매핑 파생의 **데이터 조인 기준**만 분리해 고친 아키텍처 뒷정리다. 매핑 진실의 원천을 폐기 방향인 charter(`docs/spec.md`)에서 `docs/planning/features.md`의 요구사항 capability(`<!-- capability: 키 -->`)로 전환하고, 활성 change만 스캔하던 것을 archive된 change까지 포함하도록 완화한다. UI(배지·상세패널·진입)는 불변이며 데이터 조인 기준만 바뀐다. 목적은 "라이브 실데이터에서 노드 배지 0"의 근본 원인(활성 change의 specs/dir이 features.md capability와 교집합 0 + 구현 change는 이미 archive로 이동) 해소다.
+
+### 기능: features.md capability를 매핑 조인 원천으로 파싱
+- assert:symbol parseFeatureCapabilities
+- `docs/planning/features.md`의 `<!-- capability: 키 -->` 마커를 읽어 capability 키 집합을 뽑는 순수 파서다(`server/src/lib/capabilityIndex.ts`). charter(`docs/spec.md`)의 `## capability:` 파서(`parseCharterCapabilities`)를 대체하는 새 조인 원천으로, features.md에 선언된 capability를 진실의 원천으로 삼아 change의 `specs/<dir>`과 조인한다.
+- invariant: 매핑 기준 전환은 `capabilityIndex` 조인에 한정된다 — `graph.ts`·`koreanLabels.ts`·`changes.ts`·`projects.ts` 등 docs/spec.md의 다른 소비자와 wowa-app 등 타 프로젝트 planning 뷰를 회귀시키지 않는다.
+- metric: server jest capabilityIndex.test.ts 22/22 PASS(parseFeatureCapabilities 키 추출 + wowa-app 무저촉 케이스 포함).
+
+### 기능: archive된 change도 매핑 스캔에 포함
+- `buildCapabilityIndex`가 `openspec/changes/archive/<dated-change>/`(archive 래퍼 1단계 하강)도 change로 스캔에 포함한다(활성 전용이던 것을 완화). 완료돼 archive된 change가 구현한 capability도 노드 배지로 표시되며, archive 하위 링크에만 `archived:true`를 옵셔널로 실어 활성 링크 형태를 바꾸지 않는다(비파괴). ⚠️ `buildCapabilityIndex` 심볼 자체는 `capability-change-navigation`에서 이미 assert 중이므로 여기서는 archive 스캔 불변식으로만 서술한다(중복 assert 회피).
+- invariant: archive/ 아래는 dated change 래퍼로 취급해 한 단계 더 내려가 각각을 change로 처리한다(`changeKey === "archive"` 분기, D2). archive 미매칭 change도 활성과 동일 규칙으로 unlinked에 표면화한다(silent drop 금지).
+- invariant: archive 완화가 활성 change 링크를 오염시키지 않는다 — 활성 change 링크에는 `archived`가 참이 되지 않는다.
+- metric: capabilityIndex.test.ts의 D2 케이스 PASS — "활성+archive가 같은 capability를 구현하면 둘 다 병합해 담는다", "archive 미매칭 change도 unlinked로 표면화", "활성 change 링크는 archived가 참이 아니다".
+
+## capability: flowforge-screen-crosslink — 화면 id 조인키 상호참조
+
+유저플로우 화면(page) 노드를 선택하면, 그 화면 id를 조인키로 (a)대응 와이어프레임 프리뷰/딥링크와 (b)그 화면을 연결화면으로 가진 기능명세 상세기능 목록을 상세 패널 안에 상호참조로 표시하는 읽기전용 오버레이다. 화면 id는 유저플로우·IA·와이어·기능명세가 공유하는 기존 조인키(`features.md` 화면목록 `<!-- screen: id -->`)를 활용한다. 각 산출물의 렌더링 자체는 불변이며 상호참조 섹션만 추가된다. 피드백9(유저플로우에서 와이어 안 보임)와 피드백12(노드가 어떤 기능과 연관됐는지 모름)를 해소한다.
+
+### 기능: 화면 id → 상세기능 역인덱스 + 와이어 lookup (web 헬퍼)
+- assert:symbol buildScreenToDetailLabels
+- assert:symbol detailLabelsForScreen
+- assert:symbol buildWireById
+- assert:symbol wireForScreen
+- `screenRegistry.links`(상세기능→화면 N:M 정방향 링크)를 화면 id 기준으로 역인덱싱해 `Map<screenId, detailLabel[]>`를 만들고(`buildScreenToDetailLabels`/`detailLabelsForScreen`), `planningWireScreens`에서 화면 id로 와이어(`WireScreen2`)를 조회한다(`buildWireById`/`wireForScreen`). 모두 `web/src/screenCrosslink.ts`의 순수 헬퍼다.
+- invariant: 화면 id 매칭이 0개이거나 dangling(레지스트리·와이어 어디에도 없는 id)이면 빈 배열/undefined를 반환해 크래시 없이 빈 상태로 처리한다(숨기되 앱을 깨뜨리지 않음).
+- metric: web vitest screenCrosslink.test.ts 8/8 PASS(정상 N:M 역인덱스·같은 화면 다중 상세기능·매칭 0개→빈배열·dangling·id로 와이어 조회).
+
+### 기능: 유저플로우 상세 패널 화면 허브 상호참조 (web 컴포넌트)
+- assert:symbol FlowDetailPanel
+- assert:symbol ScreenCrosslinkData
+- `FlowDetailPanel`이 화면(page) 종류 노드일 때만 기존 흐름(전이) 섹션에 더해 "연관 와이어프레임"(`WireframeDeviceFrame` 프리뷰/wire 탭 딥링크)·"연관 기능명세"(상세기능 라벨 목록) 섹션을 그린다. App이 화면 id 조인으로 계산한 `ScreenCrosslinkData`를 넘기며, 화면 노드가 아니거나 데이터가 없으면 undefined로 섹션을 미노출한다. ⚠️ 화면 id 원천 라우트(`GET /api/docs/:project/planning-screens` + `fetchPlanningScreens`)는 `planning-panel-screen-links` capability에서 이미 assert 중이므로 여기서 재assert하지 않는다.
+- invariant: 화면(page) 종류가 아닌 노드(시작·섹션·행동)에서는 상호참조 섹션이 표시되지 않고 기존 흐름 섹션만 정상 렌더된다(기존 유저플로우 상세 패널 동작 완전 보존, 회귀 0).
+- invariant: 이 capability는 읽기 상호참조(보기·딥링크)만 신설한다 — 유저플로우에서 와이어/기능을 편집하거나 양방향 링크를 추가하는 쓰기 경로는 없다.
+- metric: FlowDetailPanel.test.tsx PASS(화면 노드 선택 시 상호참조 섹션 렌더, 화면 아님/연결 0개→미노출) + 라이브 재빌드 후 화면 노드 클릭 시 와이어 프리뷰·기능 목록 표시 Playwright 실픽셀 실증.
+
+## capability: flowforge-feature-list-view — 기능명세 리스트 뷰
+
+기능명세서 뷰를 ReactFlow 노드-엣지 다이어그램이 아니라 **들여쓴 계층 트리/아웃라인 리스트**로 렌더하는 능력이다. 원본 데이터(`FeatureTreeNode`의 children 중첩)·서버 파서(featureTreeBuilder)·연결화면 조인은 무변경이고, web 렌더 계층만 교체한다. planning 기능명세와 capability drill-down 기능명세 두 진입점 모두에 적용되며, 다이어그램이 싣던 표시 정보(타입 태그·priority/status 뱃지·capability 칩·audit 뱃지·연결화면 칩·메모)를 무손실로 보존한다.
+
+### 기능: 기능명세를 들여쓴 계층 리스트로 렌더 (web 컴포넌트)
+- assert:symbol FeatureListView
+- assert:symbol toFeatureTreeList
+- assert:symbol FeatureListItemFlat
+- `toFeatureTreeList`(`web/src/featureTreeAdapter.ts`)가 `FeatureTree.root.children`을 `children` 깊이만큼 depth를 실은 평탄 리스트 항목(`FeatureListItemFlat`)으로 변환하고, `FeatureListView`(`web/src/FeatureListView.tsx`)가 그 항목들을 depth만큼 들여쓴 트리/아웃라인 리스트로 렌더한다. dagre 자동 레이아웃(`rankdir:"LR"`)과 캔버스 패닝/줌은 이 뷰에서 쓰지 않는다.
+- invariant: 데이터 원천(`shared`의 `FeatureTree`/`FeatureTreeNode`)과 서버 파서는 변경하지 않는다 — 렌더 방식만 리스트로 바뀐다(순수 web 렌더 교체, additive).
+- invariant: 상세기능 노드의 연결화면 칩은 리스트에서도 화면 레지스트리(`featureTreeAdapter`의 `screenRegistry` 조인)와 동일 화면 id로 붙는다(조인 회귀 0).
+- metric: 서버 featureTreeBuilder·`FeatureTree` 타입 무변경을 grep/타입체크로 확인 + `FeatureListView`/`toFeatureTreeList`/`FeatureListItemFlat` export 존재(featureTreeAdapter.ts:110·68, FeatureListView.tsx:119) + web 빌드 PASS + 라이브 재빌드 후 리스트 렌더·다이어그램 부재·뱃지/칩 보존 Playwright 실픽셀 실증. ⚠️ 이 web 렌더 영역은 순수 리스트 어댑터 단위테스트가 없어(`toFeatureTreeList` 전용 테스트 없음) 검증 근거는 타입체크·빌드·산출물 관찰이다(테스트 PASS 주장 아님 — 정직 표기).
+
+## capability: flowforge-view-labels — 뷰 라벨 계보 구별
+
+두 계보에 중복으로 붙어 있던 "기능명세서" 레이블을 UI에서 구분 가능하게 만드는 능력이다. planning 계보(`docs/planning/features.md`, openspec-plan 산출)와 change 계보(change의 `specs/<cap>/spec.md`, openspec-propose 산출)가 같은 이름이라 UI만으로 구별되지 않던 혼동(피드백11)을 해소한다. 노드 타입은 코드상 이미 분리돼 있으나(`App.tsx`의 `specTree` vs `featureTree`) 레이블이 같아 혼동됐으므로, 탭 레이블 문자열만 서로 구별되게 바꾼다.
+
+### 기능: change 탭과 planning 탭의 기능명세 레이블 구별 (UI 문자열)
+- invariant: change 뷰의 기능명세 탭 레이블(`명세(change)`)과 planning 뷰의 기획 기능명세 탭 레이블(`기획 기능명세`)이 서로 다른 문자열로, 어느 계보의 기능명세인지 UI만으로 식별된다(둘 다 그냥 "기능명세서"로 표기되지 않는다).
+- invariant: planning 계보(features.md·openspec-plan)와 change 계보(spec.md·openspec-propose)가 레이블로 구별된다.
+- ⚠️ assert 대상 없음(UI 문자열): 이 capability는 endpoint도 named export symbol도 아닌 순수 UI 레이블 문자열(`web/src/App.tsx`의 `tabBtn("spec", "명세(change)")` / `planTabBtn("features", "기획 기능명세")`)이라 assert:endpoint/assert:symbol 대상이 없다. audit 문자열 대조 대상이 아니므로 억지 symbol assert를 넣지 않고 불변식+metric 서술로만 검증한다.
+- metric: 두 탭 레이블이 서로 다른 문자열임을 grep으로 확인(`web/src/App.tsx:945` `명세(change)` / `:998` `기획 기능명세`) + web 빌드 PASS + 라이브 UI에서 change 뷰·planning 뷰의 두 기능명세 레이블이 구별돼 보이는지 Playwright 실픽셀 관찰. 노드타입 분리(`specTree` vs `featureTree`)는 이미 코드상 되어 있어 무변경 확인.
