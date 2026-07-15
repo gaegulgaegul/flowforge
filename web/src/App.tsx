@@ -1115,19 +1115,19 @@ export function App(): JSX.Element {
                 "모든 change를 한 번에" 나열하지 않고 "항상 연관된 것만" 보여준다. */}
             {/* 기획 문서가 없는 프로젝트는 위 기능명세 노드 경유 진입로 자체가 없다
                 (uncharted-project-change-list) — activeChangeNames를 재사용해 change
-                목록 진입로를 보충한다. hasCharter=true 프로젝트는 이 분기에 들어오지 않음. */}
-            {!dashProject?.hasCharter && (
-              <UnchartedChangeList
-                changeNames={dashProject?.activeChangeNames ?? []}
-                onOpenChange={(name) =>
-                  openChangeViews({
-                    key: name,
-                    displayName: name,
-                    ...(dashProject?.name ? { project: dashProject.name } : {}),
-                  })
-                }
-              />
-            )}
+                목록 진입로를 보충한다. hasCharter 게이팅은 컴포넌트 내부에서 처리(회귀 가드
+                테스트를 그 컴포넌트 하나로 고정하기 위함). */}
+            <UnchartedChangeList
+              hasCharter={dashProject?.hasCharter ?? true}
+              changeNames={dashProject?.activeChangeNames ?? []}
+              onOpenChange={(name) =>
+                openChangeViews({
+                  key: name,
+                  displayName: name,
+                  ...(dashProject?.name ? { project: dashProject.name } : {}),
+                })
+              }
+            />
           </div>
         ) : (
           // views: 5종 뷰. dashStage==="views"

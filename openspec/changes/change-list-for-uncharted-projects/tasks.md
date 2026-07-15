@@ -14,8 +14,8 @@
 
 ### Sequential: 회귀·엣지 확인
 
-- [ ] 3.1 회귀 확인: `hasCharter=true` 프로젝트(flowforge)의 기존 planning 탭(PRD/features/wire/flow)과 기능명세 노드 경유 change 진입이 불변인지 테스트로 고정. 무력화 프로브(가드 `!hasCharter` 제거 시 회귀 테스트 red) 확인.
-- [ ] 3.2 딥링크 검증: change 클릭 시 URL에 `?project=<영문키>&change=<key>&tab=prd`가 기록되고 한글 displayName이 아닌 영문 name이 실리는지 확인(빈/플레이스홀더 project 금지).
+- [x] 3.1 회귀 확인: `hasCharter=true` 프로젝트(flowforge)의 기존 planning 탭(PRD/features/wire/flow)과 기능명세 노드 경유 change 진입이 불변인지 테스트로 고정. 무력화 프로브(가드 `!hasCharter` 제거 시 회귀 테스트 red) 확인.
+- [x] 3.2 딥링크 검증: change 클릭 시 URL에 `?project=<영문키>&change=<key>&tab=prd`가 기록되고 한글 displayName이 아닌 영문 name이 실리는지 확인(빈/플레이스홀더 project 금지).
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
