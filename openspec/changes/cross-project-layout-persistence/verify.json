@@ -1,0 +1,253 @@
+{
+  "change": "cross-project-layout-persistence",
+  "verifiedAt": "2026-07-15T06:40:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 8,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "타 프로젝트 change 의 레이아웃 저장",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "covered",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "동시성": "단일 사용자 개인 홈서버 환경(design Non-Goals 에 명시). 다중 사용자 동시 편집 충돌 해결은 범위 밖."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "타 프로젝트 change 레이아웃 저장 성공: PUT /api/changes/<id>/layout?project=<타프로젝트> 가 200 과 저장 결과를 응답하고 <OVERLAY_ROOT>/<project>/<id>.json 에 실제 기록된다",
+          "layer": "server",
+          "means": "라이브 재배포 후 이전에 500 나던 것과 동일한 curl 명령 재실행 + 호스트에서 저장 파일 재조회",
+          "basis": "server 레이어 감지: writeOverlay OVERLAY_ROOT 규약 구현, 라이브 배포 확인(docker inspect /data/graph-overlay RW=true, OVERLAY_ROOT env 주입)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PUT /api/changes/implement-ios-app/layout?project=wowa-wt-dashboard -> HTTP 200 {\"ok\":true,\"saved\":2} (이전 동일 명령은 500 {\"error\":\"internal_error\"}). 호스트 재조회: data/graph-overlay/wowa-wt-dashboard/implement-ios-app.json 실재, 내용 = 저장한 좌표 그대로.",
+            "caption": "500 재현 소멸 → 200 + 전용 볼륨에 실제 저장"
+          }
+        },
+        {
+          "scenario": "읽기 전용 마운트에 쓰지 않는다: PROJECTS_ROOT 하위 change 디렉토리에 viz/ 나 오버레이 파일이 생성되지 않는다",
+          "layer": "server",
+          "means": "저장 성공 후 호스트 홈(/home/gaegul/wowa-wt-dashboard/openspec/changes) 하위에 viz 디렉토리가 생겼는지 find 로 전수 확인",
+          "basis": "design D1 보안 경계(홈 RO 유지) 실증",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "find /home/gaegul/wowa-wt-dashboard/openspec/changes -name viz -type d -> 결과 0건. docker inspect: /data/docs-root RW=false 유지(홈 마운트 RO 그대로, 뒤집지 않음).",
+            "caption": "홈 RO 경계 보존 — 홈에 아무것도 쓰지 않음"
+          }
+        },
+        {
+          "scenario": "잘못된 레이아웃 본문은 거부: 형식에 맞지 않는 본문은 400 으로 거부하고 아무것도 저장하지 않는다",
+          "layer": "server",
+          "means": "라이브에 {\"bad\":\"shape\"} 본문으로 PUT",
+          "basis": "isLayoutOverlay 런타임 검증(기존)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PUT layout?project=wowa-wt-dashboard -d '{\"bad\":\"shape\"}' -> HTTP 400. 저장 안 됨.",
+            "caption": "잘못된 본문 400 거부"
+          }
+        }
+      ]
+    },
+    {
+      "title": "저장한 레이아웃의 재조회 일관성",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "readOverlay 는 JSON.parse 실패 시 null 반환(기존 방어). 저장 경로가 검증된 본문만 받으므로 오염 입력 경로 없음.",
+          "동시성": "단일 사용자 환경(design Non-Goals).",
+          "특수문자": "노드 id 는 서버 파서가 생성한 slug(screen-<name>). 사용자 자유입력 아님."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "저장 → 재조회 시 좌표 복원: 저장한 노드 좌표가 그래프 응답에 반영되어 돌아온다",
+          "layer": "web",
+          "means": "라이브에 좌표 저장 후 GET graph 재조회 + Playwright 로 두 번 연속 로드해 ReactFlow 내부 좌표(transform translate) 비교",
+          "basis": "readOverlay OVERLAY_ROOT 우선 조회 구현 + 라이브 실픽셀",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/e2e-3-reload-persisted.png",
+            "caption": "새로고침 후 저장 좌표 그대로 복원 — 두 번 로드 결과 완전 동일",
+            "text": "GET graph?project=wowa-wt-dashboard -> layout 필드에 저장값 그대로 반환({screen-ios-app-shell:{x:777,y:888}...}). Playwright 두 번 연속 로드: 5개 노드 좌표 전부 동일(재현 가능=영속 성공). 저장 파일 기대값(929.3/1114.4)과 실제 로드 좌표 정확히 일치. ⚠️화면 픽셀 위치는 캔버스 줌/팬 때문에 달라 보일 수 있어 RF 내부 좌표로 판정함."
+          }
+        },
+        {
+          "scenario": "기존 글로벌 루트 오버레이 무손실: 기존 <changeDir>/viz/graph-overlay.json 에 저장된 오버레이가 계속 읽힌다",
+          "layer": "server",
+          "means": "server 단위테스트로 readOverlay 폴백 경로 검증(design D3)",
+          "basis": "server/src/lib/__tests__/changes.test.ts 신규 케이스",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "server jest 554 PASS — readOverlay 가 OVERLAY_ROOT 우선 조회 후 없으면 기존 <changeDir>/viz/graph-overlay.json 폴백을 읽는 케이스 포함. 기존 저장분 유실 없음(design D3 무손실 보장).",
+            "caption": "기존 오버레이 읽기 폴백 유지"
+          }
+        }
+      ]
+    },
+    {
+      "title": "쓰기 불가 대상의 정직한 거부",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "na",
+          "빈값": "na",
+          "잘못된타입": "na",
+          "경계값": "na",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "null": "이 요구사항은 '쓰기 불가 상태'라는 환경 조건에 대한 응답 계약. 입력값 클래스가 아님.",
+          "빈값": "동일 — 환경 조건 기반 요구사항.",
+          "잘못된타입": "본문 타입 검증은 앞 요구사항(400)이 담당.",
+          "경계값": "쓰기 가능/불가는 이진 조건. 경계값 없음.",
+          "동시성": "단일 사용자 환경(design Non-Goals).",
+          "대량": "에러 응답 경로. 데이터 규모 무관."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "쓰기 불가 대상은 409: 저장 대상 루트가 쓰기 불가면 409 + read_only_target 으로 응답하고(500 아님) 응답 본문에 내부 파일시스템 경로가 포함되지 않는다",
+          "layer": "server",
+          "means": "server 테스트에서 chmod 0555 로 RO 루트를 재현해 409 응답 + 본문에 경로 미포함 검증. 무력화 프로브로 방어 실효성 확인(design D5)",
+          "basis": "server/src/routes/__tests__/graphCrossProject.test.ts RO 루트 케이스(신규)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "server jest 554 PASS(기존 548 + 신규 6). RO 루트(chmod 0555) 재현 케이스에서 409 read_only_target 응답 확인, 응답 본문 내부 경로 미노출. apply 단계에서 무력화 프로브 수행(409 방어 제거 시 red → 원복). 기존 픽스처(mkdtempSync, 쓰기가능 tmp)가 프로덕션 RO 조건을 재현 못 해 500 을 가렸던 실사례 재발 방지.",
+            "caption": "RO 대상 409 — 프로덕션 조건 재현 테스트로 고정"
+          }
+        },
+        {
+          "scenario": "미지 프로젝트는 404 유지: 화이트리스트를 통과하지 못하는 프로젝트명은 기존대로 404(경로 존재 여부 비노출)",
+          "layer": "server",
+          "means": "라이브에 경로조작 시도(?project=../etc)",
+          "basis": "resolveProjectDir 화이트리스트(기존, projects.ts:33-47)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PUT layout?project=../etc -> HTTP 404 (409 아님 — 경로 존재 여부를 드러내지 않음). 기존 화이트리스트 방어 유지.",
+            "caption": "경로조작 404 유지"
+          }
+        }
+      ]
+    },
+    {
+      "title": "글로벌 루트 저장 경로 회귀 없음",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "기존 경로 회귀 검증. 타입 방어는 기존 isLayoutOverlay 그대로.",
+          "동시성": "단일 사용자 환경(design Non-Goals).",
+          "특수문자": "노드 id 는 서버 생성 slug."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "글로벌 루트 저장은 기존대로: ?project= 없이 PUT 하면 기존과 동일하게 저장 성공하고 재조회 시 복원된다",
+          "layer": "server",
+          "means": "라이브에 ?project= 없이 PUT + server 회귀 테스트",
+          "basis": "OVERLAY_ROOT 미설정/글로벌 루트 폴백 유지(apply 0.2 결정)",
+          "result": "PASS",
+          "evidence": {
+            "kind": "text",
+            "text": "PUT /api/changes/implement-ios-app/layout (?project= 없음) -> HTTP 200(기존과 동일). server jest 554 PASS 중 글로벌 루트 저장 회귀 케이스 포함. web vitest 16/16 무영향(프론트 API 계약 saveLayout(id,layout,project?) 무변경).",
+            "caption": "기존 경로 회귀 0"
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 554,
+      "passed": 554,
+      "failed": 0,
+      "basis": "server 워크스페이스 감지(jest). 신규 6케이스(OVERLAY_ROOT 규약·읽기 폴백·RO 409). 라이브 API 실측 병행.",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 16,
+      "passed": 16,
+      "failed": 0,
+      "basis": "web 워크스페이스 감지(vitest) — 프론트 무변경 확인. 라이브 Playwright 실픽셀 e2e(드래그→PUT 200→새로고침 영속).",
+      "reason": ""
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "",
+      "reason": "해당 없음 — flowforge 는 웹 대시보드. android 산출물 없음."
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "",
+      "reason": "해당 없음 — flowforge 는 웹 대시보드. ios 산출물 없음."
+    }
+  ],
+  "codeState": {
+    "head": "a7719012b0f4dd2e177aa89d9818ade2d236a9e7",
+    "dirty": true,
+    "branch": "main",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260715-0640.html"
+}

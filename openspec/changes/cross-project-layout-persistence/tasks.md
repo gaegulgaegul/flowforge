@@ -28,4 +28,4 @@
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
-- [ ] 4.1 VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(server jest, 프론트 무변경이면 web 무영향 확인) → **실동작**: 🔴 `docker compose up -d --build` 는 라이브 재생성이라 **사용자 사전 승인**(§4) 후 실행. 재배포 후 라이브에서 `PUT /api/changes/implement-ios-app/layout?project=wowa-wt-dashboard` 가 **200**(이전 500 재현 소멸) + `<OVERLAY_ROOT>/wowa-wt-dashboard/implement-ios-app.json` 실재 + 재조회 시 좌표 복원 + `PROJECTS_ROOT` 하위에 `viz/` 미생성을 전부 실측. UI 드래그→저장도 Playwright 로 실픽셀 확인
+- [x] 4.1 VERIFY: **PASS** (2026-07-15, `verify.json`/`verify.html`). 5단계 전부 통과 — 빌드 0·타입체크 0·린트 0·테스트(server 554 PASS = 기존 548 + 신규 6, web 16/16 무영향)·실동작. 사용자 승인 후 `docker compose up -d --build` 재배포(docker inspect 확인: `/data/graph-overlay` RW=true 신규, `/data/docs-root` RW=false 유지, `OVERLAY_ROOT` env 주입). 라이브 실측: 이전 500 나던 동일 명령 → **200** `{"ok":true,"saved":2}`, `data/graph-overlay/wowa-wt-dashboard/implement-ios-app.json` 실재, 홈 하위 `viz/` 0건(find), 재조회 좌표 복원(두 번 로드 동일=영속), 글로벌 루트(`?project=` 없음) 200 회귀 0, 경로조작 404, 잘못된 본문 400. Playwright e2e: 노드 드래그 → 브라우저가 `PUT layout?project=wowa-wt-dashboard` 발신 → **200**. 시나리오 8/8 PASS.
