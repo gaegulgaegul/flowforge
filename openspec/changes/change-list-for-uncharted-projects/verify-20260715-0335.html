@@ -1,0 +1,43 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>실증 검증 — change-list-for-uncharted-projects</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;margin:24px;color:#1f2328}
+ h1{font-size:22px} h2{font-size:17px;margin-top:28px;border-bottom:1px solid #d0d7de;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+ th,td{border:1px solid #d0d7de;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f6f8fa}
+ .badge{padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap}
+ .banner{font-size:20px;font-weight:700;padding:14px 18px;border-radius:8px;color:#1a7f37;background:#e6f4ea;display:inline-block}
+ code{font-size:12px} .muted{color:#6e7781}
+</style></head><body>
+<h1>실증 검증 — change-list-for-uncharted-projects</h1>
+<p class="muted">검증일: 2026-07-15T03:35:00+09:00 · 환경: server(jest 548)·web(vitest 16) 실행. UI=Playwright chromium 헤드리스로 라이브(flowforge.gaegul.house, docker compose up -d --build 재배포분) 실픽셀 관찰. android/ios=해당 없음(웹 대시보드). · run: run-20260715-0335 · commit 15829738 (dirty)</p>
+<p><span class="banner">✓ 최종 판정: PASS</span></p>
+<p class="muted">PASS 5 · FAIL 0 · 검증 안 함 0 · SKIPPED 0</p>
+
+<h2>받아들임기준 ↔ 검증 매핑</h2>
+<table><thead><tr><th>Requirement</th><th>Scenario</th><th>Layer</th><th>검증 수단</th><th>탐지 근거(basis)</th><th>결과</th><th>증거</th></tr></thead>
+<tbody><tr><td>기획 없는 프로젝트의 change 목록 노출</td><td>활성 change가 있는 기획-없는 프로젝트: hasCharter=false이고 activeChangeNames가 1개 이상인 프로젝트 카드를 열면 활성 change 각각이 클릭 가능한 목록 항목으로 렌더된다</td><td>web</td><td>라이브 flowforge.gaegul.house에서 Playwright로 wowa-wt-dashboard(활성 change 4개) 카드 클릭 → skeleton 단계 innerText에서 4개 change 이름 전수 확인</td><td><code>web 레이어 감지: web/src/UnchartedChangeList.tsx + App.tsx 배선, 라이브 배포 확인</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/s1-uncharted-change-list.png"><img src="evidence/s1-uncharted-change-list.png" alt="wowa-wt-dashboard(활성 change 4개) skeleton — 4개 전부 클릭 가능 항목으로 렌더(절단 없음)" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>기획 없는 프로젝트의 change 목록 노출</td><td>활성 change가 없는 기획-없는 프로젝트: change 목록을 억지로 만들지 않고 활성 change가 없음을 정직하게 표기한다(존재하지 않는 링크 미생성)</td><td>web</td><td>server 단위테스트로 allActiveChangeNames=[] 반환 확인 + UnchartedChangeList의 changeNames.length===0 분기가 &#x27;활성 change 없음&#x27; 렌더</td><td><code>server/src/lib/__tests__/projects.test.ts 신규 케이스 + web/src/UnchartedChangeList.tsx:19-24</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/s2-empty-state.png"><img src="evidence/s2-empty-state.png" alt="활성 change 목록 빈 상태 정직 표기(없는 링크 미생성)" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>change 클릭 시 5종 문서 뷰 진입</td><td>change 항목 클릭 → views 진입: 대시보드가 views 단계로 전환되고 그 change의 문서 뷰(기본 PRD 탭)가 열린다</td><td>web</td><td>라이브에서 Playwright로 wowa-wt-dashboard의 3번째 change(implement-ios-app, slice 절단으로 이전엔 도달 불가였던 것) 클릭 → 브라우저 실요청 status + PRD 본문 렌더 관찰</td><td><code>web 레이어 감지: App.tsx openChangeViews 배선, 라이브 배포 확인</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/s3-views-prd.png"><img src="evidence/s3-views-prd.png" alt="이전 도달 불가였던 3번째 change(implement-ios-app) 클릭 → views 전환, PRD 본문 실렌더, 5종 탭+브레드크럼 정상" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>change 클릭 시 5종 문서 뷰 진입</td><td>딥링크 project는 영문 키로 실린다: 딥링크의 project 파라미터는 프로젝트 영문 식별자(name)이며 한글 표시명이 아니고, 빈 값·플레이스홀더를 남기지 않는다</td><td>web</td><td>라이브 클릭 후 실제 브라우저 URL 관찰</td><td><code>web/src/deeplink.ts serializeDeepLink(encodeURIComponent) + App.tsx openChangeViews</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/s4-deeplink-url.png"><img src="evidence/s4-deeplink-url.png" alt="딥링크 ?project=wowa-wt-dashboard&amp;change=implement-ios-app&amp;tab=prd — 영문 키" style="max-width:240px;border:1px solid #ccc"></a></td></tr>
+<tr><td>기획 있는 프로젝트 회귀 없음</td><td>기획 있는 프로젝트는 기존대로: hasCharter=true 프로젝트(flowforge)의 기존 planning 탭이 그대로 렌더되고 새 change 목록 섹션은 나타나지 않으며, 기능명세 노드 경유 기존 change 진입이 정상 동작한다</td><td>web</td><td>web vitest 회귀 가드 테스트(hasCharter=true → 목록 미렌더) + 무력화 프로브 + server 548 전체 무회귀</td><td><code>web/src/__tests__/uncharted-change-list.test.tsx 회귀 describe 블록</code></td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td><a href="evidence/s5-charter-project-no-regression.png"><img src="evidence/s5-charter-project-no-regression.png" alt="기획 있는 프로젝트(flowforge) — 기존 planning 탭 유지, change 목록 섹션 미렌더" style="max-width:240px;border:1px solid #ccc"></a></td></tr></tbody></table>
+
+<h2>예외 케이스 충분성 (8종, 엄격)</h2>
+<table><thead><tr><th>Requirement</th><th>null</th><th>빈값</th><th>잘못된타입</th><th>경계값</th><th>에러경로</th><th>동시성</th><th>대량</th><th>특수문자</th><th>판정</th></tr></thead>
+<tbody><tr><td>기획 없는 프로젝트의 change 목록 노출</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="activeChangeNames/allActiveChangeNames는 서버가 readdirSync 결과로 항상 string[]을 반환(scanChanges). 프론트는 ?? [] 폴백. 임의 타입 주입 경로 없음.">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="이 요구사항은 이미 로드된 ProjectCard 데이터의 렌더 분기. 네트워크 실패는 상위 프로젝트 로드 단계 관심사(이 change 범위 밖, 기존 동작).">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="단일 사용자 브라우저의 순수 렌더 분기. 공유 상태 변경 없음.">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="change 이름은 파일시스템 디렉토리명이라 FS가 유효성 제한. 서버 resolveProjectDir이 ^[A-Za-z0-9_-]+$ 화이트리스트로 프로젝트명 재검증.">N/A</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>change 클릭 시 5종 문서 뷰 진입</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="onOpenChange 콜백은 목록이 렌더한 string만 전달. 외부 입력 경로 없음.">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="단일 사용자 브라우저의 화면 전환. openChangeViews는 기존 경로 재사용(이 change에서 미변경).">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr>
+<tr><td>기획 있는 프로젝트 회귀 없음</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="hasCharter는 서버가 boolean으로 계산(hasCharter(projDir)). 프론트 ?? true 폴백(안전측=렌더 안 함).">N/A</td><td style="background:#e6f4ea;color:#1a7f37">✓</td><td style="background:#f0f1f2;color:#6e7781" title="회귀 방지 요구사항 — 새 코드 경로를 추가하지 않음을 검증하는 성격. 에러 경로는 기존 동작 소관.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="렌더 분기 가드. 공유 상태 없음.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="가드 조건은 boolean 단일 판정. 데이터 규모 무관.">N/A</td><td style="background:#f0f1f2;color:#6e7781" title="boolean 가드. 문자열 입력 없음.">N/A</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ 충분</span></td></tr></tbody></table>
+<p class="muted">✓=covered · N/A=해당없음(사유 hover) · ✗=missing. happy-path만이면 검증 불충분 → 최종 FAIL 차단.</p>
+
+<h2>레이어별 결과</h2>
+<table><thead><tr><th>Layer</th><th>상태</th><th>ran</th><th>passed</th><th>failed</th><th>근거/사유</th></tr></thead>
+<tbody><tr><td>server</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>548</td><td>548</td><td>0</td><td>server 워크스페이스 감지(jest, npm test --workspace=server). allActiveChangeNames 신규 3케이스 포함.</td></tr>
+<tr><td>web</td><td><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span></td><td>16</td><td>16</td><td>0</td><td>web 워크스페이스 감지(vitest) + 라이브 Playwright 실픽셀 관찰(flowforge.gaegul.house 재배포분).</td></tr>
+<tr><td>android</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>해당 없음 — flowforge는 웹 대시보드. android 산출물 없음.</td></tr>
+<tr><td>ios</td><td><span class="badge" style="color:#6e7781;background:#f0f1f2">– SKIPPED</span></td><td>0</td><td>0</td><td>0</td><td>해당 없음 — flowforge는 웹 대시보드. ios 산출물 없음.</td></tr></tbody></table>
+
+<h2>Archive 게이트</h2>
+<p><span class="badge" style="color:#1a7f37;background:#e6f4ea">✓ PASS</span> <strong>통과</strong></p>
+<p class="muted">archiveGate.open = true (PASS일 때만 true). verify.json이 이 값을 archive 게이트에 전달.</p>
+</body></html>

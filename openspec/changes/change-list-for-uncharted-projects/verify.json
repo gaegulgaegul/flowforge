@@ -1,0 +1,199 @@
+{
+  "change": "change-list-for-uncharted-projects",
+  "verifiedAt": "2026-07-15T03:35:00+09:00",
+  "finalJudgment": "PASS",
+  "counts": {
+    "pass": 5,
+    "fail": 0,
+    "검증안함": 0,
+    "skipped": 0
+  },
+  "archiveGate": {
+    "open": true,
+    "reason": ""
+  },
+  "requirements": [
+    {
+      "title": "기획 없는 프로젝트의 change 목록 노출",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "activeChangeNames/allActiveChangeNames는 서버가 readdirSync 결과로 항상 string[]을 반환(scanChanges). 프론트는 ?? [] 폴백. 임의 타입 주입 경로 없음.",
+          "에러경로": "이 요구사항은 이미 로드된 ProjectCard 데이터의 렌더 분기. 네트워크 실패는 상위 프로젝트 로드 단계 관심사(이 change 범위 밖, 기존 동작).",
+          "동시성": "단일 사용자 브라우저의 순수 렌더 분기. 공유 상태 변경 없음.",
+          "특수문자": "change 이름은 파일시스템 디렉토리명이라 FS가 유효성 제한. 서버 resolveProjectDir이 ^[A-Za-z0-9_-]+$ 화이트리스트로 프로젝트명 재검증."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "활성 change가 있는 기획-없는 프로젝트: hasCharter=false이고 activeChangeNames가 1개 이상인 프로젝트 카드를 열면 활성 change 각각이 클릭 가능한 목록 항목으로 렌더된다",
+          "layer": "web",
+          "means": "라이브 flowforge.gaegul.house에서 Playwright로 wowa-wt-dashboard(활성 change 4개) 카드 클릭 → skeleton 단계 innerText에서 4개 change 이름 전수 확인",
+          "basis": "web 레이어 감지: web/src/UnchartedChangeList.tsx + App.tsx 배선, 라이브 배포 확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s1-uncharted-change-list.png",
+            "caption": "wowa-wt-dashboard(활성 change 4개) skeleton — 4개 전부 클릭 가능 항목으로 렌더(절단 없음)",
+            "text": "wowa-wt-dashboard(실제 활성 change 4개) skeleton 렌더 실측: add-weekly-dashboard 렌더됨 O / emphasize-movement-weight 렌더됨 O / implement-ios-app 렌더됨 O / widget-multi-size 렌더됨 O — 4/4 전부 렌더. review BLOCK(slice(0,2) 절단) 수정 후 재측정분."
+          }
+        },
+        {
+          "scenario": "활성 change가 없는 기획-없는 프로젝트: change 목록을 억지로 만들지 않고 활성 change가 없음을 정직하게 표기한다(존재하지 않는 링크 미생성)",
+          "layer": "web",
+          "means": "server 단위테스트로 allActiveChangeNames=[] 반환 확인 + UnchartedChangeList의 changeNames.length===0 분기가 '활성 change 없음' 렌더",
+          "basis": "server/src/lib/__tests__/projects.test.ts 신규 케이스 + web/src/UnchartedChangeList.tsx:19-24",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s2-empty-state.png",
+            "caption": "활성 change 목록 빈 상태 정직 표기(없는 링크 미생성)",
+            "text": "server test '활성 change가 없으면 전체 목록도 빈 배열이다(없는 링크를 지어내지 않음)' PASS. UnchartedChangeList.tsx:19-24가 빈 배열 시 '활성 change 없음' 명시 렌더(링크 미생성)."
+          }
+        }
+      ]
+    },
+    {
+      "title": "change 클릭 시 5종 문서 뷰 진입",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "covered",
+          "동시성": "na",
+          "대량": "covered",
+          "특수문자": "covered"
+        },
+        "naReasons": {
+          "잘못된타입": "onOpenChange 콜백은 목록이 렌더한 string만 전달. 외부 입력 경로 없음.",
+          "동시성": "단일 사용자 브라우저의 화면 전환. openChangeViews는 기존 경로 재사용(이 change에서 미변경)."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "change 항목 클릭 → views 진입: 대시보드가 views 단계로 전환되고 그 change의 문서 뷰(기본 PRD 탭)가 열린다",
+          "layer": "web",
+          "means": "라이브에서 Playwright로 wowa-wt-dashboard의 3번째 change(implement-ios-app, slice 절단으로 이전엔 도달 불가였던 것) 클릭 → 브라우저 실요청 status + PRD 본문 렌더 관찰",
+          "basis": "web 레이어 감지: App.tsx openChangeViews 배선, 라이브 배포 확인",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s3-views-prd.png",
+            "caption": "이전 도달 불가였던 3번째 change(implement-ios-app) 클릭 → views 전환, PRD 본문 실렌더, 5종 탭+브레드크럼 정상",
+            "text": "implement-ios-app 클릭 후 브라우저 실요청 4종 전부 200: GET /api/changes/implement-ios-app/prd?project=wowa-wt-dashboard 200 / wireframe 200 / graph 200 / spec-tree 200. PRD 본문 실렌더(6517자, 개요/핵심가치 섹션 존재). 콘솔 404 9건은 /api/docs/<project>/planning-* = 기획문서 조회로 hasCharter=false 프로젝트엔 없는 게 정상(이 change 무관, 기존 동작)."
+          }
+        },
+        {
+          "scenario": "딥링크 project는 영문 키로 실린다: 딥링크의 project 파라미터는 프로젝트 영문 식별자(name)이며 한글 표시명이 아니고, 빈 값·플레이스홀더를 남기지 않는다",
+          "layer": "web",
+          "means": "라이브 클릭 후 실제 브라우저 URL 관찰",
+          "basis": "web/src/deeplink.ts serializeDeepLink(encodeURIComponent) + App.tsx openChangeViews",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s4-deeplink-url.png",
+            "caption": "딥링크 ?project=wowa-wt-dashboard&change=implement-ios-app&tab=prd — 영문 키",
+            "text": "실측 URL: https://flowforge.gaegul.house/?project=wowa-wt-dashboard&change=implement-ios-app&tab=prd — 영문 키(wowa-wt-dashboard), 빈 값/플레이스홀더 없음. agentic-harness 케이스도 동일 확인(?project=agentic-harness&change=apply-context-scan&tab=prd)."
+          }
+        }
+      ]
+    },
+    {
+      "title": "기획 있는 프로젝트 회귀 없음",
+      "edgeCase": {
+        "verdict": "충분",
+        "classes": {
+          "null": "covered",
+          "빈값": "covered",
+          "잘못된타입": "na",
+          "경계값": "covered",
+          "에러경로": "na",
+          "동시성": "na",
+          "대량": "na",
+          "특수문자": "na"
+        },
+        "naReasons": {
+          "잘못된타입": "hasCharter는 서버가 boolean으로 계산(hasCharter(projDir)). 프론트 ?? true 폴백(안전측=렌더 안 함).",
+          "에러경로": "회귀 방지 요구사항 — 새 코드 경로를 추가하지 않음을 검증하는 성격. 에러 경로는 기존 동작 소관.",
+          "동시성": "렌더 분기 가드. 공유 상태 없음.",
+          "대량": "가드 조건은 boolean 단일 판정. 데이터 규모 무관.",
+          "특수문자": "boolean 가드. 문자열 입력 없음."
+        }
+      },
+      "scenarios": [
+        {
+          "scenario": "기획 있는 프로젝트는 기존대로: hasCharter=true 프로젝트(flowforge)의 기존 planning 탭이 그대로 렌더되고 새 change 목록 섹션은 나타나지 않으며, 기능명세 노드 경유 기존 change 진입이 정상 동작한다",
+          "layer": "web",
+          "means": "web vitest 회귀 가드 테스트(hasCharter=true → 목록 미렌더) + 무력화 프로브 + server 548 전체 무회귀",
+          "basis": "web/src/__tests__/uncharted-change-list.test.tsx 회귀 describe 블록",
+          "result": "PASS",
+          "evidence": {
+            "kind": "screenshot",
+            "path": "evidence/s5-charter-project-no-regression.png",
+            "caption": "기획 있는 프로젝트(flowforge) — 기존 planning 탭 유지, change 목록 섹션 미렌더",
+            "text": "web vitest 16/16 PASS(hasCharter=true 시 change 목록 섹션 미렌더 회귀 가드 포함). server jest 548/548 PASS(기존 545 + 신규 3, 회귀 0). 진입로는 UnchartedChangeList.tsx:19 if(hasCharter) return null 로 hasCharter=false 분기에서만 렌더. ProjectGrid.tsx:32는 여전히 칩용 activeChangeNames(2개 상한) 참조로 카드 레이아웃 회귀 없음(리뷰어 재검증 확인)."
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "layer": "server",
+      "status": "PASS",
+      "ran": 548,
+      "passed": 548,
+      "failed": 0,
+      "basis": "server 워크스페이스 감지(jest, npm test --workspace=server). allActiveChangeNames 신규 3케이스 포함.",
+      "reason": ""
+    },
+    {
+      "layer": "web",
+      "status": "PASS",
+      "ran": 16,
+      "passed": 16,
+      "failed": 0,
+      "basis": "web 워크스페이스 감지(vitest) + 라이브 Playwright 실픽셀 관찰(flowforge.gaegul.house 재배포분).",
+      "reason": ""
+    },
+    {
+      "layer": "android",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "",
+      "reason": "해당 없음 — flowforge는 웹 대시보드. android 산출물 없음."
+    },
+    {
+      "layer": "ios",
+      "status": "SKIPPED",
+      "ran": 0,
+      "passed": 0,
+      "failed": 0,
+      "basis": "",
+      "reason": "해당 없음 — flowforge는 웹 대시보드. ios 산출물 없음."
+    }
+  ],
+  "codeState": {
+    "head": "158297382d84bea2594bd962c788c5eab96e633e",
+    "dirty": true,
+    "branch": "main",
+    "gitUnavailable": false
+  },
+  "reportHtml": "verify.html",
+  "historyHtml": "verify-20260715-0335.html"
+}
