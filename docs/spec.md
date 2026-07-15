@@ -691,3 +691,29 @@ harness(외부 openspec-plan 계열 스킬)가 flowforge에 넘길 화면별 HTM
 - invariant: 딥링크의 `project` 는 프로젝트 영문 식별자(`name`)이며 한글 표시명(`displayName`)이나 빈 값·플레이스홀더를 싣지 않는다.
 - invariant: 이 capability 는 서버 신규 API 를 만들지 않는다 — 기존 `/api/changes/:id/*?project=` 를 그대로 쓴다.
 - metric: 라이브 실픽셀 실증(이전 도달 불가였던 3번째 change `implement-ios-app` 클릭 → 브라우저 실요청 prd/spec-tree/graph/wireframe 4종 200 → PRD 본문 6517자 렌더, URL `?project=wowa-wt-dashboard&change=implement-ios-app&tab=prd`).
+
+## capability: cross-project-layout-persistence — 크로스프로젝트 레이아웃 영속
+
+타 프로젝트(`PROJECTS_ROOT` 하위 = 호스트 홈 RO 마운트) change 의 유저플로우 그래프 레이아웃을 전용 RW 볼륨(`OVERLAY_ROOT`)에 저장·재조회하는 능력이다. 홈은 무인증 노출이라 의도적으로 읽기 전용으로 잠갔는데(`projects.ts` 보안 경계) 오버레이를 그 하위 `<changeDir>/viz/` 에 쓰려 해 HTTP 500 이 났다 — 사용자가 UI 에서 노드를 드래그하면 실제로 밟히는 경로였다. 홈 마운트를 RW 로 뒤집지 않고, `WIREFRAME_FEEDBACK_ROOT` 가 동일한 RO-홈 문제를 푼 선례와 같은 패턴으로 전용 볼륨을 둔다.
+
+### 기능: OVERLAY_ROOT 규약으로 레이아웃 저장·읽기 (서버 lib)
+- assert:symbol writeOverlay
+- assert:symbol readOverlay
+- assert:symbol OverlayTarget
+- `writeOverlay`(`server/src/lib/changes.ts:124`)가 `OVERLAY_ROOT` 설정 + `OverlayTarget`(project·changeId) 제공 시 `<OVERLAY_ROOT>/<project>/<changeId>.json` 에 쓴다. `readOverlay`(`:97`)는 같은 경로를 우선 조회한다.
+- invariant: `PROJECTS_ROOT`(홈 RO 마운트) 하위에는 `viz/` 디렉토리나 오버레이 파일을 만들지 않는다 — 홈의 읽기 전용 보안 경계를 보존한다(홈 RW 전환은 명시적 거부 결정).
+- invariant: `readOverlay` 는 `OVERLAY_ROOT` 경로가 없을 때만 레거시 `<changeDir>/viz/graph-overlay.json` 로 폴백한다 — 이미 저장된 글로벌 루트 오버레이가 새 규약 도입으로 유실되지 않게 하되(무손실), 레거시 값이 신규 저장분을 가리지 않는다.
+- invariant: `OVERLAY_ROOT` 미설정 시 기존 `<changeDir>/viz/` 로 폴백한다 — 로컬 개발·테스트·글로벌 루트(RW)에서 현행 동작을 유지하기 위함이며, 이 폴백이 조용한 실패가 되는 경우(RO 대상)는 아래 409 방어가 커버한다.
+- metric: `writeOverlay`/`readOverlay`/`OverlayTarget` export 존재(`server/src/lib/changes.ts:124`·`:97`·`:19`) + server jest 554 PASS(OVERLAY_ROOT 규약·읽기 폴백 신규 케이스 포함) + 라이브 실측(이전 500 나던 `PUT /api/changes/implement-ios-app/layout?project=wowa-wt-dashboard` → 200, 저장 파일 실재, 홈 하위 `viz/` find 0건, 재조회 좌표 복원=두 번 로드 동일).
+
+### 기능: 쓰기 불가 대상의 409 거부 (라우트)
+- invariant: 저장 대상이 쓰기 불가면 generic 500 이 아니라 409 + `read_only_target` 으로 응답한다 — 설계상 쓸 수 없는 대상은 서버 내부 오류가 아니며, 500 은 진단을 방해한다. (라우트 핸들러의 catch 블록에서 매핑하며 export 심볼이 아니라 assert 대상이 아님.)
+- invariant: 409 응답 본문에 내부 파일시스템 경로를 노출하지 않는다 — 경로는 서버 로그(stderr)에만 남긴다.
+- invariant: RO 마운트의 mkdir 실패는 Node 에서 여러 에러 코드로 표면화되므로(EROFS·ENOENT·EACCES, 셸은 EROFS 인데 Node 는 ENOENT 로 보고) 그 전부를 409 로 매핑한다. 경로 세그먼트 충돌(ENOTDIR)도 500 이 아닌 409 로 떨어뜨린다.
+- invariant: 화이트리스트를 통과하지 못하는 프로젝트명은 409 가 아니라 기존대로 404 로 응답한다 — 경로 존재 여부를 드러내지 않는다.
+- metric: server jest 554 PASS 중 RO 루트 재현 케이스(`chmod 0555` 픽스처, `graphCrossProject.test.ts`)가 409 응답 + 응답 본문 내부 경로 부재를 assert. 무력화 프로브로 방어 실효성 확인(409 방어 제거 시 red). 라이브 실측: 경로조작 `?project=../etc` → 404, 잘못된 본문 → 400.
+
+### 기능: 전용 RW 볼륨 인프라 (docker-compose)
+- invariant: `OVERLAY_ROOT` 는 전용 RW 볼륨(`/data/graph-overlay`)을 가리키고, `PROJECTS_ROOT`(`/data/docs-root`)는 읽기 전용(`:ro`)으로 유지한다 — 홈 전체를 RW 로 여는 대안은 보안 후퇴라 거부한다.
+- invariant: 볼륨 산출물은 `.gitignore` 로 레포 오염을 차단한다(런타임 생성물).
+- metric: `docker inspect` 로 마운트 플래그 실측 — `/data/graph-overlay` RW=true(신규), `/data/docs-root` RW=false(유지), 컨테이너 `OVERLAY_ROOT` env 주입 확인. 재배포 후 라이브 health 200 + 핵심 경로 200 회귀 0.

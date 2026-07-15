@@ -3,11 +3,11 @@
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
-    "PASS": 145,
+    "PASS": 148,
     "FAIL": 0,
-    "UNVERIFIABLE": 258
+    "UNVERIFIABLE": 271
   },
-  "reason": "미검증(UNVERIFIABLE) 258건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 271건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -18,7 +18,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:117"
+      "evidence": "server/src/routes/graph.ts:136"
     },
     {
       "capability": "spec-tree-view",
@@ -117,7 +117,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "route 문자열 대조 (normalized)",
-      "evidence": "server/src/routes/graph.ts:104"
+      "evidence": "server/src/routes/graph.ts:123"
     },
     {
       "capability": "prd-view",
@@ -2610,7 +2610,7 @@
       "verdict": "PASS",
       "reason": "",
       "method": "export 심볼 대조",
-      "evidence": "server/src/lib/changes.ts:63"
+      "evidence": "server/src/lib/changes.ts:75"
     },
     {
       "capability": "cross-project-change-views",
@@ -2654,7 +2654,7 @@
       "verdict": "UNVERIFIABLE",
       "reason": "유사 테스트 있음 (5토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/graphCrossProject.test.ts:76",
+      "evidence": "server/src/routes/__tests__/graphCrossProject.test.ts:80",
       "llmHint": "?project= 있으면 그 프로젝트 openspec/changes에서 change를 해석하고, 없으면 기존 글로벌 루트 동작 그대로(하위호환). web은 카드 드릴다운의 project를 5종 fetch+layout 저장에 부착(withProject)"
     },
     {
@@ -4476,28 +4476,204 @@
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
       "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "OVERLAY_ROOT 규약으로 레이아웃 저장·읽기 (서버 lib)",
+      "line": 700,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol writeOverlay",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/changes.ts:124"
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "OVERLAY_ROOT 규약으로 레이아웃 저장·읽기 (서버 lib)",
+      "line": 701,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol readOverlay",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/changes.ts:97"
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "OVERLAY_ROOT 규약으로 레이아웃 저장·읽기 (서버 lib)",
+      "line": 702,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol OverlayTarget",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/changes.ts:19"
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "OVERLAY_ROOT 규약으로 레이아웃 저장·읽기 (서버 lib)",
+      "line": 703,
+      "kind": "freetext",
+      "claim": "`writeOverlay`(`server/src/lib/changes.ts:124`)가 `OVERLAY_ROOT` 설정 + `OverlayTarget`(project·changeId) 제공 시 `<OVERLAY_ROOT>/<project>/<changeId>.json` 에 쓴다. `readOverlay`(`:97`)는 같은 경로를 우선 조회한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "OVERLAY_ROOT 규약으로 레이아웃 저장·읽기 (서버 lib)",
+      "line": 704,
+      "kind": "freetext",
+      "claim": "invariant: `PROJECTS_ROOT`(홈 RO 마운트) 하위에는 `viz/` 디렉토리나 오버레이 파일을 만들지 않는다 — 홈의 읽기 전용 보안 경계를 보존한다(홈 RW 전환은 명시적 거부 결정).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "OVERLAY_ROOT 규약으로 레이아웃 저장·읽기 (서버 lib)",
+      "line": 705,
+      "kind": "freetext",
+      "claim": "invariant: `readOverlay` 는 `OVERLAY_ROOT` 경로가 없을 때만 레거시 `<changeDir>/viz/graph-overlay.json` 로 폴백한다 — 이미 저장된 글로벌 루트 오버레이가 새 규약 도입으로 유실되지 않게 하되(무손실), 레거시 값이 신규 저장분을 가리지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "OVERLAY_ROOT 규약으로 레이아웃 저장·읽기 (서버 lib)",
+      "line": 706,
+      "kind": "freetext",
+      "claim": "invariant: `OVERLAY_ROOT` 미설정 시 기존 `<changeDir>/viz/` 로 폴백한다 — 로컬 개발·테스트·글로벌 루트(RW)에서 현행 동작을 유지하기 위함이며, 이 폴백이 조용한 실패가 되는 경우(RO 대상)는 아래 409 방어가 커버한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "OVERLAY_ROOT 규약으로 레이아웃 저장·읽기 (서버 lib)",
+      "line": 707,
+      "kind": "metric",
+      "claim": "metric: `writeOverlay`/`readOverlay`/`OverlayTarget` export 존재(`server/src/lib/changes.ts:124`·`:97`·`:19`) + server jest 554 PASS(OVERLAY_ROOT 규약·읽기 폴백 신규 케이스 포함) + 라이브 실측(이전 500 나던 `PUT /api/changes/implement-ios-app/layout?project=wowa-wt-dashboard` → 200, 저장 파일 실재, 홈 하위 `viz/` find 0건, 재조회 좌표 복원=두 번 로드 동일).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "쓰기 불가 대상의 409 거부 (라우트)",
+      "line": 710,
+      "kind": "freetext",
+      "claim": "invariant: 저장 대상이 쓰기 불가면 generic 500 이 아니라 409 + `read_only_target` 으로 응답한다 — 설계상 쓸 수 없는 대상은 서버 내부 오류가 아니며, 500 은 진단을 방해한다. (라우트 핸들러의 catch 블록에서 매핑하며 export 심볼이 아니라 assert 대상이 아님.)",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "쓰기 불가 대상의 409 거부 (라우트)",
+      "line": 711,
+      "kind": "freetext",
+      "claim": "invariant: 409 응답 본문에 내부 파일시스템 경로를 노출하지 않는다 — 경로는 서버 로그(stderr)에만 남긴다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "쓰기 불가 대상의 409 거부 (라우트)",
+      "line": 712,
+      "kind": "freetext",
+      "claim": "invariant: RO 마운트의 mkdir 실패는 Node 에서 여러 에러 코드로 표면화되므로(EROFS·ENOENT·EACCES, 셸은 EROFS 인데 Node 는 ENOENT 로 보고) 그 전부를 409 로 매핑한다. 경로 세그먼트 충돌(ENOTDIR)도 500 이 아닌 409 로 떨어뜨린다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "쓰기 불가 대상의 409 거부 (라우트)",
+      "line": 713,
+      "kind": "freetext",
+      "claim": "invariant: 화이트리스트를 통과하지 못하는 프로젝트명은 409 가 아니라 기존대로 404 로 응답한다 — 경로 존재 여부를 드러내지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "쓰기 불가 대상의 409 거부 (라우트)",
+      "line": 714,
+      "kind": "metric",
+      "claim": "metric: server jest 554 PASS 중 RO 루트 재현 케이스(`chmod 0555` 픽스처, `graphCrossProject.test.ts`)가 409 응답 + 응답 본문 내부 경로 부재를 assert. 무력화 프로브로 방어 실효성 확인(409 방어 제거 시 red). 라이브 실측: 경로조작 `?project=../etc` → 404, 잘못된 본문 → 400.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "전용 RW 볼륨 인프라 (docker-compose)",
+      "line": 717,
+      "kind": "freetext",
+      "claim": "invariant: `OVERLAY_ROOT` 는 전용 RW 볼륨(`/data/graph-overlay`)을 가리키고, `PROJECTS_ROOT`(`/data/docs-root`)는 읽기 전용(`:ro`)으로 유지한다 — 홈 전체를 RW 로 여는 대안은 보안 후퇴라 거부한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "전용 RW 볼륨 인프라 (docker-compose)",
+      "line": 718,
+      "kind": "freetext",
+      "claim": "invariant: 볼륨 산출물은 `.gitignore` 로 레포 오염을 차단한다(런타임 생성물).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "cross-project-layout-persistence",
+      "feature": "전용 RW 볼륨 인프라 (docker-compose)",
+      "line": 719,
+      "kind": "metric",
+      "claim": "metric: `docker inspect` 로 마운트 플래그 실측 — `/data/graph-overlay` RW=true(신규), `/data/docs-root` RW=false(유지), 컨테이너 `OVERLAY_ROOT` env 주입 확인. 재배포 후 라이브 health 200 + 핵심 경로 200 회귀 0.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
     }
   ],
   "ghosts": [
     {
       "type": "endpoint",
       "what": "GET /api/changes",
-      "source": "server/src/routes/graph.ts:69"
+      "source": "server/src/routes/graph.ts:88"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/graph",
-      "source": "server/src/routes/graph.ts:76"
+      "source": "server/src/routes/graph.ts:95"
     },
     {
       "type": "endpoint",
       "what": "PUT /api/changes/:id(*)/layout",
-      "source": "server/src/routes/graph.ts:130"
+      "source": "server/src/routes/graph.ts:149"
     },
     {
       "type": "endpoint",
       "what": "GET /api/changes/:id(*)/wireframe",
-      "source": "server/src/routes/graph.ts:91"
+      "source": "server/src/routes/graph.ts:110"
     },
     {
       "type": "endpoint",
@@ -4692,7 +4868,7 @@
     {
       "type": "symbol",
       "what": "changesRoot",
-      "source": "server/src/lib/changes.ts:13"
+      "source": "server/src/lib/changes.ts:25"
     },
     {
       "type": "symbol",
@@ -4827,7 +5003,7 @@
     {
       "type": "symbol",
       "what": "isLayoutOverlay",
-      "source": "server/src/lib/changes.ts:98"
+      "source": "server/src/lib/changes.ts:141"
     },
     {
       "type": "symbol",
@@ -4847,7 +5023,7 @@
     {
       "type": "symbol",
       "what": "listChanges",
-      "source": "server/src/lib/changes.ts:33"
+      "source": "server/src/lib/changes.ts:45"
     },
     {
       "type": "symbol",
@@ -4918,11 +5094,6 @@
       "type": "symbol",
       "what": "readDocsWireframeSuggestions",
       "source": "server/src/lib/wireDocs.ts:99"
-    },
-    {
-      "type": "symbol",
-      "what": "readOverlay",
-      "source": "server/src/lib/changes.ts:77"
     },
     {
       "type": "symbol",
@@ -5018,11 +5189,6 @@
       "type": "symbol",
       "what": "wireframeInvariantHolds",
       "source": "server/src/lib/wireDocs.ts:163"
-    },
-    {
-      "type": "symbol",
-      "what": "writeOverlay",
-      "source": "server/src/lib/changes.ts:88"
     }
   ],
   "scanSkipped": [
@@ -5033,6 +5199,6 @@
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-0715-0400.html",
-  "runId": "0715-0400"
+  "historyHtml": "audit-0715-0700.html",
+  "runId": "0715-0700"
 }
