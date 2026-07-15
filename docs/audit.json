@@ -3,11 +3,11 @@
   "scanRoot": "/home/gaegul/flowforge",
   "finalJudgment": "조건부",
   "counts": {
-    "PASS": 142,
+    "PASS": 145,
     "FAIL": 0,
-    "UNVERIFIABLE": 244
+    "UNVERIFIABLE": 258
   },
-  "reason": "미검증(UNVERIFIABLE) 244건 — 100% 검증 아님",
+  "reason": "미검증(UNVERIFIABLE) 258건 — 100% 검증 아님",
   "items": [
     {
       "capability": "spec-tree-view",
@@ -2887,9 +2887,9 @@
       "kind": "behavior",
       "claim": "behavior: 입력에 근거가 없는 섹션은 그럴듯하게 지어내지 않고 비어있음을 표면화한다(빈 섹션 또는 \"(미정)\" 표기)",
       "verdict": "UNVERIFIABLE",
-      "reason": "유사 테스트 있음 (2토큰 겹침) — 동일 보장 불가, LLM추정 영역",
+      "reason": "유사 테스트 있음 (3토큰 겹침) — 동일 보장 불가, LLM추정 영역",
       "method": "행위 검증: 토큰 유사 매칭은 결정론 아님 → PASS 불가",
-      "evidence": "server/src/routes/__tests__/docs.planning.test.ts:120",
+      "evidence": "web/src/__tests__/uncharted-change-list.test.tsx:26",
       "llmHint": "입력에 근거가 없는 섹션은 그럴듯하게 지어내지 않고 비어있음을 표면화한다(빈 섹션 또는 \"(미정)\" 표기)"
     },
     {
@@ -4289,6 +4289,193 @@
       "reason": "지표 미측정 (1단계 범위 밖)",
       "method": "성공지표 — 파싱만, 실측 미연결",
       "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "기획 없는 프로젝트 skeleton 에 활성 change 목록 렌더 (web 컴포넌트)",
+      "line": 673,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol UnchartedChangeList",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/UnchartedChangeList.tsx:12"
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "기획 없는 프로젝트 skeleton 에 활성 change 목록 렌더 (web 컴포넌트)",
+      "line": 674,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol UnchartedChangeListProps",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "web/src/UnchartedChangeList.tsx:6"
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "기획 없는 프로젝트 skeleton 에 활성 change 목록 렌더 (web 컴포넌트)",
+      "line": 675,
+      "kind": "freetext",
+      "claim": "`UnchartedChangeList`(`web/src/UnchartedChangeList.tsx`)가 `hasCharter=false` 일 때만 활성 change 목록을 클릭 가능한 항목으로 렌더하고, `App.tsx` skeleton 블록이 이를 배선한다. `hasCharter=true` 면 `null` 을 반환해 기획 있는 프로젝트의 기존 planning 탭 렌더에 관여하지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "기획 없는 프로젝트 skeleton 에 활성 change 목록 렌더 (web 컴포넌트)",
+      "line": 676,
+      "kind": "freetext",
+      "claim": "invariant: 진입로 데이터는 `ProjectCard.allActiveChangeNames`(전량)를 쓰고 카드 칩용 `activeChangeNames`(2개 상한)를 쓰지 않는다 — 잘린 목록을 쓰면 상한 초과 change 가 도달 불가로 남아 이 capability 의 목적을 배반한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "기획 없는 프로젝트 skeleton 에 활성 change 목록 렌더 (web 컴포넌트)",
+      "line": 677,
+      "kind": "freetext",
+      "claim": "invariant: 활성 change 가 없으면 목록·링크를 만들지 않고 \"활성 change 없음\"을 표기한다(존재하지 않는 링크 미생성).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "기획 없는 프로젝트 skeleton 에 활성 change 목록 렌더 (web 컴포넌트)",
+      "line": 678,
+      "kind": "freetext",
+      "claim": "invariant: `hasCharter` 게이팅은 컴포넌트 내부(`if (hasCharter) return null`)에서 하며, 호출부는 `?? true`(안전측=미렌더)로 폴백한다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "기획 없는 프로젝트 skeleton 에 활성 change 목록 렌더 (web 컴포넌트)",
+      "line": 679,
+      "kind": "metric",
+      "claim": "metric: `UnchartedChangeList` export 존재(`web/src/UnchartedChangeList.tsx:12`) + web vitest 16 PASS(hasCharter=true 시 미렌더 회귀 가드 포함, 무력화 프로브로 가드 실효성 확인) + 라이브 재배포 후 Playwright 실픽셀 실증(wowa-wt-dashboard 활성 change 4개 전량 렌더, 기획 있는 flowforge 는 목록 섹션 부재).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "카드 칩(상한)과 진입로(전량)의 change 목록 분리 (서버 스캔)",
+      "line": 682,
+      "kind": "assert:symbol",
+      "claim": "assert:symbol listProjectCards",
+      "verdict": "PASS",
+      "reason": "",
+      "method": "export 심볼 대조",
+      "evidence": "server/src/lib/projects.ts:149"
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "카드 칩(상한)과 진입로(전량)의 change 목록 분리 (서버 스캔)",
+      "line": 683,
+      "kind": "freetext",
+      "claim": "`listProjectCards`(`server/src/lib/projects.ts:149`)가 `ProjectCard` 에 두 필드를 병렬로 싣는다: `activeChangeNames`(카드 칩 표시용, `scan.active.slice(0, 2)`)와 `allActiveChangeNames`(진입로용, `scan.active` 전량). 카드 그리드의 칩 레이아웃은 상한을 유지하면서 진입로는 모든 활성 change 에 도달 가능해야 하기 때문이다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "카드 칩(상한)과 진입로(전량)의 change 목록 분리 (서버 스캔)",
+      "line": 684,
+      "kind": "freetext",
+      "claim": "invariant: `allActiveChangeNames` 는 절단하지 않는다 — 절단 시 상한 초과 change 가 화면에서 도달 불가가 된다(2026-07-15 review BLOCK 으로 실측 확인: 고아 프로젝트 4개 중 3개가 활성 change 3~4개 보유).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "카드 칩(상한)과 진입로(전량)의 change 목록 분리 (서버 스캔)",
+      "line": 685,
+      "kind": "freetext",
+      "claim": "invariant: 카드 칩(`web/src/ProjectGrid.tsx`)은 계속 `activeChangeNames` 를 참조해 그리드 레이아웃 회귀가 없다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "카드 칩(상한)과 진입로(전량)의 change 목록 분리 (서버 스캔)",
+      "line": 686,
+      "kind": "metric",
+      "claim": "metric: `listProjectCards` export 존재(`server/src/lib/projects.ts:149`) + server jest 548 PASS(신규 3케이스: 상한 초과 시 칩 2개·전량 4개 / 상한 이하 시 동일 / 활성 0 시 빈 배열) + 무력화 프로브(전량 필드를 `slice(0,2)` 로 되돌리면 1건 red) + 라이브 `GET /api/projects` 실측(wowa-wt-dashboard: 칩 2개, 전량 4개).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "change 클릭 시 5종 문서 뷰 딥링크 진입 (기존 경로 재사용)",
+      "line": 689,
+      "kind": "freetext",
+      "claim": "invariant: 진입 경로는 `App.tsx` 내부의 기존 `openChangeViews` 콜백을 재사용하며 새 진입 경로를 만들지 않는다(컴포넌트 지역 `useCallback`이라 export 심볼 assert 대상이 아님 — 검증은 아래 metric 의 라이브 실픽셀로 한다).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "change 클릭 시 5종 문서 뷰 딥링크 진입 (기존 경로 재사용)",
+      "line": 690,
+      "kind": "freetext",
+      "claim": "change 목록 항목 클릭이 기존 `openChangeViews`(`web/src/App.tsx:831`)를 호출해 views 단계로 전환하고 기본 PRD 탭을 연다. 프로젝트 키를 실어 딥링크 `?project=<영문키>&change=<change키>&tab=prd` 가 기록되며, 서버는 이미 `?project=` 쿼리로 크로스 프로젝트 change 조회를 지원한다(`cross-project-change-views`, archive 2026-07-08).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "change 클릭 시 5종 문서 뷰 딥링크 진입 (기존 경로 재사용)",
+      "line": 691,
+      "kind": "freetext",
+      "claim": "invariant: 딥링크의 `project` 는 프로젝트 영문 식별자(`name`)이며 한글 표시명(`displayName`)이나 빈 값·플레이스홀더를 싣지 않는다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "change 클릭 시 5종 문서 뷰 딥링크 진입 (기존 경로 재사용)",
+      "line": 692,
+      "kind": "freetext",
+      "claim": "invariant: 이 capability 는 서버 신규 API 를 만들지 않는다 — 기존 `/api/changes/:id/*?project=` 를 그대로 쓴다.",
+      "verdict": "UNVERIFIABLE",
+      "reason": "검증수단없음 (자유서술 — 태그 없음)",
+      "method": "태그 없는 불릿 — 결정론 검증 대상 아님",
+      "evidence": null
+    },
+    {
+      "capability": "uncharted-project-change-list",
+      "feature": "change 클릭 시 5종 문서 뷰 딥링크 진입 (기존 경로 재사용)",
+      "line": 693,
+      "kind": "metric",
+      "claim": "metric: 라이브 실픽셀 실증(이전 도달 불가였던 3번째 change `implement-ios-app` 클릭 → 브라우저 실요청 prd/spec-tree/graph/wireframe 4종 200 → PRD 본문 6517자 렌더, URL `?project=wowa-wt-dashboard&change=implement-ios-app&tab=prd`).",
+      "verdict": "UNVERIFIABLE",
+      "reason": "지표 미측정 (1단계 범위 밖)",
+      "method": "성공지표 — 파싱만, 실측 미연결",
+      "evidence": null
     }
   ],
   "ghosts": [
@@ -4350,7 +4537,7 @@
     {
       "type": "symbol",
       "what": "App",
-      "source": "web/src/App.tsx:98"
+      "source": "web/src/App.tsx:99"
     },
     {
       "type": "symbol",
@@ -4846,6 +5033,6 @@
     }
   ],
   "reportHtml": "audit.html",
-  "historyHtml": "audit-20260713-1628.html",
-  "runId": "run-20260713-1628"
+  "historyHtml": "audit-0715-0400.html",
+  "runId": "0715-0400"
 }

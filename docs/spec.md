@@ -664,3 +664,30 @@ harness(외부 openspec-plan 계열 스킬)가 flowforge에 넘길 화면별 HTM
 - invariant: planning 계보(features.md·openspec-plan)와 change 계보(spec.md·openspec-propose)가 레이블로 구별된다.
 - ⚠️ assert 대상 없음(UI 문자열): 이 capability는 endpoint도 named export symbol도 아닌 순수 UI 레이블 문자열(`web/src/App.tsx`의 `tabBtn("spec", "명세(change)")` / `planTabBtn("features", "기획 기능명세")`)이라 assert:endpoint/assert:symbol 대상이 없다. audit 문자열 대조 대상이 아니므로 억지 symbol assert를 넣지 않고 불변식+metric 서술로만 검증한다.
 - metric: 두 탭 레이블이 서로 다른 문자열임을 grep으로 확인(`web/src/App.tsx:945` `명세(change)` / `:998` `기획 기능명세`) + web 빌드 PASS + 라이브 UI에서 change 뷰·planning 뷰의 두 기능명세 레이블이 구별돼 보이는지 Playwright 실픽셀 관찰. 노드타입 분리(`specTree` vs `featureTree`)는 이미 코드상 되어 있어 무변경 확인.
+
+## capability: uncharted-project-change-list — 기획 없는 프로젝트의 change 목록 진입로
+
+기획 문서(`docs/planning/*`)가 없는 프로젝트(`hasCharter=false`)의 skeleton 단계에 그 프로젝트의 활성 change 목록을 노출해, 클릭 시 기존 5종 문서 뷰(views)로 진입시키는 능력이다. change 를 기능명세 노드 경유로만 열도록 바꾼 설계(`flowforge-change-node-mapping`)가 기획 문서 없는 프로젝트를 놓쳐(노드 생성 근거인 `features.md` 자체가 없어 skeleton 이 빈 화면) change 도달 경로가 끊겼던 것을 잇는다. 서버 신규 API 없이 프로젝트 카드가 이미 싣는 데이터를 재사용하며, 기획 있는 프로젝트의 기존 노드-경유 진입은 불변으로 유지한다.
+
+### 기능: 기획 없는 프로젝트 skeleton 에 활성 change 목록 렌더 (web 컴포넌트)
+- assert:symbol UnchartedChangeList
+- assert:symbol UnchartedChangeListProps
+- `UnchartedChangeList`(`web/src/UnchartedChangeList.tsx`)가 `hasCharter=false` 일 때만 활성 change 목록을 클릭 가능한 항목으로 렌더하고, `App.tsx` skeleton 블록이 이를 배선한다. `hasCharter=true` 면 `null` 을 반환해 기획 있는 프로젝트의 기존 planning 탭 렌더에 관여하지 않는다.
+- invariant: 진입로 데이터는 `ProjectCard.allActiveChangeNames`(전량)를 쓰고 카드 칩용 `activeChangeNames`(2개 상한)를 쓰지 않는다 — 잘린 목록을 쓰면 상한 초과 change 가 도달 불가로 남아 이 capability 의 목적을 배반한다.
+- invariant: 활성 change 가 없으면 목록·링크를 만들지 않고 "활성 change 없음"을 표기한다(존재하지 않는 링크 미생성).
+- invariant: `hasCharter` 게이팅은 컴포넌트 내부(`if (hasCharter) return null`)에서 하며, 호출부는 `?? true`(안전측=미렌더)로 폴백한다.
+- metric: `UnchartedChangeList` export 존재(`web/src/UnchartedChangeList.tsx:12`) + web vitest 16 PASS(hasCharter=true 시 미렌더 회귀 가드 포함, 무력화 프로브로 가드 실효성 확인) + 라이브 재배포 후 Playwright 실픽셀 실증(wowa-wt-dashboard 활성 change 4개 전량 렌더, 기획 있는 flowforge 는 목록 섹션 부재).
+
+### 기능: 카드 칩(상한)과 진입로(전량)의 change 목록 분리 (서버 스캔)
+- assert:symbol listProjectCards
+- `listProjectCards`(`server/src/lib/projects.ts:149`)가 `ProjectCard` 에 두 필드를 병렬로 싣는다: `activeChangeNames`(카드 칩 표시용, `scan.active.slice(0, 2)`)와 `allActiveChangeNames`(진입로용, `scan.active` 전량). 카드 그리드의 칩 레이아웃은 상한을 유지하면서 진입로는 모든 활성 change 에 도달 가능해야 하기 때문이다.
+- invariant: `allActiveChangeNames` 는 절단하지 않는다 — 절단 시 상한 초과 change 가 화면에서 도달 불가가 된다(2026-07-15 review BLOCK 으로 실측 확인: 고아 프로젝트 4개 중 3개가 활성 change 3~4개 보유).
+- invariant: 카드 칩(`web/src/ProjectGrid.tsx`)은 계속 `activeChangeNames` 를 참조해 그리드 레이아웃 회귀가 없다.
+- metric: `listProjectCards` export 존재(`server/src/lib/projects.ts:149`) + server jest 548 PASS(신규 3케이스: 상한 초과 시 칩 2개·전량 4개 / 상한 이하 시 동일 / 활성 0 시 빈 배열) + 무력화 프로브(전량 필드를 `slice(0,2)` 로 되돌리면 1건 red) + 라이브 `GET /api/projects` 실측(wowa-wt-dashboard: 칩 2개, 전량 4개).
+
+### 기능: change 클릭 시 5종 문서 뷰 딥링크 진입 (기존 경로 재사용)
+- invariant: 진입 경로는 `App.tsx` 내부의 기존 `openChangeViews` 콜백을 재사용하며 새 진입 경로를 만들지 않는다(컴포넌트 지역 `useCallback`이라 export 심볼 assert 대상이 아님 — 검증은 아래 metric 의 라이브 실픽셀로 한다).
+- change 목록 항목 클릭이 기존 `openChangeViews`(`web/src/App.tsx:831`)를 호출해 views 단계로 전환하고 기본 PRD 탭을 연다. 프로젝트 키를 실어 딥링크 `?project=<영문키>&change=<change키>&tab=prd` 가 기록되며, 서버는 이미 `?project=` 쿼리로 크로스 프로젝트 change 조회를 지원한다(`cross-project-change-views`, archive 2026-07-08).
+- invariant: 딥링크의 `project` 는 프로젝트 영문 식별자(`name`)이며 한글 표시명(`displayName`)이나 빈 값·플레이스홀더를 싣지 않는다.
+- invariant: 이 capability 는 서버 신규 API 를 만들지 않는다 — 기존 `/api/changes/:id/*?project=` 를 그대로 쓴다.
+- metric: 라이브 실픽셀 실증(이전 도달 불가였던 3번째 change `implement-ios-app` 클릭 → 브라우저 실요청 prd/spec-tree/graph/wireframe 4종 200 → PRD 본문 6517자 렌더, URL `?project=wowa-wt-dashboard&change=implement-ios-app&tab=prd`).
