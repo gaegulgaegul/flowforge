@@ -19,4 +19,4 @@
 
 ### Sequential: 검증 게이트 (마지막 필수 — dev-verify)
 
-- [ ] 4.1 VERIFY: 5단계 게이트 통과 — 빌드 → 타입체크 → 린트 → 테스트(web vitest + server 무영향) → UI(프론트 변경이므로 필수: `docker compose up -d --build` 후 Playwright로 고아 프로젝트(agentic-harness/stock-league 등)에서 change 목록 렌더 → 클릭 → change 문서 뷰 진입 실픽셀 실증) 전부 PASS
+- [~] 4.1 VERIFY: **FAIL** (2026-07-15, `verify.md` 참조). 빌드·타입체크·린트·테스트(web 16/16·server 545/545)는 PASS. **UI 실픽셀에서 FAIL**: 라이브 재배포 후 Playwright 실측 결과 change 목록 렌더·클릭·딥링크는 동작하나, 진입한 5종 뷰의 문서가 **전부 404**(prd/spec-tree/graph/ia/wireframe). 근본원인=`/api/changes/:id/*`가 `OPENSPEC_ROOT` 단일 경로(wowa-app)만 조회하고 프로젝트 인자를 안 받음 → 타 프로젝트 change 조회 불가. proposal의 "신규 서버 API 없음" 제약으로는 목표 도달 불가함이 실측으로 드러남. 후속 change `cross-project-change-views`로 서버 확장 후 재verify.
