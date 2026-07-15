@@ -2,7 +2,7 @@
 
 - **판정: PASS** (archive 게이트 통과)
 - 실행: 2026-07-15, 라이브 실측(https://flowforge.gaegul.house, 컨테이너 재빌드 후)
-- codeState: `d74ba7e` 시점 소스 기준(이후 verify 산출물 커밋으로 HEAD 이동 시 재바인딩 필요)
+- codeState: `762915e` (review BLOCK 수정 반영 후 재검증)
 - 실행자: 케로로 본체(openspec-goal 러너 apply 6/7 완료 후 이어받아 VERIFY 수행)
 
 ## 정정 이력 (중요 — 최초 FAIL 판정은 검증자 오류였음)
@@ -54,6 +54,20 @@
 | 기획 있는 프로젝트는 기존대로 | PASS | server 545/545 무회귀. web 회귀 가드 테스트(무력화 프로브 포함) 통과 |
 
 **집계: PASS 6 / FAIL 0 / SKIP 0**
+
+## review BLOCK 대응 (2026-07-15, 재검증)
+
+review(code-reviewer 4페르소나)가 **배포 불가(BLOCK)** 판정. 실측으로 타당함을 확인하고 수정했다.
+
+- **BLOCK 내용**: 진입로가 쓰는 `activeChangeNames`가 서버에서 `slice(0, 2)`로 잘려 있어(`server/src/lib/projects.ts:180`), 활성 change 3개 이상 프로젝트는 3번째부터 여전히 도달 불가. spec `"활성 change 각각이 렌더된다"` 위반.
+- **실측 확인**: 디스크 기준 agentic-harness 3개 / wowa-wt-dashboard 4개 / wowa-wt-ios 4개인데 API는 2개만 반환. 고아 프로젝트 4개 중 3개가 영향.
+- **최초 verify가 놓친 이유**: 하필 slice 상한 이하로 *보이던* agentic-harness(실제 3개, 2개만 노출)만 실픽셀 검증했다. 잘린 사실 자체를 눈치채지 못함.
+- **수정**(커밋 `762915e`): `ProjectCard.allActiveChangeNames`(전체, 미절단) 추가. 카드 칩은 기존 2개 상한 유지(그리드 레이아웃 보존), **진입로만** 전체 목록 사용.
+- **재검증**:
+  - server 548 PASS(신규 3건: slice 초과/이하/빈 목록).
+  - **무력화 프로브**: `allActiveChangeNames`를 다시 `slice(0,2)`로 되돌리면 테스트 1건 red → 원복 시 green. 방어가 실제 결함을 잡음을 실증.
+  - **라이브 실픽셀**: wowa-wt-dashboard(change 4개)에서 4개 전부 렌더. 이전 도달 불가였던 3번째 `implement-ios-app` 클릭 → 실요청 4종 200, PRD 본문 6517자 렌더. URL `?project=wowa-wt-dashboard&change=implement-ios-app&tab=prd`.
+  - 콘솔 404 9건은 `/api/docs/<project>/planning-*` = 기획 문서 조회로, `hasCharter=false` 프로젝트엔 그 문서가 없어 404가 정상(이 change 무관, 기존 동작).
 
 ## 검증 중 발견한 별건 결함 (이 change 범위 밖 — 후속 대상)
 
