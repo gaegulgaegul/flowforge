@@ -17,8 +17,8 @@
 
 ### Parallel Group 1 (독립 - 동시 실행 가능: 서로 다른 파일)
 
-- [ ] 2.1 GREEN: `server/src/routes/graph.ts:130-147` PUT layout 이 쓰기 불가를 409 + `read_only_target` 으로 매핑(generic 500 금지). **에러 본문에 내부 경로 미노출**(30-security), 경로는 서버 로그에만. 미지 프로젝트 404 는 기존 유지 [parallel]
-- [ ] 2.2 인프라: `docker-compose.yml` 에 `OVERLAY_ROOT: /data/graph-overlay` env + `./data/graph-overlay:/data/graph-overlay`(RW) 볼륨 추가. 호스트 `flowforge/data/graph-overlay/` mkdir. `.gitignore` 에 산출물 제외 추가. **홈 마운트는 RO 유지**(design D1 — 뒤집지 않는다). 🔴 컨테이너 재생성은 4.1 에서 [parallel]
+- [x] 2.1 GREEN: `server/src/routes/graph.ts:130-147` PUT layout 이 쓰기 불가를 409 + `read_only_target` 으로 매핑(generic 500 금지). **에러 본문에 내부 경로 미노출**(30-security), 경로는 서버 로그에만. 미지 프로젝트 404 는 기존 유지 [parallel]
+- [x] 2.2 인프라: `docker-compose.yml` 에 `OVERLAY_ROOT: /data/graph-overlay` env + `./data/graph-overlay:/data/graph-overlay`(RW) 볼륨 추가. 호스트 `flowforge/data/graph-overlay/` mkdir. `.gitignore` 에 산출물 제외 추가. **홈 마운트는 RO 유지**(design D1 — 뒤집지 않는다). 🔴 컨테이너 재생성은 4.1 에서 [parallel]
 
 ### Sequential: 프로덕션 조건 재현 테스트 (design D5 — 픽스처가 결함 가리지 못하게)
 

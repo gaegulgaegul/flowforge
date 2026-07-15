@@ -24,6 +24,11 @@ services:
       # 홈은 RO라 docsDir 하위 write 불가(EROFS) → feedback.json·wireframe.json은 이 RW 볼륨에.
       # flowforge write 경로: <WIREFRAME_FEEDBACK_ROOT>/<project>.feedback.json / .wireframe.json
       WIREFRAME_FEEDBACK_ROOT: /data/wireframe-feedback
+      # 크로스프로젝트 change 레이아웃 오버레이 전용 RW 볼륨(cross-project-layout-persistence).
+      # PROJECTS_ROOT(호스트 홈)는 RO라 <project>/openspec/changes/<id>/viz/ write 불가(EROFS/ENOENT)
+      # → 타 프로젝트 change 레이아웃은 이 RW 볼륨에. WIREFRAME_FEEDBACK_ROOT와 동일한 RO-홈 회피 패턴.
+      # flowforge write 경로: <OVERLAY_ROOT>/<project>/<changeId>.json
+      OVERLAY_ROOT: /data/graph-overlay
       # 쓰기 인증(public-surface-hardening). 값은 호스트 .env(git-ignored)에서 주입 —
       # 실값을 이 파일에 커밋하지 않는다(30-security). 넷 다 미설정이면 현행 무인증 동작
       # (개발 모드) — 프로덕션 강제는 CF Zero Trust 등록 + 아래 env 주입을 한 세트로.
@@ -47,6 +52,8 @@ services:
       - /home/gaegul:/data/docs-root:ro
       # 와이어 피드백/승인분 전용 RW(홈 RO 우회, B안). graph-overlay(/data/openspec)와 같은 전용 RW 볼륨 패턴.
       - /home/gaegul/flowforge/data/wireframe-feedback:/data/wireframe-feedback
+      # 크로스프로젝트 change 레이아웃 오버레이 전용 RW(홈 RO 우회). PROJECTS_ROOT는 RO 유지(design D1 — 뒤집지 않는다).
+      - /home/gaegul/flowforge/data/graph-overlay:/data/graph-overlay
     # immich 가 RAM 빠듯한 서버 → 메모리 상한으로 영향 차단(메모리 교훈: RAM 압박)
     mem_limit: 256m
     networks:

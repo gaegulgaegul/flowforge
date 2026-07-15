@@ -160,7 +160,21 @@ graphRouter.put(
       res.status(400).json({ error: "invalid_layout" });
       return;
     }
-    writeOverlay(dir, body, overlayTargetFromReq(req));
+    try {
+      writeOverlay(dir, body, overlayTargetFromReq(req));
+    } catch (err: unknown) {
+      // 쓰기 불가 대상(RO 마운트)은 서버 내부 오류가 아니라 알려진 제약 — 409로 정직하게
+      // 알린다(generic 500 금지, design D4). EROFS/ENOENT 둘 다 RO 마운트의 mkdir 실패로
+      // 관측됨(같은 근본원인이 Node에서 다른 코드로 표면화 — proposal.md 실측).
+      // 내부 경로는 클라이언트에 노출하지 않고 서버 로그에만 남긴다(30-security).
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code === "EROFS" || code === "ENOENT" || code === "EACCES") {
+        process.stderr.write(`[flowforge] PUT ${req.path} 쓰기 불가(${code}): 대상 경로 읽기전용\n`);
+        res.status(409).json({ error: "read_only_target" });
+        return;
+      }
+      throw err;
+    }
     res.json({ ok: true, saved: Object.keys(body).length });
   }),
 );
