@@ -6,8 +6,12 @@
  * - ?project= 있음 → 그 프로젝트 산출물로 200
  * - ?project= 없음 → 현행 글로벌(OPENSPEC_ROOT) 루트 동작 불변
  * - project=../.. / 미지 프로젝트 → 404 (루트 밖 접근 없음)
+ *
+ * RO 루트 재현 (task 3.1, cross-project-layout-persistence, design D5):
+ * 기존 mkdtempSync 픽스처는 쓰기 가능이라 프로덕션의 RO 마운트(PROJECTS_ROOT)보다 관대했다
+ * — green인 채로 프로덕션 500이 났던 실사례. chmod 0555로 실제 RO 조건을 재현해 409를 검증한다.
  */
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import request from "supertest";
@@ -124,5 +128,25 @@ describe("graph API — 크로스프로젝트 ?project=", () => {
     );
     expect(existsSync(overlay)).toBe(true);
     expect(JSON.parse(readFileSync(overlay, "utf-8"))["screen-scr-a"]).toEqual({ x: 10, y: 20 });
+  });
+
+  it("PUT layout — 쓰기 불가 대상(RO 루트)은 409 read_only_target, 내부 경로 미노출 (task 3.1, design D5)", async () => {
+    const changeDir = makeProjectChange(projectsRoot, "wowa-app", "feature-a");
+    // 프로덕션 재현: change 디렉토리 자체를 RO로 만들어 viz/ mkdir이 EROFS/ENOENT로 실패하게 한다
+    // (OVERLAY_ROOT 미설정 상태 — 실제 사고 당시와 동일 조건, changes.ts 레거시 폴백 경로 타겟).
+    chmodSync(changeDir, 0o555);
+    try {
+      const app = await loadApp();
+      const res = await request(app)
+        .put("/api/changes/feature-a/layout?project=wowa-app")
+        .send({ "screen-scr-a": { x: 1, y: 2 } });
+      expect(res.status).toBe(409);
+      expect(res.body).toEqual({ error: "read_only_target" });
+      // 내부 파일시스템 경로가 응답 본문에 노출되지 않는다(30-security)
+      expect(JSON.stringify(res.body)).not.toContain(changeDir);
+      expect(JSON.stringify(res.body)).not.toContain(projectsRoot);
+    } finally {
+      chmodSync(changeDir, 0o755); // afterEach의 rmSync가 지울 수 있도록 원복
+    }
   });
 });
