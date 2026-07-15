@@ -1114,12 +1114,14 @@ export function App(): JSX.Element {
                 연관된 것만 in-place로 매핑돼 표시된다(FeatureNode 배지 + 상세 패널 진입).
                 "모든 change를 한 번에" 나열하지 않고 "항상 연관된 것만" 보여준다. */}
             {/* 기획 문서가 없는 프로젝트는 위 기능명세 노드 경유 진입로 자체가 없다
-                (uncharted-project-change-list) — activeChangeNames를 재사용해 change
-                목록 진입로를 보충한다. hasCharter 게이팅은 컴포넌트 내부에서 처리(회귀 가드
-                테스트를 그 컴포넌트 하나로 고정하기 위함). */}
+                (uncharted-project-change-list) — change 목록 진입로를 보충한다.
+                allActiveChangeNames(전체)를 쓴다. activeChangeNames 는 카드 칩용으로
+                2개까지 잘려 있어 3번째 이후 change 가 도달 불가가 된다.
+                hasCharter 게이팅은 컴포넌트 내부에서 처리(회귀 가드 테스트를 그 컴포넌트
+                하나로 고정하기 위함). */}
             <UnchartedChangeList
               hasCharter={dashProject?.hasCharter ?? true}
-              changeNames={dashProject?.activeChangeNames ?? []}
+              changeNames={dashProject?.allActiveChangeNames ?? []}
               onOpenChange={(name) =>
                 openChangeViews({
                   key: name,

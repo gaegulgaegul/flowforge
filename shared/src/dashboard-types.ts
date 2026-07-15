@@ -29,8 +29,14 @@ export interface ProjectCard {
   auditStatus: AuditStatus;
   /** Number of archived changes (additive). */
   archivedChangeCount?: number;
-  /** Active change display names, up to 2 (additive). */
+  /** Active change display names, up to 2 — card chip display only (additive). */
   activeChangeNames?: string[];
+  /**
+   * All active change names, unsliced (additive).
+   * Card chips use the capped `activeChangeNames`; navigation entry points must use
+   * this so every active change stays reachable (uncharted-project-change-list).
+   */
+  allActiveChangeNames?: string[];
   /** Most recent activity date, KST (Asia/Seoul) YYYY-MM-DD. additive. */
   lastActivityAt?: string;
 }

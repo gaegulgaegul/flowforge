@@ -147,4 +147,34 @@ describe("listProjectCards — 홈서버 프로젝트 카드 스캔", () => {
     const names = listProjectCards().map((c) => c.name);
     expect(names).toEqual(["onlydocs", "real"]);
   });
+
+  /**
+   * 카드 칩(activeChangeNames)은 2개까지만 표시하지만, 진입로가 쓰는
+   * allActiveChangeNames는 잘리면 안 된다 — 3번째 이후 change가 도달 불가가 되기 때문
+   * (uncharted-project-change-list, review BLOCK 지적).
+   */
+  describe("activeChangeNames(칩, 2개 상한) vs allActiveChangeNames(진입로, 전체)", () => {
+    it("활성 change가 2개를 넘으면 칩은 2개로 자르고 전체 목록은 전부 싣는다", () => {
+      makeChange(root, "many", "ch1");
+      makeChange(root, "many", "ch2");
+      makeChange(root, "many", "ch3");
+      makeChange(root, "many", "ch4");
+      const card = listProjectCards().find((c) => c.name === "many");
+      expect(card?.activeChangeNames).toHaveLength(2); // 칩은 잘림(레이아웃 유지)
+      expect(card?.allActiveChangeNames).toEqual(["ch1", "ch2", "ch3", "ch4"]); // 진입로는 전량
+    });
+
+    it("활성 change가 상한 이하면 둘이 같다", () => {
+      makeChange(root, "few", "ch1");
+      const card = listProjectCards().find((c) => c.name === "few");
+      expect(card?.activeChangeNames).toEqual(["ch1"]);
+      expect(card?.allActiveChangeNames).toEqual(["ch1"]);
+    });
+
+    it("활성 change가 없으면 전체 목록도 빈 배열이다(없는 링크를 지어내지 않음)", () => {
+      makeCharter(root, "nochange");
+      const card = listProjectCards().find((c) => c.name === "nochange");
+      expect(card?.allActiveChangeNames).toEqual([]);
+    });
+  });
 });

@@ -177,7 +177,10 @@ export function listProjectCards(labelMap?: Map<string, string>): ProjectCard[] 
       changeCount,
       auditStatus,
       archivedChangeCount: scan.archivedCount,
+      // 카드 칩은 2개까지만 표시(그리드 레이아웃 유지). 진입로는 잘린 목록을 쓰면
+      // 3번째 이후 change 가 도달 불가가 되므로 전체 목록을 따로 싣는다.
       activeChangeNames: scan.active.slice(0, 2),
+      allActiveChangeNames: scan.active,
       ...(scan.lastMtimeMs > 0 ? { lastActivityAt: toKstDate(scan.lastMtimeMs) } : {}),
     });
   }
