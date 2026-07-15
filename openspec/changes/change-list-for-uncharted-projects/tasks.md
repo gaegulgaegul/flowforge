@@ -4,13 +4,13 @@
 
 ### Parallel Group 1 (독립 - 동시 실행 가능: 서로 다른 테스트 파일)
 
-- [ ] 1.1 RED: 기획 없는 프로젝트(`hasCharter=false`, `activeChangeNames=["a","b"]`) skeleton 렌더 시 change 목록 항목 2개가 나타나는지 실패 테스트 작성 [parallel] — `web/src/__tests__/uncharted-change-list.test.tsx` (신규)
-- [ ] 1.2 RED: 기획 있는 프로젝트(`hasCharter=true`) skeleton에는 change 목록 섹션이 렌더되지 **않음**을 검증하는 회귀 실패 테스트 작성 [parallel] — 같은 신규 테스트 파일에 추가하되 1.1과 별 describe 블록. (파일 교집합 있으나 1.1과 함께 작성 가능 시 한 태스크로 병합해도 됨)
+- [x] 1.1 RED: 기획 없는 프로젝트(`hasCharter=false`, `activeChangeNames=["a","b"]`) skeleton 렌더 시 change 목록 항목 2개가 나타나는지 실패 테스트 작성 [parallel] — `web/src/__tests__/uncharted-change-list.test.tsx` (신규)
+- [x] 1.2 RED: 기획 있는 프로젝트(`hasCharter=true`) skeleton에는 change 목록 섹션이 렌더되지 **않음**을 검증하는 회귀 실패 테스트 작성 [parallel] — 같은 신규 테스트 파일에 추가하되 1.1과 별 describe 블록. (파일 교집합 있으나 1.1과 함께 작성 가능 시 한 태스크로 병합해도 됨)
 
 ### Sequential: change 목록 진입로 구현 (GREEN)
 
-- [ ] 2.1 GREEN: `web/src/App.tsx` skeleton 렌더 블록(`dashStage === "skeleton"`, ~993)에 `!dashProject.hasCharter && (dashProject.activeChangeNames?.length ?? 0) > 0`일 때 change 목록 섹션을 렌더. 각 항목 = 클릭 가능한 버튼, onClick = `openChangeViews({ key: name, displayName: name, project: dashProject.name })`. 기존 "기획 문서가 없습니다" 안내문은 "change 목록에서 진입" 취지로 문구 조정. (테스트 실패 시 추측 수정 금지, 근본원인부터)
-- [ ] 2.2 GREEN: 활성 change 없는 기획-없는 프로젝트는 change 목록을 만들지 않고 "활성 change 없음"을 정직하게 표기(존재하지 않는 링크 미생성). spec의 빈 상태 시나리오 충족.
+- [x] 2.1 GREEN: `web/src/App.tsx` skeleton 렌더 블록(`dashStage === "skeleton"`, ~993)에 `!dashProject.hasCharter && (dashProject.activeChangeNames?.length ?? 0) > 0`일 때 change 목록 섹션을 렌더. 각 항목 = 클릭 가능한 버튼, onClick = `openChangeViews({ key: name, displayName: name, project: dashProject.name })`. 기존 "기획 문서가 없습니다" 안내문은 "change 목록에서 진입" 취지로 문구 조정. (테스트 실패 시 추측 수정 금지, 근본원인부터)
+- [x] 2.2 GREEN: 활성 change 없는 기획-없는 프로젝트는 change 목록을 만들지 않고 "활성 change 없음"을 정직하게 표기(존재하지 않는 링크 미생성). spec의 빈 상태 시나리오 충족.
 
 ### Sequential: 회귀·엣지 확인
 

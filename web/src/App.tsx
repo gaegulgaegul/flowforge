@@ -67,6 +67,7 @@ import { FeatureApprovalWizard } from "./FeatureApprovalWizard.js";
 import { UserFlowApprovalWizard } from "./UserFlowApprovalWizard.js";
 import { FeatureDetailPanel } from "./FeatureDetailPanel.js";
 import { FlowDetailPanel, type ScreenCrosslinkData } from "./FlowDetailPanel.js";
+import { UnchartedChangeList } from "./UnchartedChangeList.js";
 import {
   buildScreenToDetailLabels,
   detailLabelsForScreen,
@@ -538,7 +539,7 @@ export function App(): JSX.Element {
       setStatus("");
     } else {
       setDashStage("skeleton");
-      setStatus("이 프로젝트는 기획 문서가 없습니다(change는 capability 경유로만 표시).");
+      setStatus("이 프로젝트는 기획 문서가 없습니다(아래 change 목록에서 진입).");
     }
   }, []);
 
@@ -1112,6 +1113,21 @@ export function App(): JSX.Element {
                 (flowforge-change-node-mapping): change는 이제 기능명세 노드/화면에
                 연관된 것만 in-place로 매핑돼 표시된다(FeatureNode 배지 + 상세 패널 진입).
                 "모든 change를 한 번에" 나열하지 않고 "항상 연관된 것만" 보여준다. */}
+            {/* 기획 문서가 없는 프로젝트는 위 기능명세 노드 경유 진입로 자체가 없다
+                (uncharted-project-change-list) — activeChangeNames를 재사용해 change
+                목록 진입로를 보충한다. hasCharter=true 프로젝트는 이 분기에 들어오지 않음. */}
+            {!dashProject?.hasCharter && (
+              <UnchartedChangeList
+                changeNames={dashProject?.activeChangeNames ?? []}
+                onOpenChange={(name) =>
+                  openChangeViews({
+                    key: name,
+                    displayName: name,
+                    ...(dashProject?.name ? { project: dashProject.name } : {}),
+                  })
+                }
+              />
+            )}
           </div>
         ) : (
           // views: 5종 뷰. dashStage==="views"
