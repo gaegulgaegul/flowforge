@@ -11,9 +11,9 @@
 
 ### Sequential: 저장/읽기 경로 (RED → GREEN, 같은 파일 changes.ts)
 
-- [ ] 1.1 RED: `OVERLAY_ROOT` 설정 시 `writeOverlay` 가 `<OVERLAY_ROOT>/<project>/<changeId>.json` 에 쓰고 `PROJECTS_ROOT` 하위에는 `viz/` 를 만들지 않는 실패 테스트 작성 — `server/src/lib/__tests__/changes.test.ts`
-- [ ] 1.2 RED: `readOverlay` 가 `OVERLAY_ROOT` 우선 조회 + 기존 `<changeDir>/viz/graph-overlay.json` 폴백을 둘 다 읽는 실패 테스트 작성(무손실 보장, design D3) — 같은 파일
-- [ ] 1.3 GREEN: `server/src/lib/changes.ts` `writeOverlay`/`readOverlay` 를 `OVERLAY_ROOT` 규약으로 구현. 0.1·0.2 결정 반영. project 컨텍스트를 인자로 받도록 시그니처 확장(호출부 동시 수정 — [[feedback_api_contract]] 계약 일치). (테스트 실패 시 추측 수정 금지, 근본원인부터)
+- [x] 1.1 RED: `OVERLAY_ROOT` 설정 시 `writeOverlay` 가 `<OVERLAY_ROOT>/<project>/<changeId>.json` 에 쓰고 `PROJECTS_ROOT` 하위에는 `viz/` 를 만들지 않는 실패 테스트 작성 — `server/src/lib/__tests__/changes.test.ts`
+- [x] 1.2 RED: `readOverlay` 가 `OVERLAY_ROOT` 우선 조회 + 기존 `<changeDir>/viz/graph-overlay.json` 폴백을 둘 다 읽는 실패 테스트 작성(무손실 보장, design D3) — 같은 파일
+- [x] 1.3 GREEN: `server/src/lib/changes.ts` `writeOverlay`/`readOverlay` 를 `OVERLAY_ROOT` 규약으로 구현. 0.1·0.2 결정 반영. project 컨텍스트를 인자로 받도록 시그니처 확장(호출부 동시 수정 — [[feedback_api_contract]] 계약 일치). (테스트 실패 시 추측 수정 금지, 근본원인부터)
 
 ### Parallel Group 1 (독립 - 동시 실행 가능: 서로 다른 파일)
 

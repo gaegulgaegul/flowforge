@@ -3,11 +3,23 @@
  *
  * 스캔 루트는 OPENSPEC_ROOT 환경변수(기본=cwd의 openspec/). 개인 도구라
  * 다른 프로젝트의 openspec도 이 루트만 바꿔 시각화할 수 있다.
- * 레이아웃 오버레이는 <change>/viz/graph-overlay.json 에 영속(spec.md는 SSOT, 읽기전용).
+ *
+ * 레이아웃 오버레이 저장 위치(cross-project-layout-persistence, design D1-D3):
+ * - OVERLAY_ROOT 설정 시: <OVERLAY_ROOT>/<project>/<changeId>.json 에 쓴다(project 컨텍스트 필수).
+ *   PROJECTS_ROOT(RO 마운트) 하위에는 쓰지 않는다 — 홈 전체 RO 보안 경계 보존.
+ * - OVERLAY_ROOT 미설정 시: 기존 <changeDir>/viz/graph-overlay.json 폴백(회귀 없음, design 0.2).
+ * - 읽기는 OVERLAY_ROOT 우선 조회 + 기존 <changeDir>/viz/graph-overlay.json 폴백을 항상 겸한다
+ *   (무손실 — 이미 저장된 글로벌 루트 오버레이가 새 규약 도입으로 사라지지 않게, design D3).
  */
 import { readdirSync, statSync, existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { LayoutOverlay } from "@flowforge/shared";
+
+/** OVERLAY_ROOT 저장 대상 컨텍스트. project+changeId 조합이 <OVERLAY_ROOT> 하위 경로를 결정한다. */
+export interface OverlayTarget {
+  project: string;
+  changeId: string;
+}
 
 /** changes 스캔 루트. 기본: <cwd>/openspec/changes */
 export function changesRoot(): string {
@@ -68,27 +80,58 @@ export function resolveChangeDir(id: string, rootDir: string = changesRoot()): s
   return dir;
 }
 
-/** 레이아웃 오버레이 경로 */
-function overlayPath(changeDir: string): string {
+/** 레거시 오버레이 경로(글로벌 루트 하위, 읽기 폴백/OVERLAY_ROOT 미설정 시 쓰기 대상) */
+function legacyOverlayPath(changeDir: string): string {
   return join(changeDir, "viz", "graph-overlay.json");
 }
 
-/** 레이아웃 오버레이 읽기 (없으면 null) */
-export function readOverlay(changeDir: string): LayoutOverlay | null {
-  const p = overlayPath(changeDir);
-  if (!existsSync(p)) return null;
+/** OVERLAY_ROOT 하위 오버레이 경로. changeId의 archive/<name> 형태는 그대로 하위 디렉토리가 된다(design 0.1). */
+function overlayRootPath(overlayRoot: string, target: OverlayTarget): string {
+  return join(overlayRoot, target.project, `${target.changeId}.json`);
+}
+
+/**
+ * 레이아웃 오버레이 읽기 (없으면 null).
+ * OVERLAY_ROOT 설정 + target 제공 시 그 경로를 우선 조회하고, 없으면 레거시 경로도 읽는다(D3 무손실).
+ */
+export function readOverlay(changeDir: string, target?: OverlayTarget): LayoutOverlay | null {
+  const overlayRoot = process.env.OVERLAY_ROOT;
+  if (overlayRoot && target) {
+    const p = overlayRootPath(overlayRoot, target);
+    if (existsSync(p)) {
+      try {
+        return JSON.parse(readFileSync(p, "utf-8")) as LayoutOverlay;
+      } catch {
+        return null;
+      }
+    }
+  }
+  const legacy = legacyOverlayPath(changeDir);
+  if (!existsSync(legacy)) return null;
   try {
-    return JSON.parse(readFileSync(p, "utf-8")) as LayoutOverlay;
+    return JSON.parse(readFileSync(legacy, "utf-8")) as LayoutOverlay;
   } catch {
     return null;
   }
 }
 
-/** 레이아웃 오버레이 저장 (viz/ 디렉토리 자동 생성) */
-export function writeOverlay(changeDir: string, overlay: LayoutOverlay): void {
+/**
+ * 레이아웃 오버레이 저장.
+ * OVERLAY_ROOT 설정 + target 제공 시 <OVERLAY_ROOT>/<project>/<changeId>.json 에 쓴다
+ * (changeDir 하위엔 쓰지 않는다 — PROJECTS_ROOT RO 마운트 보존, design D1).
+ * OVERLAY_ROOT 미설정 시 기존 <changeDir>/viz/ 폴백(회귀 없음, design 0.2).
+ */
+export function writeOverlay(changeDir: string, overlay: LayoutOverlay, target?: OverlayTarget): void {
+  const overlayRoot = process.env.OVERLAY_ROOT;
+  if (overlayRoot && target) {
+    const p = overlayRootPath(overlayRoot, target);
+    mkdirSync(join(p, ".."), { recursive: true });
+    writeFileSync(p, JSON.stringify(overlay, null, 2), "utf-8");
+    return;
+  }
   const dir = join(changeDir, "viz");
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(overlayPath(changeDir), JSON.stringify(overlay, null, 2), "utf-8");
+  writeFileSync(legacyOverlayPath(changeDir), JSON.stringify(overlay, null, 2), "utf-8");
 }
 
 /**

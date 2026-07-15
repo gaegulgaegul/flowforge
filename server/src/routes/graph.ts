@@ -20,7 +20,14 @@ import { buildGraph } from "../parser/graphBuilder.js";
 import { buildWireframe } from "../parser/wireframeBuilder.js";
 import { buildPrd } from "../parser/prdBuilder.js";
 import { buildSpecTree } from "../parser/specTreeBuilder.js";
-import { listChanges, resolveChangeDir, readOverlay, writeOverlay, isLayoutOverlay } from "../lib/changes.js";
+import {
+  listChanges,
+  resolveChangeDir,
+  readOverlay,
+  writeOverlay,
+  isLayoutOverlay,
+  type OverlayTarget,
+} from "../lib/changes.js";
 import { resolveProjectDir } from "../lib/projects.js";
 import { safe } from "../lib/safe-error.js";
 import { requireWriteAuth } from "../lib/requireWriteAuth.js";
@@ -42,6 +49,18 @@ function resolveChangeFromReq(req: Request): string | null {
   const projDir = resolveProjectDir(project);
   if (projDir === null) return null; // 화이트리스트 실패 → 404
   return resolveChangeDir(id, join(projDir, "openspec", "changes"));
+}
+
+/**
+ * 요청에서 오버레이 저장/조회 대상 컨텍스트를 뽑는다.
+ * ?project= 없으면 undefined — 글로벌 루트는 OVERLAY_ROOT 규약과 무관하게 레거시 경로만 쓴다
+ * (design 0.2 — project 컨텍스트가 없는 저장 위치는 만들지 않는다, 글로벌 루트 회귀 없음).
+ */
+function overlayTargetFromReq(req: Request): OverlayTarget | undefined {
+  const project = req.query.project;
+  if (typeof project !== "string") return undefined;
+  const id = String(req.params.id ?? "");
+  return { project, changeId: id };
 }
 
 /** graphBuilder 내부 형식 → shared SpecGraph 계약으로 변환 */
@@ -83,7 +102,7 @@ graphRouter.get(
       return;
     }
     const graph = toSpecGraph(dir);
-    const layout = readOverlay(dir) ?? {};
+    const layout = readOverlay(dir, overlayTargetFromReq(req)) ?? {};
     res.json({ id, graph, layout });
   }),
 );
@@ -141,7 +160,7 @@ graphRouter.put(
       res.status(400).json({ error: "invalid_layout" });
       return;
     }
-    writeOverlay(dir, body);
+    writeOverlay(dir, body, overlayTargetFromReq(req));
     res.json({ ok: true, saved: Object.keys(body).length });
   }),
 );
