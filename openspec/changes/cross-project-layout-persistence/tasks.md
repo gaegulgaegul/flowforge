@@ -6,8 +6,8 @@
 
 ### Sequential: 사실 확인 (추측 금지 — design Open Questions 해소)
 
-- [ ] 0.1 change id 형태 확인: 라우트가 `:id(*)` 라 id 에 `/` 가 들어올 수 있는지 실제 데이터로 확인(`ls <project>/openspec/changes/`). `/` 가 있으면 저장 파일명 flatten 여부 결정, 없으면 그대로. **결과를 design.md D2 에 반영**(추측으로 구현 금지).
-- [ ] 0.2 `OVERLAY_ROOT` 미설정 시 동작 결정: 기존 `<changeDir>/viz/` 폴백 vs 명시적 실패. 테스트·외부 PC 에서 안 깨지는 쪽을 택하되 **조용한 실패를 만들지 않는다**. design.md Open Questions 에 결정 기록.
+- [x] 0.1 change id 형태 확인: 라우트가 `:id(*)` 라 id 에 `/` 가 들어올 수 있는지 실제 데이터로 확인(`ls <project>/openspec/changes/`). `/` 가 있으면 저장 파일명 flatten 여부 결정, 없으면 그대로. **결과를 design.md D2 에 반영**(추측으로 구현 금지).
+- [x] 0.2 `OVERLAY_ROOT` 미설정 시 동작 결정: 기존 `<changeDir>/viz/` 폴백 vs 명시적 실패. 테스트·외부 PC 에서 안 깨지는 쪽을 택하되 **조용한 실패를 만들지 않는다**. design.md Open Questions 에 결정 기록.
 
 ### Sequential: 저장/읽기 경로 (RED → GREEN, 같은 파일 changes.ts)
 

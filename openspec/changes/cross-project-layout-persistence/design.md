@@ -72,9 +72,19 @@
 ## Risks / Open Questions
 
 - **컨테이너 실행 유저 = root**(`docker exec id` 확인). 호스트 볼륨 디렉토리 소유권이 어긋나면 호스트에서 파일을 못 읽을 수 있다. 볼륨 생성 시 소유권을 확인한다.
-- **`OVERLAY_ROOT` 미설정 시 동작**: env 없으면 기존 `<changeDir>/viz/` 로 폴백할지, 아니면 명시적 실패로 갈지 — apply 에서 결정. 외부 PC/테스트 환경에서 안 깨지는 쪽(폴백)이 유력하나, 폴백이 조용한 실패를 만들면 안 된다.
-- **change id 의 `/` 포함 여부**: D2 주석 참조. 실제 id 형태를 확인 후 flatten 여부 결정.
 - **프론트 409 처리**: `App.tsx:289` 가 `.catch()` 로 로깅만 한다. 409 를 사용자에게 알릴지는 확인 후 최소 범위로. 이 change 의 정상 경로에선 409 가 안 나므로 우선순위 낮음.
+
+### 0.1 결정 (apply 단계, 2026-07-15 실측): change id 의 `/` 포함 여부
+
+실제 데이터 확인 — flowforge/wowa-app/wowa-wt-dashboard/wowa-wt-ios/agentic-harness/ssoksok/stock-league 전 프로젝트의 `openspec/changes/` (활성 + archive 하위)를 순회한 결과, **`/` 를 포함하는 change id 는 `archive/<name>` 접두어 패턴 하나뿐**이다(`changes.ts:49` `listChanges()` 가 이 형태로 생성 — 실제로 `archive/2026-07-08-cross-project-change-views` 같은 id 가 존재). `archive/` 이외의 위치에 슬래시가 들어간 id 는 어느 프로젝트에도 없다.
+
+**결정**: flatten 하지 않는다. `<OVERLAY_ROOT>/<project>/<changeId>.json` 규약을 그대로 적용하면 `archive/` 케이스는 `<OVERLAY_ROOT>/<project>/archive/<name>.json` 이 되어 자연스러운 하위 디렉토리 구조가 된다 — `writeOverlay` 가 이미 `mkdirSync(dir, { recursive: true })` 로 부모를 만들므로 추가 처리가 필요 없다. id 는 `changes.ts:65` 정규식(`[A-Za-z0-9_\-/]+`)으로 이미 `..` 및 화이트리스트 밖 문자를 차단하므로 경로조작 위험도 없다.
+
+### 0.2 결정 (apply 단계): `OVERLAY_ROOT` 미설정 시 동작
+
+**결정**: 폴백. `OVERLAY_ROOT` 미설정이면 기존 `<changeDir>/viz/` 에 쓴다(현행 동작 그대로 — 회귀 없음).
+
+**근거**: 이건 "조용한 실패"가 아니라 "기존의 잘 정의된 동작으로 되돌아가는 것"이다 — 로컬 개발·테스트·글로벌 루트(`OPENSPEC_ROOT`, RW)에서는 `OVERLAY_ROOT` 없이도 지금처럼 정상 동작해야 한다(D1 은 크로스프로젝트/RO 대상 문제를 풀 뿐, 글로벌 루트 경로를 바꾸지 않는다 — Non-Goals 참조). `OVERLAY_ROOT` 는 오직 "쓰기 대상이 RO 일 수 있는 크로스프로젝트 경로"를 위한 신규 옵션이므로, 없으면 과거처럼 동작하는 게 맞다. 이 폴백이 실제로 조용한 실패가 되는 유일한 경우는 크로스프로젝트(RO) 대상에 `OVERLAY_ROOT` 없이 쓰기를 시도할 때인데, 그 경우는 D4 의 409 방어(쓰기 실패 시 EROFS/ENOENT 를 감지해 read_only_target 매핑)가 커버한다 — 폴백 자체가 에러를 삼키지 않는다.
 
 ## 화면 구성 / UI
 
