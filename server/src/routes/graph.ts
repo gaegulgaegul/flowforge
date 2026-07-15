@@ -167,8 +167,11 @@ graphRouter.put(
       // 알린다(generic 500 금지, design D4). EROFS/ENOENT 둘 다 RO 마운트의 mkdir 실패로
       // 관측됨(같은 근본원인이 Node에서 다른 코드로 표면화 — proposal.md 실측).
       // 내부 경로는 클라이언트에 노출하지 않고 서버 로그에만 남긴다(30-security).
+      // ENOTDIR = 경로 세그먼트가 파일과 충돌(예: changeId "archive" 가 archive/<name> 의
+      // 부모 디렉토리 자리를 파일로 점유). 현재 데이터로는 발현 불가(listChanges 가 bare
+      // "archive" id 를 만들지 않고 라우트도 404)지만, 나면 500 이 아니라 진단 가능한 409로.
       const code = (err as NodeJS.ErrnoException).code;
-      if (code === "EROFS" || code === "ENOENT" || code === "EACCES") {
+      if (code === "EROFS" || code === "ENOENT" || code === "EACCES" || code === "ENOTDIR") {
         process.stderr.write(`[flowforge] PUT ${req.path} 쓰기 불가(${code}): 대상 경로 읽기전용\n`);
         res.status(409).json({ error: "read_only_target" });
         return;

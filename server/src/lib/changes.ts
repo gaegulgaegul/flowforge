@@ -12,7 +12,7 @@
  *   (무손실 — 이미 저장된 글로벌 루트 오버레이가 새 규약 도입으로 사라지지 않게, design D3).
  */
 import { readdirSync, statSync, existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { LayoutOverlay } from "@flowforge/shared";
 
 /** OVERLAY_ROOT 저장 대상 컨텍스트. project+changeId 조합이 <OVERLAY_ROOT> 하위 경로를 결정한다. */
@@ -125,7 +125,7 @@ export function writeOverlay(changeDir: string, overlay: LayoutOverlay, target?:
   const overlayRoot = process.env.OVERLAY_ROOT;
   if (overlayRoot && target) {
     const p = overlayRootPath(overlayRoot, target);
-    mkdirSync(join(p, ".."), { recursive: true });
+    mkdirSync(dirname(p), { recursive: true });
     writeFileSync(p, JSON.stringify(overlay, null, 2), "utf-8");
     return;
   }
