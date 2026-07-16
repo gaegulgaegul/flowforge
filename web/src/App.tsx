@@ -96,6 +96,19 @@ const SKIPPED_PREVIEW_CAP = 5;
 // 기능명세 노드/화면에 in-place로 매핑돼 표시된다.
 type DashStage = "grid" | "skeleton" | "views";
 
+// 기획 뼈대(skeleton) 단계 탭. 배열이 곧 탭 노출 순서이자 폴백 우선순위(PLAN_TABS[0])다 —
+// 순서를 바꾸려면 여기만 고친다(선언 4곳 중복이 wire/flow 순서 드리프트를 낳았던 자리).
+// 산출물 파이프라인 순서: PRD → 기획 기능명세 → 유저플로우 → 와이어프레임.
+// deeplink.ts TABS(change 5종)와 동일한 단일 정의 패턴.
+const PLAN_TABS = ["prd", "features", "flow", "wire"] as const;
+type PlanTab = (typeof PLAN_TABS)[number];
+const PLAN_TAB_LABELS: Record<PlanTab, string> = {
+  prd: "PRD",
+  features: "기획 기능명세",
+  flow: "유저플로우",
+  wire: "와이어프레임",
+};
+
 export function App(): JSX.Element {
   // views 단계에서 선택된 change 키. 클릭으로 세팅되며 5종 산출물 로딩 effect의 트리거.
   const [selected, setSelected] = useState<string>("");
@@ -104,8 +117,7 @@ export function App(): JSX.Element {
   const [selectedProject, setSelectedProject] = useState<string | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("prd");
   // skeleton(기획 뼈대) 단계 전용 탭. views 단계의 tab(4종)과 완전히 분리 — 충돌 방지.
-  // IA 뷰 제거(flowforge-ia-removal) — "ia" 제거, 산출물 4종.
-  const [planTab, setPlanTab] = useState<"prd" | "features" | "wire" | "flow">("prd");
+  const [planTab, setPlanTab] = useState<PlanTab>("prd");
   const [status, setStatus] = useState("");
 
   // 유저플로우 상태
@@ -882,16 +894,18 @@ export function App(): JSX.Element {
   );
 
   // skeleton 뷰 탭: 있는 뷰만 노출, 활성 탭이 없는 뷰를 가리키면 첫 유효 탭으로 폴백.
-  // IA 뷰 제거(flowforge-ia-removal) — 4종(prd·features·wire·flow).
-  const planTabsAvail: Array<"prd" | "features" | "wire" | "flow"> = [];
-  if (planningPrd) planTabsAvail.push("prd");
-  if (planningFeatures) planTabsAvail.push("features");
-  if (planningWireScreens) planTabsAvail.push("wire");
-  if (planningUserFlow) planTabsAvail.push("flow");
-  const activePlanTab: "prd" | "features" | "wire" | "flow" = planTabsAvail.includes(planTab)
+  // 노출·폴백 순서는 PLAN_TABS 하나가 결정한다(여기서 순서를 다시 쓰지 않는다).
+  const planTabHas: Record<PlanTab, boolean> = {
+    prd: Boolean(planningPrd),
+    features: Boolean(planningFeatures),
+    flow: Boolean(planningUserFlow),
+    wire: Boolean(planningWireScreens),
+  };
+  const planTabsAvail: PlanTab[] = PLAN_TABS.filter((k) => planTabHas[k]);
+  const activePlanTab: PlanTab = planTabsAvail.includes(planTab)
     ? planTab
     : (planTabsAvail[0] ?? "prd");
-  const planTabBtn = (key: "prd" | "features" | "wire" | "flow", label: string): JSX.Element => (
+  const planTabBtn = (key: PlanTab, label: string): JSX.Element => (
     <button
       key={key}
       onClick={() => setPlanTab(key)}
@@ -995,10 +1009,7 @@ export function App(): JSX.Element {
           <div className={`dash-body${["features", "flow", "wire"].includes(activePlanTab) ? " dash-body--wide" : ""}`}>
             {planTabsAvail.length > 0 && (
               <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 12 }} data-testid="plan-tabs">
-                {planningPrd && planTabBtn("prd", "PRD")}
-                {planningFeatures && planTabBtn("features", "기획 기능명세")}
-                {planningWireScreens && planTabBtn("wire", "와이어프레임")}
-                {planningUserFlow && planTabBtn("flow", "유저플로우")}
+                {planTabsAvail.map((k) => planTabBtn(k, PLAN_TAB_LABELS[k]))}
               </div>
             )}
             {/* 기획 단계 PRD(docs/planning/prd.md) — 있으면 프로젝트 기획을 PrdPanel로 렌더 */}
