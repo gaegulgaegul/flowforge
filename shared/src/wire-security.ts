@@ -50,6 +50,55 @@ export const WIRE_DOC_CSP =
   "base-uri 'none'";
 
 /**
+ * 화면 전환 브리지(wire-nav) — 와이어 문서 안의 클릭을 부모 렌더러에 전달하는 postMessage 계약.
+ *
+ * 배경: 화면 선택 툴바를 제거하고 "와이어 안의 카드·메뉴 클릭 → 화면 전환"(실제 앱처럼)으로 바꾸면서
+ * 필요해졌다. 문서는 opaque origin이라 부모가 내부 DOM을 볼 수 없으므로(그리고 그 격리는 유지해야 하므로),
+ * 클릭 사실은 문서가 **스스로 알려주는** 수밖에 없다 → postMessage 단방향(문서 → 부모) 통지.
+ *
+ * ⚠️ 보안상 이 브리지는 sandbox·CSP를 **하나도 약화시키지 않는다**:
+ *   - postMessage는 어떤 CSP 디렉티브의 대상도 아니다(`connect-src 'none'`은 fetch/XHR/WS만 제약).
+ *   - opaque origin 문서도 `parent.postMessage(msg, '*')` 송신은 가능하다 → `allow-same-origin` 불필요.
+ *   - 방향이 문서 → 부모 단방향이라 부모의 DOM·토큰이 문서에 노출되지 않는다.
+ *
+ * ⚠️ 수신 측 검증 의무(부모): opaque origin이라 `event.origin`은 문자열 `"null"`로 도착해 **신뢰할 수
+ *   없다**. 따라서 오리진 대신 **`event.source === iframe.contentWindow`(발신 창 동일성)**로 발신자를
+ *   검증하고, 받은 screenId는 실재 화면 화이트리스트와 대조해야 한다. 메시지 본문은 신뢰 불가 입력이다.
+ */
+export const WIRE_NAV_MESSAGE_TYPE = 'wf-nav' as const;
+
+/** 와이어 문서 → 부모 렌더러 화면 전환 요청 메시지. `screenId`는 신뢰 불가(부모가 화이트리스트 검증). */
+export interface WireNavMessage {
+  readonly type: typeof WIRE_NAV_MESSAGE_TYPE;
+  readonly screenId: string;
+}
+
+/** unknown 메시지 → WireNavMessage 좁힘. 형태만 검사한다(screenId 실재 여부는 부모가 별도 검증). */
+export function isWireNavMessage(data: unknown): data is WireNavMessage {
+  if (typeof data !== 'object' || data === null) return false;
+  const m = data as { type?: unknown; screenId?: unknown };
+  return m.type === WIRE_NAV_MESSAGE_TYPE && typeof m.screenId === 'string' && m.screenId.length > 0;
+}
+
+/**
+ * 와이어 문서에 심는 화면 전환 송신 스크립트(자족 인라인 — CSP `script-src 'unsafe-inline'` 안에서 동작).
+ *
+ * `data-nav="<screenId>"`가 달린 요소를 클릭하면 그 id를 부모에 통지한다. 이벤트 위임이라 문서가 나중에
+ * DOM을 바꿔도 동작하고, `closest`로 카드 내부 자식을 눌러도 잡힌다. targetOrigin이 `'*'`인 이유는
+ * opaque origin(sandbox, allow-same-origin 없음)에선 부모 오리진을 특정해 보낼 수 없기 때문이며,
+ * 본문에 비밀이 없고(화면 id뿐) 부모가 발신 창을 검증하므로 안전하다.
+ */
+export const WIRE_NAV_SCRIPT = `
+<script>
+  document.addEventListener('click', function (e) {
+    var el = e.target && e.target.closest ? e.target.closest('[data-nav]') : null;
+    if (!el) return;
+    e.preventDefault();
+    parent.postMessage({ type: '${WIRE_NAV_MESSAGE_TYPE}', screenId: el.getAttribute('data-nav') }, '*');
+  });
+</script>`;
+
+/**
  * 앱 CSP(flowforge 자체 응답 헤더) — clickjacking 방어(현재 서버에 CSP 전무 → 이 change에서 신설).
  *
  * `frame-ancestors 'self'`: flowforge가 신뢰되지 않은 상위 프레임에 임베드(clickjacking 대상)되지 않게.

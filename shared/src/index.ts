@@ -33,7 +33,12 @@ export {
   WIRE_IFRAME_SANDBOX,
   WIRE_DOC_CSP,
   WIRE_APP_CSP,
+  WIRE_NAV_MESSAGE_TYPE,
+  WIRE_NAV_SCRIPT,
+  isWireNavMessage,
 } from './wire-security.js';
+
+export type { WireNavMessage } from './wire-security.js';
 
 export type {
   PrdSectionKey,

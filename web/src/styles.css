@@ -899,19 +899,25 @@ button:hover { border-color: var(--lime); }
   --lofi-fill: #21262d;
   --lofi-fill2: #1c2128;
   --lofi-muted: #8b949e;
-  display: flex; flex-direction: column; gap: 14px; align-items: center; padding: 8px 0 4px;
+  /* align-items:center면 자식이 내용폭으로 줄어 풀폭 프레임이 안 된다 → stretch(기본)로 폭을 채운다.
+     모바일 프레임은 자체 고정폭(340px)이라 .wf-df-stage의 justify-content로 가운데 정렬된다. */
+  display: flex; flex-direction: column; gap: 14px; align-items: stretch; padding: 8px 0 4px;
+  min-width: 0;
 }
 .wf-df-empty { color: var(--lofi-muted); padding: 24px; font-style: italic; }
 
-/* --- 컨트롤: 디바이스 토글 + 화면 탭 --- */
-.wf-df-controls { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; width: 100%; }
-.wf-df-device-toggle, .wf-df-screen-tabs { display: flex; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
-.wf-df-device-toggle button, .wf-df-screen-tabs button {
+/* --- 컨트롤: 디바이스 토글 + 현재 화면 표시 --- */
+/* 화면 선택 탭(.wf-df-screen-tabs)은 제거됐다 — 화면 전환은 와이어 안의 요소 클릭으로만 한다.
+   대신 지금 어느 화면인지 알 수 있게 이름만 표시한다(.wf-df-now). */
+.wf-df-controls { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; justify-content: center; width: 100%; }
+.wf-df-device-toggle { display: flex; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
+.wf-df-device-toggle button {
   border: none; border-radius: 6px; background: transparent; color: var(--lofi-muted);
   cursor: pointer; font-size: 12px; font-weight: 600; padding: 7px 12px;
 }
-.wf-df-device-toggle button:hover, .wf-df-screen-tabs button:hover { color: var(--text); border-color: transparent; }
-.wf-df-device-toggle button.on, .wf-df-screen-tabs button.on { background: var(--lime); color: #16181d; }
+.wf-df-device-toggle button:hover { color: var(--text); border-color: transparent; }
+.wf-df-device-toggle button.on { background: var(--lime); color: #16181d; }
+.wf-df-now { font-size: 12px; font-weight: 600; color: var(--text); }
 
 /* --- 스테이지 + 프레임 --- */
 .wf-df-stage { width: 100%; display: flex; justify-content: center; overflow-x: auto; }
@@ -919,8 +925,10 @@ button:hover { border-color: var(--lime); }
   background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
   box-shadow: 0 18px 60px rgba(0,0,0,0.5); overflow: hidden; position: relative;
 }
-.wf-df-frame--desktop { width: 1000px; height: 640px; max-width: 100%; }
-.wf-df-frame--mobile { width: 340px; height: 660px; }
+/* 데스크탑 = 전체 화면. 고정 1000px이면 실제 화면 비율과 달라 "보는 화면과 레이아웃이 다르다"는
+   괴리가 생긴다 → 스테이지 폭을 그대로 채우고 높이는 뷰포트에 비례(실제 브라우저 창에 근접). */
+.wf-df-frame--desktop { width: 100%; height: calc(100vh - 260px); min-height: 520px; }
+.wf-df-frame--mobile { width: 340px; height: 660px; flex: none; }
 
 .wf-df-chrome {
   height: 30px; background: var(--panel, #1b1e24); border-bottom: 1px solid var(--border);
@@ -957,9 +965,11 @@ button:hover { border-color: var(--lime); }
 .wire-approval-screen-id { color: var(--lofi-muted, #8b949e); font-weight: 400; font-size: 12px; }
 
 /* --- 인플레이스 핀 피드백(D2 정정 — Figma 코멘트식) --- */
+/* 풀폭 — max-width:1360px + margin:auto 였을 때는 넓은 화면에서 컨테이너 전체가 가운데 떠서
+   우측 피드백 패널이 화면 오른쪽 끝에 붙지 못하고 허공에 뜬 것처럼 보였다. 이제 뷰포트를 다 쓴다. */
 .wf-pin-root {
   --pin: #d9663f; --pin-ink: #f0b79e;
-  width: 100%; max-width: 1360px; margin: 16px auto 0; border-top: 1px dashed var(--border);
+  width: 100%; margin: 16px 0 0; border-top: 1px dashed var(--border);
   padding-top: 16px; display: flex; flex-direction: column; gap: 12px;
 }
 .wf-pin-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }

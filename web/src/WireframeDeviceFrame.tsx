@@ -17,10 +17,10 @@
  * ⚠️ 보안 불변식: 와이어 HTML은 sandbox iframe 이외 경로(상위 문서 innerHTML/dangerouslySetInnerHTML)로
  *    삽입하지 않는다. iframe 내부 DOM은 cross-origin 취급이라 접근 불가 — 핀 좌표는 iframe 표면 기준만.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { WireDocDevice, WireDoc } from "@flowforge/shared";
-import { WIRE_IFRAME_SANDBOX } from "@flowforge/shared";
+import { WIRE_IFRAME_SANDBOX, isWireNavMessage } from "@flowforge/shared";
 import { createWirePreview } from "./api.js";
 
 /** 프레임 위 오버레이 렌더 컨텍스트 — 현재 디바이스/화면 id(핀 필터·좌표계용). */
@@ -47,10 +47,13 @@ function DocFrame({
   doc,
   project,
   preview = false,
+  frameRef,
 }: {
   doc: WireDoc;
   project: string;
   preview?: boolean;
+  /** 화면 전환 브리지 발신자 검증용 — 부모가 `event.source === contentWindow`를 대조한다. */
+  frameRef?: React.RefObject<HTMLIFrameElement> | undefined;
 }): JSX.Element {
   const directSrc = useMemo(
     () => (preview ? null : directDocSrc(project, doc.id)),
@@ -87,6 +90,7 @@ function DocFrame({
   }
   return (
     <iframe
+      ref={frameRef}
       className="wf-df-iframe"
       data-testid="wf-df-iframe"
       title={doc.title}
@@ -106,11 +110,13 @@ function DesktopScreen({
   project,
   preview = false,
   overlay,
+  frameRef,
 }: {
   doc: WireDoc;
   project: string;
   preview?: boolean;
   overlay?: ReactNode;
+  frameRef?: React.RefObject<HTMLIFrameElement> | undefined;
 }): JSX.Element {
   return (
     <div className="wf-df-frame wf-df-frame--desktop" data-testid="wf-df-desktop">
@@ -121,7 +127,7 @@ function DesktopScreen({
         <span className="wf-df-url">flowforge.gaegul.house</span>
       </div>
       <div className="wf-df-viewport">
-        <DocFrame doc={doc} project={project} preview={preview} />
+        <DocFrame doc={doc} project={project} preview={preview} frameRef={frameRef} />
         {overlay}
       </div>
     </div>
@@ -134,16 +140,18 @@ function MobileScreen({
   project,
   preview = false,
   overlay,
+  frameRef,
 }: {
   doc: WireDoc;
   project: string;
   preview?: boolean;
   overlay?: ReactNode;
+  frameRef?: React.RefObject<HTMLIFrameElement> | undefined;
 }): JSX.Element {
   return (
     <div className="wf-df-frame wf-df-frame--mobile" data-testid="wf-df-mobile">
       <div className="wf-df-viewport">
-        <DocFrame doc={doc} project={project} preview={preview} />
+        <DocFrame doc={doc} project={project} preview={preview} frameRef={frameRef} />
         {overlay}
       </div>
     </div>
@@ -181,6 +189,8 @@ export function WireframeDeviceFrame({
 }): JSX.Element {
   const [device, setDevice] = useState<WireDocDevice>(screens[0]?.device ?? "desktop");
   const [activeId, setActiveId] = useState<string>(screens[0]?.id ?? "");
+  // 화면 전환 브리지 발신자 검증용 — 이 프레임이 실제로 띄운 창에서 온 메시지만 받는다.
+  const frameRef = useRef<HTMLIFrameElement>(null);
 
   // 외부 이동 요청(핀 목록 클릭) → 그 대상 화면이 실재하면 device·화면을 맞춘다. nonce 변화로 재요청 반영.
   useEffect(() => {
@@ -190,6 +200,29 @@ export function WireframeDeviceFrame({
       setActiveId(focusTarget.screenId);
     }
   }, [focusTarget, screens]);
+
+  /**
+   * 와이어 문서 안의 클릭(`data-nav`) → 화면 전환. 화면 선택 툴바를 대체하는 유일한 전환 경로다.
+   *
+   * ⚠️ 메시지는 신뢰 불가 입력이다. 문서가 opaque origin(sandbox, allow-same-origin 없음)이라
+   * `event.origin`은 `"null"`로 와서 오리진 검증이 불가능하므로, 대신 두 겹으로 막는다:
+   *   1) `event.source === frameRef.current.contentWindow` — 이 프레임이 띄운 창이 보낸 것만 수용
+   *      (다른 탭·다른 iframe·확장이 보낸 메시지 배제).
+   *   2) 받은 screenId를 실재 화면 목록과 대조 — 없는 화면이면 무시(focusTarget과 동일한 화이트리스트).
+   * 수용해도 하는 일은 "어느 화면을 보여줄지" 상태 변경뿐이라 문서에 부모 권한이 새지 않는다.
+   */
+  useEffect(() => {
+    const onMessage = (e: MessageEvent): void => {
+      if (!frameRef.current || e.source !== frameRef.current.contentWindow) return;
+      if (!isWireNavMessage(e.data)) return;
+      const target = screens.find((s) => s.id === e.data.screenId);
+      if (!target) return; // 실재하지 않는 화면 id — 무시
+      setDevice(target.device);
+      setActiveId(target.id);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [screens]);
 
   // 현재 디바이스에 해당하는 화면들(desktop이면 desktop 화면, mobile이면 mobile 화면).
   const deviceScreens = useMemo(() => screens.filter((s) => s.device === device), [screens, device]);
@@ -210,9 +243,9 @@ export function WireframeDeviceFrame({
       <div className="wf-df-root wf-df-root--preview">
         <div className="wf-df-stage">
           {active.device === "desktop" ? (
-            <DesktopScreen doc={active} project={project} preview={preview} overlay={overlay} />
+            <DesktopScreen doc={active} project={project} preview={preview} overlay={overlay} frameRef={frameRef} />
           ) : (
-            <MobileScreen doc={active} project={project} preview={preview} overlay={overlay} />
+            <MobileScreen doc={active} project={project} preview={preview} overlay={overlay} frameRef={frameRef} />
           )}
         </div>
       </div>
@@ -242,26 +275,14 @@ export function WireframeDeviceFrame({
             📱 모바일
           </button>
         </div>
-        <div className="wf-df-screen-tabs" role="group" aria-label="화면">
-          {deviceScreens.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={s.id === active.id ? "on" : ""}
-              aria-pressed={s.id === active.id}
-              data-testid={`wf-df-screen-${s.id}`}
-              onClick={() => setActiveId(s.id)}
-            >
-              {s.title}
-            </button>
-          ))}
-        </div>
+        {/* 화면 선택 탭은 없앴다 — 화면 전환은 와이어 안의 요소(data-nav) 클릭으로만 한다(실제 앱과 동형). */}
+        <span className="wf-df-now" data-testid="wf-df-now">{active.title}</span>
       </div>
       <div className="wf-df-stage">
         {active.device === "desktop" ? (
-          <DesktopScreen doc={active} project={project} preview={preview} overlay={overlay} />
+          <DesktopScreen doc={active} project={project} preview={preview} overlay={overlay} frameRef={frameRef} />
         ) : (
-          <MobileScreen doc={active} project={project} preview={preview} overlay={overlay} />
+          <MobileScreen doc={active} project={project} preview={preview} overlay={overlay} frameRef={frameRef} />
         )}
       </div>
       <p className="wf-df-caption">
