@@ -115,3 +115,59 @@ describe("픽스처 화면 전환 배선", () => {
     }
   });
 });
+
+/**
+ * 화면 **안**의 이벤트가 내용을 실제로 바꾸는지(껍데기 반응 방지).
+ *
+ * 회귀 대상: 예전엔 탭을 눌러도 밑줄(.on)만 옮겨가고 본문은 고정, 검색창은 "검색: xxx" 문구만 뜨고
+ * 목록은 그대로였다(라이브 실측). 와이어의 값어치가 "실제로 동작하는 화면"이므로 그 반응이 살아있어야 한다.
+ */
+describe("화면 내 이벤트 → 내용 변경", () => {
+  const byId = new Map(PLANNING_WIREFRAME_FIXTURE.map((s) => [s.id, s]));
+
+  it("기획 뷰: 탭별 본문 데이터가 있고 클릭 시 갈아끼운다(밑줄만 바뀌지 않는다)", () => {
+    const html = byId.get("skeleton")?.html ?? "";
+    // 탭 3종 각각의 본문이 데이터로 존재
+    expect(html).toContain("PANELS");
+    expect(html).toContain("panel.innerHTML");
+    for (const key of ["prd", "features", "flow"]) {
+      expect(html).toContain(`data-tab="${key}"`);
+    }
+    // 유저플로우 탭 본문은 PRD 본문과 다른 내용이어야 한다(고정 본문 회귀 탐지)
+    expect(html).toContain("시작 → 로그인");
+  });
+
+  it("기획 뷰: 좌측 메뉴도 죽은 링크가 아니다(클릭하면 탭이 열린다)", () => {
+    const html = byId.get("skeleton")?.html ?? "";
+    expect(html).toContain('data-tab-link="prd"');
+    expect(html).toContain('data-tab-link="flow"');
+  });
+
+  it("기능명세: 검색이 트리를 실제로 거른다(문구만 바뀌지 않는다)", () => {
+    const html = byId.get("features")?.html ?? "";
+    expect(html).toContain("tree.innerHTML");
+    expect(html).toContain(".filter(");
+    expect(html).toContain("일치하는 기능이 없습니다"); // 0건 경로 존재
+  });
+
+  it("모바일 목록: 검색이 카드를 실제로 거른다", () => {
+    const html = byId.get("grid-m")?.html ?? "";
+    expect(html).toContain("plist.innerHTML");
+    expect(html).toContain(".filter(");
+    expect(html).toContain("일치하는 프로젝트가 없습니다");
+  });
+
+  it("모바일 기획 뷰: 탭이 본문을 갈아끼운다", () => {
+    const html = byId.get("skeleton-m")?.html ?? "";
+    expect(html).toContain("MPANELS");
+    expect(html).toContain("mpanel.innerHTML");
+  });
+
+  it("사용자 입력을 그대로 innerHTML에 넣지 않는다(문서 안 XSS 자해 방지)", () => {
+    // 검색어는 esc()를 거치거나 textContent로만 나가야 한다. innerHTML에 q.value 직결이면 위험.
+    for (const s of PLANNING_WIREFRAME_FIXTURE) {
+      expect(s.html).not.toMatch(/innerHTML\s*=\s*[^;]*\bq\.value\b/);
+      expect(s.html).not.toMatch(/innerHTML\s*=\s*[^;]*\bpq\.value\b/);
+    }
+  });
+});

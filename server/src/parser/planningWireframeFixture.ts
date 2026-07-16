@@ -76,7 +76,12 @@ const SCREEN_GRID: WireDoc = {
     </div>`),
 };
 
-/** 화면 2: 기획 뷰(데스크탑) — 탭 + PRD 섹션. 탭 클릭 시 실제로 활성 표시가 바뀐다(동작 검증용). */
+/**
+ * 화면 2: 기획 뷰(데스크탑) — 탭 전환이 **본문을 실제로 갈아끼운다**.
+ *
+ * 이전엔 탭을 눌러도 밑줄(.on)만 옮겨가고 본문은 PRD 5섹션 고정이었다(껍데기 반응). 와이어의 목적이
+ * "실제로 동작하는 화면을 보는 것"이므로 탭별 본문을 데이터로 두고 클릭 시 렌더한다.
+ */
 const SCREEN_SKELETON: WireDoc = {
   id: "skeleton",
   title: "기획 뷰",
@@ -84,20 +89,43 @@ const SCREEN_SKELETON: WireDoc = {
   html: doc(`
     <div class="bar"><span class="brand" data-nav="grid">flowforge</span><span data-nav="grid" class="crumb">프로젝트</span><span>쏙쏙 육아 앱</span></div>
     <div class="layout">
-      <nav class="side"><a class="on">PRD</a><a data-nav="features">기능명세</a><a>유저플로우</a><a>와이어</a></nav>
+      <nav class="side"><a class="on" data-tab-link="prd">PRD</a><a data-nav="features">기능명세</a><a data-tab-link="flow">유저플로우</a><a>와이어</a></nav>
       <main class="main">
-        <div class="tabs"><button class="tab on" data-tab>PRD</button><button class="tab" data-tab>기능명세</button><button class="tab" data-tab>유저플로우</button></div>
-        <div class="field">1. 개요</div><div class="field">2. 핵심가치</div><div class="field">3. 타겟 · 시나리오</div>
-        <div class="field">4. 성공지표</div><div class="field">5. 속성설정</div>
+        <div class="tabs">
+          <button class="tab on" data-tab="prd">PRD</button>
+          <button class="tab" data-tab="features">기능명세</button>
+          <button class="tab" data-tab="flow">유저플로우</button>
+        </div>
+        <div id="panel"></div>
       </main>
     </div>
     <script>
-      document.querySelectorAll('[data-tab]').forEach(function(t){
-        t.addEventListener('click', function(){
-          document.querySelectorAll('[data-tab]').forEach(function(x){ x.classList.remove('on'); });
-          t.classList.add('on');
+      var PANELS = {
+        prd: '<div class="field">1. 개요</div><div class="field">2. 핵심가치</div>'
+           + '<div class="field">3. 타겟 · 시나리오</div><div class="field">4. 성공지표</div>'
+           + '<div class="field">5. 속성설정</div>',
+        features: '<ul class="tree"><li>회원관리<ul><li>회원가입</li><li>로그인</li></ul></li>'
+           + '<li>기록관리<ul><li>사진 기록</li><li>타임라인</li></ul></li></ul>'
+           + '<div class="out">기능 2개 · 상세기능 4개</div>',
+        flow: '<div class="field">시작 → 로그인</div><div class="field">로그인 → 홈</div>'
+           + '<div class="field">홈 → 사진 기록</div><div class="out">화면 4개 · 전이 3개</div>'
+      };
+      var panel = document.getElementById('panel');
+      function show(key) {
+        panel.innerHTML = PANELS[key] || '';
+        document.querySelectorAll('[data-tab]').forEach(function (x) {
+          x.classList.toggle('on', x.getAttribute('data-tab') === key);
         });
+        document.querySelectorAll('[data-tab-link]').forEach(function (x) {
+          x.classList.toggle('on', x.getAttribute('data-tab-link') === key);
+        });
+      }
+      document.addEventListener('click', function (e) {
+        var t = e.target.closest('[data-tab], [data-tab-link]');
+        if (!t) return;
+        show(t.getAttribute('data-tab') || t.getAttribute('data-tab-link'));
       });
+      show('prd');
     </script>`),
 };
 
@@ -112,20 +140,45 @@ const SCREEN_FEATURES: WireDoc = {
       <nav class="side"><a data-nav="skeleton">PRD</a><a class="on">기능명세</a><a>유저플로우</a><a>와이어</a></nav>
       <main class="main">
         <input id="q" placeholder="🔍 기능 검색" />
-        <ul class="tree">
-          <li>회원관리<ul><li>회원가입</li><li>로그인</li></ul></li>
-          <li>기록관리<ul><li>사진 기록</li><li>타임라인</li></ul></li>
-        </ul>
-        <div class="out" id="out">입력 없음</div>
+        <ul class="tree" id="tree"></ul>
+        <div class="out" id="out"></div>
       </main>
     </div>
     <script>
-      var q = document.getElementById('q'); var out = document.getElementById('out');
-      q.addEventListener('input', function(){ out.textContent = q.value ? ('검색: ' + q.value) : '입력 없음'; });
+      var DATA = [
+        { name: '회원관리', children: ['회원가입', '로그인'] },
+        { name: '기록관리', children: ['사진 기록', '타임라인'] },
+        { name: '리액션', children: ['이모지 반응', '댓글'] }
+      ];
+      var q = document.getElementById('q');
+      var tree = document.getElementById('tree');
+      var out = document.getElementById('out');
+      function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+      function render() {
+        var kw = q.value.trim().toLowerCase();
+        var hits = 0;
+        var html = '';
+        DATA.forEach(function (g) {
+          // 그룹명이 맞으면 자식 전부, 아니면 맞는 자식만 — 실제 검색처럼 걸러진다.
+          var kids = g.name.toLowerCase().indexOf(kw) >= 0
+            ? g.children
+            : g.children.filter(function (c) { return c.toLowerCase().indexOf(kw) >= 0; });
+          if (!kw || kids.length) {
+            hits += kids.length;
+            html += '<li>' + esc(g.name) + '<ul>'
+              + kids.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('')
+              + '</ul></li>';
+          }
+        });
+        tree.innerHTML = html || '<li class="out">일치하는 기능이 없습니다</li>';
+        out.textContent = kw ? ('"' + q.value + '" 검색 결과 · 상세기능 ' + hits + '개') : ('전체 상세기능 ' + hits + '개');
+      }
+      q.addEventListener('input', render);
+      render();
     </script>`),
 };
 
-/** 화면 4: 프로젝트 목록(모바일) — 세로 카드 + 하단 메뉴바. */
+/** 화면 4: 프로젝트 목록(모바일) — 검색이 실제로 카드를 거른다 + 하단 메뉴바. */
 const SCREEN_GRID_MOBILE: WireDoc = {
   id: "grid-m",
   title: "프로젝트 목록",
@@ -133,12 +186,28 @@ const SCREEN_GRID_MOBILE: WireDoc = {
   html: doc(`
     <div class="bar"><span class="brand">프로젝트</span></div>
     <main class="main" style="padding-bottom:56px">
-      <input placeholder="🔍 프로젝트 검색" style="margin-bottom:12px" />
-      <div class="card" data-nav="skeleton-m" style="margin-bottom:10px">쏙쏙 육아 앱</div>
-      <div class="card" data-nav="skeleton-m" style="margin-bottom:10px">wowa 크로스핏</div>
-      <div class="card" data-nav="skeleton-m" style="margin-bottom:10px">stock-brief</div>
+      <input id="pq" placeholder="🔍 프로젝트 검색" style="margin-bottom:12px" />
+      <div id="plist"></div>
+      <div class="out" id="pout"></div>
     </main>
-    <nav class="bottombar"><a data-nav="grid-m" class="on">프로젝트</a><a>템플릿</a><a>팀</a><a>설정</a></nav>`),
+    <nav class="bottombar"><a data-nav="grid-m" class="on">프로젝트</a><a>템플릿</a><a>팀</a><a>설정</a></nav>
+    <script>
+      var PROJECTS = ['쏙쏙 육아 앱', 'wowa 크로스핏', 'stock-brief', 'agent-reach'];
+      var pq = document.getElementById('pq');
+      var plist = document.getElementById('plist');
+      var pout = document.getElementById('pout');
+      function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+      function renderProjects() {
+        var kw = pq.value.trim().toLowerCase();
+        var hit = PROJECTS.filter(function (n) { return n.toLowerCase().indexOf(kw) >= 0; });
+        plist.innerHTML = hit.map(function (n) {
+          return '<div class="card" data-nav="skeleton-m" style="margin-bottom:10px">' + esc(n) + '</div>';
+        }).join('') || '<div class="out">일치하는 프로젝트가 없습니다</div>';
+        pout.textContent = kw ? (hit.length + '개 표시 / 전체 ' + PROJECTS.length + '개') : ('전체 ' + PROJECTS.length + '개');
+      }
+      pq.addEventListener('input', renderProjects);
+      renderProjects();
+    </script>`),
 };
 
 /** 화면 5: 기획 뷰(모바일) — 탭 + PRD + 하단 메뉴바. */
@@ -149,18 +218,36 @@ const SCREEN_SKELETON_MOBILE: WireDoc = {
   html: doc(`
     <div class="bar"><span class="brand">쏙쏙 육아 앱 — 기획</span></div>
     <main class="main" style="padding-bottom:56px">
-      <div class="tabs"><button class="tab on" data-tab>PRD</button><button class="tab" data-tab>기능명세</button><button class="tab" data-tab>유저플로우</button></div>
-      <div class="field">1. 개요</div><div class="field">2. 핵심가치</div>
-      <button class="act" data-nav="grid-m">← 프로젝트 목록</button>
+      <div class="tabs">
+        <button class="tab on" data-tab="prd">PRD</button>
+        <button class="tab" data-tab="features">기능명세</button>
+        <button class="tab" data-tab="flow">유저플로우</button>
+      </div>
+      <div id="mpanel"></div>
+      <button class="act" data-nav="grid-m" style="margin-top:12px">← 프로젝트 목록</button>
     </main>
     <nav class="bottombar"><a data-nav="grid-m">프로젝트</a><a>템플릿</a><a>팀</a><a>설정</a></nav>
     <script>
-      document.querySelectorAll('[data-tab]').forEach(function(t){
-        t.addEventListener('click', function(){
-          document.querySelectorAll('[data-tab]').forEach(function(x){ x.classList.remove('on'); });
-          t.classList.add('on');
+      var MPANELS = {
+        prd: '<div class="field">1. 개요</div><div class="field">2. 핵심가치</div>'
+           + '<div class="field">3. 타겟 · 시나리오</div>',
+        features: '<ul class="tree"><li>회원관리<ul><li>회원가입</li><li>로그인</li></ul></li>'
+           + '<li>기록관리<ul><li>사진 기록</li></ul></li></ul>',
+        flow: '<div class="field">시작 → 로그인</div><div class="field">로그인 → 홈</div>'
+           + '<div class="field">홈 → 사진 기록</div>'
+      };
+      var mpanel = document.getElementById('mpanel');
+      function mshow(key) {
+        mpanel.innerHTML = MPANELS[key] || '';
+        document.querySelectorAll('[data-tab]').forEach(function (x) {
+          x.classList.toggle('on', x.getAttribute('data-tab') === key);
         });
+      }
+      document.addEventListener('click', function (e) {
+        var t = e.target.closest('[data-tab]');
+        if (t) mshow(t.getAttribute('data-tab'));
       });
+      mshow('prd');
     </script>`),
 };
 
