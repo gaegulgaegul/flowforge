@@ -37,3 +37,10 @@ data/wireframe-feedback/
 
 # 크로스프로젝트 change 레이아웃 오버레이 RW 볼륨 산출물(런타임 생성, git 오염 차단)
 data/graph-overlay/
+
+# 기획문서 승인 대기 큐(런타임 생성, 승인 시 원천 문서에 반영됨 — 큐 자체는 커밋 안 함)
+docs/planning/*.suggestions.json
+docs/planning/**/*.suggestions.json
+
+# serena MCP 로컬 설정(도구 산출물)
+.serena/
